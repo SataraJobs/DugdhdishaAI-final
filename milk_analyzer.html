@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - मिल्क ॲनालायझर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; background: #f4f7f6; min-height: 100vh; }
+        
+        .top-dashboard { background: #1976d2; padding: 20px; border-radius: 0 0 20px 20px; color: white; }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .header-titles h1 { margin: 10px 0 5px; font-size: 22px; }
+        .header-titles p { margin: 0; font-size: 13px; color: #e3f2fd; }
+
+        /* ✨ AI Live Camera Scanner Styling */
+        .ai-scanner-card { background: linear-gradient(145deg, #fff0f5, #f3e5f5); border: 2px dashed #ce93d8; border-radius: 16px; padding: 20px; margin: 20px; text-align: center; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.15); }
+        .ai-title { color: #8e24aa; font-size: 16px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .ai-subtitle { font-size: 12px; color: #666; margin-bottom: 15px; }
+        
+        /* Direct Camera Window */
+        .camera-box { width: 100%; height: 250px; background: #222; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 12px; border: 2px solid #ce93d8; display: flex; justify-content: center; align-items: center; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; display: none; }
+        #captured_preview { width: 100%; height: 100%; object-fit: contain; display: none; background: #000; }
+        #camera_placeholder { color: #888; font-size: 14px; font-weight: bold; }
+        
+        .camera-btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        
+        .btn-start-cam { background: #1976d2; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 0 #1565c0; margin-bottom: 12px;}
+        .btn-start-cam:active { top: 3px; box-shadow: 0 1px 0 #1565c0; position: relative; }
+
+        .btn-capture { flex: 1; background: #8e24aa; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: none; box-shadow: 0 4px 0 #6a1b9a;}
+        .btn-capture:active { top: 3px; box-shadow: 0 1px 0 #6a1b9a; position: relative; }
+
+        .btn-retake { flex: 1; background: #555; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: none; box-shadow: 0 4px 0 #333;}
+        .btn-retake:active { top: 3px; box-shadow: 0 1px 0 #333; position: relative; }
+
+        .btn-magic { background: linear-gradient(145deg, #ab47bc, #7b1fa2); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #4a148c; transition: 0.3s; margin-top: 5px;}
+        .btn-magic:active { top: 4px; box-shadow: 0 0 0 #4a148c; position: relative; }
+        .btn-magic:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; color: #888; }
+
+        /* Manual Form Section */
+        .form-section { background: #fff; padding: 20px; margin: 0 20px 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .section-title { font-size: 15px; color: #333; font-weight: bold; border-left: 5px solid #1976d2; padding-left: 10px; margin-bottom: 15px; }
+        
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-col { flex: 1; }
+        .input-col label { display: block; font-weight: bold; color: #555; margin-bottom: 5px; font-size: 12px; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fafafa; font-size: 15px; box-sizing: border-box; font-weight: bold; color: #333; }
+        input:focus { border-color: #1976d2; outline: none; background: #e3f2fd; }
+
+        .btn-primary { background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #0d47a1; margin-top: 5px; }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+
+        /* History Cards */
+        .history-card { background: #fff; border-left: 5px solid #4caf50; padding: 15px; margin: 10px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .hist-date { font-size: 12px; color: #777; font-weight: bold; }
+        .hist-details { font-size: 14px; color: #333; font-weight: bold; margin-top: 5px; }
+        .hist-amount { font-size: 18px; color: #2e7d32; font-weight: 900; }
+        
+        /* 🔥 Dynamic Ad Box Styling 🔥 */
+        .dynamic-ad-container { background:#fff3e0; border-left:4px solid #ff9800; padding:15px; border-radius:12px; margin: 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: none;}
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer;}
+        .vendor-ad-box h3 { color: #0d47a1; font-weight: 900; font-size: 15px; margin: 0 0 5px;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+
+        /* 🔥 Knowledge Box */
+        .knowledge-box { background: #e8eaf6; border-left: 4px solid #3f51b5; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .knowledge-box:hover { background: #c5cae9; }
+        .knowledge-box h4 { margin: 0 0 5px; font-size: 13px; color: #1a237e; }
+        .knowledge-box p { margin: 0; font-size: 11.5px; color: #333; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>मिल्क ॲनालायझर 🥛</h1>
+            <p>रोजचे दूध संकलन आणि पावती रेकॉर्ड</p>
+        </div>
+    </div>
+
+    <div class="ai-scanner-card">
+        <div class="ai-title">🪄 AI डायरेक्ट कॅमेरा स्कॅनर</div>
+        <div class="ai-subtitle">खालील बटण दाबून कॅमेरा सुरू करा आणि पावतीचा फोटो काढा.</div>
+        
+        <div class="camera-box">
+            <span id="camera_placeholder">कॅमेरा बंद आहे</span>
+            <video id="webcam" autoplay playsinline></video>
+            <img id="captured_preview" alt="Captured Receipt">
+            <canvas id="capture_canvas" style="display: none;"></canvas>
+        </div>
+        
+        <button class="btn-start-cam" id="btn_start_cam" onclick="startCamera()">📷 कॅमेरा सुरू करा (Open Camera)</button>
+        
+        <div class="camera-btn-row">
+            <button class="btn-capture" id="btn_snap" onclick="takeSnapshot()">📸 फोटो काढा</button>
+            <button class="btn-retake" id="btn_retake" onclick="retakePhoto()">🔄 पुन्हा काढा</button>
+        </div>
+        
+        <button class="btn-magic" id="btn_ai_scan" onclick="simulateAIExtraction()" disabled style="opacity: 0.6;">
+            🤖 AI ने फॉर्म भरा (जादू पहा)
+        </button>
+    </div>
+
+    <div class="form-section">
+        <div class="section-title">पावतीचा तपशील (मॅन्युअल फिल)</div>
+        
+        <div class="input-row">
+            <div class="input-col">
+                <label>दिनांक *</label>
+                <input type="date" id="milk_date">
+            </div>
+            <div class="input-col">
+                <label>वेळ (Shift)</label>
+                <select id="milk_shift">
+                    <option value="सकाळ">सकाळ</option>
+                    <option value="संध्याकाळ">संध्याकाळ</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-col">
+                <label>कोणत्या गाईचे/म्हशीचे दूध आहे?</label>
+                <select id="milk_animal_select">
+                    <option value="all">एकत्रित दूध (सर्व गोठा)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-col">
+                <label>एकूण दूध (लिटर) *</label>
+                <input type="number" id="milk_liters" placeholder="उदा. 15.5" step="0.1" oninput="calculateTotal()">
+            </div>
+            <div class="input-col">
+                <label>फॅट (Fat) *</label>
+                <input type="number" id="milk_fat" placeholder="उदा. 4.2" step="0.1" oninput="checkMilkQuality()">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-col">
+                <label>एस.एन.एफ (SNF) *</label>
+                <input type="number" id="milk_snf" placeholder="उदा. 8.5" step="0.1" oninput="checkMilkQuality()">
+            </div>
+            <div class="input-col">
+                <label>दूध दर (₹) *</label>
+                <!-- Automatic Rate Removed. User manually types the rate according to their local dairy -->
+                <input type="number" id="milk_rate" placeholder="उदा. 35.50" step="0.1" oninput="calculateTotal()">
+            </div>
+        </div>
+        
+        <div class="input-row">
+            <div class="input-col">
+                <label>एकूण रक्कम (₹) *</label>
+                <input type="number" id="milk_total" placeholder="0.00" readonly style="background: #e8f5e9; color: #2e7d32; border-color: #81c784;">
+            </div>
+        </div>
+
+        <button class="btn-primary" id="save_btn_milk" onclick="saveMilkRecord()">💾 रेकॉर्ड सेव्ह करा</button>
+    </div>
+
+    <!-- Container for Ads and Knowledge Base Links -->
+    <div id="dynamic_ad_container" class="dynamic-ad-container"></div>
+
+    <div class="section-title" style="margin: 20px; font-size: 16px;">अलीकडील नोंदी (Recent Entries)</div>
+    <div id="history_container"></div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    document.getElementById('milk_date').valueAsDate = new Date();
+
+    let videoStream = null;
+    const video = document.getElementById('webcam');
+    const preview = document.getElementById('captured_preview');
+    const canvas = document.getElementById('capture_canvas');
+    const placeholder = document.getElementById('camera_placeholder');
+    
+    const btnStartCam = document.getElementById('btn_start_cam');
+    const btnSnap = document.getElementById('btn_snap');
+    const btnRetake = document.getElementById('btn_retake');
+    const btnMagic = document.getElementById('btn_ai_scan');
+
+    // Load Animals into Dropdown
+    function loadAnimalsIntoDropdown() {
+        let selectBox = document.getElementById('milk_animal_select');
+        let optionsHtml = '<option value="all">एकत्रित दूध (सर्व गोठा)</option>';
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith("cow_")) {
+                try {
+                    let animalData = JSON.parse(localStorage.getItem(key));
+                    let typeIcon = animalData.type === 'buffalo' ? '🐃' : '🐄';
+                    let tagText = animalData.tag ? `(टॅग: ${animalData.tag})` : '';
+                    optionsHtml += `<option value="${key}">${typeIcon} ${animalData.breed} ${tagText}</option>`;
+                } catch (e) {}
+            }
+        }
+        selectBox.innerHTML = optionsHtml;
+    }
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateFatBoosterAd(targetTag, defaultHtml) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI
+            return `
+                <div class="vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); color:#333; font-weight:bold;">Sponsored by ${matchedProduct.brand}</span>
+                    <div class="vendor-product-flex" style="margin-top: 8px;">
+                        ${imgHtml}
+                        <div>
+                            <h3>${matchedProduct.name}</h3>
+                            <p style="margin:0; font-size:11px; color:#444;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span style="font-size: 13px; font-weight: bold; color: #0d47a1;">किंमत: ₹${matchedProduct.offerPrice}</span>
+                        <div class="buy-now-btn">खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        return defaultHtml;
+    }
+
+    // --- Check Quality and Inject Ad ---
+    function checkMilkQuality() {
+        let fat = parseFloat(document.getElementById('milk_fat').value) || 0;
+        let snf = parseFloat(document.getElementById('milk_snf').value) || 0;
+        let adContainer = document.getElementById('dynamic_ad_container');
+
+        // Thresholds: Fat < 3.5 or SNF < 8.5 triggers the Ad & Knowledge Link
+        if ((fat > 0 && fat < 3.5) || (snf > 0 && snf < 8.5)) {
+            
+            // Default Ad if no vendor product is found
+            let defaultFatAdHtml = `
+                <div class="vendor-ad-box" style="background: linear-gradient(145deg, #e8f5e9, #c8e6c9); border-color: #4caf50;" onclick="window.location.href='krushi_mall.html'">
+                    <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); color:#333; font-weight:bold;">Sponsored by गोदरेज ॲग्रोव्हेट</span>
+                    <div style="margin-top: 8px;">
+                        <h3 style="color:#1b5e20;">बायपास फॅट (Bypass Fat)</h3>
+                        <p style="margin:0; font-size:11px; color:#444;">दुधाची फॅट आणि गुणवत्ता हमखास वाढवण्यासाठी उपयुक्त.</p>
+                    </div>
+                    <div class="sponsor-bottom-row" style="border-top-color: #81c784;">
+                        <span style="font-size: 13px; font-weight: bold; color: #1b5e20;">किंमत: ₹१,२५०</span>
+                        <div class="buy-now-btn" style="background:#2e7d32; box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+
+            let dynamicAdHtml = generateFatBoosterAd("Milk_Fat_SNF", defaultFatAdHtml);
+
+            adContainer.innerHTML = `
+                <h4 style="margin:0 0 5px; color:#e65100; display:flex; align-items:center; gap:5px;">⚠️ AI अलर्ट: फॅट / SNF कमी आहे!</h4>
+                <p style="font-size:12.5px; color:#555; margin:0 0 12px;">दुधाची गुणवत्ता आणि फॅट वाढवण्यासाठी खालील प्रॉडक्ट वापरून पहा:</p>
+                
+                ${dynamicAdHtml}
+
+                <!-- 🔥 Knowledge Base Link (Learning Gallery) -->
+                <div class="knowledge-box" onclick="window.location.href='learning_center.html'">
+                    <h4>💡 दुग्ध दिशा ज्ञान केंद्र (Knowledge Gallery)</h4>
+                    <p>चारा व्यवस्थापन, मुरघास (Silage) आणि संतुलित आहार कसा ठेवावा याबद्दल <b>सविस्तर माहिती व व्हिडिओ पाहण्यासाठी येथे क्लिक करा.</b></p>
+                </div>
+            `;
+            adContainer.style.display = "block";
+        } else {
+            adContainer.style.display = "none";
+        }
+    }
+
+    // Camera Functions
+    function startCamera() {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(function(stream) {
+                videoStream = stream;
+                video.srcObject = stream;
+                placeholder.style.display = "none";
+                preview.style.display = "none";
+                video.style.display = "block";
+                video.play();
+                btnStartCam.style.display = "none";
+                btnSnap.style.display = "block";
+                btnRetake.style.display = "none";
+                btnMagic.disabled = true;
+                btnMagic.style.opacity = "0.6";
+                btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
+            })
+            .catch(function(error) { alert("कॅमेरा सुरू करता आला नाही."); });
+        } else { alert("तुमच्या ब्राऊझरमध्ये लाईव्ह कॅमेरा सपोर्ट करत नाही."); }
+    }
+
+    function stopCamera() {
+        if(videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+    }
+
+    function takeSnapshot() {
+        if (videoStream) {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+            preview.src = canvas.toDataURL('image/png');
+            video.style.display = "none";
+            preview.style.display = "block";
+            stopCamera();
+            btnSnap.style.display = "none";
+            btnRetake.style.display = "block";
+            btnMagic.disabled = false;
+            btnMagic.style.opacity = "1";
+        }
+    }
+
+    function retakePhoto() { startCamera(); }
+
+    function simulateAIExtraction() {
+        btnMagic.innerHTML = "⏳ पावती वाचत आहे... (कृपया थांबा)";
+        btnMagic.disabled = true;
+
+        setTimeout(() => {
+            document.getElementById('milk_liters').value = "12.0";
+            document.getElementById('milk_fat').value = "3.2"; // Low fat set to trigger ad and learning gallery
+            document.getElementById('milk_snf').value = "8.2";
+            document.getElementById('milk_rate').value = "30.00";
+            
+            calculateTotal();
+            checkMilkQuality(); // Trigger check after AI scan
+
+            btnMagic.innerHTML = "✅ यश आले! (डेमो आकडे)";
+            btnMagic.style.background = "linear-gradient(145deg, #43a047, #2e7d32)";
+            
+            setTimeout(() => {
+                btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
+                btnMagic.style.background = "linear-gradient(145deg, #ab47bc, #7b1fa2)";
+                btnMagic.disabled = false;
+            }, 1000);
+
+        }, 1500); 
+    }
+
+    function calculateTotal() {
+        let liters = parseFloat(document.getElementById('milk_liters').value) || 0;
+        let rate = parseFloat(document.getElementById('milk_rate').value) || 0;
+        let total = liters * rate;
+        document.getElementById('milk_total').value = total.toFixed(2);
+    }
+
+    function saveMilkRecord() {
+        let date = document.getElementById('milk_date').value;
+        let shift = document.getElementById('milk_shift').value;
+        let animalId = document.getElementById('milk_animal_select').value;
+        let animalNameText = document.getElementById('milk_animal_select').options[document.getElementById('milk_animal_select').selectedIndex].text;
+        
+        let liters = document.getElementById('milk_liters').value;
+        let fat = document.getElementById('milk_fat').value;
+        let snf = document.getElementById('milk_snf').value;
+        let rate = document.getElementById('milk_rate').value;
+        let total = document.getElementById('milk_total').value;
+
+        if(!liters || !fat || !snf || !rate) {
+            alert("कृपया सर्व आवश्यक माहिती भरा.");
+            return;
+        }
+
+        let saveBtn = document.getElementById("save_btn_milk");
+        let originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
+        saveBtn.disabled = true;
+
+        let newRecord = {
+            id: Date.now(),
+            date: date,
+            shift: shift,
+            animalId: animalId,
+            animalName: animalNameText,
+            liters: parseFloat(liters),
+            fat: parseFloat(fat),
+            snf: parseFloat(snf),
+            rate: parseFloat(rate),
+            total: parseFloat(total)
+        };
+
+        // 1. Save locally
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        records.unshift(newRecord);
+        localStorage.setItem('milk_history', JSON.stringify(records));
+
+        // 2. 🔥 Save to Firebase Live Database 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        
+        let firebaseData = {
+            ...newRecord,
+            farmerName: fName,
+            farmerMobile: fMob,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("milk_records").add(firebaseData)
+        .then(() => {
+            alert("✅ दूध संकलनाची नोंद यशस्वीरित्या सेव्ह झाली!");
+        })
+        .catch(err => {
+            console.error("Firebase save error: ", err);
+            alert("✅ तुमची नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे.");
+        })
+        .finally(() => {
+            // Reset Inputs
+            document.getElementById('milk_liters').value = '';
+            document.getElementById('milk_fat').value = '';
+            document.getElementById('milk_snf').value = '';
+            document.getElementById('milk_rate').value = '';
+            document.getElementById('milk_total').value = '';
+            
+            // Hide Ad container on reset
+            document.getElementById('dynamic_ad_container').style.display = "none";
+
+            preview.style.display = "none";
+            placeholder.style.display = "block";
+            btnRetake.style.display = "none";
+            btnStartCam.style.display = "block";
+            btnMagic.disabled = true;
+            btnMagic.style.opacity = "0.6";
+            stopCamera();
+
+            loadHistory();
+            
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+
+    function loadHistory() {
+        let container = document.getElementById('history_container');
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        
+        if (records.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#888; font-size:13px;'>कोणतीही नोंद आढळली नाही.</p>";
+            return;
+        }
+
+        let html = "";
+        let displayRecords = records.slice(0, 5);
+        
+        displayRecords.forEach(rec => {
+            let d = new Date(rec.date);
+            let dateStr = `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
+            let shortAnimalName = rec.animalId === 'all' ? 'एकत्रित दूध' : rec.animalName.split('(')[0];
+
+            html += `
+            <div class="history-card">
+                <div>
+                    <div class="hist-date">📅 ${dateStr} (${rec.shift})</div>
+                    <div class="hist-details">🥛 ${rec.liters} लिटर | <span style="font-size:11px; color:#1976d2;">${shortAnimalName}</span></div>
+                    <div style="font-size:11px; color:#666; margin-top:3px;">फॅट: ${rec.fat} | दर: ₹${rec.rate}</div>
+                </div>
+                <div class="hist-amount">₹${rec.total}</div>
+            </div>`;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadAnimalsIntoDropdown();
+        loadHistory();
+    });
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

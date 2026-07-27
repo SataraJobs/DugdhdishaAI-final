@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - नवीन पशु नोंदणी</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .form-section {
+            background: #eef2f5;
+            padding: 20px;
+            margin: 10px 20px 20px;
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .form-section label {
+            display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px;
+        }
+        input, select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+            background: #f9f9f9; box-sizing: border-box; font-family: inherit; font-size: 14px; margin-bottom: 15px;
+        }
+
+        /* Teeth Selection Cards */
+        .teeth-container {
+            display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px 20px 5px; scrollbar-width: none;
+        }
+        .teeth-container::-webkit-scrollbar { display: none; }
+        .teeth-card {
+            min-width: 140px; background: #eef2f5; border-radius: 16px; padding: 15px 10px;
+            text-align: center; box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .teeth-card img {
+            width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px; border-radius: 8px;
+        }
+        .teeth-card h4 { margin: 0; font-size: 13px; color: #333; }
+        .teeth-card p { margin: 5px 0 0; font-size: 10px; color: #666; font-weight: bold; }
+        .teeth-card.active {
+            border-color: #1976d2; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1), inset -4px -4px 8px rgba(255,255,255,0.8);
+        }
+
+        /* Quarantine Alert Box */
+        .quarantine-box {
+            background: #fff; margin: 0 20px 20px; padding: 20px; border-radius: 16px;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            display: none; border-left: 5px solid #d32f2f;
+        }
+        .quarantine-box h3 { margin: 0 0 10px; font-size: 16px; color: #d32f2f; }
+        .timer-display {
+            background: #ffebee; color: #c62828; padding: 15px; border-radius: 12px;
+            font-size: 24px; font-weight: 900; text-align: center; margin: 15px 0; border: 2px dashed #ef9a9a;
+        }
+        .rules-list { font-size: 13px; color: #444; line-height: 1.6; padding-left: 15px; }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; }
+        
+        .result-text { font-size: 14px; color: #1976d2; font-weight: bold; margin-top: -5px; margin-bottom: 15px; display: none; }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1>नवीन पशु नोंदणी 🐄</h1>
+            <p>वय कॅल्क्युलेटर आणि अलगीकरण (Quarantine)</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin-top:20px; font-weight:bold; color:#2e7d32;">१. प्राथमिक माहिती</div>
+    <div class="form-section">
+        <label>जनावराचे नाव / टॅग नंबर: <span style="color:red;">*</span></label>
+        <input type="text" id="animal_name" placeholder="उदा. नवीन गाय १ किंवा टॅग 4021">
+        
+        <label>जनावराचा प्रकार (Category):</label>
+        <select id="animal_type" onchange="toggleCalfOptions()">
+            <option value="cow">🐄 गाय</option>
+            <option value="buffalo">🐃 म्हैस</option>
+            <option value="calf">🍼 वासरू</option>
+        </select>
+
+        <label>जात (Breed):</label>
+        <input type="text" id="animal_breed" placeholder="उदा. जर्सी, एच.एफ, मुऱ्हा, पंढरपुरी">
+
+        <!-- 🔥 NEW PARAMETERS -->
+        <label>सध्याचे वजन (Kg):</label>
+        <input type="number" id="animal_weight" placeholder="उदा. 400">
+        
+        <label>लसीकरण पूर्ण आहे का?</label>
+        <select id="animal_vaccine_status">
+            <option value="no">नाही</option>
+            <option value="yes">होय</option>
+        </select>
+        <!-- 🔥 END NEW PARAMETERS -->
+
+        <div id="calf_date_box" style="display: none; background:#fff8e1; padding:10px; border-radius:8px; border:1px dashed #ff9800; margin-bottom:15px;">
+            <label style="color:#e65100;">वासराची जन्मतारीख:</label>
+            <input type="date" id="calf_birth_date" style="margin-bottom:5px;">
+            <p style="font-size:10px; color:#555; margin:0;">*६ महिन्यांनंतर (१८० दिवस) हे वासरू आपोआप मोठ्या जनावरांच्या यादीत (गाय/म्हैस) जोडले जाईल.</p>
+        </div>
+
+        <label>ही गाय/म्हैस नवीन विकत आणली आहे का?</label>
+        <select id="is_new_purchase" onchange="toggleQuarantine()">
+            <option value="no">नाही (माझ्याच गोठ्यातील आहे)</option>
+            <option value="yes">होय (नवीन खरेदी केली आहे)</option>
+        </select>
+    </div>
+
+    <div class="category-title" style="font-weight:bold; color:#2e7d32;">२. दात तपासा (वय कॅल्क्युलेटर)</div>
+    <p style="margin: 0 20px 10px; font-size: 11px; color: #666;">जनावराचे तोंड उघडून खालच्या जबड्यातील समोरील दात (पटाशीचे दात) तपासा आणि खालीलपैकी योग्य चित्र निवडा:</p>
+    
+    <div class="teeth-container">
+        <div class="teeth-card" onclick="calculateAge(this, 1)">
+            <div style="font-size: 40px; margin-bottom: 10px;">🦷</div>
+            <h4>दुधाचे दात</h4>
+            <p>सर्व दात लहान व समान</p>
+        </div>
+        <div class="teeth-card" onclick="calculateAge(this, 2)">
+            <div style="font-size: 40px; margin-bottom: 10px;">🦷</div>
+            <h4>२ कायम दात</h4>
+            <p>मधले २ दात मोठे</p>
+        </div>
+        <div class="teeth-card" onclick="calculateAge(this, 3)">
+            <div style="font-size: 40px; margin-bottom: 10px;">🦷</div>
+            <h4>४ कायम दात</h4>
+            <p>मधले ४ दात मोठे</p>
+        </div>
+        <div class="teeth-card" onclick="calculateAge(this, 4)">
+            <div style="font-size: 40px; margin-bottom: 10px;">🦷</div>
+            <h4>८ कायम दात</h4>
+            <p>सर्व ८ दात मोठे (पूर्ण)</p>
+        </div>
+        <div class="teeth-card" onclick="calculateAge(this, 5)">
+            <div style="font-size: 40px; margin-bottom: 10px;">🦷</div>
+            <h4>घासलेले दात</h4>
+            <p>दात झिजलेले/सपाट</p>
+        </div>
+    </div>
+    
+    <div style="padding: 0 20px;">
+        <div id="age_result" class="result-text">वय येथे दिसेल...</div>
+        <!-- 🔥 Dynamic Ad Container -->
+        <div id="dynamic_ad_container"></div>
+    </div>
+
+    <div class="quarantine-box" id="quarantine_section">
+        <h3>🚨 अलगीकरण (Quarantine) टायमर</h3>
+        <p style="font-size: 12px; color: #666; margin: 0;">नवीन जनावरामुळे गोठ्यात आजार पसरू नये म्हणून AI सुरक्षा प्रोटोकॉल:</p>
+        
+        <div class="timer-display" id="timer_display">
+            २१ दिवस बाकी
+        </div>
+
+        <ul class="rules-list">
+            <li>नवीन आणलेल्या जनावरांचा मूळ कळपातील जनावरांशी कमीतकमी तीन आठवडे (२१ दिवस) संपर्क येणार नाही या पद्धतीने त्यांना वेगळे ठेवावे.</li>
+            <li>जुन्या कळपातील जनावरांचे दूध काढल्यानंतरच नविन जनावरांचे दूध काढावे व ते वेगळेच ठेवावे.</li>
+        </ul>
+        
+        <button class="btn-primary" style="background: linear-gradient(145deg, #d32f2f, #b71c1c); box-shadow: 0 4px 0 #7f0000;" onclick="startTimer()">⏳ टायमर सुरू करा</button>
+    </div>
+
+    <div style="padding: 0 20px 20px;">
+        <!-- Changed innerHTML of button to show processing state -->
+        <button id="save_btn" class="btn-primary" onclick="saveAnimalData()">💾 जनावराची माहिती सेव्ह करा</button>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let calculatedAge = "";
+
+    function toggleCalfOptions() {
+        let type = document.getElementById('animal_type').value;
+        if(type === 'calf') {
+            document.getElementById('calf_date_box').style.display = "block";
+        } else {
+            document.getElementById('calf_date_box').style.display = "none";
+        }
+    }
+
+    function toggleQuarantine() {
+        let isNew = document.getElementById('is_new_purchase').value;
+        let qBox = document.getElementById('quarantine_section');
+        if(isNew === 'yes') {
+            qBox.style.display = "block";
+            qBox.scrollIntoView({behavior: "smooth"});
+        } else {
+            qBox.style.display = "none";
+        }
+    }
+
+    function calculateAge(card, teethStage) {
+        let cards = document.getElementsByClassName('teeth-card');
+        for(let i=0; i<cards.length; i++) {
+            cards[i].classList.remove('active');
+        }
+        card.classList.add('active');
+
+        let result = document.getElementById('age_result');
+        result.style.display = "block";
+
+        let adBox = document.getElementById('dynamic_ad_container');
+        let adHtml = "";
+
+        if(teethStage === 1) {
+            calculatedAge = "० ते २ वर्षे";
+            result.innerHTML = "✅ <b>AI अंदाज:</b> या जनावराचे वय <b>० ते २ वर्षे</b> (२४ महिन्यांच्या आत) आहे.";
+            adHtml = `<div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🍼 वासरू संगोपन टीप</h4>
+                <p>लहान वयातच योग्य पोषण मिळण्यासाठी <b>काफ स्टार्टर (Calf Starter)</b> वापरा. वाढ वेगाने होईल!</p>
+                <span class="sponsor-tag">Sponsored by Godrej Agrovet</span>
+            </div>`;
+        } else if(teethStage === 2) {
+            calculatedAge = "२.५ वर्षे";
+            result.innerHTML = "✅ <b>AI अंदाज:</b> या जनावराचे वय साधारण <b>२.५ वर्षे (३० महिने)</b> आहे.";
+            adHtml = `<div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🧬 प्रजनन तयारी</h4>
+                <p>पहिली वेत येण्यापूर्वी <b>मिनरल मिक्सचर</b> सुरू करा, जेणेकरून प्रजननात अडचण येणार नाही.</p>
+                <span class="sponsor-tag">Sponsored by Intas Vet</span>
+            </div>`;
+        } else if(teethStage === 5) {
+            calculatedAge = "६+ वर्षे";
+            result.innerHTML = "⚠️ <b>AI अंदाज:</b> या जनावराचे वय <b>६ वर्षांपेक्षा जास्त</b> आहे (वृद्ध जनावर).";
+            adHtml = `<div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>💊 वृद्ध जनावरांसाठी औषध</h4>
+                <p>ज्येष्ठ जनावरांच्या हाडांच्या मजबुतीसाठी <b>कॅल्शियम लिक्विड</b> आणि <b>लिव्हर टॉनिक</b> दर महिन्याला द्या.</p>
+                <span class="sponsor-tag">Sponsored by Virbac India</span>
+            </div>`;
+        } else {
+            result.innerHTML = "✅ <b>AI अंदाज:</b> या जनावराचे वय प्रौढ आहे.";
+        }
+        
+        adBox.innerHTML = adHtml;
+    }
+
+    function startTimer() {
+        let display = document.getElementById('timer_display');
+        display.innerHTML = "🟢 टायमर सुरू (२१ दिवस बाकी)";
+        display.style.background = "#e8f5e9";
+        display.style.color = "#2e7d32";
+        display.style.borderColor = "#81c784";
+        alert("२१ दिवसांचा अलगीकरण टायमर सुरू झाला आहे. ॲप तुम्हाला रोज रिमाइंडर देईल.");
+    }
+
+    function saveAnimalData() {
+        let nameTag = document.getElementById('animal_name').value.trim();
+        let type = document.getElementById('animal_type').value;
+        let breed = document.getElementById('animal_breed').value.trim();
+        let isNew = document.getElementById('is_new_purchase').value;
+        let calfDate = document.getElementById('calf_birth_date').value;
+        
+        let weight = document.getElementById('animal_weight').value;
+        let vaccineStatus = document.getElementById('animal_vaccine_status').value;
+
+        if(!nameTag) {
+            alert('कृपया जनावराचे नाव किंवा टॅग नंबर नक्की टाका!');
+            return;
+        }
+
+        let saveBtn = document.getElementById('save_btn');
+        let originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
+        saveBtn.disabled = true;
+
+        let uniqueId = Date.now();
+        let storageKey = (type === 'calf' ? "calf_" : "cow_") + uniqueId;
+        let defaultDate = new Date().toISOString().split('T')[0];
+
+        // शेतकरी माहिती (Current User)
+        let farmerName = localStorage.getItem("current_user_name") || "अज्ञात शेतकरी";
+        let farmerMobile = localStorage.getItem("current_user_mobile") || "अज्ञात नंबर";
+
+        let animalData = {
+            id: uniqueId,
+            tag: nameTag,
+            type: type,
+            breed: breed || "अज्ञात",
+            ageEstimation: calculatedAge || "नोंदवली नाही",
+            isNewPurchase: isNew,
+            weight: weight || "0",
+            vaccineStatus: vaccineStatus,
+            birthDate: (type === 'calf' && calfDate) ? calfDate : defaultDate,
+            registrationDate: defaultDate,
+            farmerName: farmerName,
+            farmerMobile: farmerMobile,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // १. लोकल स्टोरेजमध्ये सेव्ह करा (Faster offline access)
+        localStorage.setItem(storageKey, JSON.stringify(animalData));
+
+        // २. Firebase मध्ये 'farmer_animals' या कलेक्शनमध्ये सेव्ह करा (Live tracking for Admin)
+        db.collection("farmer_animals").add(animalData)
+        .then(() => {
+            alert('✅ जनावराची नोंदणी यशस्वी झाली!');
+            window.location.href = 'cattle_profile.html';
+        })
+        .catch((error) => {
+            console.error("Firebase Error: ", error);
+            // इंटरनेट नसले तरी ॲप अडकून पडू नये म्हणून लोकल सेव्ह झाल्यावर पुढे जाऊ द्या
+            alert('✅ जनावराची नोंदणी (ऑफलाईन) यशस्वी झाली!');
+            window.location.href = 'cattle_profile.html';
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

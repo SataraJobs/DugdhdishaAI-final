@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - रिपोर्ट्स व आकडेवारी</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* 3D specific additions for Reports */
+        .filter-section {
+            background: #eef2f5;
+            padding: 20px;
+            margin: 10px 20px 20px;
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .filter-row div { flex: 1; }
+        .filter-section label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        /* 3D Graph Area */
+        .graph-container {
+            background: #eef2f5;
+            margin: 0 20px 20px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            display: none;
+        }
+        .graph-title {
+            font-size: 15px;
+            color: #1b5e20;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Simple CSS Bar Chart */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            padding: 10px 0;
+            border-bottom: 2px solid #ccc;
+            border-left: 2px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .bar {
+            width: 30px;
+            background: linear-gradient(to top, #4caf50, #81c784);
+            border-radius: 4px 4px 0 0;
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.4), 2px 0 4px rgba(0,0,0,0.1);
+            position: relative;
+            transition: height 0.5s ease;
+        }
+        .bar span {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .bar-labels {
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* Export Buttons */
+        .export-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn-export {
+            background: #eef2f5;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 5px 5px 10px rgba(0,0,0,0.08), -5px -5px 10px rgba(255,255,255,1);
+            transition: all 0.2s;
+        }
+        .btn-export:active {
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.08), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .btn-pdf { color: #d32f2f; }
+        .btn-excel { color: #2e7d32; }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.03);
+        }
+        .stat-item { text-align: center; }
+        .stat-item h4 { margin: 0; font-size: 11px; color: #777; }
+        .stat-item h2 { margin: 5px 0 0; font-size: 16px; color: #333; }
+        
+        .btn-calculate {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-calculate:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px; background: #1976d2; padding: 20px; color: white;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="margin: 0;">रिपोर्ट्स व आकडेवारी 📊</h1>
+            <p style="margin: 5px 0 0; color: #bbdefb;">PDF / Excel डाउनलोड व बिझनेस ग्राफ</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">अहवालाचा प्रकार निवडा</div>
+    <div class="filter-section">
+        <label>कशाचा रिपोर्ट हवा आहे?</label>
+        <select id="report_type" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; box-sizing: border-box; font-family: inherit; font-size: 14px; margin-bottom: 15px;">
+            <option value="milk">दूध उत्पादन आणि विक्री (Milk Production)</option>
+            <option value="finance">आर्थिक नफा-तोटा (Financial)</option>
+            <option value="feed">खाद्याचा खर्च (Feed Costs)</option>
+            <option value="health">लसीकरण व वैद्यकीय (Health/Medical)</option>
+        </select>
+
+        <div class="filter-row">
+            <div>
+                <label>या तारखेपासून:</label>
+                <input type="date" id="start_date" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: #f9f9f9; box-sizing: border-box;">
+            </div>
+            <div>
+                <label>या तारखेपर्यंत:</label>
+                <input type="date" id="end_date" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: #f9f9f9; box-sizing: border-box;">
+            </div>
+        </div>
+
+        <button class="btn-calculate" onclick="generateReport()">अहवाल तयार करा</button>
+    </div>
+
+    <!-- Generated Report View -->
+    <div class="graph-container" id="reportView">
+        
+        <div class="graph-title" id="chart_title">मागील ७ दिवसांचे दूध उत्पादन (लिटर)</div>
+        
+        <!-- Summary Data -->
+        <div class="summary-stats">
+            <div class="stat-item">
+                <h4>एकूण लिटर</h4>
+                <h2 id="total_val1">८४० L</h2>
+            </div>
+            <div class="stat-item">
+                <h4>सरासरी दर</h4>
+                <h2 id="total_val2">₹ ३४.५</h2>
+            </div>
+            <div class="stat-item">
+                <h4>एकूण रक्कम</h4>
+                <h2 id="total_val3" style="color: #1b5e20;">₹ २८,९८०</h2>
+            </div>
+        </div>
+
+        <!-- CSS Bar Chart (Simulation) -->
+        <div class="bar-chart">
+            <div class="bar" style="height: 40%;"><span>110</span></div>
+            <div class="bar" style="height: 50%;"><span>120</span></div>
+            <div class="bar" style="height: 45%;"><span>115</span></div>
+            <div class="bar" style="height: 70%;"><span>135</span></div>
+            <div class="bar" style="height: 60%;"><span>125</span></div>
+            <div class="bar" style="height: 50%;"><span>120</span></div>
+            <div class="bar" style="height: 45%;"><span>115</span></div>
+        </div>
+        <div class="bar-labels">
+            <div>सोम</div><div>मंगळ</div><div>बुध</div><div>गुरू</div><div>शुक्र</div><div>शनी</div><div>रवी</div>
+        </div>
+
+        <!-- Export Action Buttons -->
+        <div class="export-grid">
+            <button class="btn-export btn-pdf" onclick="downloadFile('PDF')">
+                📄 PDF डाऊनलोड
+            </button>
+            <button class="btn-export btn-excel" onclick="downloadFile('Excel')">
+                📊 Excel डाऊनलोड
+            </button>
+        </div>
+        <button class="btn-export" style="width: 100%; margin-top: 15px; color: #1976d2;" onclick="shareReport()">
+            🔗 WhatsApp वर शेअर करा
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // Set default dates (Last 7 days)
+    let today = new Date();
+    let lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+    
+    document.getElementById('end_date').valueAsDate = today;
+    document.getElementById('start_date').valueAsDate = lastWeek;
+
+    function generateReport() {
+        let type = document.getElementById('report_type').value;
+        let start = document.getElementById('start_date').value;
+        let end = document.getElementById('end_date').value;
+
+        if(!start || !end) {
+            alert("कृपया सुरुवातीची आणि शेवटची तारीख निवडा.");
+            return;
+        }
+
+        let title = document.getElementById('chart_title');
+        
+        // Update Chart Title based on selection
+        if(type === 'milk') title.innerText = "दूध उत्पादन आणि विक्री अहवाल";
+        else if(type === 'finance') title.innerText = "एकूण गोठा आर्थिक नफा-तोटा";
+        else if(type === 'feed') title.innerText = "पशुखाद्य आणि चारा खर्च";
+        else if(type === 'health') title.innerText = "लसीकरण आणि उपचार रेकॉर्ड";
+
+        // Show the chart area
+        let view = document.getElementById('reportView');
+        view.style.display = "block";
+        
+        // Scroll to chart smoothly
+        view.scrollIntoView({behavior: "smooth", block: "start"});
+    }
+
+    function downloadFile(format) {
+        let type = document.getElementById('report_type').options[document.getElementById('report_type').selectedIndex].text;
+        alert(`तुमचा '${type}' चा अहवाल ${format} फॉरमॅटमध्ये जनरेट होत आहे. फाईल लवकरच तुमच्या मोबाईलमध्ये सेव्ह होईल.`);
+    }
+
+    function shareReport() {
+        alert("रिपोर्टची लिंक कॉपी केली आहे. आता तुम्ही ती WhatsApp वर पाठवू शकता!");
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

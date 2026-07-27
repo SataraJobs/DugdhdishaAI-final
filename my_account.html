@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - माझे खाते</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 85px !important;}
+        .app-container { max-width: 600px; margin: 0 auto; background: #f4f7f6; min-height: 100vh; padding-bottom: 30px;}
+        
+        /* Navbar */
+        .top-navbar { background: linear-gradient(145deg, #1976d2, #1565c0); padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3);}
+        .top-navbar h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;}
+        .back-btn { background: white; color: #1565c0; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+
+        /* Profile Card */
+        .profile-card { background: white; margin: 20px 15px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; border-left: 5px solid #1565c0;}
+        .profile-avatar { width: 60px; height: 60px; background: #e3f2fd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 2px solid #1565c0;}
+        .profile-info h3 { margin: 0 0 5px; color: #333; font-size: 18px;}
+        .profile-info p { margin: 0; color: #666; font-size: 12px;}
+
+        /* Active Plan Banner */
+        .active-plan-banner { margin: 0 15px 20px; padding: 15px; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+        .plan-none { background: #ffebee; color: #c62828; border: 1px dashed #ef9a9a; }
+        .plan-pending { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+        .plan-active { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+
+        .section-title { margin: 20px 15px 10px; font-size: 16px; color: #333; font-weight: 900; border-left: 4px solid #ff9800; padding-left: 10px;}
+
+        /* Pricing Grids */
+        .pricing-grid { display: flex; flex-direction: column; gap: 15px; padding: 0 15px;}
+        
+        .price-card { background: white; border-radius: 12px; padding: 15px 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; border: 1px solid #eee; overflow: hidden; display: flex; justify-content: space-between; align-items: center;}
+        .price-card.premium { border: 2px solid #ff9800; background: linear-gradient(145deg, #ffffff, #fff8e1);}
+        
+        .plan-details { flex: 1.2; padding-right: 15px; }
+        .plan-name { font-size: 16px; font-weight: 900; color: #333; margin: 0 0 8px;}
+        .plan-desc { font-size: 12px; color: #555; margin: 0 0 10px; line-height: 1.4;}
+        .plan-benefit { font-size: 11px; color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; display: inline-block;}
+        
+        .plan-price-action { text-align: right; flex: 0.8; min-width: 100px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+        
+        /* 🔥 UPDATED BIG PRICE STYLES 🔥 */
+        .plan-price { font-size: 32px; font-weight: 900; color: #e65100; margin: 0 0 2px; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); line-height: 1.1;}
+        .plan-price-symbol { font-size: 18px; vertical-align: top; margin-right: 2px;}
+        .plan-duration { font-size: 12px; color: #666; font-weight: bold; margin-bottom: 12px; display: block;}
+        
+        .buy-btn { background: #1976d2; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 900; font-size: 13px; cursor: pointer; width: 100%; box-shadow: 0 3px 6px rgba(25,118,210,0.3); transition: 0.2s;}
+        .buy-btn.gold { background: #ff9800; box-shadow: 0 3px 6px rgba(255,152,0,0.3); color: #fff;}
+        .buy-btn:active { transform: scale(0.95);}
+
+        /* Small Cards for Pay-Per-Use */
+        .ppu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px;}
+        .ppu-card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .ppu-card h4 { margin: 0 0 5px; font-size: 13px; color: #1565c0; font-weight: 900;}
+        .ppu-card p { margin: 0 0 10px; font-size: 11px; color: #666;}
+        
+        /* 🔥 UPDATED PPU PRICE STYLES 🔥 */
+        .ppu-card .price { font-size: 24px; font-weight: 900; color: #d32f2f; margin-bottom: 12px; text-shadow: 1px 1px 0px rgba(0,0,0,0.05);}
+        .ppu-card .price-symbol { font-size: 14px; vertical-align: top; margin-right: 2px;}
+
+        /* UPI Payment Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; }
+        .qr-placeholder { background: #f0f4f8; border: 2px dashed #b0bec5; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; }
+        .field { text-align: left; margin-bottom: 15px; }
+        .field label { display: block; font-size: 11px; font-weight: bold; color: #444; margin-bottom: 5px; }
+        .field input { width: 100%; padding: 10px; border: 2px solid #ff9800; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+        .btn-confirm { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+
+        /* 🔥 BOTTOM NAVIGATION BAR STYLES 🔥 */
+        .bottom-nav-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #ffffff; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); display: flex; justify-content: space-around; align-items: center; padding: 8px 0; z-index: 1000; border-radius: 15px 15px 0 0; }
+        .b-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #757575; transition: 0.3s ease; padding: 5px 10px; border-radius: 10px; }
+        .b-nav-icon { font-size: 22px; margin-bottom: 2px; filter: grayscale(100%); transition: 0.3s; }
+        .b-nav-text { font-size: 10px; font-weight: 800; }
+        .b-nav-item.active { background: #e8f5e9; color: #1b5e20; }
+        .b-nav-item.active .b-nav-icon { filter: grayscale(0%); transform: scale(1.15); }
+
+        /* Loader Overlay for Auto-Paytm */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body onload="initAccount()">
+
+<div class="app-container">
+    
+    <!-- Navbar -->
+    <div class="top-navbar">
+        <h2>👤 माझे खाते (My Account)</h2>
+        <button class="back-btn" onclick="window.location.href='index.html'">⬅️ डॅशबोर्डवर जा</button>
+    </div>
+
+    <!-- Profile -->
+    <div class="profile-card">
+        <div class="profile-avatar">👨‍🌾</div>
+        <div class="profile-info">
+            <h3 id="profile_name">शेतकरी मित्र</h3>
+            <p id="profile_mobile">+91 9876543210</p>
+        </div>
+    </div>
+
+    <!-- Active Plan Status -->
+    <div id="active_plan_container" class="active-plan-banner plan-none">
+        <div>
+            <strong style="display:block; margin-bottom:2px;" id="status_title">सध्याचा प्लॅन: फ्री (Basic)</strong>
+            <span id="status_desc" style="font-size: 11px; color:#c62828;">तुमचा कोणताही प्रीमियम प्लॅन ॲक्टिव्ह नाही.</span>
+        </div>
+        <div id="status_icon" style="font-size: 24px;">⚠️</div>
+    </div>
+
+    <!-- Value Packs (Monthly) -->
+    <div class="section-title">💎 मंथली सबस्क्रिप्शन (Value Packs)</div>
+    <div class="pricing-grid">
+        
+        <!-- 🔥 Platinum Pack (6 Months) 🔥 -->
+        <div class="price-card premium" style="border-color: #8e24aa; background: linear-gradient(145deg, #ffffff, #f3e5f5);">
+            <div style="position: absolute; top:0; left:0; background:#8e24aa; color:white; font-size:9px; padding:3px 10px; border-radius: 0 0 10px 0; font-weight:bold;">10% OFF</div>
+            <div class="plan-details" style="margin-top: 15px;">
+                <h3 class="plan-name" style="color: #6a1b9a;">प्लॅटिनम (६ महिने)</h3>
+                <p class="plan-desc">✔️ <b>हवामान, फोटो ॲनालायझर</b><br>✔️ डॉक्टर कॉल व ॲडव्हान्स रेशन<br>✔️ ६ महिने निवांत सेवा!</p>
+                <div class="plan-benefit" style="background:#e1bee7; color:#4a148c;">फायदा: दीर्घकालीन बचत!</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price" style="color: #8e24aa;"><span class="plan-price-symbol">₹</span><span id="disp_plat6">१०७४</span></div>
+                <span class="plan-duration">/ ६ महिने</span>
+                <button id="btn_plat6" class="buy-btn" style="background: #8e24aa;" onclick="openPayment('प्लॅटिनम (६ महिने)', document.getElementById('disp_plat6').innerText, '6Months')">खरेदी करा</button>
+            </div>
+        </div>
+
+        <!-- 🔥 Platinum Pack (1 Month) 🔥 -->
+        <div class="price-card" style="border-color: #8e24aa;">
+            <div class="plan-details">
+                <h3 class="plan-name" style="color: #6a1b9a;">प्लॅटिनम (१ महिना)</h3>
+                <p class="plan-desc">✔️ <b>हवामान व फोटो ॲनालायझर</b><br>✔️ डॉक्टर कॉल व ॲडव्हान्स रेशन<br>✔️ सर्व प्रीमियम सेवा</p>
+                <div class="plan-benefit" style="background:#e1bee7; color:#4a148c;">All-in-One Pack</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price" style="color: #8e24aa;"><span class="plan-price-symbol">₹</span><span id="disp_plat1">१९९</span></div>
+                <span class="plan-duration">/ १ महिना</span>
+                <button id="btn_plat1" class="buy-btn" style="background: #8e24aa; color: white;" onclick="openPayment('प्लॅटिनम (१ महिना)', document.getElementById('disp_plat1').innerText, 'Monthly')">खरेदी करा</button>
+            </div>
+        </div>
+
+        <!-- Gold Pack -->
+        <div class="price-card premium">
+            <div style="position: absolute; top:0; left:0; background:#ff9800; color:white; font-size:9px; padding:3px 10px; border-radius: 0 0 10px 0; font-weight:bold;">सर्वाधिक पसंती</div>
+            <div class="plan-details" style="margin-top: 15px;">
+                <h3 class="plan-name">दिशा प्राईम / गोल्ड</h3>
+                <p class="plan-desc">✔️ ॲडव्हान्स रेशन बॅलन्सर<br>✔️ पशु बाजारात VIP जाहिरात<br>✔️ <b>कंपनी डॉक्टरला थेट कॉल्स</b></p>
+                <div class="plan-benefit">फायदा: ₹३०० चे काम फक्त ₹१४९ मध्ये!</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price"><span class="plan-price-symbol">₹</span><span id="disp_gold">१४९</span></div>
+                <span class="plan-duration">/ १ महिना</span>
+                <button id="btn_gold" class="buy-btn gold" onclick="openPayment('दिशा प्राईम (Gold)', document.getElementById('disp_gold').innerText, 'Monthly')">खरेदी करा</button>
+            </div>
+        </div>
+
+        <!-- Silver Pack -->
+        <div class="price-card">
+            <div class="plan-details">
+                <h3 class="plan-name" style="color: #1565c0;">सिल्व्हर पॅक</h3>
+                <p class="plan-desc">✔️ प्रो रेशन बॅलन्सर (महिनाभर)<br>✔️ पशु बाजारात VIP जाहिरात</p>
+                <div class="plan-benefit" style="background:#e3f2fd; color:#1565c0;">फायदा: ₹१५० चे काम फक्त ₹९९ मध्ये!</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price" style="color: #1565c0;"><span class="plan-price-symbol">₹</span><span id="disp_silver">९९</span></div>
+                <span class="plan-duration">/ १ महिना</span>
+                <button id="btn_silver" class="buy-btn" onclick="openPayment('सिल्व्हर पॅक', document.getElementById('disp_silver').innerText, 'Monthly')">खरेदी करा</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Pay Per Use Options -->
+    <div class="section-title" style="border-left-color: #d32f2f;">⏳ पे-पर-युज (फक्त एकदा वापरण्यासाठी)</div>
+    <div class="ppu-grid">
+        <div class="ppu-card">
+            <h4>प्रो रेशन बॅलन्सर</h4>
+            <p>२४ तासांसाठी ॲक्सेस</p>
+            <div class="price"><span class="price-symbol">₹</span><span id="disp_pro">२९</span></div>
+            <button id="btn_pro" class="buy-btn" style="background: white; color: #1976d2; border: 2px solid #1976d2;" onclick="openPayment('प्रो रेशन बॅलन्सर (24h)', document.getElementById('disp_pro').innerText, '24h')">पे करा</button>
+        </div>
+        <div class="ppu-card">
+            <h4>ॲडव्हान्स बॅलन्सर</h4>
+            <p>२४ तासांसाठी ॲक्सेस</p>
+            <div class="price"><span class="price-symbol">₹</span><span id="disp_adv">४९</span></div>
+            <button id="btn_adv" class="buy-btn" style="background: white; color: #1976d2; border: 2px solid #1976d2;" onclick="openPayment('ॲडव्हान्स बॅलन्सर (24h)', document.getElementById('disp_adv').innerText, '24h')">पे करा</button>
+        </div>
+        <div class="ppu-card" style="grid-column: span 2; display: flex; justify-content: space-between; align-items: center; border-color:#ffcc80; background:#fff3e0;">
+            <div style="text-align: left; flex:1;">
+                <h4 style="color: #e65100;">👨‍⚕️ कंपनी डॉक्टर कॉल</h4>
+                <p style="margin:0;">सकाळी १० ते ४ (१ दिवस व्हॅलिडिटी)</p>
+            </div>
+            <div style="text-align: right; flex:1;">
+                <div class="price" style="margin-bottom: 8px;"><span class="price-symbol">₹</span><span id="disp_doc">२५</span></div>
+                <button id="btn_doc" class="buy-btn gold" style="width: 100%; padding: 8px 15px;" onclick="openPayment('डॉक्टर कॉल (1 Day)', document.getElementById('disp_doc').innerText, '1Day')">पे करा</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🔥 SECURE PAYMENT MODAL 🔥 -->
+<div class="modal-overlay" id="payment_modal">
+    <div class="modal-box">
+        <h3 style="margin-top:0; color:#d32f2f; border-bottom:2px solid #eee; padding-bottom:10px;">सुरक्षित पेमेंट (UPI)</h3>
+        
+        <div class="qr-placeholder">
+            <div style="font-size: 30px; color: #1b5e20;">₹<span id="pay_amt_display">0</span></div>
+            <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाम: दुग्ध दिशा AI</div>
+            <div style="font-size:11px; color:#666;" id="payment_upi_id_display">UPI ID: 9579535290@kotak</div>
+            <div style="font-size:11px; color:#e65100; margin-top:5px; font-weight:bold;" id="pay_plan_name">Plan Name</div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <a href="#" id="direct_pay_btn" class="btn-upi-direct" onclick="triggerFarmerUPI()">📲 ॲपमधून थेट पे करा (GPay/PhonePe)</a>
+        </div>
+
+        <div class="field">
+            <label>पेमेंट झाल्यानंतर 12 अंकी UTR / Reference Number टाका *</label>
+            <input type="number" id="pay_utr" placeholder="येथे नंबर टाईप करा..." readonly>
+        </div>
+
+        <button class="btn-confirm" id="manual_confirm_btn" style="opacity: 0.5; pointer-events: none;" onclick="confirmFarmerPayment()">✅ पेमेंट कन्फर्म करा</button>
+        <button onclick="closePayment()" style="background: none; border: none; color: #555; margin-top: 10px; font-size: 12px; font-weight: bold; cursor: pointer;">✕ रद्द करा</button>
+    </div>
+</div>
+
+<!-- Loader Overlay for Auto-Paytm -->
+<div class="loader-overlay" id="loader">
+    <div class="spinner"></div>
+    <h3 style="margin:0;">कृपया थांबा...</h3>
+    <p style="font-size:12px; color:#aaa; text-align:center; padding:0 20px;">पेमेंट प्रोसेस होत आहे. ॲप बंद करू नका.</p>
+</div>
+
+<!-- 🔥 BOTTOM NAVIGATION BAR 🔥 -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item"> 
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item">
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item active"> <!-- Active for My Account Page -->
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let pendingPurchase = null;
+
+    function initAccount() {
+        let uName = localStorage.getItem("current_user_name") || "शेतकरी मित्र";
+        let uMob = localStorage.getItem("current_user_mobile") || "+91 9XXXX XXXX";
+        document.getElementById('profile_name').innerText = uName;
+        document.getElementById('profile_mobile').innerText = uMob;
+
+        loadDynamicPrices(); // Load Prices from Admin Dashboard
+        checkActivePlan(); // Strict Expiry Check
+    }
+
+    // --- 🔥 FETCH ADMIN PRICES 🔥 ---
+    function loadDynamicPrices() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        
+        let p_plat6 = adminPrices.m25_f_plat6 !== undefined ? adminPrices.m25_f_plat6 : 1074;
+        let p_plat1 = adminPrices.m25_f_plat1 !== undefined ? adminPrices.m25_f_plat1 : 199;
+        let p_gold = adminPrices.m25_f_gold !== undefined ? adminPrices.m25_f_gold : 149;
+        let p_silver = adminPrices.m25_f_silver !== undefined ? adminPrices.m25_f_silver : 99;
+        let p_adv = adminPrices.m25_f_adv !== undefined ? adminPrices.m25_f_adv : 49;
+        let p_pro = adminPrices.m25_f_pro !== undefined ? adminPrices.m25_f_pro : 29;
+        let p_doc = adminPrices.m25_f_doctor !== undefined ? adminPrices.m25_f_doctor : 25;
+
+        // Display updated prices
+        document.getElementById('disp_plat6').innerText = p_plat6;
+        document.getElementById('disp_plat1').innerText = p_plat1;
+        document.getElementById('disp_gold').innerText = p_gold;
+        document.getElementById('disp_silver').innerText = p_silver;
+        document.getElementById('disp_adv').innerText = p_adv;
+        document.getElementById('disp_pro').innerText = p_pro;
+        document.getElementById('disp_doc').innerText = p_doc;
+
+        // Bind updated prices to buttons
+        document.getElementById('btn_plat6').setAttribute('onclick', `openPayment('प्लॅटिनम (६ महिने)', ${p_plat6}, '6Months')`);
+        document.getElementById('btn_plat1').setAttribute('onclick', `openPayment('प्लॅटिनम (१ महिना)', ${p_plat1}, 'Monthly')`);
+        document.getElementById('btn_gold').setAttribute('onclick', `openPayment('दिशा प्राईम (Gold)', ${p_gold}, 'Monthly')`);
+        document.getElementById('btn_silver').setAttribute('onclick', `openPayment('सिल्व्हर पॅक', ${p_silver}, 'Monthly')`);
+        document.getElementById('btn_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स बॅलन्सर (24h)', ${p_adv}, '24h')`);
+        document.getElementById('btn_pro').setAttribute('onclick', `openPayment('प्रो रेशन बॅलन्सर (24h)', ${p_pro}, '24h')`);
+        document.getElementById('btn_doc').setAttribute('onclick', `openPayment('डॉक्टर कॉल (1 Day)', ${p_doc}, '1Day')`);
+    }
+
+    // --- 🔥 STRICT EXPIRY LOGIC CHECK 🔥 ---
+    function checkActivePlan() {
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        let pendingPlan = JSON.parse(localStorage.getItem('farmer_pending_plan'));
+        
+        let container = document.getElementById('active_plan_container');
+        let title = document.getElementById('status_title');
+        let desc = document.getElementById('status_desc');
+        let icon = document.getElementById('status_icon');
+
+        if(activePlan) {
+            let now = new Date();
+            let expiry = new Date(activePlan.expiryDate);
+            
+            if(now > expiry) {
+                // EXPIRY TRIGGERED
+                localStorage.removeItem('farmer_active_plan');
+                title.innerText = "प्लॅन एक्स्पायर झाला आहे ⚠️";
+                desc.innerText = "तुमची मुदत संपली आहे. कृपया खालीलपैकी नवीन प्लॅन खरेदी करा.";
+                container.className = "active-plan-banner plan-none";
+                icon.innerText = "⚠️";
+            } else {
+                // ACTIVE PLAN
+                title.innerText = "सध्याचा प्लॅन: " + activePlan.name;
+                let options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+                let expStr = expiry.toLocaleString('mr-IN', options);
+                desc.innerHTML = `हा प्लॅन <b style="color:#1b5e20;">${expStr}</b> पर्यंत वैध आहे.`;
+                container.className = "active-plan-banner plan-active";
+                icon.innerText = "✅";
+            }
+        } else if(pendingPlan) {
+            // PENDING ADMIN APPROVAL
+            title.innerText = "प्लॅन मंजुरीच्या प्रतीक्षेत आहे";
+            desc.innerText = `तुमची '${pendingPlan.name}' ची रिक्वेस्ट ॲडमिनकडे पेंडिंग आहे.`;
+            container.className = "active-plan-banner plan-pending";
+            icon.innerText = "⏳";
+        }
+    }
+
+    // --- 🔥 UPDATED: PAYTM AUTO ACTIVATION LOGIC 🔥 ---
+    function openPayment(planName, amount, type) {
+        let numAmount = parseFloat(amount);
+
+        // --- FREE PLAN (₹0) AUTO-ACTIVATION LOGIC ---
+        if(numAmount === 0) {
+            let now = new Date();
+            let expiryDate = new Date();
+            
+            if(type === '24h' || type === '1Day') {
+                expiryDate.setHours(expiryDate.getHours() + 24);
+            } else if(type === 'Monthly') {
+                expiryDate.setMonth(expiryDate.getMonth() + 1);
+            } else if(type === '6Months') {
+                expiryDate.setMonth(expiryDate.getMonth() + 6);
+            }
+
+            let activePlan = {
+                name: planName,
+                activatedOn: now.toISOString(),
+                expiryDate: expiryDate.toISOString()
+            };
+            
+            // Save instantly, skip Admin approval
+            localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+            localStorage.removeItem('farmer_pending_plan'); 
+            
+            alert(`🎉 अभिनंदन! '${planName}' सध्या मोफत (₹0) असल्याने तो त्वरित सुरू करण्यात आला आहे!`);
+            checkActivePlan();
+            return;
+        }
+
+        // --- AUTOMATIC UPI INTENT LOGIC FOR PAID PLANS ---
+        let userMobile = localStorage.getItem('current_user_mobile') || 'Guest';
+        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
+        let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
+        let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+
+        if(confirm(`तुम्ही '${planName}' हा प्लॅन निवडला आहे.\nएकूण रक्कम: ₹${numAmount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर प्लॅन आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
+            
+            let transactionNote = encodeURIComponent(`DD_${userMobile}_${planName}`);
+            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${numAmount}&cu=INR&tn=${transactionNote}`;
+
+            document.getElementById('loader').style.display = 'flex';
+            window.location.href = upiLink;
+
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
+                
+                if(confirmation) {
+                    let now = new Date();
+                    let expiryDate = new Date();
+                    let is8pmPassed = now.getHours() >= 20; 
+
+                    if(type === '24h' || type === '1Day') {
+                        if(is8pmPassed) {
+                            expiryDate.setDate(expiryDate.getDate() + 1); 
+                            expiryDate.setHours(8, 0, 0, 0); 
+                            expiryDate.setHours(expiryDate.getHours() + 24); 
+                            alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, तुमचा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
+                        } else {
+                            expiryDate.setHours(expiryDate.getHours() + 24);
+                        }
+                    } 
+                    else if(type === 'Monthly') {
+                        expiryDate.setMonth(expiryDate.getMonth() + 1);
+                    }
+                    else if(type === '6Months') {
+                        expiryDate.setMonth(expiryDate.getMonth() + 6);
+                    }
+
+                    let activePlan = {
+                        name: planName,
+                        activatedOn: now.toISOString(),
+                        expiryDate: expiryDate.toISOString(),
+                        status: "Active",
+                        paymentMethod: "Paytm Auto UPI"
+                    };
+
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+                    localStorage.removeItem('farmer_pending_plan');
+                    
+                    alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच चालू करण्यात आला आहे!`);
+                    
+                    checkActivePlan();
+                    window.scrollTo(0, 0);
+                } else {
+                    alert("पेमेंट कॅन्सल झाले किंवा पूर्ण होऊ शकले नाही.");
+                }
+            }, 8000);
+        }
+    }
+
+    // These functions are kept for structural integrity but are no longer the primary flow
+    function triggerFarmerUPI() {
+        let amt = pendingPurchase.amount;
+        let upiLink = `upi://pay?pa=9579535290@kotak&pn=Dugdha%20Disha%20AI&am=${amt}&cu=INR`;
+        window.location.href = upiLink;
+
+        let btn = document.getElementById('direct_pay_btn');
+        btn.innerHTML = "⏳ पेमेंट झाल्यानंतर खाली UTR टाका";
+        btn.style.background = "#f57c00";
+        btn.style.pointerEvents = "none";
+
+        let utrBox = document.getElementById('pay_utr');
+        utrBox.readOnly = false;
+        utrBox.style.background = "#fff3e0";
+        
+        let confirmBtn = document.getElementById('manual_confirm_btn');
+        confirmBtn.style.opacity = "1";
+        confirmBtn.style.pointerEvents = "auto";
+    }
+
+    function confirmFarmerPayment() {
+        let utr = document.getElementById('pay_utr').value.trim();
+        if(utr.length < 10) {
+            alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर मिळालेला वैध 12 अंकी UTR नंबर टाका!");
+            return;
+        }
+
+        let pendingReq = {
+            farmerName: localStorage.getItem("current_user_name") || "शेतकरी",
+            mobile: localStorage.getItem("current_user_mobile") || "Unknown",
+            name: pendingPurchase.name,
+            amount: pendingPurchase.amount,
+            type: pendingPurchase.type,
+            utr: utr,
+            requestTime: new Date().toLocaleString(),
+            status: "Pending"
+        };
+        
+        // 1. Save locally for UI update
+        localStorage.setItem('farmer_pending_plan', JSON.stringify(pendingReq));
+        
+        // 2. Also add to Admin's Master List locally
+        let adminList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+        adminList.push(pendingReq);
+        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(adminList));
+
+        // 3. 🔥 FIREBASE: Send Payment Request to Admin 🔥
+        db.collection("admin_pending_farmer_payments").add({
+            ...pendingReq,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            alert(`🎉 रिक्वेस्ट सबमिट झाली!\nतुमचा UTR: ${utr} ॲडमिनला पाठवला आहे.\n\nॲडमिनने मंजुरी (Approve) दिल्यावर तुमचा प्लॅन सुरू होईल.`);
+        })
+        .catch(err => {
+            console.error("Firebase Payment Logging Error: ", err);
+            alert(`🎉 रिक्वेस्ट सबमिट झाली!\nतुमचा UTR: ${utr} ॲडमिनला पाठवला आहे.\n\nॲडमिनने मंजुरी (Approve) दिल्यावर तुमचा प्लॅन सुरू होईल.`);
+        })
+        .finally(() => {
+            closePayment();
+            checkActivePlan();
+        });
+    }
+
+    function closePayment() {
+        document.getElementById('payment_modal').style.display = 'none';
+        document.getElementById('pay_utr').value = '';
+        document.getElementById('pay_utr').readOnly = true;
+        
+        let btn = document.getElementById('direct_pay_btn');
+        btn.innerHTML = "📲 ॲपमधून थेट पे करा (GPay/PhonePe)";
+        btn.style.background = "#1b5e20";
+        btn.style.pointerEvents = "auto";
+        
+        let confirmBtn = document.getElementById('manual_confirm_btn');
+        confirmBtn.style.opacity = "0.5";
+        confirmBtn.style.pointerEvents = "none";
+    }
+</script>
+
+</body>
+</html>

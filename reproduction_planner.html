@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - प्रजनन व कॅलेंडर (3D)</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* --- 🔥 3D & NEUMORPHIC BASE THEME 🔥 --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e0e5ec; margin: 0; padding: 0; }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; background: #e0e5ec; min-height: 100vh; position: relative;}
+        
+        /* Top Navigation 3D */
+        .top-dashboard { background: linear-gradient(145deg, #1b5e20, #2e7d32); padding: 20px; border-radius: 0 0 25px 25px; color: white; box-shadow: 0 10px 20px rgba(27, 94, 32, 0.3); }
+        .top-dashboard a { color: #e8f5e9; text-decoration: none; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);}
+        .header-titles h1 { margin: 10px 0 5px; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
+        .header-titles p { margin: 0; font-size: 13px; color: #a5d6a7; }
+
+        /* Form Section 3D (Neumorphism) */
+        .form-section { background: #e0e5ec; padding: 25px; margin: 25px 20px; border-radius: 20px; box-shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5); }
+        .form-section label { display: block; font-weight: 800; color: #444; margin-bottom: 8px; font-size: 14px; text-shadow: 1px 1px 0px rgba(255,255,255,0.8);}
+        
+        .form-section input, .form-section select { 
+            width: 100%; padding: 15px; border: none; border-radius: 12px; margin-bottom: 20px; font-size: 15px; font-weight: bold; color: #333;
+            background: #e0e5ec; box-shadow: inset 6px 6px 10px 0 rgba(163,177,198, 0.5), inset -6px -6px 10px 0 rgba(255,255,255, 0.8);
+            transition: all 0.2s ease-in-out; outline: none; box-sizing: border-box;
+        }
+        .form-section input:focus, .form-section select:focus { box-shadow: inset 2px 2px 5px 0 rgba(163,177,198, 0.5), inset -2px -2px 5px 0 rgba(255,255,255, 0.8); }
+        
+        /* 3D Primary Button */
+        .btn-primary { 
+            background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; width: 100%; padding: 16px; border: none; border-radius: 15px; font-size: 16px; font-weight: 900; cursor: pointer; 
+            box-shadow: 6px 6px 12px rgba(163,177,198,0.7), -6px -6px 12px rgba(255,255,255,0.8), inset 2px 2px 5px rgba(255,255,255,0.2); 
+            transition: all 0.2s; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        }
+        .btn-primary:active { transform: translateY(4px); box-shadow: 2px 2px 5px rgba(163,177,198,0.7), -2px -2px 5px rgba(255,255,255,0.8), inset 4px 4px 10px rgba(0,0,0,0.3); }
+
+        /* Timeline Design 3D */
+        .timeline-container { padding: 0 20px 20px; display: none; }
+        .timeline-header { color: #1b5e20; margin: 10px 0 20px; font-size: 19px; font-weight: 900; text-shadow: 1px 1px 0px rgba(255,255,255,0.8);}
+        
+        .timeline-card {
+            background: #e0e5ec; border-radius: 16px; padding: 18px; margin-bottom: 20px;
+            box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.8);
+            position: relative; overflow: hidden;
+        }
+        /* Color Accent Bar on Left */
+        .timeline-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+        .border-red::before { background: #f44336; } 
+        .border-purple::before { background: #9c27b0; } 
+        .border-blue::before { background: #2196f3; } 
+        .border-yellow::before { background: #ff9800; } 
+        .border-green::before { background: #4caf50; }
+
+        .timeline-flex { display: flex; align-items: center; }
+        
+        .timeline-date {
+            min-width: 85px; text-align: center; font-weight: bold; color: #444;
+            border-right: 2px dashed rgba(163,177,198,0.5); padding-right: 15px; margin-right: 15px;
+        }
+        .timeline-date span { display: block; font-size: 28px; font-weight: 900; text-shadow: 1px 1px 0px rgba(255,255,255,0.8);}
+        .day-label { font-size: 11px; color: #fff; background: #333; padding: 2px 6px; border-radius: 10px; margin-bottom: 5px; display: inline-block; font-weight: bold;}
+        
+        .timeline-info h4 { margin: 0 0 5px; font-size: 15.5px; font-weight: 900;}
+        .timeline-info p { margin: 0; font-size: 13px; color: #555; line-height: 1.5; font-weight: 600;}
+        
+        .border-red .timeline-info h4 { color: #d32f2f; }
+        .border-purple .timeline-info h4 { color: #7b1fa2; }
+        .border-blue .timeline-info h4 { color: #1976d2; }
+        .border-yellow .timeline-info h4 { color: #f57c00; }
+        .border-green .timeline-info h4 { color: #388e3c; }
+        
+        .status-special { border: 1px solid #ce93d8; background: #f3e5f5 !important; box-shadow: none !important;} 
+        
+        /* 🔥 VENDOR DYNAMIC AD OVERRIDE 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #f0f4c3 0%, #dce775 100%); border: 1px solid #c0ca33; padding: 12px; border-radius: 10px; margin-top: 15px; cursor: pointer; box-shadow: inset 2px 2px 5px rgba(255,255,255,0.5);}
+        .vendor-ad-box h4 { margin: 0 0 5px; color: #827717; font-size: 13px; font-weight: 900;}
+        .vendor-ad-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #c0ca33; padding-top: 8px; margin-top: 8px;}
+        .vendor-ad-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #827717; display: inline-block; border: 1px solid rgba(0,0,0,0.1); font-weight:bold;}
+        .vendor-ad-box .buy-now-btn { background: #827717; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+        .vendor-product-flex { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #c0ca33; background: #fff;}
+
+        /* Fallback Static Ad */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 10px; margin-top: 15px; box-shadow: inset 2px 2px 5px rgba(255,255,255,0.5); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17 !important; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .ai-recommendation-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* 🔥 REPEAT HEAT RESET STYLES 🔥 */
+        .btn-repeat-heat { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 10px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-block; margin-top: 12px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); transition: 0.2s; width: 100%; box-sizing: border-box; text-align: center;}
+        .btn-repeat-heat:active { transform: scale(0.95); }
+        
+        .reset-modal { display: none; background: #fff; padding: 15px; border-radius: 12px; border: 2px dashed #d32f2f; margin-top: 12px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);}
+        .reset-modal label { font-size: 12px; color: #333; margin-bottom: 8px; display:block; font-weight:bold;}
+        .reset-modal input { padding: 12px; border: 1px solid #ccc; width: 100%; border-radius: 8px; margin-bottom: 12px; font-size: 14px; box-sizing: border-box;}
+        .btn-reset { background: #d32f2f; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer;}
+        .btn-cancel { background: #eee; color: #333; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; width: 100%; margin-top: 8px; cursor: pointer;}
+
+        /* Saved History UI (3D) */
+        .history-section { padding: 0 20px 20px; display: none; margin-top: 10px;}
+        .history-title { font-size: 18px; font-weight: 900; color: #1b5e20; margin-bottom: 15px; text-shadow: 1px 1px 0px rgba(255,255,255,0.8);}
+        .history-card { background: #e0e5ec; padding: 15px; border-radius: 16px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; box-shadow: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2);}
+        .history-info h4 { margin: 0 0 5px; color: #1b5e20; font-size: 16px; font-weight: 900;}
+        .history-info p { margin: 0; font-size: 12px; color: #555; font-weight: 700;}
+        .history-actions { display: flex; gap: 10px; border-top: 1px dashed rgba(163,177,198,0.5); padding-top: 12px; }
+        .btn-view { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; border: none; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; flex:1; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);}
+        .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 45px;}
+    </style>
+</head>
+<body onload="initPage()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>प्रजनन व कॅलेंडर 📅</h1>
+            <p>कृत्रिम रेतन (AI) आणि प्रसूती स्मार्ट ट्रॅकर</p>
+        </div>
+    </div>
+
+    <!-- Input Form -->
+    <div class="form-section">
+        <label>गाईचे नाव किंवा टॅग नंबर:</label>
+        <input type="text" id="cow_id" placeholder="उदा. गोदावरी / Tag 102 (सक्तीचे)">
+
+        <label>रेतन किंवा प्रत्यारोपण तारीख (Date):</label>
+        <input type="date" id="ai_date">
+
+        <label>रेतनाचा प्रकार (Type of Insemination):</label>
+        <select id="ai_type">
+            <option value="normal">साधे कृत्रिम रेतन (Conventional AI)</option>
+            <option value="sexed">सेक्सड सिमेन (Sexed Semen - कालवड हमी)</option>
+            <option value="et">भ्रूण प्रत्यारोपण (Embryo Transfer - ET)</option>
+        </select>
+
+        <button class="btn-primary" onclick="saveAndGenerateCalendar()">💾 वेळापत्रक तयार करून सेव्ह करा</button>
+    </div>
+
+    <!-- Smart Timeline Result -->
+    <div class="timeline-container" id="timelineResult">
+        <h3 class="timeline-header" id="timeline_title">📊 वेळापत्रक:</h3>
+        
+        <div id="timeline_content"></div>
+        
+        <div style="font-size: 11px; color: #666; line-height: 1.4; border-top: 1px dashed rgba(163,177,198,0.8); padding-top: 12px; margin-top: 25px; text-align: justify; font-weight: 600;">
+            * ⚠️ <b>महत्त्वाची सूचना:</b> हे वेळापत्रक ICAR च्या मानकांनुसार आहे. कोणतेही औषध किंवा सप्लीमेंट देण्यापूर्वी तुमच्या परवानाधारक <b>पशुवैद्यकांचा (Doctor) सल्ला नक्की घ्यावा</b>. 
+        </div>
+    </div>
+
+    <!-- Saved History Section -->
+    <div class="history-section" id="history_section">
+        <h3 class="history-title">📂 सेव्ह केलेली जनावरे</h3>
+        <div id="history_list"></div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
+    function generateDynamicAd(targetTag, fallbackHtml, customTitle) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        // Filter products matching the tag and randomize to show different ads if multiple match
+        let matchedProducts = products.filter(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProducts.length > 0) {
+            let matchedProduct = matchedProducts[Math.floor(Math.random() * matchedProducts.length)]; // Randomize Ad
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:18px;">📦</div>`;
+            
+            return `
+                <div class="vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:13.5px; font-weight:900; color:#827717;">${matchedProduct.name}</p>
+                            <p style="margin:2px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        return fallbackHtml; // Return fallback static HTML if no dynamic match is found
+    }
+
+    function initPage() {
+        document.getElementById('ai_date').valueAsDate = new Date();
+        syncProducts();
+        loadSavedPlans();
+    }
+
+    // --- 🔥 AUTO-SAVE & NOTIFICATION LOGIC 🔥 ---
+    function saveAndGenerateCalendar() {
+        let cowId = document.getElementById("cow_id").value.trim();
+        let dateInput = document.getElementById("ai_date").value;
+        let aiType = document.getElementById('ai_type').value;
+        let typeText = document.getElementById('ai_type').options[document.getElementById('ai_type').selectedIndex].text;
+
+        if (!cowId) { alert("कृपया गाईचे नाव किंवा टॅग नंबर टाका."); return; }
+        if (!dateInput) { alert("कृपया तारीख निवडा!"); return; }
+
+        let aiDate = new Date(dateInput);
+        let timestampId = new Date().getTime(); 
+        
+        // Settings Sync
+        let m9Config = JSON.parse(localStorage.getItem('admin_data_M9')) || { m9_1: 21, m9_2: 90, m9_3: 280 };
+        let heatDays = parseInt(m9Config.m9_1) || 21;
+        let pdDays = parseInt(m9Config.m9_2) || 90;
+        
+        // ET Logic
+        let gestationDays = aiType === 'et' ? 273 : (parseInt(m9Config.m9_3) || 280);
+        let dryDays = gestationDays - 60; 
+
+        function addDays(date, days) {
+            let result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result.toISOString().split('T')[0];
+        }
+
+        // Create Save Object
+        let planData = {
+            id: timestampId,
+            cowName: cowId,
+            aiDateStr: dateInput,
+            type: aiType,
+            alerts: [
+                { date: addDays(aiDate, heatDays), type: "Heat Check", msg: `🔔 ${cowId} चा आज ${heatDays} वा दिवस आहे, माजावर (Repeat Heat) लक्ष ठेवा!` },
+                { date: addDays(aiDate, 28), type: "PAGs Test", msg: `🔔 ${cowId} ला २८ दिवस झाले आहेत, रक्ताद्वारे आधुनिक गर्भधारणा (PAGs) टेस्ट करू शकता.` },
+                { date: addDays(aiDate, pdDays), type: "PD Check", msg: `🚨 ${cowId} ला ${pdDays} दिवस झाले आहेत, पशुवैद्यकांकडून PD (गर्भ) तपासणी करून घ्या.` },
+                { date: addDays(aiDate, dryDays), type: "Dry Off", msg: `🔔 ${cowId} ची आटवण्याची (Dry off) वेळ झाली आहे, दूध काढणे थांबवा.` },
+                { date: addDays(aiDate, gestationDays), type: "Calving", msg: `🚨 ${cowId} ची आज अंदाजे प्रसूतीची वेळ आहे. गोठ्यात तयारी ठेवा.` }
+            ]
+        };
+
+        // 1. Save to LocalStorage for AI Plans
+        let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
+        savedPlans.push(planData);
+        localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
+
+        // 2. 🔥 GLOBAL INTEGRATION: Save to 'My Animals' 🔥
+        let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
+        // Check if cow exists
+        let exists = allAnimals.some(a => a.name.toLowerCase() === cowId.toLowerCase());
+        if(!exists) {
+            allAnimals.push({
+                id: timestampId, type: "Cow", name: cowId, status: "Active"
+            });
+            localStorage.setItem('my_cattle_list', JSON.stringify(allAnimals));
+        }
+
+        // 3. 🔥 FIREBASE: LOG AI CALENDAR PLAN 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("ai_calendar_plans").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            cowName: cowId,
+            aiType: typeText,
+            aiDate: dateInput,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging AI plan: ", err));
+
+        alert(`✅ ${cowId} चे वेळापत्रक सेव्ह झाले आहे! याच्या सर्व नोटिफिकेशन्स डॅशबोर्डवर आपोआप येतील.`);
+        
+        // Clear input form
+        document.getElementById('cow_id').value = '';
+        
+        generateTimelineUI(planData);
+        loadSavedPlans();
+    }
+
+    // --- Generate HTML Timeline ---
+    function generateTimelineUI(planData) {
+        let timelineContent = document.getElementById('timeline_content');
+        
+        let typeName = planData.type === 'sexed' ? '(Sexed Semen)' : (planData.type === 'et' ? '(Embryo Transfer)' : '(AI)');
+        document.getElementById("timeline_title").innerHTML = `📊 ${planData.cowName} - वेळापत्रक ${typeName}:`;
+        timelineContent.innerHTML = ""; 
+        
+        let aiDate = new Date(planData.aiDateStr);
+
+        let m9Config = JSON.parse(localStorage.getItem('admin_data_M9')) || { m9_1: 21, m9_2: 90, m9_3: 280 };
+        let heatDays = parseInt(m9Config.m9_1) || 21;
+        let pdDays = parseInt(m9Config.m9_2) || 90;
+        let gestationDays = planData.type === 'et' ? 273 : (parseInt(m9Config.m9_3) || 280);
+        let dryDays = gestationDays - 60; 
+
+        // Special Alert Box
+        if(planData.type === 'sexed') {
+            timelineContent.innerHTML += `
+                <div class="timeline-card status-special">
+                    <h4 style="color: #6a1b9a; margin:0 0 5px;">🔬 तंत्रज्ञान: सेक्सड सिमेन (Sexed Semen)</h4>
+                    <p style="color: #4a148c; font-size:12px; margin:0; font-weight:bold;"><b>टीप:</b> तुम्ही महागडे सिमेन वापरले आहे. यातून ९०% कालवड होण्याची खात्री असते, परंतु गाईचा 'बॉडी कंडिशन स्कोर (BCS)' उत्तम असणे अत्यंत आवश्यक आहे.</p>
+                </div>`;
+        } else if (planData.type === 'et') {
+            timelineContent.innerHTML += `
+                <div class="timeline-card status-special">
+                    <h4 style="color: #6a1b9a; margin:0 0 5px;">🧬 तंत्रज्ञान: भ्रूण प्रत्यारोपण (Embryo Transfer)</h4>
+                    <p style="color: #4a148c; font-size:12px; margin:0; font-weight:bold;"><b>टीप:</b> गाईमध्ये ७ दिवसांचा विकसित गर्भ सोडण्यात आला आहे. त्यामुळे तिची अंदाजे प्रसूती २८० दिवसांऐवजी <b>२७३ दिवसांतच</b> होईल.</p>
+                </div>`;
+        }
+
+        // Helper to format date
+        function getFormattedDate(days) {
+            let d = new Date(aiDate);
+            d.setDate(d.getDate() + days);
+            return {
+                day: d.getDate(),
+                month: d.toLocaleDateString('mr-IN', { month: 'short', year: 'numeric' })
+            };
+        }
+
+        let date21 = getFormattedDate(heatDays);
+        let date28 = getFormattedDate(28);
+        let date90 = getFormattedDate(pdDays);
+        let date220 = getFormattedDate(dryDays);
+        let date280 = getFormattedDate(gestationDays);
+
+        let safeId = planData.id;
+
+        // Fallbacks for Ads
+        let fallbackHeatAd = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🧬 शिफारस: इंटास (Intas)</h4>
+                <p>Minfa Gold Powder - गाय पुन्हा माजावर येत असल्यास किंवा गाभण राहत नसल्यास उत्तम उपाय.</p>
+                <span class="sponsor-tag">Sponsored</span>
+            </div>`;
+        let fallbackPregAd = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🐄 शिफारस: गोदरेज ॲग्रोव्हेट</h4>
+                <p>मिनरल मिक्सचर (Gold) - गाभण काळात वासराच्या उत्तम वाढीसाठी खनिजांची मात्रा वाढवा.</p>
+                <span class="sponsor-tag">Sponsored</span>
+            </div>`;
+        let fallbackCalvingAd = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>⚠️ शिफारस: Virbac</h4>
+                <p>कॅल्शियम जेल (Calcium Gel) - विण्यापूर्वी आणि नंतर मिल्क फिव्हर (Milk Fever) टाळण्यासाठी आवश्यक.</p>
+                <span class="sponsor-tag">Sponsored</span>
+            </div>`;
+
+        timelineContent.innerHTML += `
+            <!-- 21 Days -->
+            <div class="timeline-card border-red">
+                <div class="timeline-flex">
+                    <div class="timeline-date">
+                        <span class="day-label" style="background:#d32f2f;">${heatDays} वा दिवस</span>
+                        <span>${date21.day}</span>
+                        <div>${date21.month}</div>
+                    </div>
+                    <div class="timeline-info" style="width: 100%;">
+                        <h4>माज तपासणी (Heat Check)</h4>
+                        <p>गाय पुन्हा माजावर (Repeat Heat) येतेय का, यावर बारकाईने लक्ष ठेवा.</p>
+                        
+                        <!-- REPEAT HEAT MODAL UI -->
+                        <button class="btn-repeat-heat" onclick="toggleResetModal(${safeId})">🔄 पुन्हा माजावर आली का? (नविन AI नोंदवा)</button>
+                        
+                        <div id="repeat_heat_modal_${safeId}" class="reset-modal">
+                            <label>⚠️ गाय उलटली असेल तर नवीन तारीख टाका:</label>
+                            <input type="date" id="new_ai_date_${safeId}">
+                            <button class="btn-reset" onclick="resetCycle(${safeId})">🔄 वेळापत्रक रिसेट करा</button>
+                            <button class="btn-cancel" onclick="toggleResetModal(${safeId})">❌ रद्द करा</button>
+                        </div>
+                    </div>
+                </div>
+                ${generateDynamicAd('Reproduction_Heat', fallbackHeatAd, "🧬 माजाच्या समस्यांसाठी:")}
+            </div>
+
+            <!-- 28 Days -->
+            <div class="timeline-card border-purple">
+                <div class="timeline-flex">
+                    <div class="timeline-date">
+                        <span class="day-label" style="background:#7b1fa2;">२८ वा दिवस</span>
+                        <span>${date28.day}</span>
+                        <div>${date28.month}</div>
+                    </div>
+                    <div class="timeline-info">
+                        <h4>आधुनिक गर्भधारणा तपासणी</h4>
+                        <p>PAGs टेस्टसाठी दुधाचे/रक्ताचे सॅम्पल लॅबमध्ये पाठवून लवकर खात्री करा.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 90 Days -->
+            <div class="timeline-card border-blue">
+                <div class="timeline-flex">
+                    <div class="timeline-date">
+                        <span class="day-label" style="background:#1976d2;">${pdDays} वा दिवस</span>
+                        <span>${date90.day}</span>
+                        <div>${date90.month}</div>
+                    </div>
+                    <div class="timeline-info">
+                        <h4>पशुवैद्यकीय गर्भ तपासणी (PD)</h4>
+                        <p>डॉक्टरांकडून गाय गाभण असल्याची अंतिम खात्री करून घ्या.</p>
+                    </div>
+                </div>
+                ${generateDynamicAd('Daily_Ration_Mineral', fallbackPregAd, "🐄 गर्भाच्या वाढीसाठी:")}
+            </div>
+
+            <!-- 220 Days -->
+            <div class="timeline-card border-yellow">
+                <div class="timeline-flex">
+                    <div class="timeline-date">
+                        <span class="day-label" style="background:#f57c00;">${dryDays} वा दिवस</span>
+                        <span>${date220.day}</span>
+                        <div>${date220.month}</div>
+                    </div>
+                    <div class="timeline-info">
+                        <h4>गाय आटवणे (Dry Period)</h4>
+                        <p>गाईचे दूध काढणे थांबवा. वासराच्या उत्तम वाढीसाठी तिला आराम द्या.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 280 Days -->
+            <div class="timeline-card border-green">
+                <div class="timeline-flex">
+                    <div class="timeline-date">
+                        <span class="day-label" style="background:#388e3c;">${gestationDays} वा दिवस</span>
+                        <span>${date280.day}</span>
+                        <div>${date280.month}</div>
+                    </div>
+                    <div class="timeline-info">
+                        <h4>अंदाजे प्रसूती (Calving)</h4>
+                        <p>गाईच्या व्यायची अंदाजे तारीख. गोठ्यात स्वच्छतेची आणि पशुवैद्याची तयारी ठेवा.</p>
+                    </div>
+                </div>
+                ${generateDynamicAd('Calcium_Bypass', fallbackCalvingAd, "⚠️ प्रसूतीपूर्व तयारी:")}
+            </div>
+        `;
+        
+        document.getElementById('timelineResult').style.display = 'block';
+        document.getElementById('timelineResult').scrollIntoView({behavior: "smooth"});
+    }
+
+    // --- RESET MODAL LOGIC ---
+    function toggleResetModal(id) {
+        let modal = document.getElementById(`repeat_heat_modal_${id}`);
+        modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+        if(modal.style.display === 'block') {
+            document.getElementById(`new_ai_date_${id}`).valueAsDate = new Date(); 
+        }
+    }
+
+    function resetCycle(id) {
+        let newDateStr = document.getElementById(`new_ai_date_${id}`).value;
+        if(!newDateStr) { alert("कृपया नवीन तारीख निवडा."); return; }
+
+        if(confirm("जुने वेळापत्रक रद्द होऊन या नवीन तारखेनुसार सर्व दिवस नव्याने मोजले जातील. खात्री आहे का?")) {
+            let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
+            let index = savedPlans.findIndex(p => p.id === id);
+            
+            if(index !== -1) {
+                // Delete old plan
+                let cowName = savedPlans[index].cowName;
+                let aiType = savedPlans[index].type;
+                savedPlans.splice(index, 1);
+                localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
+                
+                // Set inputs for new creation
+                document.getElementById('cow_id').value = cowName;
+                document.getElementById('ai_date').value = newDateStr;
+                document.getElementById('ai_type').value = aiType;
+                
+                // Generate new
+                saveAndGenerateCalendar();
+                alert("✅ वेळापत्रक यशस्वीरीत्या रिसेट झाले आहे!");
+            }
+        }
+    }
+
+    // --- Load Saved History ---
+    function loadSavedPlans() {
+        let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
+        let historySection = document.getElementById('history_section');
+        let historyList = document.getElementById('history_list');
+        
+        historyList.innerHTML = "";
+
+        if(savedPlans.length > 0) {
+            historySection.style.display = 'block';
+            savedPlans.forEach(plan => {
+                let formattedDate = new Date(plan.aiDateStr).toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                let typeBadge = plan.type === 'sexed' ? '(Sexed)' : (plan.type === 'et' ? '(ET)' : '(AI)');
+                
+                let planStr = JSON.stringify(plan).replace(/"/g, '&quot;');
+
+                historyList.innerHTML += `
+                    <div class="history-card">
+                        <div class="history-info">
+                            <h4>🐄 ${plan.cowName} ${typeBadge}</h4>
+                            <p>रेतन: ${formattedDate}</p>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-view" onclick="generateTimelineUI(${planStr})">पहा</button>
+                            <button class="btn-delete" onclick="deletePlan(${plan.id})">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+        } else {
+            historySection.style.display = 'none';
+        }
+    }
+
+    function deletePlan(id) {
+        if(confirm("तुम्हाला खरोखर हे रेकॉर्ड डिलीट करायचे आहे का? (याच्या नोटिफिकेशन्स सुद्धा बंद होतील)")) {
+            let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
+            savedPlans = savedPlans.filter(p => p.id !== id);
+            localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
+            
+            document.getElementById('timelineResult').style.display = "none";
+            loadSavedPlans();
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

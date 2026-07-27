@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - THI कॅल्क्युलेटर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .form-section { background: #eef2f5; padding: 20px; margin: 15px 20px; border-radius: 16px; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); }
+        .form-section label { display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
+        .input-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; box-sizing: border-box; font-size: 15px; font-weight:bold; color: #1976d2; text-align: center;}
+        
+        .btn-primary { background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #0d47a1; margin-top: 5px; }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+
+        .btn-location { background: linear-gradient(145deg, #ff9800, #f57c00); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 14.5px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 0 #e65100; }
+        .btn-location:active { top: 4px; box-shadow: 0 0px 0 #e65100; position: relative; }
+
+        .result-box { background: #fff; margin: 20px; padding: 20px; border-radius: 16px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #2e7d32;}
+        .thi-score { font-size: 45px; font-weight: 900; margin: 10px 0; }
+        .thi-status { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .advice-box { padding: 15px; border-radius: 10px; text-align: left; font-size: 13.5px; line-height: 1.6; }
+        .advice-box h4 { margin: 0 0 10px; font-size: 15px; }
+
+        /* 🔥 AI Recommendation Ad Section (Fallback) */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; text-align: left; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* 🔥 VENDOR DYNAMIC AD STYLING 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #64b5f6; padding: 12px; border-radius: 10px; margin-top: 15px; cursor: pointer; box-shadow: inset 2px 2px 5px rgba(255,255,255,0.5); text-align: left;}
+        .vendor-ad-box h4 { margin: 0 0 5px; color: #0d47a1; font-size: 13px; font-weight: 900;}
+        .vendor-ad-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 8px; margin-top: 8px;}
+        .vendor-ad-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #0d47a1; display: inline-block; border: 1px solid rgba(0,0,0,0.1); font-weight:bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+        .vendor-product-flex { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #64b5f6; background: #fff;}
+    </style>
+</head>
+<body onload="syncProducts()">
+
+<div class="app-container">
+    <div class="top-dashboard" style="background: #1976d2; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="color: white;">हवामान व ताण 🌡️</h1>
+            <p style="color: #bbdefb;">THI (उष्णतेचा ताण) ऑटो-कॅल्क्युलेटर</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin-top: 20px;">आजचे हवामान तपासा</div>
+
+    <div class="form-section">
+        
+        <!-- Smart Auto Location Button -->
+        <button class="btn-location" id="auto_weather_btn" onclick="fetchAutoWeather()">📍 एका क्लिकवर आजचे हवामान घ्या</button>
+        <p style="font-size:11.5px; color:#666; text-align:center; margin-top:-5px; margin-bottom:15px;">(तुमचे लोकेशन आपोआप ट्रॅक केले जाईल)</p>
+        
+        <hr style="border: 0; border-top: 1px dashed #ccc; margin-bottom: 15px;">
+
+        <div class="input-row">
+            <div style="flex: 1;">
+                <label style="text-align:center;">तापमान (°C):</label>
+                <input type="number" id="temp_c" placeholder="--">
+            </div>
+            <div style="flex: 1;">
+                <label style="text-align:center;">आर्द्रता (Humidity %):</label>
+                <input type="number" id="humidity" placeholder="--">
+            </div>
+        </div>
+        <button class="btn-primary" onclick="calculateTHI()">🔍 THI विश्लेषण करा</button>
+    </div>
+
+    <!-- THI Result Box -->
+    <div class="result-box" id="thi_result">
+        <p style="margin:0; font-size:14px; color:#555;">तुमचा THI (Temperature Humidity Index) स्कोअर:</p>
+        <div class="thi-score" id="thi_score_display">--</div>
+        <div class="thi-status" id="thi_status_display">--</div>
+
+        <div class="advice-box" id="thi_advice_box">
+            <h4 id="advice_title">--</h4>
+            <div id="advice_text">--</div>
+        </div>
+
+        <!-- 🔥 CONTAINER FOR DYNAMIC PHARMA ADS -->
+        <div id="thi_pharma_ad"></div>
+
+        <!-- 🔥 Strong Medical Disclaimer -->
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> येथे दिलेली माहिती केवळ प्राथमिक माहितीसाठी आहे. जनावराला उष्माघात झाल्यास किंवा प्रकृती गंभीर असल्यास <b>पशुवैद्यकाचा (Veterinary Doctor) त्वरित सल्ला घ्यावा</b>. 
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
+    function generateDynamicAd(targetTag, fallbackHtml, customTitle) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        let matchedProducts = products.filter(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProducts.length > 0) {
+            let matchedProduct = matchedProducts[Math.floor(Math.random() * matchedProducts.length)]; // Randomize Ad
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:18px;">📦</div>`;
+            
+            return `
+                <div class="vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:13.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:2px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        return fallbackHtml; // Return static HTML if no match is found
+    }
+
+    // 1. Hybrid Weather Fetcher (GPS -> Fallback to IP Network Location)
+    function fetchAutoWeather() {
+        let btn = document.getElementById('auto_weather_btn');
+        btn.innerHTML = "⏳ हवामान शोधत आहे...";
+        btn.style.background = "#9e9e9e";
+        btn.style.boxShadow = "0 4px 0 #616161";
+
+        // प्रयत्न 1: GPS द्वारे लोकेशन घेणे (यामुळे पॉप-अप येऊ शकतो)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+                    getWeatherFromCoords(lat, lon, btn, "तुमच्या");
+                },
+                (error) => {
+                    // प्रयत्न 2: जर पॉप-अप ब्लॉक झाला किंवा GPS बंद असेल, तर 'IP' द्वारे लोकेशन घ्या (No Permission Needed!)
+                    getWeatherFromIP(btn);
+                },
+                { timeout: 3000 } // फक्त 3 सेकंद वाट पाहेल, नाहीतर IP वर जाईल
+            );
+        } else {
+            getWeatherFromIP(btn);
+        }
+    }
+
+    // IP द्वारे लोकेशन शोधणे (Zero Permission)
+    function getWeatherFromIP(btn) {
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                getWeatherFromCoords(data.latitude, data.longitude, btn, data.city);
+            })
+            .catch(err => {
+                alert("⚠️ इंटरनेट कनेक्शनची अडचण आहे. कृपया तापमान स्वतः टाईप करा.");
+                resetBtn(btn);
+            });
+    }
+
+    // मिळालेल्या लोकेशनवरून हवामान काढणे
+    function getWeatherFromCoords(lat, lon, btn, cityName) {
+        let apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m`;
+
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(weatherData => {
+                let temp = weatherData.current.temperature_2m;
+                let humidity = weatherData.current.relative_humidity_2m;
+                
+                document.getElementById('temp_c').value = temp;
+                document.getElementById('humidity').value = humidity;
+                
+                btn.innerHTML = `✅ हवामान अपडेट झाले!`;
+                btn.style.background = "#4caf50";
+                btn.style.boxShadow = "0 4px 0 #388e3c";
+                
+                setTimeout(() => { resetBtn(btn); }, 3000);
+                
+                // लगेच THI कॅल्क्युलेट करा
+                calculateTHI();
+            })
+            .catch(err => {
+                alert("⚠️ हवामानाची माहिती मिळाली नाही.");
+                resetBtn(btn);
+            });
+    }
+
+    function resetBtn(btn) {
+        btn.innerHTML = "📍 एका क्लिकवर आजचे हवामान घ्या";
+        btn.style.background = "linear-gradient(145deg, #ff9800, #f57c00)";
+        btn.style.boxShadow = "0 4px 0 #e65100";
+    }
+
+    // 2. Calculate THI
+    function calculateTHI() {
+        let tempC = parseFloat(document.getElementById('temp_c').value);
+        let rh = parseFloat(document.getElementById('humidity').value);
+
+        if (!tempC || !rh) { alert("कृपया तापमान आणि आर्द्रता (Humidity) टाका."); return; }
+
+        // Standard THI Formula
+        let thi = (1.8 * tempC + 32) - ((0.55 - 0.0055 * rh) * (1.8 * tempC - 26));
+        thi = Math.round(thi);
+
+        // 🔥 FIREBASE: LOG THI CALCULATION 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("thi_weather_logs").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            temperature: tempC,
+            humidity: rh,
+            thiScore: thi,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging THI calculation: ", err));
+
+        let resultBox = document.getElementById('thi_result');
+        let scoreDisplay = document.getElementById('thi_score_display');
+        let statusDisplay = document.getElementById('thi_status_display');
+        let adviceBox = document.getElementById('thi_advice_box');
+        let adviceTitle = document.getElementById('advice_title');
+        let adviceText = document.getElementById('advice_text');
+        let adBox = document.getElementById('thi_pharma_ad');
+
+        scoreDisplay.innerText = thi;
+        resultBox.style.display = "block";
+        adBox.innerHTML = ""; // Clear old ad
+        let htmlAd = "";
+
+        if (thi < 72) {
+            scoreDisplay.style.color = "#2e7d32";
+            statusDisplay.innerText = "🟢 सुरक्षित (No Stress)";
+            statusDisplay.style.color = "#2e7d32";
+            adviceBox.style.background = "#e8f5e9";
+            adviceTitle.style.color = "#1b5e20";
+            adviceTitle.innerText = "कोणताही धोका नाही";
+            adviceText.innerHTML = "हवामान गाईंसाठी अत्यंत अनुकूल आहे. दूध उत्पादनात कोणताही परिणाम होणार नाही. नेहमीप्रमाणे आहार चालू ठेवा.";
+            resultBox.style.borderTopColor = "#2e7d32";
+            
+            // Ad for regular milk production
+            let fallbackAd1 = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🥛 दूध उत्पादन वाढवण्यासाठी</h4>
+                    <p>सध्या हवामान उत्तम आहे. दुधातील फॅट टिकवण्यासाठी <b>गोदरेज ॲग्रोव्हेट - मिल्क पेलेट</b> चा वापर करा.</p>
+                    <span class="sponsor-tag">Sponsored by गोदरेज ॲग्रोव्हेट</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            htmlAd = generateDynamicAd('Milk_Increase', fallbackAd1, "🥛 दूध उत्पादन वाढवण्यासाठी:");
+                
+        } else if (thi >= 72 && thi <= 79) {
+            scoreDisplay.style.color = "#f57c00";
+            statusDisplay.innerText = "🟡 मध्यम ताण (Mild Stress)";
+            statusDisplay.style.color = "#f57c00";
+            adviceBox.style.background = "#fff3e0";
+            adviceTitle.style.color = "#e65100";
+            adviceTitle.innerText = "प्राथमिक उपाय योजना:";
+            adviceText.innerHTML = "• गाईचा श्वासोच्छ्वास थोडा वाढेल.<br>• <b>उपाय:</b> गोठ्यात हवा खेळती राहू द्या. पंखे चालू करा आणि पिण्यासाठी २४ तास थंड पाणी उपलब्ध ठेवा.";
+            resultBox.style.borderTopColor = "#f57c00";
+            
+            // Ad for Mild Stress Relief
+            let fallbackAd2 = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🌬️ उष्णतेचा ताण कमी करण्यासाठी</h4>
+                    <p>गाईंचा ताण कमी करण्यासाठी आणि दूध टिकवण्यासाठी त्यांना <b>Intas Electrolyte Power</b> पाण्यातून द्या.</p>
+                    <span class="sponsor-tag">Sponsored by Intas</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            htmlAd = generateDynamicAd('Heat_Stress', fallbackAd2, "🌬️ उष्णतेचा ताण कमी करण्यासाठी:");
+
+        } else if (thi >= 80 && thi <= 89) {
+            scoreDisplay.style.color = "#d32f2f";
+            statusDisplay.innerText = "🟠 तीव्र ताण (Moderate Stress)";
+            statusDisplay.style.color = "#d32f2f";
+            adviceBox.style.background = "#ffebee";
+            adviceTitle.style.color = "#c62828";
+            adviceTitle.innerText = "🚨 दुधात ५% ते १०% घट होऊ शकते!";
+            adviceText.innerHTML = "• गाई चारा खाणे कमी करतील.<br>• <b>उपाय:</b> गोठ्यात <b>फॉगर्स (पाण्याचे तुषार)</b> सुरू करा. आहारात 'इलेक्ट्रोलाईट्स' (Electrolytes) पावडर आणि बायपास फॅटचा वापर सुरू करा. दिवसाऐवजी रात्री थंड वातावरणात चारा द्या.";
+            resultBox.style.borderTopColor = "#d32f2f";
+            
+            // Ad for Heat Stress / Immunity
+            let fallbackAd3 = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🥵 दुधातील तूट भरून काढण्यासाठी</h4>
+                    <p>तीव्र उष्णतेमुळे गाईंची भूक कमी होते. ऊर्जेसाठी <b>Virbac Energy Booster</b> किंवा <b>Himalaya Liv.52</b> त्वरित सुरू करा.</p>
+                    <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            htmlAd = generateDynamicAd('Weight_BypassFat', fallbackAd3, "🥵 ऊर्जेची तूट भरून काढण्यासाठी:");
+                
+        } else {
+            scoreDisplay.style.color = "#b71c1c";
+            statusDisplay.innerText = "🔴 अति-तीव्र ताण (Severe Stress)";
+            statusDisplay.style.color = "#b71c1c";
+            adviceBox.style.background = "#ffcdd2";
+            adviceTitle.style.color = "#b71c1c";
+            adviceTitle.innerText = "🚨 इमर्जन्सी! उष्माघाताचा धोका";
+            adviceText.innerHTML = "• गाईंना उष्माघात (Heat Stroke) होऊ शकतो आणि दूध २५% पेक्षा जास्त घटेल.<br>• <b>उपाय:</b> जनावरांच्या अंगावर थेट पाणी मारा (अंघोळ घाला). फॉगर्स पूर्ण क्षमतेने चालवा. गोठ्याच्या छतावर पाचट टाकून सावली दाट करा.";
+            resultBox.style.borderTopColor = "#b71c1c";
+            
+            // Ad for Cooling System
+            let fallbackAd4 = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🚨 उष्माघात संरक्षण (Cooling Systems)</h4>
+                    <p>अति उष्णतेपासून गोठ्याचे संरक्षण करण्यासाठी 'कृषी मॉल' मधून <b>फॉगर्स (Foggers) आणि फॅन सिस्टीम</b> आजच खरेदी करा.</p>
+                    <span class="sponsor-tag">Sponsored by Agri-Tech Partners</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            htmlAd = generateDynamicAd('Heat_Stress_Equipment', fallbackAd4, "🚨 उष्माघात संरक्षण:");
+        }
+
+        adBox.innerHTML = htmlAd;
+        resultBox.scrollIntoView({behavior: "smooth"});
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

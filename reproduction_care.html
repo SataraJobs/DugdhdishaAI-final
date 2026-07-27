@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - प्रजनन सल्लागार</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root{
+            --primary: #c2185b;
+            --primary-light: #e91e63;
+            --bg-color: #fce4ec;
+            --card-bg: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --border-color: #f48fb1;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; min-height: 100vh; position: relative; }
+        
+        /* Header */
+        .top-dashboard { background: linear-gradient(145deg, var(--primary), var(--primary-light)); padding: 20px; border-radius: 0 0 20px 20px; color: white; box-shadow: 0 4px 10px rgba(194, 24, 91, 0.2); }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .header-titles h1 { margin: 10px 0 5px; font-size: 22px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);}
+        .header-titles p { margin: 0; font-size: 13px; opacity: 0.9; }
+
+        /* Form Elements */
+        .form-section { background: var(--card-bg); padding: 20px; margin: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.05); border: 1px solid rgba(194, 24, 91, 0.1); }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: bold; color: #555; margin-bottom: 6px; font-size: 13px; }
+        select, input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fafafa; font-size: 14px; box-sizing: border-box; transition: 0.3s; font-family: inherit; font-weight: bold; color: #333;}
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(194, 24, 91, 0.1);}
+
+        /* Buttons */
+        .btn-primary { background: linear-gradient(145deg, var(--primary), var(--primary-light)); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 15px rgba(194, 24, 91, 0.2); transition: 0.2s; margin-top: 10px;}
+        .btn-primary:active { transform: translateY(3px); box-shadow: 0 2px 5px rgba(194, 24, 91, 0.2); }
+        
+        .btn-gemini { background: linear-gradient(145deg, #fbc02d, #f57f17); color: #3e2723; border: 2px solid #f9a825; padding: 14px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 4px 10px rgba(251, 192, 45, 0.3); animation: pulse-glow 2s infinite; display: none;}
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); } }
+
+        /* Result Box */
+        .result-box { background: var(--card-bg); margin: 20px; padding: 20px; border-radius: 12px; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); }
+        .result-title { color: var(--primary); font-size: 18px; font-weight: 900; margin: 0 0 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
+        .advice-item { background: #fdf5f8; border-left: 4px solid var(--primary); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; color: #444; font-weight: 600;}
+
+        /* AI Box */
+        .gemini-response-box { background: #fffde7; border: 2px dashed #fbc02d; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .gemini-response-box h4 { color: #f57f17; margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px;}
+        .gemini-content { font-size: 14px; color: #3e2723; line-height: 1.6; }
+        .gemini-loader { font-size: 13px; color: #f57f17; font-weight: bold; font-style: italic; display: none; text-align: center; padding: 10px;}
+
+        /* 🔥 Dynamic Ad Styling Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); border: 2px solid #c2185b; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; display: none;}
+        .vendor-ad-box h4 { color: #880e4f; font-weight: 900; margin: 0 0 8px;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #f48fb1; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 4px; color: #880e4f; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #c2185b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(194, 24, 91, 0.3); }
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #f48fb1; background: #fff;}
+
+        /* Static AI Recommendation Box (Fallback) */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.3s ease;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(251, 192, 45, 0.2); }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+
+        .disclaimer { font-size: 11px; color: #666; text-align: center; border-top: 1px dashed #ccc; padding-top: 15px; font-weight: bold; background: #fff8e1; border-radius: 8px; padding-bottom: 15px; margin-top: 20px;}
+    </style>
+</head>
+<body onload="syncProducts()">
+
+<div class="app-container">
+
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>प्रजनन सल्लागार 🧬</h1>
+            <p>जनावरांच्या प्रजननातील समस्या आणि अचूक उपाय</p>
+        </div>
+    </div>
+
+    <!-- 📝 Input Form -->
+    <div class="form-section">
+        <div class="input-group">
+            <label>जनावराचा प्रकार:</label>
+            <select id="animal_type">
+                <option value="गाय">गाय (Cow)</option>
+                <option value="म्हैस">म्हैस (Buffalo)</option>
+                <option value="कालवड">कालवड / पारडी (Heifer)</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex: 1;">
+                <label>वय (वर्षे/महिने):</label>
+                <input type="text" id="animal_age" placeholder="उदा. ४ वर्षे">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label>वेताचा क्रमांक:</label>
+                <input type="number" id="lactation_no" placeholder="उदा. २ (नसल्यास ०)" value="0">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>मुख्य समस्या काय आहे?</label>
+            <select id="repro_problem">
+                <option value="">-- समस्या निवडा --</option>
+                <option value="anestrus">१. जनावर माजावर येत नाही (Anestrus)</option>
+                <option value="repeat_breeding">२. वारंवार उलटते / गाभण राहत नाही (Repeat Breeding)</option>
+                <option value="silent_heat">३. मुका माज (Silent Heat)</option>
+                <option value="retained_placenta">४. विल्यानंतर जार अडकणे (Retained Placenta)</option>
+                <option value="prolapse">५. अंग बाहेर काढणे (Prolapse)</option>
+                <option value="abortion">६. गर्भपात (Abortion)</option>
+                <option value="other">७. इतर समस्या</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>लक्षणे किंवा अधिक माहिती (पर्यायी):</label>
+            <textarea id="extra_symptoms" rows="3" placeholder="उदा. पांढरा स्राव पडतोय, चारा कमी खातेय..."></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="generateBasicAdvice()">🩺 प्राथमिक उपाय शोधा</button>
+    </div>
+
+    <!-- 📊 Basic Results Box -->
+    <div class="result-box" id="result_output">
+        <h3 class="result-title">📋 दुग्ध दिशा - प्राथमिक सल्ला</h3>
+        
+        <div id="basic_advice_container">
+            <!-- Basic advice injected here -->
+        </div>
+
+        <!-- 🔥 Dynamic Ad Container 🔥 -->
+        <div id="advisor_vendor_ad_container"></div>
+
+        <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमची माहिती तपासत आहे... कृपया थांबा ⏳</div>
+        
+        <!-- 🔥 AI Button -->
+        <button id="btn_gemini_trigger" class="btn-gemini" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)</button>
+        
+        <!-- 🔥 Gemini Result Box -->
+        <div class="gemini-response-box" id="gemini_response_box">
+            <h4>✨ दुग्ध दिशा AI विशेष सल्ला:</h4>
+            <div class="gemini-content" id="gemini_content_text"></div>
+        </div>
+
+        <div class="disclaimer">
+            ⚠️ कायदेशीर सूचना: सदर माहिती प्राथमिक मार्गदर्शनासाठी आहे. औषधोपचार करण्यापूर्वी किंवा प्रजननाचे इंजेक्शन देण्यापूर्वी आपल्या स्थानिक पशुवैद्यकाचा (Veterinary Doctor) सल्ला नक्की घ्या.
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ समस्येवर सुचवलेले प्रॉडक्ट:") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            return `
+                <div class="vendor-ad-box" style="display:block;" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#880e4f;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        return defaultHtml; // Fallback to static ad if no product found
+    }
+
+
+    // --- 1. Basic Offline Logic ---
+    function generateBasicAdvice() {
+        let typeSelect = document.getElementById('animal_type');
+        let type = typeSelect.value;
+        let age = document.getElementById('animal_age').value;
+        let problemSelect = document.getElementById('repro_problem');
+        let problem = problemSelect.value;
+        let problemText = problemSelect.options[problemSelect.selectedIndex].text;
+        
+        if(!age || !problem) {
+            alert("कृपया जनावराचे वय आणि मुख्य समस्या निवडा.");
+            return;
+        }
+
+        // 🔥 FIREBASE: LOG SEARCHED ISSUE 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("reproduction_searches").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            animalType: type,
+            animalAge: age,
+            searchedProblem: problemText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging reproduction search: ", err));
+
+        let adviceHtml = "";
+        let targetFilterTag = "";
+        let defaultAdHtml = "";
+
+        switch(problem) {
+            case "anestrus":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. खनिजांची कमतरता:</b> आहारात 'फॉस्फरस' आणि 'कॉपर' ची कमतरता असू शकते. आजपासून दर्जेदार 'मिनरल मिक्सचर' (५० ग्रॅम रोज) चालू करा.</div>
+                    <div class="advice-item"><b>२. जंतनिर्मूलन (Deworming):</b> जनावराच्या पोटात जंत असू शकतात. डॉक्टरांच्या सल्ल्याने जंताचे औषध द्या.</div>
+                    <div class="advice-item"><b>३. ऊर्जा संतुलित करा:</b> गाईला ऊर्जा कमी पडत असल्यास ती माजावर येत नाही. आहारात मका किंवा गूळ वाढवा.</div>
+                `;
+                targetFilterTag = "Reproduction_Heat";
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🌸 गाईला माजावर आणण्यासाठी</h4>
+                        <p>पोषक घटकांची कमतरता दूर करून गाईला वेळेवर माजावर आणण्यासाठी <b>Prajana / Heatup Capsules</b> आणि दर्जेदार <b>Mineral Mixture</b> वापरून पहा.</p>
+                        <span class="sponsor-tag" style="background:#fff; color:#e65100; border:1px solid #ffe0b2; padding:3px 6px; border-radius:4px; font-size:10px;">Sponsored Suggestion</span>
+                    </div>`;
+                break;
+            case "repeat_breeding":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. गर्भाशयाचे इन्फेक्शन:</b> जनावराला पांढरा/गढूळ स्राव येत असल्यास गर्भाशयात इन्फेक्शन असू शकते (Metritis). डॉक्टरांकडून औषध सोडून घ्या.</div>
+                    <div class="advice-item"><b>२. रेतनाची वेळ:</b> कृत्रिम रेतन (AI) करण्याची वेळ चुकली असू शकते. माजावर आल्यानंतर १२ ते १८ तासांच्या आत रेतन करावे.</div>
+                    <div class="advice-item"><b>३. खनिजे:</b> प्रजनन क्षमता टिकवण्यासाठी 'चिलेटेड मिनरल मिक्सचर' द्या.</div>
+                `;
+                targetFilterTag = "Reproduction_Heat";
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>💊 गर्भधारणा टिकवण्यासाठी (Conception)</h4>
+                        <p>वारंवार उलटणाऱ्या गाईंसाठी रेतन (AI) केल्यानंतर गर्भ व्यवस्थित टिकून राहण्यासाठी डॉक्टरांच्या सल्ल्याने <b>Minfa Gold</b> किंवा तत्सम सप्लिमेंट वापरा.</p>
+                        <span class="sponsor-tag" style="background:#fff; color:#e65100; border:1px solid #ffe0b2; padding:3px 6px; border-radius:4px; font-size:10px;">Sponsored Suggestion</span>
+                    </div>`;
+                break;
+            case "silent_heat":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. मुका माज:</b> म्हशींमध्ये ही समस्या खूप आढळते. जनावराचे बारकाईने निरीक्षण करा (उदा. चारा कमी खाणे, दूध कमी देणे, दुसऱ्या जनावरांवर उड्या मारणे).</div>
+                    <div class="advice-item"><b>२. रेकॉर्ड ठेवा:</b> दोन माजांमधील २१ दिवसांचे अंतर कॅलेंडरवर नोंदवून ठेवा, जेणेकरून पुढच्या माजाची तारीख आधीच समजेल.</div>
+                `;
+                targetFilterTag = "Daily_Ration_Mineral";
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🥣 मुका माज टाळण्यासाठी</h4>
+                        <p>मुका माज हे खनिजांच्या कमतरतेचे प्रमुख लक्षण आहे. तुमच्या आहारात आजच चांगल्या कंपनीचे <b>Chelated Mineral Mixture</b> सुरू करा.</p>
+                        <span class="sponsor-tag" style="background:#fff; color:#e65100; border:1px solid #ffe0b2; padding:3px 6px; border-radius:4px; font-size:10px;">Sponsored Suggestion</span>
+                    </div>`;
+                break;
+            case "retained_placenta":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. तातडीचा उपाय:</b> विल्यानंतर ८-१२ तासांत जार न पडल्यास, हाताने ओढून काढू नका. यामुळे इन्फेक्शन होऊ शकते.</div>
+                    <div class="advice-item"><b>२. डॉक्टरांना बोलवा:</b> गर्भाशय साफ करण्यासाठी डॉक्टरांकडून 'Exapar' किंवा तत्सम लिक्विड औषध पाजा.</div>
+                    <div class="advice-item"><b>३. कॅल्शियम:</b> विण्यापूर्वी आणि नंतर कॅल्शियम जेल द्या जेणेकरून स्नायूंना ताकद मिळेल.</div>
+                `;
+                targetFilterTag = "Calcium_Bypass";
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🩺 गर्भाशय साफ करण्यासाठी</h4>
+                        <p>जार वेळेवर पडण्यासाठी आणि गर्भाशय स्वच्छ करण्यासाठी <b>Exapar Liquid</b> किंवा <b>Uterotone</b> अत्यंत उपयुक्त आहे. तसेच कॅल्शियम जेल सोबत ठेवा.</p>
+                        <span class="sponsor-tag" style="background:#fff; color:#e65100; border:1px solid #ffe0b2; padding:3px 6px; border-radius:4px; font-size:10px;">Sponsored Suggestion</span>
+                    </div>`;
+                break;
+            case "prolapse":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. जागा योग्य करा:</b> जनावराला बांधण्याची जागा मागच्या बाजूने उंच असावी.</div>
+                    <div class="advice-item"><b>२. कॅल्शियमची पातळी:</b> रक्तातील कॅल्शियम कमी झाल्याने हे होते. डॉक्टरांना बोलावून सलाईन (Calcium) द्या.</div>
+                    <div class="advice-item"><b>३. तातडीने डॉक्टर:</b> अंग बाहेर आल्यास त्यावर थंड पाणी व हळद टाकून डॉक्टरांना तातडीने बोलवा.</div>
+                `;
+                targetFilterTag = "Calcium_Bypass";
+                break;
+            case "abortion":
+                adviceHtml = `
+                    <div class="advice-item"><b>१. इन्फेक्शनचा धोका:</b> ब्रुसेलोसिस सारख्या संसर्गजन्य आजारामुळे गर्भपात होऊ शकतो. डॉक्टरांकडून रक्त तपासणी करून घ्या.</div>
+                    <div class="advice-item"><b>२. वेगळे ठेवा:</b> गर्भपात झालेल्या गाईला इतर जनावरांपासून वेगळे बांधा आणि गोठ्यात चुना/जंतुनाशक फवारा.</div>
+                `;
+                targetFilterTag = "Reproduction_Heat";
+                break;
+            default:
+                adviceHtml = `<div class="advice-item">कृपया तुमची समस्या सविस्तर पाहण्यासाठी खालील AI बटणावर क्लिक करा.</div>`;
+        }
+
+        document.getElementById('basic_advice_container').innerHTML = adviceHtml;
+        
+        // 🔥 Inject the Dynamic Ad if a target was found 🔥
+        let adBox = document.getElementById('advisor_vendor_ad_container');
+        if (targetFilterTag !== "") {
+            adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml);
+            adBox.style.display = 'block';
+        } else {
+            adBox.innerHTML = "";
+            adBox.style.display = 'none';
+        }
+
+        document.getElementById('result_output').style.display = 'block';
+        document.getElementById('btn_gemini_trigger').style.display = 'block';
+        document.getElementById('gemini_response_box').style.display = 'none';
+
+        // Scroll down
+        document.getElementById('result_output').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- 2. Advanced AI Logic (Gemini 1.5) ---
+    async function fetchGeminiAdvice() {
+        // Fetch Key from Admin Panel
+        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+        let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
+
+        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+            alert("⚠️ ॲडमिन पॅनेलमध्ये Google Gemini ची योग्य API Key जोडलेली नाही. कृपया M16 टॅबमध्ये जाऊन API Key सेट करा.");
+            return;
+        }
+
+        document.getElementById('btn_gemini_trigger').style.display = "none";
+        document.getElementById('gemini_loader').style.display = "block";
+        document.getElementById('gemini_response_box').style.display = "none";
+
+        let type = document.getElementById('animal_type').value;
+        let age = document.getElementById('animal_age').value;
+        let lact = document.getElementById('lactation_no').value;
+        let problem = document.getElementById('repro_problem').options[document.getElementById('repro_problem').selectedIndex].text;
+        let symptoms = document.getElementById('extra_symptoms').value || "काहीही नाही";
+
+        let promptText = `
+        तू 'दुग्ध दिशा' ॲपचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आहेस. 
+        शेतकऱ्याने त्याच्या जनावराच्या प्रजननाबाबत (Reproduction) खालील समस्या सांगितली आहे:
+        - जनावर: ${type}
+        - वय: ${age}
+        - वेत: ${lact}
+        - मुख्य अडचण: ${problem}
+        - इतर लक्षणे: ${symptoms}
+        
+        शेतकऱ्याला मराठीत ५ ते ६ ओळींत (बुलेट पॉईंट्स वापरून) अत्यंत सोपा, अचूक आणि घरगुती/वैद्यकीय उपाय सांग. 
+        कोणतीही गुंतागुंतीची तांत्रिक भाषा वापरू नकोस. शक्य असल्यास आवश्यक खनिजे किंवा औषधांचा प्रकार सुचव.
+        शेवटी 'हा उपाय प्राथमिक आहे, डॉक्टरांना दाखवा' अशी सूचना दे.
+        `;
+
+        try {
+            // Auto-Discovery of Model
+            let selectedModel = "models/gemini-1.5-flash"; 
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${selectedModel}:generateContent?key=${apiKey}`;
+            const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
+                alert("AI Server Error: " + errMsg);
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+                return;
+            }
+
+            if (data.candidates && data.candidates.length > 0) {
+                let aiResponse = data.candidates[0].content.parts[0].text;
+                // Format text (Bold & Bullets)
+                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                
+                document.getElementById('gemini_content_text').innerHTML = aiResponse;
+                document.getElementById('gemini_loader').style.display = "none";
+                document.getElementById('gemini_response_box').style.display = "block";
+                
+                document.getElementById('gemini_response_box').scrollIntoView({ behavior: "smooth" });
+            } else {
+                alert("AI कडून कोणतेही उत्तर आले नाही. कृपया पुन्हा प्रयत्न करा.");
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+            }
+        } catch (error) {
+            alert("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये समस्या आहे.");
+            document.getElementById('btn_gemini_trigger').style.display = "block";
+            document.getElementById('gemini_loader').style.display = "none";
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

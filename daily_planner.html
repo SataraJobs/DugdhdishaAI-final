@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - डेली प्लॅनर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .date-header {
+            background: #fff;
+            padding: 15px 20px;
+            margin: -20px 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+        .date-header h2 { margin: 0; font-size: 18px; color: #1b5e20; }
+        .date-header p { margin: 2px 0 0; font-size: 12px; color: #666; font-weight: bold; }
+        
+        .task-list {
+            padding: 0 20px 20px;
+        }
+        .task-card {
+            background: #fff;
+            border-left: 5px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .task-card.completed {
+            opacity: 0.6;
+            border-left-color: #4CAF50 !important;
+        }
+        .task-card.completed .task-title {
+            text-decoration: line-through;
+            color: #888;
+        }
+        
+        /* Custom Checkbox */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .custom-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #aaa;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+        }
+        .completed .custom-checkbox {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .completed .custom-checkbox::after {
+            content: '✔';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .task-content { flex: 1; }
+        .task-category {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .task-title { margin: 0 0 4px; font-size: 14px; color: #333; font-weight: bold; }
+        .task-desc { margin: 0; font-size: 12px; color: #666; line-height: 1.4; }
+        
+        /* Category Colors */
+        .cat-reproduction { background: #ffebee; color: #c62828; }
+        .cat-health { background: #e3f2fd; color: #1565c0; }
+        .cat-feed { background: #fff3e0; color: #e65100; }
+        .cat-calf { background: #f3e5f5; color: #7b1fa2; }
+        
+        /* Border Colors */
+        .task-card.type-reproduction { border-color: #f44336; }
+        .task-card.type-health { border-color: #2196f3; }
+        .task-card.type-feed { border-color: #ff9800; }
+        .task-card.type-calf { border-color: #9c27b0; }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 20px 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: #4CAF50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            text-align: right;
+            font-size: 11px;
+            color: #555;
+            margin: -15px 20px 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="padding-bottom: 40px; border-radius: 0 0 20px 20px; background: #1b5e20;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px; color: white;">
+            <h1 style="margin:0;">डेली प्लॅनर 📋</h1>
+            <p style="margin:5px 0 0; color:#c8e6c9;">आजची कामे आणि स्मार्ट ॲलर्ट्स</p>
+        </div>
+    </div>
+
+    <div class="date-header">
+        <div>
+            <h2 id="today_date">--</h2>
+            <p id="today_day">--</p>
+        </div>
+        <div style="text-align: right;">
+            <p style="color: #ff9800; font-size: 14px; margin:0; font-weight:bold;">🔔 ४ ॲलर्ट्स</p>
+        </div>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="taskProgress"></div>
+    </div>
+    <div class="progress-text" id="progressText">0% पूर्ण</div>
+
+    <div class="task-list" id="taskContainer">
+        
+        <!-- Added Unique IDs for Firebase Tracking -->
+        <div class="task-card type-reproduction" id="task_1" onclick="toggleTask(this)">
+            <div class="checkbox-container">
+                <div class="custom-checkbox"></div>
+            </div>
+            <div class="task-content">
+                <span class="task-category cat-reproduction">♀️ प्रजनन</span>
+                <p class="task-title">गोदावरीची माज तपासणी (२१ वा दिवस)</p>
+                <p class="task-desc">२१ दिवसांपूर्वी कृत्रिम रेतन (AI) केले होते. गाय पुन्हा माजावर येतेय का यावर लक्ष ठेवा.</p>
+            </div>
+        </div>
+
+        <div class="task-card type-calf" id="task_2" onclick="toggleTask(this)">
+            <div class="checkbox-container">
+                <div class="custom-checkbox"></div>
+            </div>
+            <div class="task-content">
+                <span class="task-category cat-calf">🍼 वासरू संगोपन</span>
+                <p class="task-title">वासराला (गौरी) पहिले जंतनाशक देणे</p>
+                <p class="task-desc">वासरू आज १५ दिवसांचे झाले आहे. डॉक्टरांच्या सल्ल्याने जंतनाशक डोस द्या.</p>
+            </div>
+        </div>
+
+        <div class="task-card type-feed" id="task_3" onclick="toggleTask(this)">
+            <div class="checkbox-container">
+                <div class="custom-checkbox"></div>
+            </div>
+            <div class="task-content">
+                <span class="task-category cat-feed">🥬 आहार</span>
+                <p class="task-title">गाईंना (Group A) बायपास फॅट देणे</p>
+                <p class="task-desc">AI ॲनालायझरनुसार गाईंची ऊर्जा कमी होत आहे, आज ५० ग्रॅम बायपास फॅट खाद्यात मिसळा.</p>
+            </div>
+        </div>
+
+        <div class="task-card type-health" id="task_4" onclick="toggleTask(this)">
+            <div class="checkbox-container">
+                <div class="custom-checkbox"></div>
+            </div>
+            <div class="task-content">
+                <span class="task-category cat-health">💉 लसीकरण</span>
+                <p class="task-title">FMD लसीकरणाची नोंद तपासणे</p>
+                <p class="task-desc">पुढील आठवड्यात लाळ्या खुरकूत (FMD) लसीकरण करायचे आहे, डॉक्टरांची वेळ ठरवा.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // Set Today's Date
+    const today = new Date();
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    const dayOptions = { weekday: 'long' };
+    
+    document.getElementById('today_date').innerText = today.toLocaleDateString('mr-IN', options);
+    document.getElementById('today_day').innerText = today.toLocaleDateString('mr-IN', dayOptions);
+
+    // Task Toggle & Progress Logic
+    function toggleTask(cardElement) {
+        cardElement.classList.toggle('completed');
+        updateProgress();
+
+        // 🔥 FIREBASE SYNC: Save Task Completion Status 🔥
+        let taskId = cardElement.id;
+        if(taskId) {
+            let isCompleted = cardElement.classList.contains('completed');
+            let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+            let todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            
+            // Save to Firebase (Merge true updates the existing doc without overwriting other fields)
+            db.collection("daily_planner_tasks").doc(fMob + "_" + todayStr + "_" + taskId).set({
+                mobile: fMob,
+                date: todayStr,
+                taskId: taskId,
+                completed: isCompleted,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(err => console.error("Firebase Sync Error:", err));
+        }
+    }
+
+    function updateProgress() {
+        let totalTasks = document.getElementsByClassName('task-card').length;
+        let completedTasks = document.getElementsByClassName('task-card completed').length;
+        
+        let percentage = (completedTasks / totalTasks) * 100;
+        
+        document.getElementById('taskProgress').style.width = percentage + "%";
+        document.getElementById('progressText').innerText = Math.round(percentage) + "% कामे पूर्ण";
+    }
+
+    // 🔥 FIREBASE: Load Today's Saved Task Progress on Page Load 🔥
+    function loadTaskProgress() {
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        let todayStr = today.toISOString().split('T')[0];
+
+        let tasks = document.getElementsByClassName('task-card');
+        Array.from(tasks).forEach(task => {
+            if(task.id) {
+                db.collection("daily_planner_tasks").doc(fMob + "_" + todayStr + "_" + task.id).get()
+                .then(doc => {
+                    if(doc.exists && doc.data().completed) {
+                        task.classList.add('completed');
+                    }
+                    updateProgress(); // Update progress bar after fetching status
+                }).catch(err => console.error("Error loading task progress:", err));
+            }
+        });
+    }
+
+    // Initialize progress on load
+    updateProgress();
+    loadTaskProgress(); // Load Live Progress from Firebase
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

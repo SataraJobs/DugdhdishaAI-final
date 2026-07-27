@@ -1,0 +1,61 @@
+// firebase-messaging-sw.js
+// Firebase Cloud Messaging Service Worker for Dugdha Disha AI
+
+// Import and configure the Firebase SDK
+// These scripts are required to run the service worker
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+
+// Initialize the Firebase app in the service worker
+firebase.initializeApp({
+  apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+  authDomain: "dugdhdishaai.firebaseapp.com",
+  projectId: "dugdhdishaai",
+  storageBucket: "dugdhdishaai.firebasestorage.app",
+  messagingSenderId: "1059551640041",
+  appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+  measurementId: "G-6TFEJKBVFL"
+});
+
+// Retrieve an instance of Firebase Messaging so that it can handle background messages.
+const messaging = firebase.messaging();
+
+// Handle background messages
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[firebase-messaging-sw.js] Background Message Received: ', payload);
+  
+  // Customize notification here
+  const notificationTitle = payload.notification.title || "दुग्ध दिशा AI कडून सूचना";
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/icon.png', // Replace with your app logo/icon path
+    badge: '/badge.png', // Small icon for Android notification bar (optional)
+    data: payload.data // Pass extra data if needed (e.g., URL to open)
+  };
+  
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Optional: Handle Notification Click Event
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  
+  // Open the app when notification is clicked
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(windowClients => {
+      // Check if there is already a window/tab open with the target URL
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
+        // If so, just focus it.
+        if (client.url === '/' && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If not, then open the target URL in a new window/tab.
+      if (clients.openWindow) {
+        // You can change 'index.html' to a specific page based on payload data
+        return clients.openWindow('/');
+      }
+    })
+  );
+});

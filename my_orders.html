@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - माझी खरेदी</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root { --primary: #1b5e20; --secondary: #ff9800; --bg: #f4f7f9; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; padding-bottom: 70px; color: var(--text); }
+        a { text-decoration: none; }
+        
+        /* 1. Header */
+        .top-header { background: var(--primary); padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; color: white; }
+        .top-header h2 { margin: 0; font-size: 18px; font-weight: bold; flex: 1; }
+        
+        /* 2. Filter Tabs */
+        .order-tabs { display: flex; overflow-x: auto; gap: 10px; padding: 15px 20px; scroll-scrollbar-width: none; background: white; border-bottom: 1px solid #e0e0e0; }
+        .order-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: white; border: 1px solid #ddd; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #555; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: #e8f5e9; border-color: var(--primary); color: var(--primary); }
+
+        /* 3. Order Cards */
+        .order-container { padding: 15px 20px; }
+        .order-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid #eee; }
+        
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ddd; padding-bottom: 10px; margin-bottom: 10px; }
+        .order-id { font-size: 12px; font-weight: bold; color: #555; }
+        .order-date { font-size: 11px; color: #888; }
+        
+        /* Status Badges */
+        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; display: inline-block; }
+        .status-pending { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .status-shipped { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .status-delivered { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-cancelled { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; } /* New Cancelled Style */
+
+        .product-list { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .prod-icon { width: 50px; height: 50px; background: #f4f7f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #eee; }
+        .prod-details { flex: 1; }
+        .prod-name { font-size: 13px; font-weight: 900; color: #333; margin: 0 0 3px; line-height: 1.3; }
+        .prod-qty { font-size: 11px; color: #666; font-weight: bold; }
+        
+        .order-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+        .order-total { font-size: 15px; font-weight: 900; color: #d32f2f; }
+        
+        /* Actions */
+        .btn-action { background: white; border: 1px solid var(--primary); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-track { background: var(--secondary); color: white; border: none; box-shadow: 0 2px 0 #e65100; }
+        .btn-track:active { top: 2px; position: relative; box-shadow: none; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 50px 20px; color: #888; display: none; }
+        .empty-state h3 { margin: 10px 0 5px; color: #555; }
+        .empty-state p { font-size: 13px; margin: 0 0 20px; }
+        .btn-shop { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .recommendation-card { background: linear-gradient(145deg, #fff9c4, #fff176); border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px dashed #fbc02d; display: none; }
+        .recommendation-card h4 { margin: 0 0 8px; color: #f57f17; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .recommendation-card p { margin: 0 0 12px; font-size: 12px; color: #555; line-height: 1.4; font-weight: bold; }
+        .rec-item { background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* Tracking Modal */
+        .tracking-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+        .tracking-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; }
+        
+        /* New Order FAB */
+        .new-order-fab { position: fixed; bottom: 85px; right: 20px; background: var(--primary); color: white; border: none; padding: 12px 18px; border-radius: 30px; font-weight: bold; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 99; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
+        .new-order-fab:active { transform: scale(0.95); }
+    </style>
+</head>
+<body onload="initializeOrders()">
+
+    <!-- Header -->
+    <header class="top-header">
+        <a href="index.html" style="color: white; font-size: 20px;">⬅️</a>
+        <h2>माझी खरेदी (My Orders) 📦</h2>
+        
+        <!-- Notification Feature -->
+        <div style="position: relative; cursor: pointer;" onclick="toggleNotifications()">
+            <span style="font-size: 22px;">🔔</span>
+            <span id="notif_badge" style="position: absolute; top: -5px; right: -5px; background: #e65100; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;">०</span>
+            
+            <div id="notificationDropdown" style="display: none; position: absolute; top: 35px; right: 0; background: white; width: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e0e0; z-index: 1000; padding: 12px; text-align: left; color: #333;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters (Added Cancelled Tab) -->
+    <div class="order-tabs">
+        <button class="tab-btn active" onclick="filterOrders('all', this)">सर्व (All)</button>
+        <button class="tab-btn" onclick="filterOrders('pending', this)">प्रलंबित (Pending)</button>
+        <button class="tab-btn" onclick="filterOrders('shipped', this)">वाटेत (Shipped)</button>
+        <button class="tab-btn" onclick="filterOrders('delivered', this)">पोहोचले (Delivered)</button>
+        <button class="tab-btn" onclick="filterOrders('cancelled', this)">रद्द (Cancelled)</button>
+    </div>
+
+    <!-- Dynamic Order List Container -->
+    <div class="order-container">
+        
+        <!-- 🔥 NEW: AI Order Recommendation Ad -->
+        <div class="recommendation-card" id="ai_order_recommendation">
+            <!-- JS will inject dynamic cross-sell Ad here -->
+        </div>
+
+        <div id="dynamic_orders_list">
+            <!-- JavaScript द्वारे येथे खरेदी केलेल्या ऑर्डर्स आपोआप येतील -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div style="font-size: 60px; margin-bottom: 10px;">📦</div>
+            <h3>कोणतीही खरेदी नाही!</h3>
+            <p>तुम्ही अद्याप कोणतीही ऑर्डर केलेली नाही.</p>
+            
+            <!-- Empty State First Purchase Ad -->
+            <div style="background: linear-gradient(145deg, #e3f2fd, #bbdefb); padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px dashed #1976d2; cursor: pointer;" onclick="window.location.href='krushi_mall.html'">
+                <span style="background:#1976d2; color:white; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:bold;">First Order Offer</span>
+                <h4 style="margin: 8px 0 5px; color:#0d47a1;">स्पेशल १५% डिस्काउंट!</h4>
+                <p style="font-size: 12px; margin: 0; color: #333; font-weight: bold;">तुमच्या पहिल्या खरेदीवर 'हिंदुस्तान फिड्स' च्या पेंडीवर मिळवा खास सवलत. आजच खरेदी करा!</p>
+            </div>
+            
+            <button class="btn-shop" style="margin-top: 20px; width: 100%; box-shadow: 0 4px 0 #0d3b11;" onclick="window.location.href='krushi_mall.html'">🛒 कृषी मॉलमध्ये जा</button>
+        </div>
+
+    </div>
+
+    <!-- 🔥 NEW: Floating 'New Order' Button -->
+    <button class="new-order-fab" onclick="window.location.href='krushi_mall.html'">
+        <span style="font-size:18px;">➕</span> नवीन ऑर्डर
+    </button>
+
+    <!-- 🔥 NEW: Live Order Tracking Modal -->
+    <div class="tracking-modal" id="trackingModal">
+        <div class="tracking-content">
+            <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid #eee; padding-bottom:10px;">📍 लाईव्ह ऑर्डर ट्रॅकिंग</h3>
+            <p id="track_order_id" style="font-size:12px; font-weight:bold; color:#666; margin-bottom:15px;"></p>
+            
+            <div id="tracking_status_content" style="margin:20px 0; font-size:14px; line-height:2;">
+                <!-- tracking logic injected here -->
+            </div>
+            
+            <button class="btn-action" style="background:#f4f7f9; border-color:#ccc; width:100%; padding:10px; color:#333; font-size:14px;" onclick="document.getElementById('trackingModal').style.display='none'">बंद करा</button>
+        </div>
+    </div>
+
+    <script>
+        // 🔥 FIREBASE INITIALIZATION 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        function initializeOrders() {
+            if(typeof loadNotifications === 'function') loadNotifications('farmer');
+            loadMyOrders('all');
+        }
+
+        // 🔥 ACTIVATE: Order Cancellation Logic with Firebase Sync
+        function cancelOrder(orderId) {
+            if(confirm("तुम्हाला नक्की ही ऑर्डर रद्द (Cancel) करायची आहे का?")) {
+                let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                let orderIndex = orders.findIndex(o => o.id === orderId);
+                
+                if(orderIndex > -1) {
+                    // Update Locally
+                    orders[orderIndex].status = 'cancelled';
+                    localStorage.setItem('user_orders', JSON.stringify(orders));
+                    
+                    // Update in Firebase (If it exists)
+                    db.collection("mall_orders").where("id", "==", orderId).get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => {
+                            db.collection("mall_orders").doc(doc.id).update({
+                                status: "cancelled"
+                            }).catch(err => console.error("Error updating firebase order status: ", err));
+                        });
+                    }).catch(err => console.error("Error finding order in firebase: ", err));
+
+                    alert("ऑर्डर यशस्वीरीत्या रद्द करण्यात आली आहे.");
+                    
+                    let activeBtn = document.querySelector('.tab-btn.active');
+                    let activeTab = activeBtn ? activeBtn.innerText : 'all';
+                    
+                    if(activeTab.includes('प्रलंबित')) filterOrders('pending', activeBtn);
+                    else filterOrders('all', document.querySelector('.order-tabs .tab-btn'));
+                }
+            }
+        }
+
+        // 🔥 ACTIVATE: Repeat Order Logic
+        function repeatOrder(orderId) {
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let order = orders.find(o => o.id === orderId);
+            
+            if(order) {
+                let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+                
+                // Add old items back to current cart
+                order.items.forEach(item => {
+                    let existing = cart.find(i => i.id === item.id);
+                    if(existing) existing.qty += item.qty;
+                    else cart.push(item);
+                });
+                
+                localStorage.setItem('krushi_cart', JSON.stringify(cart));
+                alert("✅ या ऑर्डरमधील सर्व प्रॉडक्ट्स तुमच्या कार्टमध्ये पुन्हा ॲड केले आहेत! आता तुम्हाला खरेदी पूर्ण करण्यासाठी कृषी मॉलमध्ये पाठवत आहोत.");
+                window.location.href = "krushi_mall.html";
+            }
+        }
+
+        // 🔥 ACTIVATE: Order Tracking Logic
+        function openTrackingModal(orderId, status) {
+            document.getElementById('track_order_id').innerText = "Order ID: " + orderId;
+            let content = "";
+            
+            let pColor = (status === 'pending' || status === 'shipped' || status === 'delivered') ? '#2e7d32' : '#9e9e9e';
+            let sColor = (status === 'shipped' || status === 'delivered') ? '#2e7d32' : '#9e9e9e';
+            let dColor = (status === 'delivered') ? '#2e7d32' : '#9e9e9e';
+            
+            content += `<div style="color:${pColor}; font-weight:bold; display:flex; align-items:center; gap:10px;">
+                            <span>${pColor === '#2e7d32' ? '✅' : '⏳'}</span> <span>ऑर्डर स्वीकारली (Order Placed)</span>
+                        </div>`;
+            content += `<div style="color:${sColor}; font-weight:bold; display:flex; align-items:center; gap:10px; margin-top:10px;">
+                            <span>${sColor === '#2e7d32' ? '✅' : '⏳'}</span> <span>कुरिअरकडे दिली (Shipped)</span>
+                        </div>`;
+            content += `<div style="color:${dColor}; font-weight:bold; display:flex; align-items:center; gap:10px; margin-top:10px;">
+                            <span>${dColor === '#2e7d32' ? '✅' : '⏳'}</span> <span>तुमच्यापर्यंत पोहोचली (Delivered)</span>
+                        </div>`;
+            
+            document.getElementById('tracking_status_content').innerHTML = content;
+            document.getElementById('trackingModal').style.display = 'flex';
+        }
+
+        function loadMyOrders(filterStatus) {
+            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let container = document.getElementById('dynamic_orders_list');
+            let emptyState = document.getElementById('emptyState');
+            let recCard = document.getElementById('ai_order_recommendation');
+            
+            container.innerHTML = ''; 
+            
+            let filteredOrders = allOrders.filter(order => filterStatus === 'all' || order.status === filterStatus);
+            
+            if(filteredOrders.length === 0 && filterStatus === 'all') {
+                emptyState.style.display = 'block'; 
+                recCard.style.display = 'none';
+            } else if (filteredOrders.length === 0) {
+                 container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">या कॅटेगरीमध्ये कोणतीही ऑर्डर नाही.</div>';
+                 emptyState.style.display = 'none';
+                 recCard.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                
+                // Smart Cross-Sell Recommendations
+                let lastOrder = filteredOrders[0]; 
+                if(lastOrder && lastOrder.items) {
+                    let hasMilkingMachine = lastOrder.items.some(i => i.name.includes("मशीन"));
+                    let hasFeed = lastOrder.items.some(i => i.name.includes("पेंड") || i.name.includes("पेलेट"));
+                    
+                    if (hasMilkingMachine) {
+                        recCard.innerHTML = `
+                            <h4>🤖 AI शिफारस (Frequently Bought Together)</h4>
+                            <p>तुम्ही मिल्किंग मशीन मागवली आहे. कासदाह (Mastitis) टाळण्यासाठी कास धुण्याचे लोशन आणि मलम खरेदी करण्यास विसरू नका!</p>
+                            <div class="rec-item" onclick="window.location.href='krushi_mall.html'">
+                                <div style="font-size:24px; background:#f4f7f9; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:8px;">💊</div>
+                                <div>
+                                    <div style="font-size:12px; font-weight:bold; color:#1976d2;">Himalaya Vet (Sponsored)</div>
+                                    <div style="font-size:14px; font-weight:900;">Mastilep Ointment</div>
+                                </div>
+                                <div style="margin-left:auto; font-weight:bold; color:#d32f2f;">🛒 Buy</div>
+                            </div>
+                        `;
+                        recCard.style.display = 'block';
+                    } else if (hasFeed) {
+                        recCard.innerHTML = `
+                            <h4>🤖 AI शिफारस (Nutrition Boost)</h4>
+                            <p>तुमच्या पशुखाद्यासोबत 'खनिज मिश्रण' (Mineral Mixture) दिल्यास दुधातील फॅट आणि SNF वेगाने वाढेल.</p>
+                            <div class="rec-item" onclick="window.location.href='krushi_mall.html'">
+                                <div style="font-size:24px; background:#f4f7f9; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:8px;">🥣</div>
+                                <div>
+                                    <div style="font-size:12px; font-weight:bold; color:#1976d2;">गोदरेज ॲग्रोव्हेट (Sponsored)</div>
+                                    <div style="font-size:14px; font-weight:900;">मिनरल मिक्सचर Gold</div>
+                                </div>
+                                <div style="margin-left:auto; font-weight:bold; color:#d32f2f;">🛒 Buy</div>
+                            </div>
+                        `;
+                        recCard.style.display = 'block';
+                    } else {
+                        recCard.style.display = 'none';
+                    }
+                }
+
+                let html = '';
+                filteredOrders.forEach(order => {
+                    let statusClass, statusText, statusIcon;
+                    if(order.status === 'pending') {
+                        statusClass = 'status-pending'; statusText = 'प्रोसेसिंग'; statusIcon = '⏳';
+                    } else if(order.status === 'shipped') {
+                        statusClass = 'status-shipped'; statusText = 'वाटेत आहे'; statusIcon = '🚚';
+                    } else if(order.status === 'delivered') {
+                        statusClass = 'status-delivered'; statusText = 'पोहोचले'; statusIcon = '🎉';
+                    } else if(order.status === 'cancelled') {
+                        statusClass = 'status-cancelled'; statusText = 'रद्द केली'; statusIcon = '❌';
+                    } else {
+                        statusClass = 'status-pending'; statusText = 'प्रोसेसिंग'; statusIcon = '⏳';
+                    }
+
+                    let paymentText = order.paymentMethod === 'COD' ? 'एकूण बिल (COD)' : 'एकूण बिल (Paid)';
+                    let paymentStyle = order.paymentMethod === 'Online Paid' ? 'color:#2e7d32;' : '';
+                    let paymentCheck = order.paymentMethod === 'Online Paid' ? ' ✅' : '';
+
+                    let productsHtml = '';
+                    order.items.forEach(item => {
+                        productsHtml += `
+                        <div class="product-list">
+                            <div class="prod-icon">${item.icon}</div>
+                            <div class="prod-details">
+                                <div class="prod-name">${item.name}</div>
+                                <div class="prod-qty">${item.company} • ${item.qty} नग</div>
+                            </div>
+                        </div>`;
+                    });
+
+                    // 🔥 ACTIVATE: Dynamic Action Buttons based on Status
+                    let actionButtonsHtml = '';
+                    if(order.status === 'pending') {
+                        actionButtonsHtml = `
+                            <button class="btn-action" style="color:#d32f2f; border-color:#d32f2f;" onclick="cancelOrder('${order.id}')">❌ रद्द करा</button>
+                            <button class="btn-action btn-track" onclick="openTrackingModal('${order.id}', '${order.status}')">📍 ट्रॅक करा</button>
+                        `;
+                    } else if(order.status === 'shipped') {
+                        actionButtonsHtml = `
+                            <button class="btn-action" onclick="alert('डीलरशी संपर्क: ९५७९५३५२९० (Dugdha Disha Hub)')">📞 कॉल</button>
+                            <button class="btn-action btn-track" onclick="openTrackingModal('${order.id}', '${order.status}')">📍 ट्रॅक करा</button>
+                        `;
+                    } else if(order.status === 'delivered') {
+                        actionButtonsHtml = `
+                            <button class="btn-action" onclick="alert('${order.id} ची पावती (Invoice) PDF डाउनलोड सुरू झाले आहे!')">📥 पावती</button>
+                            <button class="btn-action" style="background:#f4f7f9; border-color:#ccc; color:#333;" onclick="repeatOrder('${order.id}')">🔄 रिपीट ऑर्डर</button>
+                        `;
+                    } else if(order.status === 'cancelled') {
+                        actionButtonsHtml = `
+                            <button class="btn-action" style="background:#f4f7f9; border-color:#ccc; color:#333; width:100%;" onclick="repeatOrder('${order.id}')">🔄 पुन्हा ऑर्डर करा</button>
+                        `;
+                    }
+
+                    html += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-id">Order ID: ${order.id}</div>
+                                <div class="order-date">${order.date}</div>
+                            </div>
+                            <div class="status-badge ${statusClass}">${statusIcon} ${statusText}</div>
+                        </div>
+                        
+                        ${productsHtml}
+
+                        <div class="order-footer">
+                            <div>
+                                <span style="font-size:10px; color:#666;">${paymentText}</span><br>
+                                <span class="order-total" style="${paymentStyle}">₹${order.totalAmount.toLocaleString('en-IN')}${paymentCheck}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                ${actionButtonsHtml}
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+        }
+
+        function filterOrders(status, btnElement) {
+            let btns = document.getElementsByClassName('tab-btn');
+            for(let i=0; i<btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+            btnElement.classList.add('active');
+            loadMyOrders(status);
+        }
+    </script>
+
+    <script src="notifications.js"></script>
+    <script src="fcm_setup.js"></script>
+
+</body>
+</html>

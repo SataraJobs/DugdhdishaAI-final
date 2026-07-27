@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - स्मार्ट जंतनिर्मूलन (Deworming)</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; background: #f4f7f6; min-height: 100vh; }
+        
+        .top-dashboard { background: #00796b; padding: 20px; border-radius: 0 0 20px 20px; color: white; }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .header-titles h1 { margin: 10px 0 5px; font-size: 22px; }
+        .header-titles p { margin: 0; font-size: 13px; color: #b2dfdb; }
+
+        /* Permanent Disclaimer (Always Visible) */
+        .permanent-disclaimer { margin: 20px; padding: 15px; background: #ffebee; border-left: 5px solid #d32f2f; border-radius: 8px; font-size: 13.5px; color: #c62828; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); line-height: 1.5; }
+
+        /* Tabs Styling */
+        .tabs-container { display: flex; gap: 10px; margin: 0 20px 10px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; background: #e0e0e0; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; color: #555; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: #00796b; color: white; box-shadow: 0 4px 8px rgba(0, 121, 107, 0.3); }
+
+        /* Form Sections */
+        .category-title { font-size: 16px; font-weight: bold; color: #00796b; margin: 20px 20px 10px; border-left: 5px solid #ff9800; padding-left: 10px; }
+        .form-section { background: #fff; padding: 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .input-row { margin-bottom: 15px; }
+        .input-row label { display: block; font-weight: bold; color: #444; margin-bottom: 5px; font-size: 13px; }
+        select, input[type="text"], input[type="date"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fafafa; font-size: 14px; box-sizing: border-box; }
+        
+        /* Checkbox Styling */
+        .checkbox-row { display: flex; align-items: center; gap: 10px; background: #fff3e0; padding: 12px; border-radius: 8px; border: 1px solid #ffcc80; margin-top: 10px; display: none; }
+        .checkbox-row input { width: 20px; height: 20px; accent-color: #e65100; }
+        .checkbox-row label { margin: 0; color: #e65100; font-weight: bold; font-size: 14px; cursor: pointer;}
+
+        .btn-primary { background: linear-gradient(145deg, #00796b, #004d40); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #004d40; margin-top: 10px; }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #004d40; position: relative; }
+
+        /* Result Area */
+        .result-box { background: #fff; margin: 20px; padding: 20px; border-radius: 12px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #00796b; }
+        .result-title { color: #00796b; margin: 0 0 15px; font-size: 18px; }
+        
+        .medicine-card { background: #e8f5e9; border: 1px solid #81c784; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .medicine-card h4 { margin: 0 0 5px; color: #2e7d32; font-size: 14px; }
+        .medicine-card p { margin: 0; font-size: 18px; font-weight: 900; color: #1b5e20; }
+
+        .date-card { background: #e3f2fd; border: 1px solid #90caf9; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
+        .date-card div h4 { margin: 0 0 5px; color: #1565c0; font-size: 13px; }
+        .date-card div p { margin: 0; font-size: 16px; font-weight: bold; color: #0d47a1; }
+        
+        .pregnant-warning { background: #fff3e0; border-left: 5px solid #e65100; padding: 12px; border-radius: 6px; font-size: 13px; color: #e65100; margin-bottom: 15px; font-weight: bold; display: none;}
+
+        /* Information Table Styles */
+        .info-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .info-table th, .info-table td { border: 1px solid #e0e0e0; padding: 10px 8px; text-align: left; }
+        .info-table th { background: #00796b; color: white; }
+        .info-table tr:nth-child(even) { background: #f9f9f9; }
+        .info-list { font-size: 13.5px; color: #444; padding-left: 20px; margin-bottom: 0; line-height: 1.6; }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; margin-bottom: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body onload="initPage()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>जंतनिर्मूलन (Deworming) 💊</h1>
+            <p>स्मार्ट ट्रॅकर आणि औषध रोटेशन सिस्टम</p>
+        </div>
+    </div>
+
+    <!-- कायमस्वरूपी वैद्यकीय टीप (Permanent Disclaimer) -->
+    <div class="permanent-disclaimer">
+        🚨 टीप - हे ॲप फक्त एज्युकेशन purpose (शैक्षणिक उद्देशा) साठी आहे. डॉक्टरांच्या सल्ल्याशिवाय कोणतेही औषध देऊ नये.
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-btn active" id="btn_single" onclick="switchTab('single')">🐄 एका गाईसाठी</button>
+        <button class="tab-btn" id="btn_herd" onclick="switchTab('herd')">🛖 संपूर्ण गोठ्यासाठी</button>
+    </div>
+
+    <!-- TAB 1: Single Animal -->
+    <div id="tab_single" class="form-section">
+        <div class="input-row">
+            <label>जनावराचा टॅग नंबर / नाव:</label>
+            <input type="text" id="tag_number" placeholder="उदा. गाय क्र. १०१ किंवा लक्ष्मी">
+        </div>
+        
+        <div class="input-row">
+            <label>जनावराचे वय / गट निवडा:</label>
+            <select id="animal_age" onchange="checkPregnancyOption()">
+                <option value="">-- वय निवडा --</option>
+                <optgroup label="वासरांचे वेळापत्रक (Calves)">
+                    <option value="10d">१० दिवस</option>
+                    <option value="1m">१ महिना</option>
+                    <option value="2m">२ महिना</option>
+                    <option value="3m">३ महिना</option>
+                    <option value="4m">४ महिना</option>
+                    <option value="5m">५ महिना</option>
+                    <option value="6m">६ महिना</option>
+                    <option value="9m">९ महिना</option>
+                    <option value="1y">१ वर्ष</option>
+                </optgroup>
+                <optgroup label="मोठी जनावरे (Adults)">
+                    <option value="adult">१ वर्षापुढील गाय / म्हैस</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Hidden checkbox for pregnancy (Shows only if Adult is selected) -->
+        <div class="checkbox-row" id="preg_check_div">
+            <input type="checkbox" id="is_pregnant">
+            <label for="is_pregnant">ही गाय सध्या गाभण आहे का?</label>
+        </div>
+
+        <div class="input-row" style="margin-top: 15px;">
+            <label>मागील जंतनिर्मूलनाची तारीख (असल्यास):</label>
+            <input type="date" id="last_date">
+            <span style="font-size: 11px; color: #888;">(माहित नसल्यास आजची तारीख निवडा)</span>
+        </div>
+
+        <button class="btn-primary" onclick="generateSchedule('single')">📅 डोस आणि रिमाइंडर सेट करा</button>
+    </div>
+
+    <!-- TAB 2: Entire Herd -->
+    <div id="tab_herd" class="form-section" style="display: none;">
+        <div class="input-row">
+            <label>कोणत्या गटासाठी औषध द्यायचे आहे?</label>
+            <select id="herd_group">
+                <option value="adults">सर्व मोठ्या गाई (१ वर्षापुढील)</option>
+                <option value="calves">सर्व वासरे (१ वर्षाआतील एकत्रित डोस)</option>
+            </select>
+        </div>
+        
+        <div class="input-row">
+            <label>संपूर्ण गोठ्याची जंतनिर्मूलन तारीख:</label>
+            <input type="date" id="herd_last_date">
+        </div>
+
+        <button class="btn-primary" onclick="generateSchedule('herd')">🛖 गोठ्याचा रिमाइंडर सेट करा</button>
+    </div>
+
+    <!-- Result Box -->
+    <div class="result-box" id="result_output">
+        <h3 class="result-title" id="res_title">अहवाल व वेळापत्रक</h3>
+        
+        <!-- Pregnancy Warning -->
+        <div class="pregnant-warning" id="preg_warning">
+            ⚠️ <b>सतर्कता:</b> गाय गाभण असल्याने कोणतेही औषध देण्यापूर्वी पशुवैद्यकीय डॉक्टरांचा सल्ला घेणे अनिवार्य आहे. शक्यतो पहिल्या आणि शेवटच्या ३ महिन्यांत औषध देणे टाळावे.
+        </div>
+
+        <div class="medicine-card">
+            <h4>सुचवलेले जंतनाशक घटक (Recommended Drug):</h4>
+            <p id="res_drug">--</p>
+            <span style="font-size: 11px; color: #555; display: block; margin-top: 5px;" id="drug_note"></span>
+        </div>
+
+        <div class="date-card">
+            <div>
+                <h4>पुढील जंतनिर्मूलन तारीख (Next Date):</h4>
+                <p id="res_next_date">--</p>
+            </div>
+            <div style="font-size: 25px;">⏰</div>
+        </div>
+
+        <!-- 🔥 Dynamic Pharma Ad Container -->
+        <div id="deworming_pharma_ad"></div>
+
+        <!-- 🔥 Dynamic Liver Tonic Ad Container -->
+        <div id="liver_tonic_ad_container"></div>
+
+        <!-- 🔥 Small Font Legal Disclaimer specifically for Ads/Suggestions -->
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 10px; margin-bottom: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> वरील सुचवलेली औषधे आणि सप्लीमेंट्स केवळ प्राथमिक माहितीसाठी आहेत. कोणतेही औषध, सप्लीमेंट किंवा जंतनाशक देण्यापूर्वी तुमच्या परवानाधारक <b>पशुवैद्यकीय डॉक्टरांचा (Veterinary Doctor) सल्ला नक्की घ्यावा.</b>
+        </div>
+
+        <button id="save_record_btn" class="btn-primary" style="background: #ff9800; box-shadow: 0 4px 0 #e65100;" onclick="saveRecord()">💾 ही नोंद सेव्ह करा</button>
+    </div>
+
+    <!-- 📚 नवीन विभाग: माहिती आणि चार्ट -->
+    <div class="category-title">📚 जंतनिर्मूलन वेळापत्रक (माहितीसाठी)</div>
+    <div class="form-section">
+        <h4 style="color: #2e7d32; margin-top: 0;">१. वासरांचे वेळापत्रक (Calves Schedule)</h4>
+        <table class="info-table">
+            <tr>
+                <th width="35%">डोस / वय</th>
+                <th>औषध (घटक)</th>
+            </tr>
+            <tr><td><b>१० दिवस</b></td><td>पिपराझीन / अल्बेंडाझोल</td></tr>
+            <tr><td><b>१ महिना</b></td><td>अल्बेंडाझोल + आयव्हरमेक्टीन *<br><span style="font-size:10px;">(* गोचीड असल्यास)</span></td></tr>
+            <tr><td><b>२ महिना</b></td><td>फेनबेंडाझोल</td></tr>
+            <tr><td><b>३ महिना</b></td><td>क्लोझान्टेल</td></tr>
+            <tr><td><b>४ महिना</b></td><td>फेनबेंडाझोल + आयव्हरमेक्टीन</td></tr>
+            <tr><td><b>५ महिना</b></td><td>अल्बेंडाझोल</td></tr>
+            <tr><td><b>६ महिना</b></td><td>डोरामेक्टीन / आयव्हरमेक्टीन (इंजेक्शन)</td></tr>
+            <tr><td><b>९ महिना</b></td><td>ऑक्सिस्क्लोजनाईड + लेवामिसोल</td></tr>
+            <tr><td><b>१ वर्ष</b></td><td>डोरामेक्टीन / आयव्हरमेक्टीन (इंजेक्शन)</td></tr>
+        </table>
+        
+        <h4 style="color: #1565c0; margin-top: 25px;">२. मोठी जनावरे (Adults Protocol)</h4>
+        <ul class="info-list">
+            <li>मोठ्या गाईंना <b>दर ३ महिन्यांनी</b> (वर्षातून ४ वेळा) जंताचे औषध द्यावे.</li>
+            <li>जंतांना औषधाची सवय होऊ नये म्हणून प्रत्येक वेळी <b>औषधाचा घटक (Salt) बदलून</b> द्यावा. (उदा. एकदा Fenbendazole, पुढच्या वेळी Ivermectin)</li>
+            <li><b>गाभण काळ:</b> गाभण गाईंना औषध देण्यापूर्वी डॉक्टरांचा सल्ला नक्की घ्या. पहिल्या आणि शेवटच्या तीन महिन्यांत शक्यतो जंतनाशक देणे टाळावे.</li>
+        </ul>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // --- CHECK DUE NOTIFICATIONS ON PAGE LOAD ---
+    function checkDueNotifications() {
+        let savedRecords = JSON.parse(localStorage.getItem('deworming_saved_records')) || [];
+        let systemNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+        
+        let todayDate = new Date();
+        todayDate.setHours(0,0,0,0);
+        
+        let hasNewAlert = false;
+
+        savedRecords.forEach(record => {
+            if(!record.nextDate) return;
+            
+            // Check if record already triggered a notif to avoid duplicates
+            if(record.notified) return;
+
+            let dueDate = new Date(record.nextDate.split('-').reverse().join('-')); // Convert DD-MM-YYYY to valid Date obj
+            dueDate.setHours(0,0,0,0);
+            
+            let timeDiff = dueDate.getTime() - todayDate.getTime();
+            let daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            // If due date is tomorrow, today, or past
+            if(daysDiff <= 1) {
+                let msg = daysDiff < 0 ? 
+                          `${record.title} ची जंतनिर्मूलन तारीख निघून गेली आहे! कृपया लवकरात लवकर औषध द्या.` : 
+                          `${record.title} ची जंतनिर्मूलन तारीख जवळ आली आहे (${record.nextDate}). तयारी ठेवा.`;
+                
+                systemNotifs.unshift({
+                    id: Date.now() + Math.floor(Math.random()*100),
+                    title: `🐛 जंतनिर्मूलन ॲलर्ट`,
+                    message: msg,
+                    target: 'farmer',
+                    timestamp: new Date().toISOString(),
+                    time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+                
+                record.notified = true; // Mark as notified
+                hasNewAlert = true;
+            }
+        });
+
+        if(hasNewAlert) {
+            localStorage.setItem('system_notifications', JSON.stringify(systemNotifs));
+            localStorage.setItem('deworming_saved_records', JSON.stringify(savedRecords));
+            // Update badge if top navbar exists
+            let badge = document.getElementById('notif_badge');
+            if(badge) {
+                badge.style.display = 'inline-block';
+                badge.innerText = parseInt(badge.innerText || 0) + 1;
+            }
+        }
+    }
+
+    function initPage() {
+        syncProducts();
+        checkDueNotifications();
+    }
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ तुमच्या जनावरासाठी सुचवलेले") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag" style="background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    // Tab Switching Logic
+    function switchTab(tab) {
+        document.getElementById('btn_single').classList.remove('active');
+        document.getElementById('btn_herd').classList.remove('active');
+        document.getElementById('tab_single').style.display = 'none';
+        document.getElementById('tab_herd').style.display = 'none';
+        document.getElementById('result_output').style.display = 'none';
+
+        if(tab === 'single') {
+            document.getElementById('btn_single').classList.add('active');
+            document.getElementById('tab_single').style.display = 'block';
+        } else {
+            document.getElementById('btn_herd').classList.add('active');
+            document.getElementById('tab_herd').style.display = 'block';
+        }
+    }
+
+    // Show/Hide Pregnancy Checkbox
+    function checkPregnancyOption() {
+        let age = document.getElementById('animal_age').value;
+        let pregDiv = document.getElementById('preg_check_div');
+        if(age === 'adult') {
+            pregDiv.style.display = 'flex';
+        } else {
+            pregDiv.style.display = 'none';
+            document.getElementById('is_pregnant').checked = false;
+        }
+    }
+
+    // Drug Rotation Logic for Adults (दर ३ महिन्यांनी बदलून)
+    const adultDrugsRotation = [
+        "अल्बेंडाझोल (Albendazole) / फेनबेंडाझोल (Fenbendazole)",
+        "ऑक्सिस्क्लोजनाईड + लेवामिसोल (Oxyclozanide + Levamisole)",
+        "क्लोझान्टेल (Closantel)",
+        "आयव्हरमेक्टीन / डोरामेक्टीन (Ivermectin / Doramectin - Injection)"
+    ];
+
+    // Calf Schedule from Chart
+    const calfSchedule = {
+        "10d": { drug: "पिपराझीन / अल्बेंडाझोल", monthsToAdd: 1 },
+        "1m": { drug: "अल्बेंडाझोल + आयव्हरमेक्टीन (गोचीड असल्यास)", monthsToAdd: 1 },
+        "2m": { drug: "फेनबेंडाझोल", monthsToAdd: 1 },
+        "3m": { drug: "क्लोझान्टेल", monthsToAdd: 1 },
+        "4m": { drug: "फेनबेंडाझोल + आयव्हरमेक्टीन", monthsToAdd: 1 },
+        "5m": { drug: "अल्बेंडाझोल", monthsToAdd: 1 },
+        "6m": { drug: "डोरामेक्टीन / आयव्हरमेक्टीन (इंजेक्शन)", monthsToAdd: 3 },
+        "9m": { drug: "ऑक्सिस्क्लोजनाईड + लेवामिसोल", monthsToAdd: 3 },
+        "1y": { drug: "डोरामेक्टीन / आयव्हरमेक्टीन (इंजेक्शन)", monthsToAdd: 3 }
+    };
+
+    // Global variables to hold generated data for saving
+    let currentRecordToSave = {};
+
+    function generateSchedule(mode) {
+        let lastDateInput = mode === 'single' ? document.getElementById('last_date').value : document.getElementById('herd_last_date').value;
+        
+        if (!lastDateInput) {
+            alert("कृपया जंतनिर्मूलनाची तारीख निवडा.");
+            return;
+        }
+
+        let lastDate = new Date(lastDateInput);
+        let nextDate = new Date(lastDate);
+        let suggestedDrug = "";
+        let drugNote = "";
+        let isPregnant = false;
+        let titleForSave = "";
+
+        document.getElementById('preg_warning').style.display = 'none';
+        
+        let dewormingAdBox = document.getElementById('deworming_pharma_ad');
+        let liverTonicAdBox = document.getElementById('liver_tonic_ad_container');
+        
+        dewormingAdBox.innerHTML = ""; // Clear old ad
+        liverTonicAdBox.innerHTML = ""; // Clear old ad
+
+        // 🔥 ADMIN M11 SYNC LOGIC 🔥
+        let adminM11Data = JSON.parse(localStorage.getItem('admin_data_M11'));
+
+        if (mode === 'single') {
+            let tag = document.getElementById('tag_number').value || "अज्ञात";
+            let age = document.getElementById('animal_age').value;
+            isPregnant = document.getElementById('is_pregnant').checked;
+
+            if(!age) { alert("कृपया जनावराचे वय निवडा."); return; }
+
+            titleForSave = `टॅग: ${tag}`;
+            document.getElementById('res_title').innerText = `📑 ${titleForSave} चे वेळापत्रक`;
+
+            if (age === 'adult') {
+                if(isPregnant) {
+                    document.getElementById('preg_warning').style.display = 'block';
+                    
+                    // Admin Sync for Pregnant Cows
+                    if(adminM11Data && adminM11Data.m11_4) {
+                        suggestedDrug = adminM11Data.m11_4 + " (Admin Update)";
+                        drugNote = "गाभण काळातील सुरक्षिततेसाठी सुचवलेले औषध.";
+                    } else {
+                        suggestedDrug = "डॉक्टरांचा सल्ला घ्या (उदा. सुरक्षित Fenbendazole)";
+                        drugNote = "गाभण काळात औषध देणे जोखमीचे असू शकते.";
+                    }
+                } else {
+                    let randomIndex = Math.floor(Math.random() * adultDrugsRotation.length);
+                    suggestedDrug = adultDrugsRotation[randomIndex];
+                    drugNote = "पुढच्या वेळी याऐवजी वेगळ्या घटकाचे औषध वापरा.";
+                }
+                nextDate.setMonth(nextDate.getMonth() + 3); 
+            } else {
+                // Admin Sync for Calves
+                if(adminM11Data && adminM11Data.m11_1 && adminM11Data.m11_1 === age) {
+                    suggestedDrug = adminM11Data.m11_2 + " (Admin Update)";
+                    drugNote = "नवीन ॲडमिन अपडेटनुसार औषध.";
+                    nextDate.setMonth(nextDate.getMonth() + parseInt(adminM11Data.m11_3 || 1));
+                } else {
+                    suggestedDrug = calfSchedule[age].drug;
+                    drugNote = "चार्टनुसार वासराच्या वयाला अनुसरून सुचवलेले औषध.";
+                    nextDate.setMonth(nextDate.getMonth() + calfSchedule[age].monthsToAdd);
+                }
+            }
+        } 
+        else {
+            let group = document.getElementById('herd_group').value;
+            titleForSave = group === 'adults' ? 'संपूर्ण गोठा (मोठी जनावरे)' : 'संपूर्ण गोठा (वासरे)';
+            document.getElementById('res_title').innerText = `🛖 ${titleForSave}`;
+            
+            if(group === 'adults') {
+                let randomIndex = Math.floor(Math.random() * adultDrugsRotation.length);
+                suggestedDrug = adultDrugsRotation[randomIndex];
+                drugNote = "पुढच्या वेळी गोठ्यासाठी याऐवजी वेगळे औषध वापरा. (गाभण गाईंना वगळून)";
+                nextDate.setMonth(nextDate.getMonth() + 3);
+            } else {
+                suggestedDrug = "सर्वसाधारण ब्रॉड-स्पेक्ट्रम जंतनाशक (डॉक्टरांना विचारून)";
+                drugNote = "वेगवेगळ्या वयाच्या वासरांसाठी डॉक्टरांचा सल्ला घ्या.";
+                nextDate.setMonth(nextDate.getMonth() + 3);
+            }
+        }
+
+        // Format Next Date
+        let dd = String(nextDate.getDate()).padStart(2, '0');
+        let mm = String(nextDate.getMonth() + 1).padStart(2, '0');
+        let yyyy = nextDate.getFullYear();
+        let formattedNextDate = `${dd}-${mm}-${yyyy}`;
+        
+        document.getElementById('res_drug').innerText = suggestedDrug;
+        document.getElementById('drug_note').innerText = drugNote;
+        document.getElementById('res_next_date').innerText = formattedNextDate;
+
+        // 🔥 Dynamic Dewormer Ad Injection
+        let defaultDewormingAd = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'" style="background: #e0f2f1; border-color: #00897b;">
+                <h4>💊 सुरक्षित जंतनिर्मूलन औषध</h4>
+                <p>सर्व प्रकारच्या जंतांवर प्रभावी असलेल्या <b>Intas Albomar / Neozash</b> चा वापर डॉक्टरांच्या सल्ल्याने करा.</p>
+                <span class="sponsor-tag" style="background:#b2dfdb;">Sponsored by Intas Pharmaceuticals</span>
+            </div>`;
+        dewormingAdBox.innerHTML = generateDynamicAd("De_worming", defaultDewormingAd, "💊 सुचवलेले जंतनाशक औषध");
+
+        // 🔥 Dynamic Contextual Ad (Liver Tonic is essential after deworming)
+        let defaultLiverTonicAd = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🩺 जंतनाशक दिल्यानंतर आवश्यक!</h4>
+                <p>जंतनाशक दिल्याने यकृतावर (Liver) थोडा ताण येतो. त्यामुळे लागलीच ३ ते ५ दिवस <b>Himalaya Liv.52</b> किंवा चांगले लिव्हर टॉनिक नक्की द्या.</p>
+                <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
+            </div>`;
+        liverTonicAdBox.innerHTML = generateDynamicAd("Poisoning_Liver", defaultLiverTonicAd, "🩺 जंतनाशक दिल्यानंतर आवश्यक!");
+
+        document.getElementById('result_output').style.display = "block";
+        document.getElementById('result_output').scrollIntoView({behavior: "smooth"});
+
+        // Store data globally to save on button click
+        currentRecordToSave = {
+            mode: mode,
+            title: titleForSave,
+            lastDate: lastDateInput,
+            nextDate: formattedNextDate,
+            drug: suggestedDrug,
+            notified: false
+        };
+    }
+
+    function saveRecord() {
+        if(!currentRecordToSave.title) return;
+
+        let saveBtn = document.getElementById('save_record_btn');
+        let originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
+        saveBtn.disabled = true;
+
+        // 1. Save to Local Storage for offline access & notification checking
+        let savedRecords = JSON.parse(localStorage.getItem('deworming_saved_records')) || [];
+        currentRecordToSave.id = Date.now(); // Give it a unique ID
+        savedRecords.push(currentRecordToSave);
+        localStorage.setItem('deworming_saved_records', JSON.stringify(savedRecords));
+
+        // 2. Save to Firebase Live Database
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        
+        let firebaseData = {
+            farmerName: fName,
+            farmerMobile: fMob,
+            title: currentRecordToSave.title,
+            lastDewormingDate: currentRecordToSave.lastDate,
+            nextDewormingDate: currentRecordToSave.nextDate,
+            suggestedDrug: currentRecordToSave.drug,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("deworming_records").add(firebaseData)
+        .then(() => {
+            alert("✅ तुमची नोंद आणि रिमाइंडर यशस्वीरित्या सेव्ह झाला आहे!\nपुढच्या वेळी जेव्हा औषधाची वेळ येईल तेव्हा ॲप तुम्हाला नोटिफिकेशन पाठवेल.");
+        })
+        .catch(err => {
+            console.error("Firebase save error: ", err);
+            // Alert success anyway since it saved locally
+            alert("✅ तुमची नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे.");
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

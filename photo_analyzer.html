@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - फोटो ॲनालायझर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .camera-container {
+            background: #eef2f5;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 6px 6px 15px rgba(0,0,0,0.08), -6px -6px 15px rgba(255,255,255,1);
+            text-align: center;
+        }
+        .viewfinder {
+            background: #000;
+            height: 250px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #333;
+        }
+        .viewfinder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none; /* Hidden until photo is taken */
+        }
+        .viewfinder-text {
+            color: white;
+            font-size: 14px;
+            opacity: 0.8;
+            position: absolute;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        /* 3D Scanning Line Animation */
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #00e676;
+            box-shadow: 0 0 15px #00e676, 0 0 30px #00e676;
+            display: none;
+            animation: scan 2s infinite linear;
+            z-index: 10;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn-camera {
+            flex: 1;
+            background: linear-gradient(145deg, #1976d2, #1565c0);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 6px 0 #0d47a1, 0 10px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .btn-camera:active { top: 4px; box-shadow: 0 2px 0 #0d47a1, 0 4px 6px rgba(0,0,0,0.2); }
+        
+        .ai-result {
+            background: #e8f5e9;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #4CAF50;
+            display: none;
+            text-align: left;
+        }
+        .ai-result h3 { margin: 0 0 10px; color: #2e7d32; font-size: 16px; }
+        .ai-result p { margin: 5px 0; font-size: 13px; color: #444; }
+        .quality-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 15px; border-radius: 12px; margin-top: 15px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.3s ease;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(251, 192, 45, 0.2); }
+        .ai-recommendation-box h4 { margin: 0 0 8px; color: #f57f17; font-size: 15px; display: flex; align-items: center; gap: 6px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0 0 10px; font-size: 13px; color: #333; line-height: 1.5; font-weight: bold; }
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 12px; margin-top: 12px;}
+        .vendor-ad-box .sponsor-tag { font-size: 10px; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; color: #0d47a1; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3); }
+        
+        .vendor-product-flex { display: flex; gap: 12px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="top-dashboard" style="background: #1b5e20; padding: 20px; color: white; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="margin: 0;">फोटो ॲनालायझर 📷</h1>
+            <p style="margin: 5px 0 0; color: #c8e6c9;">AI द्वारे चारा आणि आजार ओळखा</p>
+        </div>
+    </div>
+
+    <div class="camera-container">
+        <h4 style="margin: 0 0 15px; color: #333;">चाऱ्याचा किंवा आजारी भागाचा फोटो काढा</h4>
+        
+        <div class="viewfinder" id="cameraBox">
+            <div class="viewfinder-text" id="camText">कॅमेरा सुरू करण्यासाठी खालील बटण दाबा</div>
+            <img id="previewImg" src="" alt="Captured Image">
+            <div class="scanner-line" id="scanner"></div>
+        </div>
+
+        <!-- Hidden File Input for Real Camera/Gallery Access -->
+        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+
+        <div class="action-btns">
+            <button class="btn-camera" onclick="document.getElementById('imageInput').setAttribute('capture', 'environment'); document.getElementById('imageInput').click();">📸 फोटो काढा</button>
+            <button class="btn-camera" style="background: linear-gradient(145deg, #7b1fa2, #6a1b9a); box-shadow: 0 6px 0 #4a148c;" onclick="document.getElementById('imageInput').removeAttribute('capture'); document.getElementById('imageInput').click();">🖼️ गॅलरी</button>
+        </div>
+    </div>
+
+    <div class="ai-result" id="aiResult">
+        <h3>🤖 AI स्कॅनिंग अहवाल:</h3>
+        <div id="aiOutputContent">
+            <!-- Real AI Output will be injected here -->
+        </div>
+        
+        <!-- 🔥 Dynamic Pharma Ad Container -->
+        <div id="ai_pharma_ad"></div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔴 Default Fallback Key
+    let GEMINI_API_KEY = "AQ.Ab8RN6JERIjbm4s9Pb0ajCloS90Ow01aC4_Cq3CiNiVa03aCtg"; 
+
+    // 🔥 ADMIN SYNC: Load API Key from Admin Panel (M16 Tab) if available
+    let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+    if(adminAiData && adminAiData.m16_1 && adminAiData.m16_1 !== "sk-xxxxxxxxxxxxx") {
+        GEMINI_API_KEY = adminAiData.m16_1;
+    }
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ तुमच्यासाठी सुचवलेले") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 50)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    // Handle Image Selection (Camera or Gallery)
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        let camText = document.getElementById("camText");
+        let previewImg = document.getElementById("previewImg");
+        let scanner = document.getElementById("scanner");
+        let resultBox = document.getElementById("aiResult");
+        let outputContent = document.getElementById("aiOutputContent");
+        let adBox = document.getElementById("ai_pharma_ad");
+
+        // UI Reset
+        resultBox.style.display = "none";
+        adBox.innerHTML = "";
+        camText.style.display = "none";
+        previewImg.style.display = "block";
+        scanner.style.display = "block";
+        outputContent.innerHTML = "<p><i>फोटोचे विश्लेषण सुरू आहे... कृपया १०-१५ सेकंद थांबा.</i></p>";
+
+        // Read File as Base64 to show preview and send to API
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64ImageString = e.target.result;
+            previewImg.src = base64ImageString;
+
+            // Extract only the raw base64 data (remove "data:image/jpeg;base64,")
+            const base64Data = base64ImageString.split(',')[1];
+            
+            // Call Gemini API
+            analyzeImageWithAI(base64Data);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Call Google Gemini Vision API (WITH STRICTER ACCURACY PROMPT)
+    async function analyzeImageWithAI(base64Data) {
+        let scanner = document.getElementById("scanner");
+        let resultBox = document.getElementById("aiResult");
+        let outputContent = document.getElementById("aiOutputContent");
+        let adBox = document.getElementById("ai_pharma_ad");
+
+        resultBox.style.display = "block";
+
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+            scanner.style.display = "none";
+            outputContent.innerHTML = "<p style='color:red;'>⚠️ API Key उपलब्ध नाही. कृपया ॲडमिन पॅनेलमध्ये Gemini API Key टाका.</p>";
+            return;
+        }
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // 🔥 HIGH ACCURACY PROMPT 🔥
+        const aiPrompt = `
+        तू एक अत्यंत तज्ज्ञ आणि अचूक पशुवैद्यक (Veterinarian) आणि दुग्ध व्यवसाय (Dairy Farming) मार्गदर्शक आहेस. 
+        तुला दिलेल्या फोटोचे अतिशय बारकाईने विश्लेषण करायचे आहे. तुझे उत्तर 'फक्त आणि फक्त मराठीत' असले पाहिजे.
+        
+        नियम:
+        १. जर फोटोत चारा (हिरवा, सुका, पेंड किंवा मुरघास) असेल:
+           - चाऱ्याचे अचूक नाव सांग.
+           - चाऱ्याची गुणवत्ता (उत्तम/मध्यम/वाईट) सांग.
+           - अंदाजित प्रथिने (CP - Crude Protein) किती टक्के असतील ते सांग.
+           - अंदाजित ड्राय मॅटर (DM - Dry Matter) किती टक्के असेल ते सांग.
+           - आणि शेतकऱ्याला तो चारा कसा खायला द्यावा याबद्दल एक व्यावसायिक सल्ला दे.
+           - उत्तराच्या शेवटी "TAG:FODDER" असा टॅग नक्की लाव.
+
+        २. जर फोटोत आजारी जनावर किंवा जनावराची एखादी जखम/त्रास (उदा. कासदाह, गोचीड, खूर) असेल:
+           - आजाराचे किंवा जखमेचे नाव अचूक ओळख.
+           - त्याच्यावरील प्राथमिक उपचार आणि सल्ला सांग.
+           - उत्तराच्या शेवटी "TAG:DISEASE" असा टॅग नक्की लाव.
+
+        ३. जर फोटोत 'चारा' किंवा 'आजार/जनावर' यापैकी काहीही नसेल (उदा. गाडी, माणूस, रिकामा रस्ता इ.):
+           - स्पष्टपणे सांग की "हा फोटो चारा किंवा जनावराच्या आजाराचा नाही. कृपया योग्य फोटो अपलोड करा." आणि कोणतेही टॅग लावू नकोस.
+
+        तुझे उत्तर फक्त खालील HTML फॉरमॅटमध्येच दे (कोणतेही markdown जसे की \`\`\`html देऊ नकोस आणि इतर कोणतीही अतिरिक्त माहिती देऊ नकोस):
+        
+        <p><b>ओळखलेला प्रकार:</b> [येथे नाव]</p>
+        <p><b>अंदाजित गुणवत्ता:</b> <span class="quality-badge">[येथे गुणवत्ता]</span></p>
+        <p><b>अंदाजित प्रथिने (CP):</b> [येथे टक्केवारी]</p>
+        <p><b>अंदाजित ड्राय मॅटर:</b> [येथे टक्केवारी]</p>
+        <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
+        <p style="font-size: 13px; color: #e65100;"><b>तज्ज्ञांचा सल्ला:</b> [येथे तुझा सविस्तर सल्ला]</p>
+        `;
+
+        const requestBody = {
+            contents: [{
+                parts: [
+                    { text: aiPrompt },
+                    { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+                ]
+            }]
+        };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            scanner.style.display = "none"; // Stop Animation
+
+            if (data.candidates && data.candidates.length > 0) {
+                let aiResponseHTML = data.candidates[0].content.parts[0].text;
+                
+                // Determine which ad to show based on AI hidden tag
+                let targetFilterTag = "Daily_Ration_Mineral"; // Default
+                let defaultAdHtml = "";
+                
+                if(aiResponseHTML.includes("TAG:FODDER")) {
+                    targetFilterTag = "Silage_Fodder"; // Fodder seed / Silage Ad
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🌱 उत्तम चारा बियाणे</h4>
+                            <p>उच्च प्रतीचा चारा लावण्यासाठी <b>Advanta Nutrifeed</b> किंवा <b>Super Napier</b> चे बियाणे खरेदी करा.</p>
+                            <div class="sponsor-bottom-row">
+                                <span class="sponsor-tag">Sponsored by Advanta</span>
+                                <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                            </div>
+                        </div>`;
+                } else if(aiResponseHTML.includes("TAG:DISEASE")) {
+                    targetFilterTag = "Medicine_Wound"; // Wound spray / Medicine Ad
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'" style="border-color:#d32f2f;">
+                            <h4 style="color:#d32f2f;">🩹 जखम आणि आजार नियंत्रण</h4>
+                            <p>कोणत्याही जखमेवर आणि जिवाणूंवर प्रभावी <b>Himalaya Himax Spray / Ointment</b> नक्की वापरा.</p>
+                            <div class="sponsor-bottom-row">
+                                <span class="sponsor-tag" style="color:#d32f2f; border-color:#ef5350;">Sponsored by Himalaya Vet</span>
+                                <div class="buy-now-btn" style="background:#d32f2f; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);">मॉलमध्ये पहा ➔</div>
+                            </div>
+                        </div>`;
+                }
+
+                // Clean up any accidental markdown code blocks and the hidden tags generated by AI
+                aiResponseHTML = aiResponseHTML.replace(/```html/g, "").replace(/```/g, "").replace(/TAG:FODDER/g, "").replace(/TAG:DISEASE/g, "").trim();
+                
+                outputContent.innerHTML = aiResponseHTML;
+                
+                // Inject Ad
+                if(targetFilterTag !== "Daily_Ration_Mineral") { // Only show ad if it found fodder or disease
+                     adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "💡 AI शिफारस (सुचवलेले प्रॉडक्ट)");
+                }
+                
+            } else {
+                outputContent.innerHTML = "<p style='color:red;'>माफ करा, मला हा फोटो स्पष्ट ओळखता आला नाही. कृपया दुसरा फोटो काढा.</p>";
+            }
+            
+            // Scroll down to result
+            setTimeout(() => {
+                resultBox.scrollIntoView({behavior: "smooth", block: "start"});
+            }, 300);
+
+        } catch (error) {
+            scanner.style.display = "none";
+            outputContent.innerHTML = "<p style='color:red;'>⚠️ इंटरनेट कनेक्शन किंवा सर्व्हरची अडचण आहे. पुन्हा प्रयत्न करा.</p>";
+            console.error("Vision API Error:", error);
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - आजार व इमर्जन्सी</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .form-section {
+            background: #eef2f5; padding: 20px; margin: 15px 20px; border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .form-section label {
+            display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 14px;
+        }
+        select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+            background: #fff; box-sizing: border-box; font-family: inherit; font-size: 14px; margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1;
+        }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+
+        /* Result Box Styling */
+        .result-box {
+            background: #fff; margin: 20px; padding: 20px; border-radius: 16px; display: none;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            border-left: 6px solid #1976d2;
+        }
+        .result-box h3 { margin: 0 0 15px; font-size: 18px; color: #1565c0; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        .result-box h4 { margin: 15px 0 5px; font-size: 14px; color: #333; }
+        .result-box p { margin: 0 0 10px; font-size: 13.5px; color: #555; line-height: 1.6; }
+        
+        /* Emergency Warning Box */
+        .emergency-alert {
+            background: #ffebee; border: 2px dashed #f44336; padding: 15px; border-radius: 12px;
+            margin-top: 15px; color: #c62828; display: none;
+        }
+        .emergency-alert h4 { color: #c62828; margin-top: 0; font-size: 15px; }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.3s ease;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(251, 192, 45, 0.2); }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #0d47a1; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body onload="initPage()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="background: #1b5e20; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="color: white;">आजार व इमर्जन्सी 🏥</h1>
+            <p style="color: #c8e6c9;">लक्षणे तपासा आणि प्राथमिक उपचार</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin-top: 20px; font-weight: bold; font-size: 16px; color: #2e7d32; border-left: 5px solid #ff9800; padding-left: 10px; margin-left: 20px;">१. लक्षणे तपासा (AI निदान)</div>
+    
+    <div class="form-section">
+        <label>कोणता त्रास किंवा लक्षण दिसत आहे?</label>
+        <select id="symptom_select" onchange="hideResult()">
+            <option value="none">-- आजार किंवा लक्षण निवडा --</option>
+            
+            <optgroup label="पचन व पोट (Digestive)">
+                <option value="diarrhea">वासराला/गाईला हागवण (जुलाब) लागणे</option>
+                <option value="bloat">पोट खूप फुगणे आणि श्वास घेण्यास त्रास (Bloat)</option>
+            </optgroup>
+            
+            <optgroup label="ताप व संसर्गजन्य आजार (Infectious)">
+                <option value="fever">फक्त ताप असणे किंवा चारा न खाणे</option>
+                <option value="fmd">तोंडात आणि पायाच्या खुरांमध्ये फोड येणे (लाळ्या खुरकूत)</option>
+                <option value="lumpy">अंगावर मोठ्या गाठी येणे आणि ताप (लम्पी स्किन)</option>
+                <option value="hs_bq">गळ्याला किंवा मांडीला सूज येणे, लंगडणे (घटसर्प/फऱ्या)</option>
+                <option value="tick_fever">लघवी लाल रंगाची होणे (गोचीड ताप / Babesiosis)</option>
+            </optgroup>
+
+            <optgroup label="श्वसन व इतर (Respiratory & Metabolic)">
+                <option value="pneumonia">धाप लागणे, नाकातून स्त्राव गळणे (निमोनिया)</option>
+                <option value="milk_fever">विल्यानंतर गाय/म्हैस खाली बसून राहणे, मान टाकणे (मिल्क फिव्हर)</option>
+                <option value="mastitis">कास सुजणे, दुधात गाठी किंवा रक्त येणे (स्तनदाह)</option>
+            </optgroup>
+        </select>
+        
+        <button class="btn-primary" onclick="analyzeDisease()">🔍 AI विश्लेषण करा</button>
+    </div>
+
+    <!-- AI Result Box -->
+    <div class="result-box" id="result_box">
+        <h3 id="disease_title">आजार</h3>
+        
+        <h4 style="color: #2e7d32;">✅ प्राथमिक व्यवस्थापन (First Aid):</h4>
+        <p id="first_aid_text">माहिती</p>
+        
+        <!-- Emergency Alert -->
+        <div class="emergency-alert" id="emergency_box">
+            <h4>🚨 इमर्जन्सी अलर्ट (लाल कंदील):</h4>
+            <p id="emergency_text">धोक्याची सूचना</p>
+        </div>
+
+        <!-- 🔥 Dynamic Targeted Pharma Ad -->
+        <div id="emergency_pharma_ad"></div>
+
+        <!-- 🔥 Strong Medical Disclaimer -->
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> येथे दिलेली माहिती केवळ प्राथमिक माहितीसाठी आहे. गंभीर आजार किंवा इमर्जन्सीच्या स्थितीत कोणतेही औषध देण्यापूर्वी तुमच्या परवानाधारक <b>पशुवैद्यकाचा (Veterinary Doctor) त्वरित सल्ला घ्यावा</b>. 
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    function initPage() {
+        syncProducts();
+    }
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ तुमच्या जनावरासाठी सुचवलेले औषध") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag" style="background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    function hideResult() {
+        document.getElementById('result_box').style.display = "none";
+    }
+
+    function analyzeDisease() {
+        let symptomSelect = document.getElementById('symptom_select');
+        let symptom = symptomSelect.value;
+        let symptomText = symptomSelect.options[symptomSelect.selectedIndex].text;
+        
+        let resultBox = document.getElementById('result_box');
+        let title = document.getElementById('disease_title');
+        let firstAid = document.getElementById('first_aid_text');
+        let emergencyBox = document.getElementById('emergency_box');
+        let emergencyText = document.getElementById('emergency_text');
+        let adBox = document.getElementById('emergency_pharma_ad');
+        
+        let targetFilterTag = "";
+        let defaultAdHtml = "";
+        
+        if (symptom === 'none') {
+            alert("कृपया प्रथम लक्षण किंवा आजार निवडा.");
+            return;
+        }
+
+        // 🔥 FIREBASE: LOG SEARCHED DISEASE
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("emergency_searches").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            searchedSymptom: symptomText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging search: ", err));
+
+        // Reset Box Styles
+        resultBox.style.display = "block";
+        emergencyBox.style.display = "none";
+        adBox.innerHTML = ""; // Clear ads
+        resultBox.style.borderLeftColor = "#1976d2"; // Default Blue
+        title.style.color = "#1565c0";
+
+        // 🔥 ADMIN M6 SYNC LOGIC
+        // Check if Admin has overridden the specific disease info
+        let adminM6Data = JSON.parse(localStorage.getItem('admin_data_M6'));
+        let adminOverride = false;
+        
+        // Simple matching logic: if admin data exists and disease name somewhat matches the selected dropdown
+        if (adminM6Data && adminM6Data.m6_1) {
+            let adminDiseaseName = adminM6Data.m6_1.toLowerCase();
+            let isMatch = false;
+            
+            if(symptom === 'fmd' && (adminDiseaseName.includes('लाळ्या') || adminDiseaseName.includes('fmd'))) isMatch = true;
+            else if(symptom === 'lumpy' && (adminDiseaseName.includes('लम्पी') || adminDiseaseName.includes('lumpy'))) isMatch = true;
+            else if(symptom === 'mastitis' && (adminDiseaseName.includes('कासदाह') || adminDiseaseName.includes('स्तनदाह') || adminDiseaseName.includes('mastitis'))) isMatch = true;
+            
+            if(isMatch) {
+                adminOverride = true;
+                title.innerHTML = "🔴 आजार: " + adminM6Data.m6_1 + " (Admin Update)";
+                firstAid.innerHTML = "<b>लक्षणे:</b> " + adminM6Data.m6_2 + "<br><br><b>उपचार:</b> " + adminM6Data.m6_3;
+                
+                if(adminM6Data.m6_5 === "High") {
+                    resultBox.style.borderLeftColor = "#d32f2f";
+                    title.style.color = "#d32f2f";
+                    emergencyBox.style.display = "block";
+                    emergencyText.innerHTML = "अतिदक्षता: त्वरित डॉक्टरांना बोलवा. (Level: High)";
+                }
+
+                if(adminM6Data.m6_4) { // Medicine to suggest
+                    defaultAdHtml = `
+                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🩺 AI शिफारस (Admin Prescribed)</h4>
+                        <p>या आजारावर <b>${adminM6Data.m6_4}</b> हे औषध सुचवले आहे.</p>
+                        <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Recommended by Dugdha Disha</span>
+                    </div>`;
+                }
+            }
+        }
+
+        // IF ADMIN HAS NOT OVERRIDDEN, USE DEFAULT LOGIC
+        if (!adminOverride) {
+            switch(symptom) {
+                case 'diarrhea':
+                    title.innerHTML = "🦠 आजार: जुलाब / हगवण (Scours)";
+                    firstAid.innerHTML = "• वासराला शरीरात पाणी कमी पडू नये म्हणून <b>ORS चे पाणी</b> किंवा मीठ-साखरेचे पाणी पाजा.<br>• दूध पाजणे तात्पुरते कमी करा.<br>• गोठ्यात स्वच्छता ठेवा आणि पशुवैद्यकाकडून अँटीबायोटिक्स सुरू करा.";
+                    
+                    targetFilterTag = "Digestion"; // Digestion & Electrolytes
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>💧 AI शिफारस (पाण्याची कमतरता)</h4>
+                            <p>जुलाबामुळे जाणारी ताकद भरून काढण्यासाठी <b>Intas Electrolyte</b> किंवा <b>Astringent Powder</b> वापरा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Intas</span>
+                        </div>`;
+                    break;
+                    
+                case 'bloat':
+                    resultBox.style.borderLeftColor = "#d32f2f";
+                    title.style.color = "#d32f2f";
+                    title.innerHTML = "🎈 आजार: पोटफुगी (Tympany / Bloat)";
+                    firstAid.innerHTML = "• जनावराला बसू देऊ नका, त्याला <b>हळूहळू चालवत ठेवा</b>.<br>• पाणी पाजू नका. तात्पुरता उपाय म्हणून गोडेतेल किंवा ब्लॉटोसिल (Blotosil) पाजा.";
+                    emergencyBox.style.display = "block";
+                    emergencyText.innerHTML = "पोटफुगीमुळे जनावराच्या फुफ्फुसावर दाब पडून श्वास कोंडतो आणि मृत्यू होऊ शकतो. त्वरित पशुवैद्यकाला पाचारण करा.";
+                    
+                    targetFilterTag = "Bloat_Acidosis";
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🌿 पचन सुधारक (Digestion)</h4>
+                            <p>पोटफुगीचा त्रास वारंवार होत असल्यास <b>Himalaya Blotasil</b> किंवा पचन सुधारक औषध नेहमी गोठ्यात ठेवा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Himalaya Vet</span>
+                        </div>`;
+                    break;
+
+                case 'fever':
+                case 'lumpy':
+                    title.innerHTML = symptom === 'fever' ? "🌡️ आजार: सामान्य ताप (Fever / Off-feed)" : "🦠 आजार: लम्पी स्किन डिसीज (LSD)";
+                    firstAid.innerHTML = symptom === 'fever' ? 
+                        "• जनावराचे तापमान थर्मामीटरने तपासा (सामान्य तापमान 101.5°F असते).<br>• जनावराला हवेशीर, सावलीच्या ठिकाणी बांधा आणि पिण्यासाठी स्वच्छ पाणी द्या.<br>• स्वतः कोणतेही मानवी औषध (उदा. पॅरासिटामॉल) देऊ नका." : 
+                        "• हे जनावर पूर्णपणे वेगळे बांधा. गोठ्यात डास आणि माश्यांचा प्रादुर्भाव थांबवण्यासाठी धूर करा किंवा फवारणी करा.<br>• ताप नियंत्रणासाठी आणि दुय्यम संसर्ग टाळण्यासाठी त्वरित पशुवैद्यकीय उपचार सुरू करा.";
+                    
+                    if(symptom === 'lumpy') resultBox.style.borderLeftColor = "#ff9800";
+                    
+                    targetFilterTag = symptom === 'fever' ? "Fever_Pain" : "Immunity";
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>💪 इम्युनिटी बूस्टर व ताप नियंत्रण</h4>
+                            <p>आजारातून लवकर बरे होण्यासाठी आणि रोगप्रतिकारशक्ती वाढवण्यासाठी <b>Himalaya Liv.52</b> किंवा <b>Virbac Immunity Booster</b> द्या.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Virbac / Himalaya</span>
+                        </div>`;
+                    break;
+
+                case 'fmd':
+                    title.innerHTML = "🔴 आजार: लाळ्या खुरकूत (FMD - Viral)";
+                    resultBox.style.borderLeftColor = "#ff9800";
+                    firstAid.innerHTML = "• <b>अलगीकरण (Isolation):</b> या जनावराला तत्काळ इतर निरोगी जनावरांपासून वेगळे बांधा.<br>• तोंड आणि पायाचे फोड 'पोटॅशियम परमॅंगनेट' (PP) च्या पाण्याने किंवा तुरटीच्या पाण्याने धुवा.<br>• मऊ चारा खायला द्या.";
+                    
+                    targetFilterTag = "Fever_Pain"; // Pain relief or foot spray
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🩹 जखमा भरून काढण्यासाठी</h4>
+                            <p>पायाच्या खुरांमधील जखमा लवकर भरून काढण्यासाठी <b>Himalaya Himax Ointment/Spray</b> वापरा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Himalaya Vet</span>
+                        </div>`;
+                    break;
+
+                case 'hs_bq':
+                    resultBox.style.borderLeftColor = "#d32f2f";
+                    title.style.color = "#d32f2f";
+                    title.innerHTML = "🚨 आजार: घटसर्प (HS) किंवा फऱ्या (BQ)";
+                    firstAid.innerHTML = "• हे अत्यंत घातक जीवाणूजन्य आजार आहेत. यात कोणतीही घरगुती उपाययोजना करू नये.<br>• पावसाळ्यापूर्वी याची लस देणे हाच एकमेव खात्रीशीर उपाय आहे.";
+                    emergencyBox.style.display = "block";
+                    emergencyText.innerHTML = "हे आजार अतिशय वेगाने पसरतात आणि यात जनावर काही तासांत दगावू शकते. एकही मिनिट वाया न घालवता ताबडतोब डॉक्टरांना बोलवा.";
+                    break;
+
+                case 'tick_fever':
+                    title.innerHTML = "🪲 आजार: गोचीड ताप (Babesiosis / Red Water)";
+                    firstAid.innerHTML = "• जनावराच्या अंगावरील गोचीड काढण्यासाठी औषधाची फवारणी करा (डॉक्टरांच्या सल्ल्याने).<br>• लाल लघवी हे रक्तातील पेशी फुटल्याचे लक्षण आहे. यावर पशुवैद्यकाकडे विशिष्ट इंजेक्शन उपलब्ध असते, ते त्वरित टोचून घ्या.";
+                    
+                    targetFilterTag = "Vaccine_Syringe"; // Tick control products
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🪲 बाह्य परजीवी नियंत्रण</h4>
+                            <p>गोचीड आणि माश्यांचा प्रादुर्भाव टाळण्यासाठी <b>Intas Tick Control</b> किंवा गोचीड मारणारे सुरक्षित औषध वापरा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Intas Pharmaceuticals</span>
+                        </div>`;
+                    break;
+
+                case 'pneumonia':
+                    title.innerHTML = "🌬️ आजार: निमोनिया (Pneumonia)";
+                    firstAid.innerHTML = "• जनावराला थंडीपासून किंवा पावसापासून वाचवा. ऊबदार जागी बांधा.<br>• गोठ्यात अमोनिया गॅस (लघवीचा दर्प) साचू देऊ नका, हवा खेळती राहू द्या.<br>• त्वरित पशुवैद्यकाकडून तपासणी करून घ्या.";
+                    break;
+
+                case 'milk_fever':
+                    resultBox.style.borderLeftColor = "#d32f2f";
+                    title.style.color = "#d32f2f";
+                    title.innerHTML = "🥛 आजार: मिल्क फिव्हर (Calcium Deficiency)";
+                    firstAid.innerHTML = "• विल्यानंतर जास्त दूध देणाऱ्या गाईंमध्ये रक्तातील कॅल्शियम अचानक कमी झाल्याने हा आजार होतो.<br>• <b>महत्त्वाचे:</b> गाईला मारून किंवा ओढून उभे करण्याचा अजिबात प्रयत्न करू नका, तिचे हाड मोडू शकते.";
+                    emergencyBox.style.display = "block";
+                    emergencyText.innerHTML = "शिरेतून (IV) कॅल्शियमची बाटली लावल्यास गाय काही मिनिटांत उभी राहते. त्वरित डॉक्टरांना बोलावून सलाईन सुरू करा.";
+                    
+                    targetFilterTag = "Calcium_Bones"; // Calcium Gel
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>⚡ तातडीचे कॅल्शियम (Calcium Gel)</h4>
+                            <p>विण्यापूर्वी आणि नंतर मिल्क फिव्हर टाळण्यासाठी <b>Virbac Calcium Gel / Intas Caldico Gel</b> गोठ्यात नक्की तयार ठेवा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Virbac / Intas</span>
+                        </div>`;
+                    break;
+
+                case 'mastitis':
+                    title.innerHTML = "🩸 आजार: स्तनदाह (Mastitis)";
+                    firstAid.innerHTML = "• खराब झालेले दूध थेट जमिनीवर न काढता एका भांड्यात काढा आणि त्याची विल्हेवाट लावा.<br>• कास स्वच्छ धुवून घ्या.<br>• <b>टीप:</b> अधिक सविस्तर माहितीसाठी डॅशबोर्डवरील 'स्तनदाह व्यवस्थापन' या बटनावर क्लिक करा.";
+                    
+                    targetFilterTag = "Mastitis"; // Mastitis Ointment
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🩺 कासदाह संरक्षण व उपचार</h4>
+                            <p>सुरुवातीच्या टप्प्यात कासेला सूज आल्यास <b>Himalaya Mastilep</b> मलम लावा आणि पशुवैद्यकाला दाखवा.</p>
+                            <span class="sponsor-tag" style="background:rgba(0,0,0,0.1); border:1px solid #ccc; color:#333;">Sponsored by Himalaya Vet</span>
+                        </div>`;
+                    break;
+            }
+        }
+
+        // 🔥 Call the Dynamic Ad Function 🔥
+        adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "🩺 प्राथमिक उपचारांसाठी सुचवलेले औषध");
+        
+        // Scroll to result smoothly
+        resultBox.scrollIntoView({behavior: "smooth", block: "center"});
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - सुपर ॲडमिन</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Admin Specific 3D Styles */
+        .admin-header {
+            background: linear-gradient(135deg, #37474f, #263238);
+            color: white; padding: 25px 20px 40px 20px;
+            border-bottom-left-radius: 35px; border-bottom-right-radius: 35px;
+            box-shadow: 0 10px 20px rgba(38, 50, 56, 0.4), inset 0 -3px 8px rgba(0,0,0,0.3);
+        }
+        
+        .role-badge {
+            background: #ff9800; color: #fff; padding: 4px 10px;
+            border-radius: 12px; font-size: 11px; font-weight: bold;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2); display: inline-block; margin-bottom: 5px;
+        }
+
+        /* 3D Dashboard Stats Grid */
+        .admin-stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: -25px;
+        }
+        .stat-card-3d {
+            background: #eef2f5; border-radius: 16px; padding: 15px; text-align: center;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.1), -6px -6px 12px rgba(255,255,255,1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .stat-card-3d h4 { margin: 0 0 5px; font-size: 12px; color: #555; }
+        .stat-card-3d h2 { margin: 0; font-size: 22px; color: #1b5e20; }
+        .stat-card-3d .trend { font-size: 10px; color: #4caf50; font-weight: bold; margin-top: 5px; display: block;}
+
+        .section-box {
+            background: #eef2f5; margin: 15px 20px; padding: 20px; border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+
+        /* Tabs for Admin Functions */
+        .admin-tabs {
+            display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none;
+        }
+        .admin-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            background: #eef2f5; border: none; padding: 10px 15px; border-radius: 20px;
+            font-size: 12px; font-weight: bold; color: #555; white-space: nowrap;
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.1), -4px -4px 8px rgba(255,255,255,0.9); cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #263238; color: white; box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4);
+        }
+
+        /* Order List Table */
+        .order-list {
+            width: 100%; background: #fff; border-radius: 12px; overflow: hidden;
+            font-size: 12px; box-shadow: 4px 4px 10px rgba(0,0,0,0.05);
+        }
+        .order-item {
+            display: flex; justify-content: space-between; padding: 12px;
+            border-bottom: 1px solid #eee; align-items: center;
+        }
+        .order-item:last-child { border-bottom: none; }
+        .order-status {
+            padding: 3px 8px; border-radius: 8px; font-size: 10px; font-weight: bold;
+        }
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-shipped { background: #e8f5e9; color: #2e7d32; }
+
+        /* Forms */
+        input, textarea, select, input[type="file"] {
+            width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; background: white;
+        }
+
+        /* Action Buttons */
+        .btn-action-3d {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 10px rgba(0,0,0,0.15); margin-top: 10px; transition: all 0.1s ease;
+        }
+        .btn-action-3d:active { top: 3px; box-shadow: 0 1px 0 #0d47a1, 0 2px 4px rgba(0,0,0,0.15); }
+        .btn-red { background: linear-gradient(145deg, #d32f2f, #c62828); box-shadow: 0 4px 0 #b71c1c, 0 8px 10px rgba(0,0,0,0.15); }
+        .btn-red:active { box-shadow: 0 1px 0 #b71c1c, 0 2px 4px rgba(0,0,0,0.15); }
+        .btn-orange { background: linear-gradient(145deg, #ff9800, #f57c00); box-shadow: 0 4px 0 #e65100, 0 8px 10px rgba(0,0,0,0.15); }
+        .btn-orange:active { box-shadow: 0 1px 0 #e65100, 0 2px 4px rgba(0,0,0,0.15); }
+        .btn-green { background: linear-gradient(145deg, #4caf50, #2e7d32); box-shadow: 0 4px 0 #1b5e20, 0 8px 10px rgba(0,0,0,0.15); }
+        .btn-green:active { box-shadow: 0 1px 0 #1b5e20, 0 2px 4px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body onload="loadNotifications('admin'); initAdminSettings(); loadDeliveryRates();"> <div class="app-container">
+    
+    <div class="admin-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ डॅशबोर्ड</a>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="position: relative; cursor: pointer; margin-top: 5px;" onclick="toggleNotifications()">
+                    <span style="font-size: 22px;">🔔</span>
+                    <span id="notif_badge" style="position: absolute; top: -5px; right: -5px; background: #c62828; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;">०</span>
+                    
+                    <div id="notificationDropdown" style="display: none; position: absolute; top: 35px; right: 0; background: white; width: 260px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e6ed; z-index: 1000; padding: 12px; text-align: left;">
+                         </div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="role-badge">👑 सुपर ॲडमिन</span>
+                    <p style="margin: 0; font-size: 11px; opacity: 0.8;">लॉगिन: प्रज्योत साळुंखे</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="margin: 0; font-size: 24px;">कंट्रोल रूम ⚙️</h1>
+            <p style="margin: 5px 0 0; font-size: 13px;">संपूर्ण इकोसिस्टिमचे नियंत्रण केंद्र</p>
+        </div>
+    </div>
+
+    <div class="admin-stats-grid">
+        <div class="stat-card-3d">
+            <h4>नोंदणीकृत शेतकरी</h4>
+            <h2>१,४५०</h2>
+            <span class="trend">↑ १२ नवीन आज</span>
+        </div>
+        <div class="stat-card-3d">
+            <h4>एकूण गाई/म्हशी</h4>
+            <h2>४,२००</h2>
+            <span class="trend">↑ ८५ नवीन आज</span>
+        </div>
+        <div class="stat-card-3d">
+            <h4>आजचे दूध (लिटर)</h4>
+            <h2 style="color: #1976d2;">१२,५४०</h2>
+            <span class="trend">लाईव्ह डेटा 🔴</span>
+        </div>
+        <div class="stat-card-3d">
+            <h4>पेंडिंग ऑर्डर्स (Store)</h4>
+            <h2 style="color: #e65100;">२४</h2>
+            <span class="trend" style="color: #e65100;">ॲक्शन आवश्यक ⚠️</span>
+        </div>
+    </div>
+
+    <div style="padding: 20px 20px 0;">
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab(this, 'tab_logistics')">ई-स्टोअर व लॉजिस्टिक्स</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab_slider_ad')">स्लायडर जाहिरात 🖼️</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab_feed')">फीड डेटाबेस ➕</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab_ads')">स्मार्ट ॲलर्ट 📢</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab_payment')">पेमेंट सेटिंग 💳</button>
+            <button class="tab-btn" onclick="switchTab(this, 'tab_delivery')">डिलिव्हरी व पिनकोड 🚚</button>
+        </div>
+    </div>
+
+    <div class="section-box tab-content" id="tab_logistics">
+        <h4 style="margin: 0 0 15px; color: #333; font-size: 15px;">🛒 नवीन ऑर्डर्स आणि सप्लाय चेन</h4>
+        <div class="order-list">
+            <div class="order-item">
+                <div>
+                    <b>Order #1042</b> (पिनकोड: 415001)<br>
+                    <span style="color: #666;">२ गोणी टाईप १ पेंड, १x बायपास फॅट</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="order-status status-pending">लोकल डीलरकडे पाठवली</span>
+                </div>
+            </div>
+            <div class="order-item">
+                <div>
+                    <b>Order #1043</b> (पिनकोड: 411045)<br>
+                    <span style="color: #666;">१x लिक्विड कॅल्शियम (५ L)</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="order-status status-shipped">कंपनीतून डिस्पॅच</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn-action-3d" style="margin-top: 15px;">सर्व ऑर्डर्स पहा व मॅनेज करा</button>
+    </div>
+
+    <div class="section-box tab-content" style="display: none;" id="tab_slider_ad">
+        <h4 style="margin: 0 0 10px; color: #333; font-size: 15px;">🖼️ युजरच्या डॅशबोर्डवर जाहिरात पाठवा</h4>
+        <p style="font-size: 12px; color: #666; margin-top: 0;">येथून टाकलेली जाहिरात शेतकऱ्यांच्या होम पेजवरील स्लायडरमध्ये लाईव्ह दिसेल.</p>
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">जाहिरातीचा मजकूर (Ad Text):</label>
+        <textarea id="ad_text" rows="3" placeholder="उदा. नवीन मिल्किंग मशीनवर २०% सूट! आजच खरेदी करा." style="margin-bottom: 15px;"></textarea>
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">बॅकग्राउंड रंग निवडा:</label>
+        <select id="ad_color" style="margin-bottom: 15px;">
+            <option value="linear-gradient(145deg, #d32f2f, #b71c1c)">🔴 लाल (Red Theme)</option>
+            <option value="linear-gradient(145deg, #1976d2, #1565c0)">🔵 निळा (Blue Theme)</option>
+            <option value="linear-gradient(145deg, #ff9800, #f57c00)">🟠 नारंगी (Orange Theme)</option>
+            <option value="linear-gradient(145deg, #2e7d32, #1b5e20)">🟢 हिरवा (Green Theme)</option>
+        </select>
+
+        <button class="btn-action-3d btn-orange" onclick="publishAd()">🚀 जाहिरात लाईव्ह करा (Publish)</button>
+        <button class="btn-action-3d btn-red" onclick="removeAd()" style="margin-top: 10px;">🗑️ जाहिरात काढून टाका</button>
+    </div>
+
+    <div class="section-box tab-content" style="display: none;" id="tab_feed">
+        <h4 style="margin: 0 0 15px; color: #333; font-size: 15px;">🌾 मास्टर फीड लायब्ररी अपडेट करा</h4>
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">नवीन चाऱ्याचे / खाद्याचे नाव:</label>
+        <input type="text" placeholder="उदा. यशवंत चारा" style="margin-bottom: 15px;">
+
+        <label style="font-size: 12px; font-weight: bold; color: #555;">कॅटेगरी (Category):</label>
+        <select style="margin-bottom: 15px;">
+            <option>पशुखाद्य (Cattle Feed)</option>
+            <option>चारा/मुरघास (Fodder/Silage)</option>
+            <option>मिनरल्स आणि सप्लिमेंट्स (Minerals)</option>
+            <option>औषधे व लस (Medicines & Vaccines)</option>
+            <option>मिल्किंग मशीन (Milking Machines)</option>
+            <option>शेती/गोठा मशिनरी (Machinery)</option>
+            <option>पुस्तके व माहिती (Books & Guides)</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">DM (%)</label>
+                <input type="number" placeholder="20">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">Protein (%)</label>
+                <input type="number" placeholder="8.5">
+            </div>
+        </div>
+        <button class="btn-action-3d btn-green">💾 ग्लोबल डेटाबेसमध्ये सेव्ह करा</button>
+    </div>
+
+    <div class="section-box tab-content" style="display: none;" id="tab_ads">
+        <h4 style="margin: 0 0 15px; color: #333; font-size: 15px;">📢 शेतकऱ्यांना स्मार्ट ॲलर्ट (Notification) पाठवा</h4>
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">विषय (Title):</label>
+        <input type="text" placeholder="उदा. उन्हाळ्यात जनावरांची काळजी" style="margin-bottom: 15px;">
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">संदेश (Message):</label>
+        <textarea rows="3" placeholder="येथे तुमची सूचना किंवा जाहिरात टाईप करा..." style="margin-bottom: 15px;"></textarea>
+        
+        <button class="btn-action-3d btn-red" onclick="sendNotification('नवीन अलर्ट 📢', 'सुपर ॲडमिन कडून नवीन संदेश प्राप्त झाला आहे!', 'all')">🚀 १,४५० शेतकऱ्यांना सेंड करा</button>
+    </div>
+
+    <div class="section-box tab-content" style="display: none;" id="tab_payment">
+        <h4 style="margin: 0 0 10px; color: #333; font-size: 15px;">💳 UPI पेमेंट सेटिंग्ज</h4>
+        <p style="font-size: 12px; color: #666; margin-top: 0; margin-bottom: 15px;">शेतकऱ्यांनी कृषी मॉलमध्ये खरेदी केल्यावर पैसे थेट तुमच्या कोणत्या बँक खात्यात यावेत, ते येथे सेट करा.</p>
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">Payee Name (ॲपवर दिसणारे नाव):</label>
+        <input type="text" id="upi_payee_name" value="दुग्ध दिशा AI" placeholder="उदा. दुग्ध दिशा AI" style="margin-bottom: 15px;">
+        
+        <label style="font-size: 12px; font-weight: bold; color: #555;">Merchant UPI ID (तुमचा UPI आयडी):</label>
+        <input type="text" id="upi_id_value" value="9579535290@kotak" placeholder="उदा. 9579535290@kotak" style="margin-bottom: 15px;">
+        
+        <button class="btn-action-3d btn-green" onclick="savePaymentSettings()">💾 Payment Settings सेव्ह करा</button>
+    </div>
+
+    <!-- 🔥 UPDATED FEATURE: Delivery Matrix with CSV Upload -->
+    <div class="section-box tab-content" style="display: none;" id="tab_delivery">
+        <h4 style="margin: 0 0 10px; color: #333; font-size: 15px;">🚚 कुरिअर व पिनकोड दर (Delivery Matrix)</h4>
+        
+        <!-- बल्क अपलोड सेक्शन (CSV) -->
+        <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px dashed #2e7d32; margin-bottom: 20px;">
+            <p style="font-size: 12px; color: #2e7d32; font-weight: bold; margin: 0 0 10px;">Excel (CSV) फाईलद्वारे हजारो दर एकत्र अपलोड करा:</p>
+            <p style="font-size: 10px; color: #666; margin: 0 0 10px;">Format: <i>Pincode, Courier Name, Charge</i> (उदा. 415001, DTDC, 50)</p>
+            <input type="file" id="csv_file" accept=".csv">
+            <button class="btn-action-3d btn-green" onclick="handleCSVUpload()" style="margin-top: 10px; padding: 8px;">📤 CSV अपलोड करा</button>
+        </div>
+
+        <p style="font-size: 12px; color: #666; font-weight: bold; margin-bottom: 10px; text-align: center;">किंवा मॅन्युअली एक-एक ॲड करा 👇</p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">कुरिअर कंपनी:</label>
+                <input type="text" id="del_courier" placeholder="उदा. DTDC / Ecom">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">पिनकोड:</label>
+                <input type="number" id="del_pincode" placeholder="उदा. 415001">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">डिलिव्हरी चार्ज (₹):</label>
+                <input type="number" id="del_charge" placeholder="उदा. 50">
+            </div>
+        </div>
+        
+        <button class="btn-action-3d btn-orange" onclick="saveDeliveryRate()">➕ मॅन्युअल दर सेव्ह करा</button>
+
+        <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin: 25px 0 10px;">
+            <h4 style="margin: 0; color: #333; font-size: 14px;">सेव्ह केलेले दर</h4>
+            <span style="font-size: 10px; color: #d32f2f; cursor: pointer; font-weight: bold;" onclick="clearAllRates()">🗑️ सर्व क्लियर करा</span>
+        </div>
+        
+        <!-- Table for saved rates -->
+        <div class="order-list" id="saved_rates_list">
+            <!-- JavaScript द्वारे येथे सेव्ह केलेले दर येतील -->
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function switchTab(clickedBtn, targetId) {
+        let btns = document.getElementsByClassName('tab-btn');
+        for(let i=0; i<btns.length; i++) {
+            btns[i].classList.remove('active');
+        }
+        clickedBtn.classList.add('active');
+        
+        let contents = document.getElementsByClassName('tab-content');
+        for(let i=0; i<contents.length; i++) {
+            contents[i].style.display = "none";
+        }
+        document.getElementById(targetId).style.display = "block";
+    }
+
+    function publishAd() {
+        let text = document.getElementById('ad_text').value;
+        let color = document.getElementById('ad_color').value;
+        if(!text) { alert("कृपया जाहिरातीचा मजकूर टाका!"); return; }
+        let adData = { text: text, color: color, active: true };
+        localStorage.setItem("live_admin_ad", JSON.stringify(adData));
+        alert("✅ जाहिरात लाईव्ह झाली आहे!");
+    }
+
+    function removeAd() {
+        localStorage.removeItem("live_admin_ad");
+        document.getElementById('ad_text').value = "";
+        alert("🗑️ जाहिरात काढून टाकली आहे.");
+    }
+
+    function initAdminSettings() {
+        let savedSettings = JSON.parse(localStorage.getItem("admin_payment_settings"));
+        if(savedSettings) {
+            document.getElementById('upi_payee_name').value = savedSettings.payee_name;
+            document.getElementById('upi_id_value').value = savedSettings.upi_id;
+        }
+    }
+
+    function savePaymentSettings() {
+        let name = document.getElementById('upi_payee_name').value;
+        let upi = document.getElementById('upi_id_value').value;
+        if(!name || !upi) return;
+        localStorage.setItem("admin_payment_settings", JSON.stringify({ payee_name: name, upi_id: upi }));
+        alert("✅ पेमेंट सेटिंग्ज सेव्ह झाल्या!");
+    }
+
+    // ----------------------------------------------------
+    // 🔥 NEW LOGIC: Delivery Matrix & CSV Parsing
+    // ----------------------------------------------------
+
+    // 1. Manual Save
+    function saveDeliveryRate() {
+        let courier = document.getElementById('del_courier').value;
+        let pincode = document.getElementById('del_pincode').value;
+        let charge = document.getElementById('del_charge').value;
+
+        if(!courier || !pincode || !charge) { alert("कृपया सर्व माहिती भरा!"); return; }
+
+        let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
+        rates[pincode] = { courier: courier, charge: parseInt(charge) };
+        localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+
+        alert("✅ दर सेव्ह झाले!");
+        document.getElementById('del_courier').value = '';
+        document.getElementById('del_pincode').value = '';
+        document.getElementById('del_charge').value = '';
+        loadDeliveryRates(); 
+    }
+
+    // 2. CSV Bulk Upload Parser
+    function handleCSVUpload() {
+        const fileInput = document.getElementById('csv_file');
+        const file = fileInput.files[0];
+        
+        if (!file) { alert('कृपया CSV फाईल निवडा!'); return; }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
+            let count = 0;
+
+            // Loop through CSV lines (assuming Row 1 might be headers)
+            for(let i = 0; i < lines.length; i++) { 
+                let line = lines[i].trim();
+                if(line === '' || line.toLowerCase().includes('pincode')) continue; // Skip empty or header rows
+                
+                let cols = line.split(',');
+                if(cols.length >= 3) {
+                    let pin = cols[0].trim();
+                    let courier = cols[1].trim();
+                    let charge = parseInt(cols[2].trim());
+                    
+                    if(pin && courier && !isNaN(charge)) {
+                        rates[pin] = { courier: courier, charge: charge };
+                        count++;
+                    }
+                }
+            }
+            
+            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+            alert(`✅ यशस्वी! ${count} नवीन पिनकोडचे दर सिस्टीममध्ये अपलोड झाले आहेत.`);
+            loadDeliveryRates();
+            fileInput.value = ''; // Reset input
+        };
+        reader.readAsText(file);
+    }
+
+    // 3. Render List
+    function loadDeliveryRates() {
+        let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
+        let container = document.getElementById('saved_rates_list');
+        let html = '';
+
+        if(Object.keys(rates).length === 0) {
+            container.innerHTML = '<div style="padding:15px; text-align:center; color:#888;">अद्याप कोणतेही दर सेट केलेले नाहीत.</div>';
+            return;
+        }
+
+        for(let pin in rates) {
+            html += `
+            <div class="order-item">
+                <div>
+                    <b style="font-size:14px; color:#1b5e20;">पिनकोड: ${pin}</b><br>
+                    <span style="color: #666; font-size:11px;">कुरिअर: ${rates[pin].courier}</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color:#d32f2f; font-weight:bold; font-size:14px;">₹${rates[pin].charge}</span>
+                    <br><span style="color:#e65100; cursor:pointer; font-size:11px; font-weight:bold; text-decoration:underline;" onclick="deleteDeliveryRate('${pin}')">Delete</span>
+                </div>
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    // 4. Delete Single Rate
+    function deleteDeliveryRate(pin) {
+        if(confirm("पिनकोड " + pin + " चा दर डिलीट करायचा आहे का?")) {
+            let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
+            delete rates[pin];
+            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+            loadDeliveryRates();
+        }
+    }
+    
+    // 5. Clear All Rates
+    function clearAllRates() {
+        if(confirm("⚠️ चेतावणी: सर्व पिनकोड आणि दर सिस्टीममधून कायमचे डिलीट होतील. पुढे जायचे?")) {
+            localStorage.removeItem('admin_delivery_rates');
+            loadDeliveryRates();
+            alert("सर्व दर डिलीट केले गेले आहेत.");
+        }
+    }
+</script>
+
+<script src="notifications.js"></script>
+
+</body>
+</html>

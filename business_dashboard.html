@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - Business Hub</title>
+    
+    <!-- 🔥 NEW: Cropper.js CSS for Image Cropping 🔥 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <!-- Load Cropper.js Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <style>
+        :root { --b-primary: #0d47a1; --b-secondary: #1565c0; --b-accent: #ff9800; --bg-color: #f5f7fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; position: relative; }
+        
+        .sidebar { width: 280px; background: #0a192f; color: white; display: flex; flex-direction: column; overflow-y: auto; transition: transform 0.3s ease; z-index: 1001; position: fixed; top: 0; bottom: 0; left: 0; transform: translateX(0); box-shadow: 2px 0 15px rgba(0,0,0,0.2); }
+        .sidebar.collapsed { transform: translateX(-280px); }
+        
+        .sidebar-header { padding: 20px; background: #020c1b; text-align: center; border-bottom: 1px solid #172a45; }
+        .sidebar-header h2 { margin: 0; font-size: 20px; font-weight: 900; color: #64ffda; }
+        .sidebar-header p { margin: 5px 0 0; font-size: 11px; color: #8892b0; }
+        
+        .role-simulator { padding: 15px; background: #112240; border-bottom: 1px solid #233554; }
+        .role-simulator select { width: 100%; padding: 8px; background: #0a192f; color: #64ffda; border: 1px solid #64ffda; border-radius: 6px; font-weight: bold; font-size: 13px; }
+
+        .menu-list { padding: 10px 0; }
+        .menu-item { padding: 12px 20px; font-size: 13px; color: #ccd6f6; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .menu-item:hover, .menu-item.active { background: #172a45; color: #64ffda; border-left: 4px solid var(--b-accent); }
+        .module-hidden { display: none !important; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-color); width: 100%; margin-left: 280px; transition: margin-left 0.3s ease; position: relative;}
+        .main-content.full-width { margin-left: 0; }
+        
+        .top-bar { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; position: sticky; top: 0; gap: 10px;}
+        
+        .top-bar-left-wrap { display: flex; align-items: center; gap: 10px; }
+        .toggle-btn { background: var(--b-primary); color: white; border: none; padding: 10px 14px; font-size: 18px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .top-bar h2 { margin: 0; font-size: 17px; color: var(--b-primary); font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        
+        .top-action-group { display: flex; align-items: center; gap: 12px; }
+        .top-bar-right { font-size: 12px; font-weight: bold; color: #1565c0; text-align: right; line-height: 1.3; }
+        
+        .top-action-btn { border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s;}
+        .top-action-btn:active { transform: scale(0.95); }
+        .btn-user { background: #2e7d32; color: white; }
+        .btn-logout { background: #d32f2f; color: white; }
+
+        .content-body { padding: 20px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        
+        .biz-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e0e6ed; margin-bottom: 20px; }
+        .biz-card h4 { margin-top: 0; color: var(--b-primary); font-size: 15px; border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 15px;}
+        
+        .stat-box { background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--b-secondary); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .stat-box h3 { margin: 0; font-size: 22px; color: var(--b-primary); font-weight: 900; }
+        .stat-box p { margin: 5px 0 0; font-size: 12px; color: #666; font-weight: bold; }
+
+        .field { margin-bottom: 15px; }
+        .field label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cfd8dc; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f8fafc; font-weight: 600; color: #2c3e50; }
+        input:focus, select:focus, textarea:focus { border-color: var(--b-primary); outline: none; background: #fff; }
+        
+        .btn-action { background: var(--b-primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; box-shadow: 0 3px 0 #093275; width: 100%; }
+        .btn-action:active { top: 3px; position: relative; box-shadow: none; }
+        .btn-premium { background: linear-gradient(145deg, #ff9800, #f57c00); box-shadow: 0 3px 0 #e65100; }
+
+        .tag { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; margin-right: 5px; display: inline-block; margin-bottom: 5px; cursor: pointer; border: 1px solid #bbdefb; transition: 0.2s;}
+        .tag.active { background: #0d47a1; color: white; }
+
+        .dealer-order-card { border: 1px solid #e0e6ed; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .dealer-order-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px; align-items: center; }
+        .dealer-order-customer { background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; color: #333; border-left: 3px solid #ff9800; }
+        .status-btn { padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; color: white; }
+        .btn-ship { background: #1565c0; }
+        .btn-deliver { background: #2e7d32; }
+
+        .premium-card { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border: 2px solid #ffca28; position: relative; overflow: hidden; }
+        .premium-card::after { content: '⭐'; position: absolute; right: -20px; top: -20px; font-size: 100px; opacity: 0.2; }
+        
+        .locked-lead { background: #fdfaf6; border: 1px solid #ffe0b2; padding: 15px; border-radius: 8px; position: relative; }
+        .blur-mobile { filter: blur(4px); user-select: none; background: #e0e0e0; padding: 0 5px; border-radius: 3px; }
+
+        .image-upload-box { border: 2px dashed #b0bec5; padding: 25px; text-align: center; border-radius: 8px; cursor: pointer; background: #f8fafc; color: #546e7a; font-weight: bold; transition: 0.3s; margin-top: 5px; }
+        .image-upload-box:hover { border-color: var(--b-primary); background: #e3f2fd; color: var(--b-primary); }
+        .image-preview-container { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .image-preview-card { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid #cfd8dc; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative;}
+
+        .ad-type-card { border: 1px solid #e0e6ed; padding: 15px; border-radius: 10px; background: #fff; text-align: center; transition: 0.3s; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 160px; cursor: pointer;}
+        .ad-type-card:hover { border-color: var(--b-primary); box-shadow: 0 4px 12px rgba(13, 71, 161, 0.1); transform: translateY(-3px); }
+        .ad-icon { font-size: 30px; margin-bottom: 5px; }
+        .ad-title { font-size: 13px; font-weight: 900; color: var(--b-primary); margin-bottom: 5px; }
+        .ad-desc { font-size: 11px; color: #666; line-height: 1.4; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
+
+        .roadmap-container { display: flex; justify-content: space-between; position: relative; margin: 30px 0; padding: 0 10px; }
+        .roadmap-container::before { content: ''; position: absolute; top: 15px; left: 30px; right: 30px; height: 2px; background: #e0e6ed; z-index: 1; }
+        .roadmap-step { position: relative; z-index: 2; text-align: center; background: var(--bg-color); padding: 0 5px; width: 60px; }
+        .step-circle { width: 30px; height: 30px; background: var(--b-secondary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 8px; font-size: 14px; box-shadow: 0 0 0 4px var(--bg-color); }
+        .step-text { font-size: 10px; font-weight: bold; color: #444; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-box { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .qr-placeholder { background: #f0f4f8; border: 2px dashed #b0bec5; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px; }
+
+        .kyc-warning-box { background: #ffebee; border-left: 5px solid #d32f2f; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .kyc-warning-box h4 { margin: 0 0 8px; color: #c62828; font-size: 16px; }
+        .kyc-warning-box p { margin: 0; font-size: 13px; color: #b71c1c; line-height: 1.5; }
+        .checkbox-container { display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc; }
+        .checkbox-container input { width: auto; margin-top: 3px; }
+        .checkbox-container label { font-size: 11px; color: #555; line-height: 1.4; margin: 0; cursor: pointer; }
+
+        .front-notification { background: #fff3e0; border-left: 5px solid #ff9800; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; align-items: flex-start; gap: 10px; animation: slideDown 0.5s ease-out;}
+        .front-notification .icon { font-size: 24px; line-height: 1;}
+        .front-notification .text h4 { margin: 0 0 5px 0; color: #e65100; font-size: 14px;}
+        .front-notification .text p { margin: 0; font-size: 12px; color: #555; line-height: 1.4;}
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .billing-toggle { display: flex; justify-content: center; background: #e0e0e0; border-radius: 25px; padding: 4px; margin: 20px auto; width: 100%; max-width: 350px;}
+        .toggle-btn-bill { flex: 1; text-align: center; padding: 8px 0; font-size: 11px; font-weight: bold; color: #555; cursor: pointer; border-radius: 20px; transition: 0.3s;}
+        .toggle-btn-bill.active-toggle { background: #e65100; color: white; box-shadow: 0 2px 5px rgba(230,81,0,0.4);}
+        .discount-badge { font-size: 9px; color: #d32f2f; background: #ffebee; padding: 2px 5px; border-radius: 8px; margin-left: 4px;}
+        .pricing-grid-new { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;}
+        .price-card { background: white; border-radius: 15px; padding: 25px 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; overflow: hidden;}
+        .price-card.popular { border: 2px solid #ff9800; transform: scale(1.02);}
+        .popular-tag { position: absolute; top: 0; right: 0; background: #ff9800; color: white; font-size: 10px; font-weight: bold; padding: 5px 15px; border-radius: 0 15px 0 15px;}
+        .plan-name { font-size: 18px; font-weight: 900; color: #333; margin: 0 0 5px;}
+        
+        .plan-price { font-size: 36px; font-weight: 900; color: #e65100; margin: 0 0 15px; display:flex; align-items: baseline; justify-content:flex-start; text-shadow: 1px 1px 0px rgba(0,0,0,0.05);}
+        .plan-price .rs-symbol { font-size: 20px; margin-right: 2px; margin-top: 5px;}
+        .plan-price span { font-size: 12px; color: #888; font-weight: bold; align-self: flex-end; margin-bottom: 6px; margin-left: 5px;}
+        
+        .feature-list-new { list-style: none; padding: 0; margin: 0 0 20px; font-size: 12px; color: #444;}
+        .feature-list-new li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;}
+        .feature-list-new li.farmer-bonus { color: #1b5e20; font-weight: bold; background: #e8f5e9; padding: 8px; border-radius: 6px; border-left: 3px solid #4caf50; margin-top: 10px;}
+        .icon-check { color: #4caf50; font-weight: bold; font-size: 14px;}
+        .icon-cross { color: #bdbdbd; font-size: 14px;}
+        .buy-btn-new { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; transition: 0.3s;}
+        .buy-btn-new.btn-outline { background: white; color: #e65100; border: 2px solid #e65100;}
+        .buy-btn-new.btn-filled { background: #e65100; color: white; box-shadow: 0 4px 10px rgba(230,81,0,0.3);}
+        .buy-btn-new:active { transform: scale(0.98);}
+
+        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; text-align: center; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; transition: 0.3s; }
+        .btn-upi-direct:active { transform: scale(0.98); background: #2e7d32; }
+
+        .ad-scroll-wrapper { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+        .ad-scroll-wrapper::-webkit-scrollbar { height: 6px; }
+        .ad-scroll-wrapper::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 10px; }
+        .ad-scroll-card { min-width: 220px; flex-shrink: 0; scroll-snap-align: start; }
+
+        .info-accordion { border: 1px solid #e0e6ed; border-radius: 8px; margin-bottom: 10px; overflow: hidden; background: #fff;}
+        .info-accordion-header { padding: 15px; background: #f8fafc; font-weight: bold; color: var(--b-primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;}
+        .info-accordion-header:hover { background: #e3f2fd; }
+        .info-accordion-body { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease; font-size: 13px; color: #555; line-height: 1.6;}
+        .info-accordion.open .info-accordion-body { padding: 15px; max-height: 500px; border-top: 1px solid #eee;}
+        .info-accordion.open .info-accordion-header { background: var(--b-primary); color: white;}
+        .info-highlight { color: #e65100; font-weight: bold;}
+
+        .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .ledger-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e0e6ed; }
+        .ledger-table td { padding: 12px; border-bottom: 1px solid #eee; }
+
+        .crop-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; overflow: hidden;}
+        .crop-modal-content { background: transparent; width: 100%; max-width: 500px; padding: 20px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; position: relative;}
+        .crop-container { width: 100%; height: 50vh; max-height: 400px; background: #000; margin-bottom: 20px; display: block; position: relative;}
+        #crop_image_element { display: block; max-width: 100%; height: auto; } 
+        .crop-controls { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; width: 100%; position: relative; z-index: 4000;}
+        .crop-btn { background: #1976d2; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; position: relative; z-index: 4000;}
+        .crop-btn.save { background: #2e7d32; font-size: 15px; padding: 12px 20px;}
+
+        .chat-box { border: 1px solid #e0e6ed; border-radius: 12px; overflow: hidden; background: #fff; margin-top: 15px; }
+        .chat-header { background: #1565c0; color: white; padding: 15px; font-size: 15px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
+        .chat-body { padding: 15px; max-height: 250px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { max-width: 80%; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.4; position: relative;}
+        .chat-msg.sent { background: #e3f2fd; color: #0d47a1; align-self: flex-end; border-bottom-right-radius: 0; border: 1px solid #bbdefb;}
+        .chat-msg.received { background: #ffffff; color: #333; align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid #e0e6ed;}
+        .msg-time { font-size: 9px; color: #888; text-align: right; display: block; margin-top: 4px; }
+        .chat-input-area { display: flex; padding: 10px; background: #fff; border-top: 1px solid #e0e6ed; gap: 10px; }
+        .chat-input-area textarea { flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-size: 13px; resize: none; outline: none; height: 40px; }
+        .chat-input-area button { background: #1565c0; color: white; border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .chat-input-area button:active { transform: scale(0.95); }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+
+        /* 🔥 NEW: AD TYPE TOGGLE TABS */
+        .ad-type-tabs { display: flex; background: #e3f2fd; border-radius: 8px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+        .ad-type-tab { flex: 1; text-align: center; padding: 12px 8px; font-size: 13px; font-weight: 900; color: #555; cursor: pointer; border-radius: 6px; transition: all 0.3s ease; background: transparent; }
+        .ad-type-tab.active { background: #1565c0; color: white; box-shadow: 0 2px 8px rgba(13,71,161,0.3); }
+        .ad-tab-desc { font-size: 10px; font-weight: normal; opacity: 0.8; display: block; margin-top: 3px; }
+
+        /* Shop iframe container */
+        .shop-iframe-container { width: 100%; height: calc(100vh - 150px); border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+        /* Loader Overlay (Paytm Auto Intent) */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .sidebar { transform: translateX(-280px); z-index: 1001; }
+            .main-content { margin-left: 0; }
+            .sidebar.active-mobile { transform: translateX(0); }
+            
+            .top-bar { padding: 10px 12px; flex-wrap: wrap; gap: 5px; }
+            .top-bar-left-wrap { width: 100%; justify-content: flex-start; }
+            
+            .top-action-group { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid #e0e6ed; gap: 8px;}
+            .top-action-btn { padding: 7px 10px; font-size: 11px; }
+            
+            .top-bar-right { display: none; } 
+            .roadmap-container { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .roadmap-container::before { left: 25px; top: 15px; bottom: 15px; width: 2px; height: auto; right: auto; }
+            .roadmap-step { display: flex; align-items: center; gap: 15px; text-align: left; width: 100%; }
+            .step-circle { margin: 0; }
+        }
+    </style>
+</head>
+<body onload="initializeDashboard()"> 
+    
+    <div class="sidebar-overlay" id="sidebar_overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Business Hub 🏢</h2>
+                <!-- Close Button for Mobile Menu -->
+                <span style="font-size:20px; cursor:pointer; display:none;" class="mobile-close-btn" onclick="toggleSidebar()">✖</span>
+            </div>
+            <p>दुग्ध दिशा AI इकोसिस्टम</p>
+        </div>
+        
+        <div class="role-simulator">
+            <label style="font-size: 10px; color: #8892b0; margin-bottom: 5px; display: block;">लॉगिन प्रकार (Role Simulator):</label>
+            <select id="role_selector" onchange="applyRoleModules()">
+                <option value="company">🏭 Feed/Equipment Company</option>
+                <option value="dealer">🛒 Local Dealer / Distributor</option>
+                <option value="supplier">🚚 Raw Material Supplier</option>
+                <option value="service">👨‍⚕️ Vet / Service Provider</option>
+            </select>
+        </div>
+
+        <div class="menu-list" id="dynamic_menu">
+            <div class="menu-item active" onclick="switchTab('b1')" data-roles="all">📊 १. Dashboard & Analytics</div>
+            <div class="menu-item" onclick="checkGatekeeper('b2')" data-roles="company,dealer,supplier">🛍️ २. Product Store</div>
+            <div class="menu-item" onclick="switchTab('b3')" data-roles="company,dealer,supplier">📦 ३. Shopping & Orders</div>
+            <div class="menu-item" onclick="checkGatekeeper('b4')" data-roles="all">📢 ४. Ad Studio & Premium</div>
+            <div class="menu-item" onclick="switchTab('b5')" data-roles="company,dealer">🎟️ ५. Coupons & Offers</div>
+            <div class="menu-item" onclick="switchTab('b6')" data-roles="company">🤝 ६. Dealer Network</div>
+            <div class="menu-item" onclick="switchTab('b7')" data-roles="company,dealer,service">🎯 ७. Lead Gen & Tenders</div>
+            <div class="menu-item" onclick="switchTab('b8')" data-roles="supplier">🚛 ८. Logistics & Supply</div>
+            <div class="menu-item" onclick="switchTab('b9')" data-roles="company">🏢 ९. Franchise & Jobs</div>
+            <div class="menu-item" onclick="switchTab('b10')" data-roles="all">🎓 १०. Training Academy</div>
+            <div class="menu-item" onclick="switchTab('b11')" data-roles="all">📞 ११. Support & Helpdesk</div>
+            <div class="menu-item" onclick="switchTab('b12')" data-roles="company,service">📊 १२. Farmer Database</div>
+            <div class="menu-item" onclick="switchTab('b_ledger')" data-roles="company,dealer,supplier" style="color:#ffca28;">💰 १३. Billing & Ledger</div>
+            <div class="menu-item" onclick="switchTab('b_info')" data-roles="all" style="color:#ff9800;">ℹ️ १४. About Business Hub</div>
+            <!-- 🔥 NEW SHOP PREVIEW TAB (only visible to all roles but access controlled) -->
+            <div class="menu-item" onclick="switchTab('b_shop')" data-roles="company,dealer,supplier,service" style="color:#00f2fe;">🏪 १५. माझं दुकान (Shop Preview)</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="main_content">
+        
+        <div class="top-bar">
+            
+            <div class="top-bar-left-wrap">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <h2 id="current_module_title">📊 Dashboard & Analytics</h2>
+            </div>
+            
+            <div class="top-action-group">
+                
+                <div style="position: relative; cursor: pointer; margin-right: 5px;" onclick="toggleVendorNotifications()">
+                    <span style="font-size: 22px;">🔔</span>
+                    <span id="vendor_notif_badge" style="position: absolute; top: -5px; right: -5px; background: #e65100; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;">०</span>
+                    
+                    <div id="vendorNotificationDropdown" style="display: none; position: absolute; top: 35px; left: 50%; transform: translateX(-50%); background: white; width: 260px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e6ed; z-index: 1000; padding: 12px; text-align: left;">
+                        <div id="vendor_notif_list" style="font-size: 12px; color: #444; max-height: 200px; overflow-y: auto;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="top-bar-right" id="user_profile_badge">
+                    हिंदुस्तान ॲग्रो फिड्स <br><span style="color:#d32f2f; font-size: 10px;" id="verification_status_text">Unverified Seller</span>
+                </div>
+                
+                <button class="top-action-btn btn-user" onclick="goToUserPage()">🌾 युजर पेजला जा</button>
+                <button class="top-action-btn btn-logout" onclick="logoutUser()">🚪 लॉग आऊट</button>
+                
+            </div>
+        </div>
+
+        <div class="content-body">
+            
+            <div id="b1" class="tab-content active">
+                
+                <div class="front-notification" id="upgrade_notification">
+                    <div class="icon">🔔</div>
+                    <div class="text">
+                        <h4>तुमचे दुकान 'फ्री' मोडवर आहे!</h4>
+                        <p>सध्या तुमची उत्पादने मर्यादित शेतकऱ्यांन दिसत आहेत. संपूर्ण महाराष्ट्रातील ग्राहकांपर्यंत पोहोचण्यासाठी खालीलपैकी <b>प्रीमियम प्लॅन</b> निवडा.</p>
+                    </div>
+                </div>
+
+                <div class="biz-card" style="background: #fff8e1; border: 2px solid #ffca28; margin-bottom: 20px;" id="front_pricing_packages">
+                    <h4 style="border-bottom: none; margin-bottom: 5px; color: #e65100; font-size: 18px; text-align:center;">👑 Premium Seller Packages</h4>
+                    
+                    <div class="billing-toggle">
+                        <div class="toggle-btn-bill active-toggle" onclick="changeBilling('monthly', this)">मासिक (Monthly)</div>
+                        <div class="toggle-btn-bill" onclick="changeBilling('half', this)">६ महिने <span class="discount-badge">10% OFF</span></div>
+                        <div class="toggle-btn-bill" onclick="changeBilling('yearly', this)">वार्षिक <span class="discount-badge">20% OFF</span></div>
+                    </div>
+
+                    <div class="pricing-grid-new">
+                        <div class="price-card">
+                            <h3 class="plan-name">स्टार्टर (Starter)</h3>
+                            <h2 class="plan-price"><span class="rs-symbol">₹</span> <span class="price-val" data-monthly="४९९">४९९</span> <span>/ महिना</span></h2>
+                            <ul class="feature-list-new">
+                                <li><span class="icon-check">✔</span> ७ प्रॉडक्ट लिस्टिंग</li>
+                                <li><span class="icon-check">✔</span> ग्राहकांचे थेट कॉल मिळवा</li>
+                                <li><span class="icon-check">✔</span> १ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
+                                <li><span class="icon-cross">✖</span> कृषी मॉलमध्ये पहिल्या पानावर ॲड नाही</li>
+                                <li class="farmer-bonus">🎁 <b>बोनस:</b> मोफत प्रो रेशन बॅलन्सर (शेतकऱ्यांसाठी)</li>
+                            </ul>
+                            <button class="buy-btn-new btn-outline" onclick="buyPlan('Starter', 'pro_ration')">प्लॅन निवडा</button>
+                        </div>
+                        <div class="price-card popular">
+                            <div class="popular-tag">सर्वाधिक पसंती</div>
+                            <h3 class="plan-name">सिल्व्हर विक्रेता (Silver)</h3>
+                            <h2 class="plan-price"><span class="rs-symbol">₹</span> <span class="price-val" data-monthly="९९९">९९९</span> <span>/ महिना</span></h2>
+                            <ul class="feature-list-new">
+                                <li><span class="icon-check">✔</span> ३० प्रॉडक्ट लिस्टिंग + Verified टिक</li>
+                                <li><span class="icon-check">✔</span> ३ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
+                                <li><span class="icon-check">✔</span> कृषी मॉलच्या स्क्रोलमध्ये १ ॲड हाईलाईट</li>
+                                <li><span class="icon-check">✔</span> शेतकऱ्यांच्या थेट ऑर्डर्स (Direct Leads)</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
+                                <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
+                                <li class="farmer-bonus">🎁 <b>बोनस:</b> ॲडव्हान्स रेशन बॅलन्सर</li>
+                            </ul>
+                            <button class="buy-btn-new btn-filled" onclick="buyPlan('Silver Seller', 'adv_ration')">प्लॅन निवडा</button>
+                        </div>
+                        <div class="price-card" style="border-color: #1565c0; background: linear-gradient(to bottom, #ffffff, #e3f2fd);">
+                            <div class="popular-tag" style="background:#1565c0;">मोठ्या व्यापाऱ्यांसाठी</div>
+                            <h3 class="plan-name" style="color: #1565c0;">गोल्ड / प्लॅटिनम (Corporate)</h3>
+                            <h2 class="plan-price" style="color: #1565c0;"><span class="rs-symbol">₹</span> <span class="price-val" data-monthly="१९९९">१,९९९</span> <span>/ महिना</span></h2>
+                            <ul class="feature-list-new">
+                                <li><span class="icon-check">✔</span> अमर्यादित (Unlimited) प्रॉडक्ट लिस्टिंग</li>
+                                <li><span class="icon-check">✔</span> रेशन बॅलन्सरमध्ये (Top) प्राधान्याने ॲड</li>
+                                <li><span class="icon-check">✔</span> महिन्यातून २ मोफत पुश नोटिफिकेशन्स</li>
+                                <li><span class="icon-check">✔</span> ॲपमध्ये सर्वत्र ब्रँड 'Top Sponsored' दिसेल</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
+                                <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
+                                <li class="farmer-bonus">🎁 <b>बोनस:</b> मार्केटिंग स्टाफला मोफत ॲप + डॉक्टर लिंकिंग</li>
+                            </ul>
+                            <button class="buy-btn-new btn-filled" style="background: #1565c0;" onclick="buyPlan('Corporate Partner', 'adv_doctor')">प्लॅन निवडा</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-4">
+                    <div class="stat-box"><h3><span id="dash_views">0</span></h3><p>Product Views</p></div>
+                    <div class="stat-box"><h3><span id="dash_orders">0</span></h3><p>Active Orders</p></div>
+                    <div class="stat-box"><h3><span id="dash_leads">0</span></h3><p>New Leads</p></div>
+                    <div class="stat-box" style="border-left-color: #4caf50;"><h3>₹<span id="dash_sales">0</span></h3><p>Monthly Sales</p></div>
+                </div>
+                <div class="grid-2">
+                    <div class="biz-card">
+                        <h4>📈 Product Analytics</h4>
+                        <p style="font-size: 13px; color:#555;">(तुमचे प्लॅन सुरू झाल्यावर येथे लाईव्ह डेटा दिसेल.)<br><br>Added to Cart: <b>0 वेळा</b><br>Conversion Rate: <b>0%</b><br>Average Rating: <b>--</b></p>
+                    </div>
+                    <div class="biz-card">
+                        <h4>🤖 AI Marketing Insights</h4>
+                        <p style="font-size: 12px; color: #555;" id="dynamic_insight_text">AI Suggestion: सध्या तुमच्या भागात दुभत्या जनावरांच्या आजारांवर उपाय शोधणाऱ्या शेतकऱ्यांची संख्या वाढत आहे. जाहिरात चालवा.</p>
+                        <button class="btn-action btn-premium" style="width: auto; padding: 8px 15px; font-size: 12px; margin-top:5px;" onclick="checkGatekeeper('b4')">🚀 जाहिरात चालवा</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="b2" class="tab-content">
+                <div class="biz-card">
+                    <h4>🛍️ Product Store (नवीन प्रॉडक्ट जोडा)</h4>
+                    
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:15px; margin-bottom:15px;">📦 १. प्रॉडक्टची मूळ माहिती</h5>
+                    <div class="grid-2">
+                        <div class="field"><label>Product Name (प्रॉडक्टचे नाव) *</label><input type="text" id="vp_name" placeholder="उदा. Gold Milk Concentrate"></div>
+                        <div class="field"><label>Brand Name (ब्रँड) *</label><input type="text" id="vp_brand" placeholder="उदा. गोदावरी"></div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Category (कॅटेगरी) *</label>
+                            <select id="vp_category" onchange="toggleCategoryOther(this.value)">
+                                <option>पशुखाद्य (Feed)</option>
+                                <option>चारा/बियाणे</option>
+                                <option>मिनरल मिक्स्चर</option>
+                                <option>मशिनरी (Machinery)</option>
+                                <option>औषधे व लस</option>
+                                <option value="Other">इतर</option>
+                            </select>
+                            <input type="text" id="vp_category_other" placeholder="तुमची कॅटेगरी टाईप करा..." style="display:none; margin-top:8px; border-color:#ff9800;">
+                        </div>
+                        <div class="field"><label>Weight / Vol (वजन/आकार)</label><input type="text" id="vp_weight" placeholder="उदा. ५० Kg, १ Litre"></div>
+                    </div>
+                    <div class="field"><label>Stock Status (स्टॉक स्थिती)</label><select id="vp_stock"><option>In Stock (उपलब्ध)</option><option>Out of Stock</option></select></div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">💰 २. किंमत आणि टॅक्स</h5>
+                    <div class="grid-3">
+                        <div class="field"><label>MRP (मूळ किंमत) ₹ *</label><input type="number" id="vp_mrp" placeholder="1500"></div>
+                        <div class="field"><label>Offer Price (विक्री किंमत) ₹ *</label><input type="number" id="vp_offer" placeholder="1350" onkeyup="calculateLiveMargin()" onchange="calculateLiveMargin()"></div>
+                        <div class="field"><label>GST Status</label><select id="vp_gst"><option value="Inclusive">Inclusive (किमतीत समाविष्ट)</option><option value="Exclusive">Exclusive (अतिरिक्त)</option><option value="Exempted">Exempted (लागू नाही)</option></select></div>
+                    </div>
+                    
+                    <div id="live_margin_calculator" style="background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9; margin-bottom: 20px; display: none;">
+                        <h5 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 14px;">📊 नफा आणि प्लॅटफॉर्म फी कॅल्क्युलेटर</h5>
+                        <div style="font-size: 13px; color: #333; line-height: 1.6;">
+                            तुम्ही टाकलेली विक्री किंमत (Offer Price): <b id="calc_offer_price">₹0</b><br>
+                            ॲपची प्लॅटफॉर्म फी (<span id="calc_fee_percent">0</span>%): <b style="color: #d32f2f;">- ₹<span id="calc_fee_amount">0</span></b><br>
+                            <div style="border-top: 1px dashed #ccc; margin: 8px 0; padding-top: 8px; font-size: 15px;">
+                                तुमच्या खात्यात जमा होणारी रक्कम (Net Profit): <b style="color: #2e7d32;">₹<span id="calc_net_amount">0</span></b>
+                            </div>
+                            <span style="font-size: 11px; color: #666;">(टीप: जर तुम्हाला तुमच्या खात्यात जास्त रक्कम हवी असेल, तर 'Offer Price' त्यानुसार वाढवून टाका. प्लॅटफॉर्म फी ॲडमिनने ठरवलेल्या रक्कमेच्या टप्प्यांनुसार लागते.)</span>
+                        </div>
+                    </div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📜 ३. विक्रेता पॉलिसी (Policy)</h5>
+                    <div class="grid-2">
+                        <div class="field"><label>Delivery Charges (डिलिव्हरी) *</label><select id="vp_delivery_type"><option value="Free">Free Delivery (मोफत)</option><option value="Paid">Customer Will Pay (अतिरिक्त चार्ज)</option></select></div>
+                        <div class="field"><label>Delivery Time (लागणारा वेळ) *</label><input type="text" id="vp_delivery_time" placeholder="उदा. ३ ते ५ दिवस"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field"><label>Min Order Qty (किमान ऑर्डर)</label><input type="number" id="vp_min_qty" placeholder="उदा. 1"></div>
+                        <div class="field"><label>Return Policy (परतावा पॉलिसी) *</label><select id="vp_return"><option value="No Return">Non-Returnable (परत नाही)</option><option value="7 Days">7 Days Returnable (७ दिवसांत परत)</option><option value="Replacement Only">Replacement Only (बदलून मिळेल)</option></select></div>
+                    </div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">🤖 ४. स्मार्ट AI सजेशन फिल्टर्स</h5>
+                    <div class="field">
+                        <label>मुख्य फायदे (उपयोग): (जेणेकरून ॲप शेतकऱ्यांना योग्य वेळी हे प्रॉडक्ट सुचवेल)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 8px;" id="vp_ai_filter_grid">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #fff3e0; padding: 8px; border-radius: 6px; border: 1px solid #ffe0b2; cursor: pointer;"><input type="checkbox" value="Daily_Ration_Mineral" style="width:16px;"> रोजच्या आहारातील मिनरल</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Mastitis" style="width:16px;"> कासदाह (Mastitis)</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Milk_Increase" style="width:16px;"> दूध वाढ</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Fat_SNF" style="width:16px;"> फॅट/SNF वाढ</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Heat" style="width:16px;"> माजावर येण्यासाठी</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="De_worming" style="width:16px;"> जंतनाशक</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Immunity" style="width:16px;"> रोगप्रतिकारशक्ती / अशक्तपणा</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Digestion" style="width:16px;"> पचन सुधार</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer;"><input type="checkbox" value="Calf_Growth" style="width:16px;"> वासरू वाढ (Calf Growth)</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Pregnancy_Care" style="width:16px;"> गाभण काळ पोषण</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Uterus_Cleanser" style="width:16px;"> वार पडण्यासाठी / गर्भाशय स्वच्छता</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Bloat_Acidosis" style="width:16px;"> पोटफुगी / ऍसिडोसिस</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Poisoning_Liver" style="width:16px;"> विषबाधा / लिव्हर टॉनिक</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Fever_Pain" style="width:16px;"> ताप, सूज, वेदनाशामक</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Weight_BypassFat" style="width:16px;"> वजन वाढ / बायपास फॅट</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Calcium_Bones" style="width:16px;"> कॅल्शियम / हाडांची बळकटी</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Heat_Stress" style="width:16px;"> उष्णतेचा ताण (Heat Stress)</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Farm_Equipment" style="width:16px;"> गोठ्यातील साधने / मशीनरी</label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; background: #e3f2fd; padding: 8px; border-radius: 6px; border: 1px solid #bbdefb; cursor: pointer;"><input type="checkbox" value="Vaccine_Syringe" style="width:16px;"> लसीकरण साधने / सिरिंज</label>
+                        </div>
+                    </div>
+                    <div class="field"><label>इतर (Other Use) - वर नसेल तर टाईप करा</label><input type="text" id="vp_other_use" placeholder="उदा. गोचिड निर्मूलन, खूर आजार..."></div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📄 ५. वर्णन आणि फायदे (Description)</h5>
+                    <div class="field"><label>प्रॉडक्टचे फायदे (Benefits - बुलेट पॉईंट्स) *</label><textarea id="vp_benefits" rows="3" placeholder="१. दुधातील फॅट वाढते..."></textarea><span style="font-size:11px; color:#888;">प्रत्येक फायदा नवीन ओळीवर लिहा.</span></div>
+                    <div class="field"><label>सविस्तर माहिती (Description)</label><textarea id="vp_desc" rows="4" placeholder="प्रॉडक्ट कसे वापरावे, डोस काय आहे याची सविस्तर माहिती..."></textarea></div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📷 ६. फोटो अपलोड (Images)</h5>
+                    <div class="field">
+                        <label>Product Images (फोटो क्रॉप करून अपलोड करा) 📸</label>
+                        <div class="image-upload-box" onclick="document.getElementById('product_images').click()">
+                            📤 येथे क्लिक करून प्रॉडक्टचे फोटो निवडा
+                            <span style="font-size: 11px; font-weight: normal; color: #888; display: block; margin-top: 5px;">(कमाल ३ फोटो. फोटो ऑटो-फिट होण्यासाठी क्रॉपचा पर्याय मिळेल)</span>
+                        </div>
+                        <input type="file" id="product_images" accept="image/*" style="display:none;" onchange="openCropModal(event, 'image_preview_container')">
+                        <div id="image_preview_container" class="image-preview-container"></div>
+                    </div>
+                    
+                    <button class="btn-action" style="margin-top:20px; font-size:16px; padding:15px;" onclick="saveVendorProduct()">✅ प्रॉडक्ट कृषी मॉलमध्ये सेव्ह करा (Save)</button>
+                </div>
+                <!-- माझी प्रॉडक्ट्स (Delete करण्यासाठी) -->
+                <div class="biz-card" id="my_products_card">
+                    <h4>📋 माझी प्रॉडक्ट्स (My Products)</h4>
+                    <div id="my_products_container"></div>
+                </div>
+            </div>
+
+            <div id="b3" class="tab-content">
+                <div class="biz-card">
+                    <h4>📦 Shopping Management (नवीन ऑर्डर्स)</h4>
+                    <div style="margin-bottom: 20px;">
+                        <span class="tag filter-tag active" onclick="loadDealerOrdersDashboard('all', this)">All Orders</span>
+                        <span class="tag filter-tag" onclick="loadDealerOrdersDashboard('pending', this)" style="color:#e65100; border-color:#ffe0b2;">Pending (प्रोसेसिंग)</span>
+                        <span class="tag filter-tag" onclick="loadDealerOrdersDashboard('shipped', this)" style="color:#1565c0; border-color:#bbdefb;">Shipped (वाटेत)</span>
+                        <span class="tag filter-tag" onclick="loadDealerOrdersDashboard('delivered', this)" style="color:#2e7d32; border-color:#c8e6c9;">Delivered (पोहोचले)</span>
+                    </div>
+                    <div class="field" style="max-width: 300px;"><input type="text" placeholder="🔍 Search Order ID / Pincode" onkeyup="searchOrders(this.value)"></div>
+                    <div id="dealer_orders_container"></div>
+                </div>
+            </div>
+
+            <div id="b4" class="tab-content">
+                <div class="biz-card" style="border-left: 5px solid #1976d2; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 10px; color: #1976d2; font-size: 16px;">👨‍⚕️ कस्टमर केअर / company डॉक्टर नंबर</h3>
+                    <p style="font-size: 11px; color: #666; margin-bottom: 15px;">शेतकऱ्यांनी ॲपमधून कॉल केल्यास तो या नंबरवर लागेल. (फक्त 'ब्रँड पार्टनर / कॉर्पोरेट' प्लॅनसाठी)</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="tel" id="vendor_cc_number" placeholder="उदा. 18001234567" style="flex: 1;">
+                        <button onclick="updateCCNumber()" class="btn-action" style="width:auto; background: #1976d2;">अपडेट करा</button>
+                    </div>
+                    <div id="cc_status_msg" style="font-size: 11px; margin-top: 8px; font-weight: bold;"></div>
+                </div>
+
+                <div class="biz-card" style="background: #f8fafc;">
+                    <h4 style="font-size: 18px; color: var(--b-primary); border: none; margin-bottom: 5px;">📢 दुग्ध दिशा ॲड स्टुडिओ (Ad Brochure)</h4>
+                    <p style="font-size: 12px; color: #555; margin-bottom: 15px;">तुमच्या व्यवसायाच्या गरजेनुसार योग्य जाहिरात प्रकार निवडा. शेतकरी जिथे माहिती शोधतो तिथेच ॲड दाखवा.</p>
+                    
+                    <h5 style="color: #e65100; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">१. स्मार्ट पेज-स्पेसिफिक जाहिराती (Targeted - High Conversion)</h5>
+                    <div class="ad-scroll-wrapper">
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Ration')">
+                            <div class="ad-icon">⚖️</div><div class="ad-title">रेशन बॅलन्सर सजेशन</div>
+                            <div class="ad-desc">प्रोटीन/एनर्जी किंवा मिनरल मिक्सचर कमी असल्यास तुमचे प्रॉडक्ट सुचवले जाईल.<br><b style="color:#d32f2f; margin-top:3px; display:block;">(High Traffic)</b></div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_ration">४९९</span> / १५ दिवस</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Disease')">
+                            <div class="ad-icon">🩸</div><div class="ad-title">आजार व इमर्जन्सी</div>
+                            <div class="ad-desc">कासदाह, कॅल्शियम कमी असल्यास तुमचे औषध किंवा मलम सुचवले जाईल.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_disease">२९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Calf')">
+                            <div class="ad-icon">🍼</div><div class="ad-title">वासरू संगोपन</div>
+                            <div class="ad-desc">काफ स्टार्टर फीड आणि वासरांच्या औषधांसाठी उत्तम जागा.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_calf">३९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Reproduction')">
+                            <div class="ad-icon">🧬</div><div class="ad-title">प्रजनन (Reproduction)</div>
+                            <div class="ad-desc">माजाचा काळ किंवा प्रेग्नन्सी चेक करताना मिनरल मिक्सचरची ॲड.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_repro">४९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Weather')">
+                            <div class="ad-icon">🌡️</div><div class="ad-title">हवामान व ताण (THI)</div>
+                            <div class="ad-desc">उष्णतेचा ताण असल्यास कूलिंग पॅड्स, फॉगर्स आणि अँटी-स्ट्रेस पावडरची ॲड.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_weather">२९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_BCS')">
+                            <div class="ad-icon">📏</div><div class="ad-title">शरीर स्थिती (BCS)</div>
+                            <div class="ad-desc">वजन कमी असल्यास बायपास फॅट किंवा वजन वाढवणाऱ्या खाद्याची ॲड.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_bcs">३९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Vaccine')">
+                            <div class="ad-icon">💉</div><div class="ad-title">लसीकरण व जंतनिर्मूलन</div>
+                            <div class="ad-desc">लसीकरणाच्या वेळी सिरिंज आणि संबंधित औषधांची जाहिरात.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_vaccine">२९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_PoisonDiet')">
+                            <div class="ad-icon">🤢</div><div class="ad-title">विषबाधा व आहार आजार</div>
+                            <div class="ad-desc">इमर्जन्सी औषधे आणि लिव्हर टॉनिक प्रमोट करण्यासाठी.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_poison">२९९</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Target_Milking')">
+                            <div class="ad-icon">⚙️</div><div class="ad-title">डेली टूल्स / मशीनरी</div>
+                            <div class="ad-desc">दूध संकलन किंवा प्लॅनर पेजवर रबर मॅट, मिल्किंग मशीनची ॲड.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_milk">४९९</span> / महिना</div>
+                        </div>
+                    </div>
+
+                    <h5 style="color: #1565c0; margin-bottom: 10px; margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">२. ब्रॉडकास्ट व होम पेज जाहिराती (General Branding)</h5>
+                    <div class="ad-scroll-wrapper">
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Home Banner')">
+                            <div class="ad-icon">🖼️</div><div class="ad-title">होम top बॅनर</div>
+                            <div class="ad-desc">शेतकऱ्याने ॲप उघडल्यावर सर्वात वर मोठी ॲड. (ब्रँडिंगसाठी उत्तम).</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_banner">२०००</span> / महिना</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Sponsored Product')">
+                            <div class="ad-icon">🛍️</div><div class="ad-title">कृषी मॉल स्पॉन्सर्ड</div>
+                            <div class="ad-desc">कृषी मॉलमध्ये तुमची प्रॉडक्ट्स सर्वात वर हाईलाईट होतील.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_sponsored">५००</span> / आठवडा</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('Push Notification')">
+                            <div class="ad-icon">🔔</div><div class="ad-title">पुश नोटिफिकेशन</div>
+                            <div class="ad-desc">तुमच्या प्रॉडक्टची नोटिफिकेशन थेट शेतकऱ्यांच्या मोबाईलवर वाजेल.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_push">३००</span> / कॅम्पिंग</div>
+                        </div>
+                        <div class="ad-type-card ad-scroll-card" onclick="selectAdFromCard('District Targeted')">
+                            <div class="ad-icon">📍</div><div class="ad-title">जिल्हा टार्गेटिंग</div>
+                            <div class="ad-desc">तुमची जाहिरात फक्त तुम्ही निवडलेल्या जिल्ह्याच्या शेतकऱ्यानांच दिसेल.</div>
+                            <div style="margin-top:8px; font-weight:bold; color:#e65100; font-size:12px;">₹<span id="disp_ad_district">१०००</span> / जिल्हा</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="biz-card" id="ad_creation_form">
+                    <div style="background:#e3f2fd; border:1px solid #90caf9; padding:15px; border-radius:8px; margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
+                        <span style="color:#0d47a1; font-size:13px;">📢 <b>महत्त्वाची सूचना:</b> कोणतीही जाहिरात लावण्यासाठी तुमचे प्रॉडक्ट प्रथम <b>'🛍️ Product Store'</b> मध्ये ॲड केलेले असणे अनिवार्य आहे. (किंवा 'Generic Promotion' निवडा)</span>
+                        <button class="btn-action" style="width:fit-content; padding:8px 15px; font-size:12px; background:#1565c0;" onclick="switchTab('b2')">पहिले प्रॉडक्ट ॲड करा ➔</button>
+                    </div>
+
+                    <h4>📝 Create New Ad Campaign (नवीन जाहिरात तयार करा)</h4>
+                    
+                    <div class="ad-type-tabs">
+                        <div class="ad-type-tab active" id="tab_product_ad" onclick="setAdMode('product')">
+                            🛍️ प्रॉडक्ट ॲड
+                            <span class="ad-tab-desc">(स्टोअर प्रॉडक्टसाठी)</span>
+                        </div>
+                        <div class="ad-type-tab" id="tab_generic_ad" onclick="setAdMode('generic')">
+                            📢 जनरिक ॲड
+                            <span class="ad-tab-desc">(कंपनी/सर्व्हिस प्रमोशन)</span>
+                        </div>
+                    </div>
+                    
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:15px; margin-bottom:15px;">🎯 १. जाहिरातीचा प्रकार आणि टार्गेटिंग</h5>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Ad Category (कोणती ॲड लावायची?) *</label>
+                            <select id="campaign_type" onchange="calculateAdEstimation(); toggleProductSelection()">
+                                <optgroup label="✨ स्मार्ट पेज-स्पेसिफिक ॲड्स">
+                                    <option value="Target_Ration">⚖️ रेशन बॅलन्सर सजेशन</option>
+                                    <option value="Target_Disease">🩸 आजार व इमर्जन्सी सजेशन</option>
+                                    <option value="Target_Calf">🍼 वासरू संगोपन सजेशन</option>
+                                    <option value="Target_Reproduction">🧬 प्रजनन पेज सजेशन</option>
+                                    <option value="Target_Milking">⚙️ मशीनरी/उपकरणे सजेशन</option>
+                                    <option value="Target_Vaccine">💉 लसीकरण व जंतनिर्मूलन</option>
+                                    <option value="Target_PoisonDiet">🤢 विषबाधा व आहार आजार</option>
+                                    <option value="Target_Weather">🌡️ हवामान व ताण सजेशन</option>
+                                    <option value="Target_BCS">📏 शरीर स्थिती (BCS) सजेशन</option>
+                                </optgroup>
+                                <optgroup label="📢 जनरल ब्रँडिंग ॲड्स">
+                                    <option value="Home Banner">🖼️ होम top बॅनर ॲड</option>
+                                    <option value="Sponsored Product">🛍️ स्पॉन्सर्ड प्रॉडक्ट (Krushi Mall)</option>
+                                    <option value="Push Notification">🔔 पुश नोटिफिकेशन (SMS Alert)</option>
+                                    <option value="District Targeted">📍 जिल्हा टार्गेटिंग ॲड</option>
+                                    <option value="Category Sponsor">📁 कॅटेगरी स्पॉन्सरशिप</option>
+                                    <option value="Festival Campaign">🎉 फेस्टिव्हल / ऑफर मोहीम</option>
+                                    <option value="Generic_Promotion" style="display:none;">📢 कंपनी प्रमोशन / ब्रँडिंग (Generic)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="field">
+                            <label>Target Location (कुठे दाखवायची?) *</label>
+                            <select id="campaign_location">
+                                <option value="All Maharashtra">संपूर्ण महाराष्ट्र (All)</option>
+                                <option value="अहमदनगर">अहमदनगर (अहिल्यानगर)</option>
+                                <option value="अकोला">अकोला</option>
+                                <option value="अमरावती">अमरावती</option>
+                                <option value="छत्रपती संभाजीनगर">छत्रपती संभाजीनगर (औरंगाबाद)</option>
+                                <option value="बीड">बीड</option>
+                                <option value="भंडारा">भंडारा</option>
+                                <option value="बुलढाणा">बुलढाणा</option>
+                                <option value="चंद्रपूर">चंद्रपूर</option>
+                                <option value="धाराशिव">धाराशिव (उस्मानाबाद)</option>
+                                <option value="धुळे">धुळे</option>
+                                <option value="गडचिरोली">गडचिरोली</option>
+                                <option value="गोंदिया">गोंदिया</option>
+                                <option value="हिंगोली">हिंगोली</option>
+                                <option value="जळगाव">जळगाव</option>
+                                <option value="जालना">जालना</option>
+                                <option value="कोल्हापूर">कोल्हापूर</option>
+                                <option value="लातूर">लातूर</option>
+                                <option value="मुंबई शहर">मुंबई शहर</option>
+                                <option value="मुंबई उपनगर">मुंबई उपनगर</option>
+                                <option value="नागपूर">नागपूर</option>
+                                <option value="नांदेड">नांदेड</option>
+                                <option value="नंदुरबार">नंदुरबार</option>
+                                <option value="नाशिक">नाशिक</option>
+                                <option value="पालघर">पालघर</option>
+                                <option value="परभणी">परभणी</option>
+                                <option value="पुणे">पुणे</option>
+                                <option value="रायगड">रायगड</option>
+                                <option value="रत्नागिरी">रत्नागिरी</option>
+                                <option value="सांगली">सांगली</option>
+                                <option value="सातारा">सातारा</option>
+                                <option value="सिंधुदुर्ग">सिंधुदुर्ग</option>
+                                <option value="सोलापूर">सोलापूर</option>
+                                <option value="ठाणे">ठाणे</option>
+                                <option value="वर्धा">वर्धा</option>
+                                <option value="वाशिम">वाशिम</option>
+                                <option value="यवतमाळ">यवतमाळ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Target Audience (ही जाहिरात कोणाला दिसावी?) *</label>
+                        <select id="campaign_audience">
+                            <option value="All">सर्व शेतकरी (All Farmers)</option>
+                            <option value="Milking Cows">फक्त दुभत्या गाई-म्हशींचे मालक</option>
+                            <option value="Large Dairies">फक्त मोठे व्यावसायिक (१०+ जनावरे)</option>
+                        </select>
+                    </div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">✍️ २. जाहिरातीचा मजकूर आणि लिंक</h5>
+                    <div class="field">
+                        <label>मुख्य मजकूर / टायटल (Ad Title/Text) *</label>
+                        <input type="text" id="campaign_title" placeholder="उदा. तुमच्या जनावरांसाठी सर्वोत्तम मिनरल मिक्सचर!">
+                    </div>
+                    <div class="field" id="product_select_field">
+                        <label>कोणत्या प्रॉडक्टची जाहिरात करायची आहे? (Product Link) *</label>
+                        <select id="campaign_product_select">
+                            <option value="">-- प्रॉडक्ट निवडण्यासाठी आधी 'Product Store' मध्ये ॲड करा --</option>
+                        </select>
+                        <span style="font-size:11px; color:#888;">(येथे प्रॉडक्ट दिसत नसल्यास आधी 'Product Store' मध्ये जाऊन नवीन प्रॉडक्ट ॲड करा. Generic Promotion साठी निवडणे ऐच्छिक आहे.)</span>
+                    </div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📷 ३. फोटो / बॅनर (Images)</h5>
+                    <div class="field">
+                        <label>जाहिरातीचे फोटो / बॅनर (Crop & Auto-fit) 📸 *</label>
+                        <div class="image-upload-box" onclick="document.getElementById('ad_campaign_images').click()">
+                            📤 येथे क्लिक करून फोटो अपलोड करा
+                            <span style="font-size: 11px; font-weight: normal; color: #888; display: block; margin-top: 5px;">(बॅनर ॲडसाठी फोटो क्रॉप करण्याचा पर्याय मिळेल)</span>
+                        </div>
+                        <input type="file" id="ad_campaign_images" accept="image/*" style="display:none;" onchange="openCropModal(event, 'ad_image_preview_container')">
+                        <div id="ad_image_preview_container" class="image-preview-container"></div>
+                    </div>
+
+                    <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">💳 ४. बजेट आणि पेमेंट</h5>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Pricing Model (पैसे कसे भरणार?)</label>
+                            <select id="campaign_model" onchange="calculateAdEstimation()">
+                                <option value="Fixed">Loading...</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Total Budget / Amount (₹) *</label>
+                            <input type="number" id="campaign_budget" placeholder="उदा. 499" oninput="calculateAdEstimation()" onkeyup="calculateAdEstimation()">
+                        </div>
+                    </div>
+                    
+                    <div id="ad_estimation_text" style="background:#e8f5e9; padding:10px 15px; border-radius:6px; font-size:13px; color:#1b5e20; border:1px solid #c8e6c9; margin-bottom:15px; display:none; line-height: 1.5;"></div>
+
+                    <button class="btn-action btn-premium" style="font-size: 15px; padding: 15px; margin-top:10px;" onclick="initiatePayment()">🚀 जाहिरात सबमिट करा & Pay</button>
+                    <p style="font-size: 11px; text-align: center; color: #666; margin-top: 10px;">(पेमेंट झाल्यानंतर जाहिरात आपोआप लाईव्ह होईल.)</p>
+                </div>
+
+                <div class="biz-card">
+                    <h4>🗺️ जाहिरात कशी लावायची? (Roadmap)</h4>
+                    <div class="roadmap-container">
+                        <div class="roadmap-step"><div class="step-circle">1</div><div class="step-text">जाहिरात निवडा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंक जोडा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">3</div><div class="step-text">बजेट ठरवा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">4</div><div class="step-text">पेमेंट पूर्ण करा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">5</div><div class="step-text">ऑटो ॲप्रूव्हल</div></div>
+                        <div class="roadmap-step"><div class="step-circle" style="background:#2e7d32;">6</div><div class="step-text">जाहिरात लाईव्ह!</div></div>
+                    </div>
+                </div>
+                <div class="biz-card" id="my_ads_card">
+                    <h4>📋 माझ्या जाहिराती (My Ad Campaigns)</h4>
+                    <div id="my_ads_container"></div>
+                </div>
+            </div>
+
+            <!-- 🔥 NEWLY FUNCTIONAL TABS 🔥 -->
+            <div id="b5" class="tab-content">
+                <div class="biz-card">
+                    <h4>🎟️ Coupon & Offer Manager</h4>
+                    <div class="field">
+                        <label>Offer Type</label>
+                        <select id="coupon_type">
+                            <option>Discount Coupon</option>
+                            <option>Buy 1 Get 1</option>
+                        </select>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Promo Code</label>
+                            <input type="text" id="coupon_code" placeholder="DIWALI50" style="text-transform: uppercase;">
+                        </div>
+                        <div class="field">
+                            <label>Discount Value</label>
+                            <input type="text" id="coupon_val" placeholder="₹500">
+                        </div>
+                    </div>
+                    <button class="btn-action" onclick="generateCoupon()">💾 Generate Coupon</button>
+                </div>
+            </div>
+
+            <div id="b6" class="tab-content">
+                <div class="biz-card">
+                    <h4>🤝 Dealer Network Management</h4>
+                    <div class="field">
+                        <label>Pending Registrations</label>
+                        <select id="dealer_pending">
+                            <option>Kisan Traders (Pending)</option>
+                        </select>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Assign Territory</label>
+                            <input type="text" id="dealer_territory" placeholder="Karad Taluka">
+                        </div>
+                        <div class="field">
+                            <label>Locator Map (Lat/Long)</label>
+                            <input type="text" id="dealer_map" placeholder="17.28, 74.18">
+                        </div>
+                    </div>
+                    <button class="btn-action" onclick="approveDealer()">✅ Approve Dealer</button>
+                </div>
+            </div>
+            
+            <div id="b7" class="tab-content">
+                <div class="biz-card">
+                    <h4>🎯 Lead Generation (Pay-Per-Lead)</h4>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 20px;">इथे तुम्हाला शेतकऱ्यांच्या महागड्या उपकरणांची मोठ्या ऑर्डर्सची चौकशी दिसेल. वॉलेटमधून फी भरून लीड अनलॉक करा.</p>
+                    
+                    <div id="leads_container"></div>
+                </div>
+            </div>
+            
+            <div id="b8" class="tab-content">
+                <div class="biz-card">
+                    <h4>🚛 Logistics & Supply (Supplier Panel)</h4>
+                    <div class="field">
+                        <label>Feed Ingredient Listing</label>
+                        <input type="text" id="supply_item" placeholder="उदा. मका, सोयाबीन">
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Bulk Price Update (₹/Ton)</label>
+                            <input type="number" id="supply_price">
+                        </div>
+                        <div class="field">
+                            <label>Transport Charges</label>
+                            <input type="text" id="supply_transport" placeholder="₹50/Km">
+                        </div>
+                    </div>
+                    <button class="btn-action" onclick="updateSupplyLedger()">💾 Update Supply Ledger</button>
+                </div>
+            </div>
+
+            <div id="b9" class="tab-content">
+                <div class="biz-card">
+                    <h4>🏢 Franchise & Job Portal</h4>
+                    <div class="field">
+                        <label>Post a Job</label>
+                        <select id="franchise_job_type">
+                            <option>Sales Officer</option>
+                            <option>Veterinarian</option>
+                            <option>Nutritionist</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Franchise Requirement</label>
+                        <input type="text" id="franchise_req_input" placeholder="Seeking Distributors...">
+                    </div>
+                    <button class="btn-action" onclick="postFranchiseJob()">📝 Post Requirement</button>
+                </div>
+            </div>
+
+            <div id="b10" class="tab-content">
+                <div class="biz-card">
+                    <h4>🎓 Training Academy</h4>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Event Type</label>
+                            <select id="training_event_type">
+                                <option>Product Training Video</option>
+                                <option>Live Webinar</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="training_event_date">
+                        </div>
+                    </div>
+                    <button class="btn-action" onclick="promoteTrainingEvent()">📅 Promote Event to Farmers</button>
+                </div>
+            </div>
+            
+            <div id="b11" class="tab-content">
+                <div class="biz-card">
+                    <h4>📩 ॲडमिन सपोर्ट डेस्क (Helpdesk)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">तुम्हाला ॲप वापरताना काही अडचण येत असल्यास किंवा पेमेंट/ॲप्रूव्हल बद्दल प्रश्न असल्यास खाली मेसेज करा. ॲडमिन टीम लवकरच रिप्लाय देईल.</p>
+                    
+                    <div class="chat-box">
+                        <div class="chat-header">
+                            <span>💬 Live Support Tickets</span>
+                        </div>
+                        <div class="chat-body" id="vendor_support_chat_body">
+                            <!-- JS Injected Messages will appear here -->
+                        </div>
+                        <div class="chat-input-area">
+                            <textarea id="vendor_support_msg" placeholder="तुमची अडचण किंवा प्रश्न इथे टाईप करा..."></textarea>
+                            <button onclick="sendSupportMessage()">Send ➔</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="b12" class="tab-content"><div class="biz-card"><h4>📊 Farmer Database (Anonymized Insights)</h4><div class="grid-2"><div class="stat-box" style="border-left-color:#8e24aa;"><h3>0</h3><p>Farmers in Region</p></div><div class="stat-box" style="border-left-color:#8e24aa;"><h3>0%</h3><p>Use Cottonseed Cake</p></div></div></div></div>
+            
+            <div id="b_ledger" class="tab-content">
+                <div class="biz-card">
+                    <h4>💰 खातेवही (Billing & Ledger)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">तुमची एकूण प्लॅटफॉर्म फी आणि कमिशनची बाकी रक्कम खालीलप्रमाणे आहे. <b style="color:#d32f2f;">टीप: ८ दिवसांत पेमेंट न केल्यास तुमचे स्टोअर लॉक होईल.</b></p>
+                    <table class="ledger-table">
+                        <thead>
+                            <tr><th>तारीख</th><th>विवरण (Description)</th><th style="text-align: right;">रक्कम</th></tr>
+                        </thead>
+                        <tbody id="ledger_body">
+                            <!-- JS Injection -->
+                        </tbody>
+                    </table>
+                    <div style="margin-top:25px; padding-top: 15px; border-top: 2px dashed #eee; text-align:right;">
+                        <h3 style="margin: 0 0 10px; color: #c62828;">एकूण बाकी: ₹<span id="ledger_total_dues">0</span></h3>
+                        <button class="btn-action" style="background: #2e7d32; width: auto; font-size: 15px;" onclick="payLedgerDues()">💳 Pay Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="b_info" class="tab-content">
+                <div class="biz-card" style="border-left: 5px solid #ff9800;">
+                    <h3 style="margin: 0 0 10px; color: #e65100;">ℹ️ दुग्ध दिशा Business Hub विषयी माहिती</h3>
+                    <p style="font-size: 13px; color: #555; margin-bottom: 20px;">हा डॅशबोर्ड व्यापारी, कंपन्या आणि वितरकांना थेट शेतकऱ्यांपर्यंत पोहोचण्यासाठी डिझाईन केला आहे. खालील माहिती वाचून तुम्ही या ॲपचा जास्तीत जास्त फायदा कसा घ्यायचा ते समजू शकता.</p>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">१. Dashboard & Analytics <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> तुमच्या व्यवसायाचे लाईव्ह आकडे (Views, Orders, Sales) पाहण्यासाठी.<br>
+                            <b>फायदा:</b> तुम्हाला समजेल की तुमची उत्पादने किती शेतकऱ्यांनी पहिली आणि किती नफा झाला.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> हा फक्त तुमचा स्वतःचा (Private) रिपोर्ट आहे.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">२. Product Store <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> तुमची नवीन उत्पादने (उदा. खाद्य, मिनरल्स, औषधे) ॲपमध्ये लिस्ट करण्यासाठी.<br>
+                            <b>फायदा:</b> शेतकरी तुमची उत्पादने थेट ॲपवरून खरेदी करू शकतील.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> तुम्ही येथे टाकलेले प्रॉडक्ट शेतकऱ्यांच्या <b><span class="info-highlight">'कृषी मॉल (Store)'</span></b> मध्ये दिसतील.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">३. Shopping & Orders <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> शेतकऱ्यांनी दिलेल्या ऑर्डर्स मॅनेज करण्यासाठी (Pending, Shipped, Delivered).<br>
+                            <b>फायदा:</b> कोणती ऑर्डर कधी पाठवायची याचे नियोजन करता येते आणि पेमेंटची स्थिती समजते.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> तुम्ही ऑर्डर 'Shipped' केल्यास, शेतकऱ्याला त्याच्या <b><span class="info-highlight">'माझी खरेदी'</span></b> टॅबमध्ये नोटिफिकेशन जाईल.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">४. Ad Studio & Premium <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> ॲपमध्ये तुमची स्वतःची जाहिरात लावण्यासाठी आणि कंपनी डॉक्टरचा नंबर ॲड करण्यासाठी.<br>
+                            <b>फायदा:</b> तुमची प्रॉडक्ट्स शेतकऱ्यांच्या अचूक गरजांनुसार (Targeted) दाखवून Sales खूप पटीने वाढवता येतो.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> तुम्ही निवडलेल्या प्रकारानुसार जाहिरात <b><span class="info-highlight">होम पेज, रेशन बॅलन्सर किंवा आजारांच्या माहिती पेजवर</span></b> शेतकऱ्यांना दिसेल.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">५. Coupons & Offers <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> सण-उत्सवासाठी खास डिस्काउंट कोड (उदा. DIWALI50) तयार करण्यासाठी.<br>
+                            <b>फायदा:</b> ऑफर दिल्यास शेतकरी जास्त प्रमाणात खरेदी करतात.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> हे कोड शेतकरी 'कृषी मॉल' मध्ये <b><span class="info-highlight">पेमेंट करताना (Checkout)</span></b> वापरू शकतात.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">७. Lead Gen & Tenders <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> जर एखाद्या डेअरी फार्मला मोठ्या प्रमाणात माल हवा असेल (Bulk Order/Tender), तर ते पाहण्यासाठी.<br>
+                            <b>फायदा:</b> तुम्हाला थेट मोठ्या ऑर्डर्स मिळतील.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> शेतकरी 'कृषी मॉल' मधून <b><span class="info-highlight">'Request Quote'</span></b> करतील तेव्हा ती लीड तुम्हाला इथे दिसेल.
+                        </div>
+                    </div>
+
+                    <div class="info-accordion" onclick="this.classList.toggle('open')">
+                        <div class="info-accordion-header">१२. Farmer Database <span>▼</span></div>
+                        <div class="info-accordion-body">
+                            <b>उपयोग:</b> तुमच्या परिसरातील (जिल्ह्यातील) शेतकरी कोणता चारा किंवा खाद्य वापरत सास याची ढोबळ माहिती पाहण्यासाठी.<br>
+                            <b>फायदा:</b> शेतकऱ्यांच्या गरजा ओळखून तुम्ही नवीन प्रॉडक्ट्स बाजारात आणू शकता.<br>
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> ही फक्त तुमच्या माहितीसाठी (Analytics) आहे.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔥 NEW SHOP PREVIEW TAB -->
+            <div id="b_shop" class="tab-content">
+                <iframe id="shop_preview_iframe" class="shop-iframe-container" style="width:100%; height:calc(100vh - 150px); border:none; border-radius:12px;" srcdoc=""></iframe>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 🔥 KYC GATEKEEPER MODAL 🔥 -->
+    <div class="modal-overlay" id="kyc_gatekeeper_modal">
+        <div class="modal-box" style="max-width: 450px;">
+            <div style="text-align: center; font-size: 40px; margin-bottom: 10px;">🛡️</div>
+            <h3 style="margin-top:0; color:#1565c0; text-align: center; border-bottom:2px solid #eee; padding-bottom:10px;">प्रमाणित विक्रेता बना (Vendor KYC)</h3>
+            
+            <div class="kyc-warning-box">
+                <h4>ॲडमिन व्हेरिफिकेशन बाकी आहे!</h4>
+                <p>माल विकण्यासाठी किंवा जाहिरात लावण्यासाठी तुम्हाला प्रथम तुमची ओळख आणि दुकानाचा पुरावा अपलोड करावा लागेल. ही प्रक्रिया शेतकऱ्यांच्या सुरक्षेसाठी आहे.</p>
+            </div>
+
+            <div class="field">
+                <label>GST नंबर (असल्यास टाका)</label>
+                <input type="text" id="kyc_gst" placeholder="उदा. 27AAAAA0000A1Z5" maxlength="15" onkeyup="checkGatekeeperGst(this.value)" style="text-transform: uppercase;">
+                <span id="kyc_gst_success" style="font-size: 10px; color: #2e7d32; font-weight: bold; display: none; margin-top: 5px;">✅ GST नंबर पडताळला. इतर कागदपत्रांची गरज नाही!</span>
+            </div>
+
+            <div id="kyc_manual_docs">
+                <div style="font-size: 11px; text-align: center; color: #888; margin: 10px 0;">-- किंवा (OR) --</div>
+                <div class="field">
+                    <label>१. मालकाचे आधार कार्ड (Aadhaar Card) *</label>
+                    <input type="file" id="kyc_aadhaar" accept="image/*" style="background:#f8fafc; padding:8px;">
+                </div>
+
+                <div class="field">
+                    <label>२. दुकानाचा पुरावा (शॉप ॲक्ट किंवा दुकानाचा फोटो) *</label>
+                    <input type="file" id="kyc_shop_proof" accept="image/*" style="background:#f8fafc; padding:8px;">
+                </div>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="kyc_legal_check">
+                <label for="kyc_legal_check">
+                    मी सहमत आहे की, माझ्या दुकानातून विकल्या जाणाऱ्या कोणत्याही उत्पादनामुळे जनावराचे नुकसान झाल्यास किंवा उत्पादनाचा दर्जा निकृष्ट आढळल्यास त्याची संपूर्ण कायदेशीर जबाबदारी माझी राहील. 'दुग्ध दिशा AI' ॲप यासाठी जबाबदार नाही.
+                </label>
+            </div>
+
+            <button class="btn-action" style="margin-top:20px; font-size: 15px;" onclick="submitKYCDetails()">📤 सबमिट करा (Send to Admin)</button>
+            <button class="btn-action" style="background:#e0e0e0; color:#333; margin-top:10px; box-shadow:none;" onclick="document.getElementById('kyc_gatekeeper_modal').style.display='none'">✕ नंतर करेन</button>
+        </div>
+    </div>
+
+    <!-- 🔥 SECURE PAYMENT MODAL (KEPT HIDDEN FOR CODE INTEGRITY) 🔥 -->
+    <div class="modal-overlay" id="payment_modal">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#d32f2f; border-bottom:2px solid #eee; padding-bottom:10px;">सुरक्षित पेमेंट गेटवे (Secure Pay)</h3>
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="font-size: 35px; color: #1b5e20;">₹<span id="pay_amt_display">0</span></div>
+                <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाम: दुग्ध दिशा AI</div>
+                <div style="font-size:11px; color:#666;" id="payment_upi_id_display">UPI ID: paytm.s33ivru@pty</div>
+            </div>
+
+            <div id="upi_intent_section" style="text-align: center; margin-bottom: 15px;">
+                <a href="#" id="direct_pay_btn" class="btn-upi-direct" onclick="triggerUPIPayment()">📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)</a>
+                <p style="font-size:11px; color:#888; margin-top: 5px;">(क्लिक केल्यावर तुमच्या मोबाईलमधील पेमेंट ॲप उघडेल)</p>
+            </div>
+
+            <div class="field" style="margin-top: 20px;">
+                <label>पेमेंट झाल्यानंतर 12 अंकी UTR / Reference Number टाका (किंवा खाली स्क्रीनशॉट द्या) *</label>
+                <input type="number" id="pay_utr" placeholder="उदा. 312345678901 येथे टाईप करा..." style="border-color:#ff9800; border-width:2px; background: #fff;">
+            </div>
+
+            <div class="field">
+                <label>पेमेंटचा स्क्रीनशॉट अपलोड करा (Payment Proof)</label>
+                <input type="file" id="pay_screenshot" accept="image/*" style="background:#f8fafc; padding:5px;">
+            </div>
+
+            <button class="btn-action btn-premium" id="manual_confirm_btn" style="margin-top:10px;" onclick="confirmOfflinePayment()">✅ पेमेंट कन्फर्म करा</button>
+            <button class="btn-action" style="background:#e0e0e0; color:#333; margin-top:10px; box-shadow:none;" onclick="closePaymentModal()">✕ रद्द करा</button>
+        </div>
+    </div>
+
+    <!-- 🔥 STRICT LOCK NOTIFICATION MODAL 🔥 -->
+    <div class="modal-overlay" id="strict_lock_modal" style="z-index: 3000;">
+        <div class="modal-box" style="border: 3px solid #c62828;">
+            <div style="text-align: center; font-size: 50px; margin-bottom: 10px;">🔒</div>
+            <h3 style="margin-top:0; color:#c62828; text-align: center;">खाते तात्पुरते लॉक झाले आहे!</h3>
+            <p style="font-size: 13px; color: #444; line-height: 1.5; text-align: center;">
+                तुमची <b>प्लॅटफॉर्म फी आणि कमिशनची (COD)</b> रक्कम गेल्या ८ दिवसांपेक्षा जास्त काळ प्रलंबित आहे. पुढील फीचर्स वापरण्यासाठी कृपया आधी खातेवहीतील पेमेंट पूर्ण करा.
+            </p>
+            <button class="btn-action" style="margin-top:20px; font-size: 15px; background: #2e7d32;" onclick="redirectToLedger()">💳 Billing & Ledger मध्ये जा</button>
+        </div>
+    </div>
+
+    <!-- 🔥 CROP MODAL 🔥 -->
+    <div class="crop-modal-overlay" id="crop_modal">
+        <div class="crop-modal-content">
+            <div class="crop-container" id="crop_box_wrapper">
+                <img id="crop_image_element" src="" alt="Image to crop">
+            </div>
+            <div class="crop-controls">
+                <button class="crop-btn" onclick="cropper.rotate(-90)">↺ Rotate</button>
+                <button class="crop-btn" onclick="cropper.rotate(90)">↻ Rotate</button>
+                <button class="crop-btn" onclick="cropper.setAspectRatio(1)">1:1 Square</button>
+                <button class="crop-btn" onclick="cropper.setAspectRatio(4/3)">4:3 Banner</button>
+            </div>
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="crop-btn save" style="flex:1;" onclick="saveCroppedImage()">✅ Save Photo</button>
+                <button class="crop-btn" style="background:#e0e0e0; color:#333; flex:1;" onclick="closeCropModal()">✕ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader Overlay -->
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <h3 style="margin:0;">कृपया थांबा...</h3>
+        <p style="font-size:12px; color:#aaa; text-align:center; padding:0 20px;">पेमेंट प्रोसेस होत आहे. ॲप बंद करू नका.</p>
+    </div>
+
+    <script>
+        // ========== 🔔 सिस्टम नोटिफिकेशन (system_notifications) ==========
+        const CURRENT_ROLE = 'dealer'; // व्यापारी डॅशबोर्ड
+        const EIGHT_DAYS_MS = 8 * 24 * 60 * 60 * 1000;
+
+        function sendNotification(title, message, targetRole) {
+            let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let newNotif = {
+                id: Date.now(),
+                title: title,
+                message: message,
+                target: targetRole,
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+            notifications.unshift(newNotif);
+            localStorage.setItem('system_notifications', JSON.stringify(notifications));
+        }
+
+        function autoClearOldNotifications() {
+            let allNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let now = Date.now();
+            let fresh = allNotifs.filter(n => {
+                let notifTime = new Date(n.timestamp || n.date).getTime();
+                return (now - notifTime) < EIGHT_DAYS_MS;
+            });
+            if (fresh.length !== allNotifs.length) {
+                localStorage.setItem('system_notifications', JSON.stringify(fresh));
+            }
+        }
+
+        function loadNotificationsForRole() {
+            let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let myNotifications = notifications.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+            return myNotifications;
+        }
+
+        function toggleVendorNotifications() {
+            const dropdown = document.getElementById('vendorNotificationDropdown');
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                buildVendorNotificationDropdown();
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function buildVendorNotificationDropdown() {
+            let systemNotifs = loadNotificationsForRole();
+            let vendorAlertsHtml = getVendorAlertsHtml(); // existing vendor alerts
+            let html = `<h4 style="margin: 0 0 10px 0; font-size: 13px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 8px;">महत्त्वाच्या सूचना (Alerts)</h4>`;
+            
+            // System notifications section
+            if (systemNotifs.length > 0) {
+                html += `<div style="margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
+                            <strong style="color: #e65100;">📢 ॲडमिन मेसेजेस</strong>`;
+                systemNotifs.slice(0, 3).forEach(n => {
+                    html += `<div style="font-size: 12px; color: #444; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <b style="color:#0d47a1;">${n.title}</b><br>
+                                ${n.message}
+                                <div style="font-size:9px; color:#999; margin-top:3px;">⏰ ${n.time || new Date(n.timestamp).toLocaleTimeString('mr-IN')}</div>
+                             </div>`;
+                });
+                if (systemNotifs.length > 3) {
+                    html += `<a href="notifications.html" style="display:block; text-align:center; padding:6px; background:#e8f5e9; color:#1b5e20; font-weight:bold; border-radius:4px; margin-top:5px; text-decoration:none;">सर्व सूचना पहा →</a>`;
+                }
+                html += `</div>`;
+            }
+
+            // Add existing vendor alerts (non-system)
+            html += vendorAlertsHtml;
+            
+            document.getElementById('vendor_notif_list').innerHTML = html;
+            updateNotificationBadge(systemNotifs);
+        }
+
+        function getVendorAlertsHtml() {
+            let isVerified = localStorage.getItem("vendor_verified") === 'true';
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            let html = '';
+            
+            if(!isVerified) {
+                html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="openKYCModalFromNotification()">⚠️ कृपया तुमचे खाते प्रमाणित (Verify) करा.</div>`;
+            }
+
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile);
+            if(myLeads.length > 0) {
+                html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('b7'); document.getElementById('vendorNotificationDropdown').style.display='none';">📩 <b>${myLeads.length}</b> नवीन लीड्स उपलब्ध आहेत.</div>`;
+            }
+            
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            if(myPendingOrders > 0) {
+                html += `<div style="padding:8px 0; cursor:pointer;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">📦 <b>${myPendingOrders}</b> नवीन ऑर्डर्स प्रलंबित आहेत.</div>`;
+            }
+            
+            return html;
+        }
+
+        function openKYCModalFromNotification() {
+            document.getElementById('vendorNotificationDropdown').style.display = 'none';
+            document.getElementById('kyc_gatekeeper_modal').style.display = 'flex';
+        }
+
+        function updateNotificationBadge(systemNotifs) {
+            let totalCount = systemNotifs.length;
+            let vendorAlertCount = 0;
+            if (localStorage.getItem("vendor_verified") !== 'true') vendorAlertCount++;
+            
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            vendorAlertCount += myPendingOrders;
+            
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
+            vendorAlertCount += myLeads;
+            
+            totalCount += vendorAlertCount;
+            
+            let badge = document.getElementById('vendor_notif_badge');
+            if (totalCount > 0) {
+                badge.style.display = 'block';
+                badge.innerText = totalCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function checkVendorNotifications() {
+            let systemNotifs = loadNotificationsForRole();
+            let total = systemNotifs.length;
+            if (localStorage.getItem("vendor_verified") !== 'true') total++;
+            
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            total += myPendingOrders;
+            
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
+            total += myLeads;
+            
+            let badge = document.getElementById('vendor_notif_badge');
+            if (total > 0) {
+                badge.style.display = 'block';
+                badge.innerText = total;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Call auto clear on load
+        autoClearOldNotifications();
+        checkVendorNotifications();
+
+        let currentIntendedTab = null;
+        let ledgerTotalDues = 0;
+        let isAccountLocked = false;
+        
+        window.pendingPackageBuy = null; 
+        window.pendingOrderCommission = null;
+        window.pendingLeadUnlock = null;
+        window.pendingLedgerClearance = false;
+
+        // CROPPER GLOBALS
+        let cropper = null;
+        let currentTargetContainerId = '';
+        let uploadedImagesCount = 0;
+
+        function initializeDashboard() {
+            loadAdminAdPrices(); 
+            applyRoleModules();
+            loadDealerOrdersDashboard(); 
+            checkVendorNotifications(); 
+            initAutoScroll(); 
+            loadVendorProductsForAd(); 
+            refreshMyProducts();
+            refreshMyAds();
+            setAdMode('product'); // initialize visibility
+
+            let userName = localStorage.getItem("current_user_name") || "Guest Seller";
+            let isVerified = localStorage.getItem("vendor_verified") === 'true';
+            
+            let badgeBox = document.getElementById('user_profile_badge');
+            if(isVerified) {
+                badgeBox.innerHTML = `${userName} <br><span style="color:#2e7d32; font-size: 11px; font-weight: 900;">✅ Verified Seller</span>`;
+            } else {
+                badgeBox.innerHTML = `${userName} <br><span style="color:#d32f2f; font-size: 10px;">⚠️ Unverified Seller</span>`;
+            }
+
+            checkBusinessExpiriesOnLoad(); 
+            loadSupportTickets();
+        }
+
+        // 🔥 NEW: Auto-Payment Logic (Paytm UPI Intent) 🔥
+        function processAutoPayment(amount, transactionNote, successCallback) {
+            let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
+            let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
+            let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+            
+            if(confirm(`एकूण रक्कम: ₹${amount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर प्लॅन/सुविधा आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
+                let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+                
+                document.getElementById('loader').style.display = 'flex';
+                window.location.href = upiLink;
+                
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
+                    if(confirmation) {
+                        successCallback();
+                    } else {
+                        alert("पेमेंट कॅन्सल झाले किंवा पूर्ण होऊ शकले नाही.");
+                    }
+                }, 8000);
+            }
+        }
+
+        // ✅ NEW: AD MODE TOGGLE
+        function setAdMode(mode) {
+            document.getElementById('tab_product_ad').classList.remove('active');
+            document.getElementById('tab_generic_ad').classList.remove('active');
+            if (mode === 'product') {
+                document.getElementById('tab_product_ad').classList.add('active');
+                document.getElementById('campaign_type').value = 'Target_Ration'; // Default product ad type
+                document.getElementById('product_select_field').style.display = 'block';
+            } else {
+                document.getElementById('tab_generic_ad').classList.add('active');
+                document.getElementById('campaign_type').value = 'Generic_Promotion';
+                document.getElementById('product_select_field').style.display = 'none';
+            }
+            calculateAdEstimation();
+        }
+
+        function toggleProductSelection() {}
+
+        function refreshMyProducts() {
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile);
+            let container = document.getElementById('my_products_container');
+            if (!container) return;
+            if (myProducts.length === 0) {
+                container.innerHTML = '<p>तुमची कोणतीही प्रॉडक्ट नाहीत.</p>';
+                return;
+            }
+            let html = '<table class="ledger-table"><thead><tr><th>Product ID</th><th>नाव</th><th>Brand</th><th>Price</th><th>कृती</th></tr></thead><tbody>';
+            myProducts.forEach(p => {
+                html += `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.brand}</td><td>₹${p.offerPrice || p.mrp}</td><td><button class="btn-action" style="background:#c62828; padding:4px 8px; font-size:11px; width:auto;" onclick="deleteMyProduct('${p.id}')">🗑️ Delete</button></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function deleteMyProduct(prodId) {
+            if (confirm('हे प्रॉडक्ट कायमचे डिलीट करायचे?')) {
+                let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+                products = products.filter(p => p.id !== prodId);
+                localStorage.setItem('vendor_products', JSON.stringify(products));
+                refreshMyProducts();
+                loadVendorProductsForAd();
+            }
+        }
+
+        function refreshMyAds() {
+            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let myAds = pendingAds.filter(ad => ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url));
+            let container = document.getElementById('my_ads_container');
+            if (!container) return;
+            if (myAds.length === 0) {
+                container.innerHTML = '<p>तुमची कोणतीही जाहिरात पेंडिंग नाही.</p>';
+                return;
+            }
+            let html = '';
+            myAds.forEach(ad => {
+                html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>${ad.type}</b> - ${ad.title} (Budget: ₹${ad.budget})</span>
+                    <button class="btn-action" style="background:#c62828; padding:4px 8px; font-size:11px; width:auto;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function deleteMyAd(adId) {
+            if (confirm('ही जाहिरात रद्द करायची?')) {
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+                pendingAds = pendingAds.filter(a => a.id !== adId);
+                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
+                refreshMyAds();
+            }
+        }
+
+        function calculateLiveMargin() {
+            let offerPrice = parseFloat(document.getElementById('vp_offer').value) || 0;
+            let calcBox = document.getElementById('live_margin_calculator');
+            
+            if(offerPrice <= 0) {
+                calcBox.style.display = 'none';
+                return;
+            }
+            
+            calcBox.style.display = 'block';
+
+            let feeConfig = JSON.parse(localStorage.getItem('admin_platform_fee_config')) || {
+                slab1: 500, perc1: 3,    
+                slab2: 8000, perc2: 2,   
+                perc3: 1,                
+                maxCap: 500              
+            };
+
+            let feePercent = 0;
+
+            if (offerPrice <= feeConfig.slab1) {
+                feePercent = feeConfig.perc1;
+            } else if (offerPrice > feeConfig.slab1 && offerPrice <= feeConfig.slab2) {
+                feePercent = feeConfig.perc2;
+            } else if (offerPrice > feeConfig.slab2) {
+                feePercent = feeConfig.perc3;
+            }
+
+            let feeAmount = offerPrice * (feePercent / 100);
+
+            if (feeAmount > feeConfig.maxCap) {
+                feeAmount = feeConfig.maxCap;
+                feePercent = ((feeAmount / offerPrice) * 100).toFixed(2);
+            }
+
+            let netAmount = offerPrice - feeAmount;
+
+            document.getElementById('calc_offer_price').innerText = "₹" + offerPrice;
+            document.getElementById('calc_fee_percent').innerText = feePercent;
+            document.getElementById('calc_fee_amount').innerText = feeAmount.toFixed(2);
+            document.getElementById('calc_net_amount').innerText = netAmount.toFixed(2);
+        }
+
+        function loadVendorProductsForAd() {
+            let selectBox = document.getElementById('campaign_product_select');
+            if(!selectBox) return;
+            
+            let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            
+            if(products.length === 0) {
+                selectBox.innerHTML = '<option value="">-- No Products Found (आधी प्रॉडक्ट ॲड करा) --</option>';
+                selectBox.style.borderColor = "#d32f2f";
+            } else {
+                selectBox.style.borderColor = "#cfd8dc";
+                let html = '<option value="">-- तुमचे प्रॉडक्ट निवडा --</option>';
+                products.forEach(p => {
+                    html += `<option value="${p.id}">${p.name} (${p.brand})</option>`;
+                });
+                selectBox.innerHTML = html;
+            }
+        }
+        
+        function toggleCategoryOther(val) {
+            let otherInput = document.getElementById('vp_category_other');
+            if(val === 'Other') {
+                otherInput.style.display = 'block';
+                otherInput.focus();
+            } else {
+                otherInput.style.display = 'none';
+                otherInput.value = '';
+            }
+        }
+
+        function saveVendorProduct() {
+            let pName = document.getElementById('vp_name').value.trim();
+            let pBrand = document.getElementById('vp_brand').value.trim();
+            let pCategorySelect = document.getElementById('vp_category').value;
+            let pCategoryOther = document.getElementById('vp_category_other').value.trim();
+            
+            let pCategory = pCategorySelect === 'Other' ? pCategoryOther : pCategorySelect;
+            
+            let pWeight = document.getElementById('vp_weight').value.trim();
+            let pMrp = parseFloat(document.getElementById('vp_mrp').value);
+            let pOffer = parseFloat(document.getElementById('vp_offer').value);
+            let pStock = document.getElementById('vp_stock').value;
+            let pGst = document.getElementById('vp_gst').value;
+            let pDeliveryType = document.getElementById('vp_delivery_type').value;
+            let pDeliveryTime = document.getElementById('vp_delivery_time').value.trim();
+            let pMinQty = document.getElementById('vp_min_qty').value.trim() || "1";
+            let pReturn = document.getElementById('vp_return').value;
+            let pBenefits = document.getElementById('vp_benefits').value.trim();
+            let pDesc = document.getElementById('vp_desc').value.trim();
+            let pOtherUse = document.getElementById('vp_other_use').value.trim();
+            
+            if (!pName || !pBrand || !pBenefits) { 
+                alert("कृपया सर्व आवश्यक (*) माहिती भरा!"); 
+                return; 
+            }
+            if (pCategorySelect === 'Other' && !pCategoryOther) {
+                alert("कृपया 'इतर' कॅटेगरीचे नाव टाईप करा!");
+                document.getElementById('vp_category_other').focus();
+                return;
+            }
+            if (isNaN(pMrp) || pMrp <= 0) { 
+                alert("कृपया योग्य MRP टाका!"); 
+                return; 
+            }
+            if (!isNaN(pOffer) && pOffer > pMrp) { 
+                alert("ऑफरची किंमत ही MRP पेक्षा जास्त असू शकत नाही!"); 
+                return; 
+            }
+            
+            let selectedFilters = [];
+            let checkboxes = document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => selectedFilters.push(cb.value));
+            if(pOtherUse) selectedFilters.push(pOtherUse);
+            
+            let imageContainer = document.getElementById('image_preview_container');
+            let images = [];
+            let imageCards = imageContainer.querySelectorAll('img');
+            imageCards.forEach(img => images.push(img.src));
+
+            if (images.length === 0) {
+                alert("⚠️ कृपया प्रॉडक्टचा किमान 1 तरी फोटो अपलोड करा.");
+                return;
+            }
+
+            let feeConfig = JSON.parse(localStorage.getItem('admin_platform_fee_config')) || {
+                slab1: 500, perc1: 3, slab2: 8000, perc2: 2, perc3: 1, maxCap: 500
+            };
+            let calcOffer = isNaN(pOffer) ? pMrp : pOffer;
+            let feePercent = 0;
+            if (calcOffer <= feeConfig.slab1) feePercent = feeConfig.perc1;
+            else if (calcOffer > feeConfig.slab1 && calcOffer <= feeConfig.slab2) feePercent = feeConfig.perc2;
+            else if (calcOffer > feeConfig.slab2) feePercent = feeConfig.perc3;
+            
+            let feeAmount = calcOffer * (feePercent / 100);
+            if (feeAmount > feeConfig.maxCap) feeAmount = feeConfig.maxCap;
+
+            let newProduct = {
+                id: 'PROD' + Math.floor(Math.random() * 90000) + 10000,
+                name: pName,
+                brand: pBrand,
+                category: pCategory,
+                weight: pWeight || "N/A",
+                mrp: pMrp,
+                offerPrice: calcOffer,
+                platformFee: parseFloat(feeAmount.toFixed(2)),
+                stockStatus: pStock,
+                gstStatus: pGst,
+                policies: {
+                    deliveryType: pDeliveryType,
+                    deliveryTime: pDeliveryTime || "Standard",
+                    minQty: pMinQty,
+                    returnPolicy: pReturn
+                },
+                aiFilters: selectedFilters,
+                benefits: pBenefits,
+                description: pDesc,
+                images: images,
+                vendorName: localStorage.getItem("current_user_name") || pBrand, 
+                dateAdded: new Date().toISOString()
+            };
+
+            let allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            allProducts.unshift(newProduct);
+            localStorage.setItem('vendor_products', JSON.stringify(allProducts));
+
+            alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
+            
+            document.getElementById('vp_name').value = '';
+            document.getElementById('vp_brand').value = '';
+            document.getElementById('vp_mrp').value = '';
+            document.getElementById('vp_offer').value = '';
+            document.getElementById('vp_weight').value = '';
+            document.getElementById('vp_delivery_time').value = '';
+            document.getElementById('vp_min_qty').value = '';
+            document.getElementById('vp_benefits').value = '';
+            document.getElementById('vp_desc').value = '';
+            document.getElementById('vp_other_use').value = '';
+            document.getElementById('vp_category').value = 'पशुखाद्य (Feed)';
+            document.getElementById('vp_category_other').style.display = 'none';
+            document.getElementById('vp_category_other').value = '';
+            document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('image_preview_container').innerHTML = '';
+            document.getElementById('live_margin_calculator').style.display = 'none';
+            
+            loadVendorProductsForAd();
+            refreshMyProducts();
+        }
+
+        function applyRoleModules() {
+            let selectedRole = document.getElementById('role_selector').value;
+            let menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                let allowedRoles = item.getAttribute('data-roles');
+                if (allowedRoles === "all" || allowedRoles.includes(selectedRole)) {
+                    item.classList.remove('module-hidden');
+                } else {
+                    item.classList.add('module-hidden');
+                }
+            });
+            switchTab('b1'); 
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main_content');
+            const overlay = document.getElementById('sidebar_overlay');
+            const closeBtn = document.querySelector('.mobile-close-btn');
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('active-mobile');
+                overlay.classList.toggle('active');
+                
+                if(sidebar.classList.contains('active-mobile')) {
+                    closeBtn.style.display = 'block';
+                } else {
+                    closeBtn.style.display = 'none';
+                }
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('full-width');
+            }
+        }
+
+        function loadSupportTickets() {
+            let tickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
+            let myMobile = localStorage.getItem("current_user_mobile") || "Unknown";
+            
+            let myTickets = tickets.filter(t => t.mobile === myMobile);
+            let chatBody = document.getElementById('vendor_support_chat_body');
+            
+            if(myTickets.length === 0) {
+                chatBody.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:20px;">तुम्ही अद्याप ॲडमिनला कोणताही मेसेज पाठवलेला नाही.</div>';
+                return;
+            }
+
+            let html = '';
+            myTickets.forEach(t => {
+                html += `<div class="chat-msg sent">
+                            ${t.message}
+                            <span class="msg-time">${t.date}</span>
+                         </div>`;
+                         
+                if(t.reply) {
+                    html += `<div class="chat-msg received">
+                                <b>🎧 Admin:</b> ${t.reply}
+                                <span class="msg-time">Replied</span>
+                             </div>`;
+                }
+            });
+            
+            chatBody.innerHTML = html;
+            chatBody.scrollTop = chatBody.scrollHeight; 
+        }
+
+        function sendSupportMessage() {
+            let msgInput = document.getElementById('vendor_support_msg');
+            let msgText = msgInput.value.trim();
+            
+            if(!msgText) return;
+
+            let tickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
+            
+            let newTicket = {
+                id: "TKT" + Math.floor(Math.random() * 90000),
+                senderName: localStorage.getItem("current_user_name") || "व्यापारी",
+                mobile: localStorage.getItem("current_user_mobile") || "Unknown",
+                message: msgText,
+                reply: null,
+                status: "Open",
+                date: new Date().toLocaleString()
+            };
+            
+            tickets.push(newTicket);
+            localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
+            
+            msgInput.value = '';
+            loadSupportTickets();
+            
+            alert("✅ तुमचा मेसेज ॲडमिन टीमला मिळाला आहे. कृपया उत्तराची (Reply) प्रतीक्षा करा.");
+        }
+
+        function openCropModal(event, containerId) {
+            currentTargetContainerId = containerId;
+            let container = document.getElementById(containerId);
+            
+            if(container.children.length >= 3) {
+                alert("सावधान! तुम्ही जास्तीत जास्त ०३ फोटो अपलोड करू शकता.");
+                event.target.value = "";
+                return;
+            }
+
+            let file = event.target.files[0];
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let imageElement = document.getElementById('crop_image_element');
+                    let modal = document.getElementById('crop_modal');
+                    
+                    modal.style.display = 'flex';
+                    
+                    imageElement.onload = function() {
+                        if(cropper) { cropper.destroy(); }
+                        
+                        cropper = new Cropper(imageElement, {
+                            aspectRatio: 1, 
+                            viewMode: 1,
+                            autoCropArea: 0.9,
+                            background: true,
+                            responsive: true,
+                            checkOrientation: false
+                        });
+                    };
+                    
+                    imageElement.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+            event.target.value = ""; 
+        }
+
+        function closeCropModal() {
+            document.getElementById('crop_modal').style.display = 'none';
+            if(cropper) { cropper.destroy(); cropper = null; }
+            document.getElementById('crop_image_element').src = '';
+        }
+
+        // 🔥 CLOUDINARY INTEGRATION: Modified saveCroppedImage Function 🔥
+        function saveCroppedImage() {
+            if(!cropper) return;
+
+            // युजरला प्रोसेसिंग समजावे म्हणून बटण अपडेट करणे
+            let saveBtn = document.querySelector('.crop-btn.save');
+            let originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = "⏳ Uploading...";
+            saveBtn.disabled = true;
+
+            let canvas = cropper.getCroppedCanvas({
+                width: 600,
+                height: 600,
+                imageSmoothingQuality: 'high'
+            });
+
+            // Canvas चे Blob मध्ये रूपांतर करून Cloudinary वर पाठवणे
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append("file", blob);
+                formData.append("upload_preset", "DugdhdishaAI"); // तुमचा Preset Name
+                
+                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; // तुमचे Cloud Name
+
+                fetch(cloudinaryUrl, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.secure_url) {
+                        let finalImageSrc = data.secure_url; // Cloudinary ची खरी लिंक
+
+                        let container = document.getElementById(currentTargetContainerId);
+                        let imgWrapper = document.createElement('div');
+                        imgWrapper.style.position = "relative";
+                        imgWrapper.style.display = "inline-block";
+
+                        let img = document.createElement('img');
+                        img.src = finalImageSrc;
+                        img.className = 'image-preview-card';
+
+                        let delBtn = document.createElement('span');
+                        delBtn.innerHTML = "✖";
+                        delBtn.style.cssText = "position:absolute; top:-5px; right:-5px; background:#d32f2f; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;";
+                        delBtn.onclick = function() { imgWrapper.remove(); };
+
+                        imgWrapper.appendChild(img);
+                        imgWrapper.appendChild(delBtn);
+                        container.appendChild(imgWrapper);
+
+                        closeCropModal();
+                    } else {
+                        alert("❌ फोटो अपलोड फेल झाले. कृपया पुन्हा प्रयत्न करा.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error uploading to Cloudinary:", error);
+                    alert("❌ इंटरनेट एरर आला. फोटो अपलोड होऊ शकला नाही.");
+                })
+                .finally(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                });
+            }, 'image/jpeg', 0.8);
+        }
+
+        function checkBusinessExpiriesOnLoad() {
+            let now = new Date();
+
+            let bPlan = JSON.parse(localStorage.getItem("current_business_plan_details"));
+            let pkgFront = document.getElementById("front_pricing_packages");
+            let notif = document.getElementById("upgrade_notification");
+
+            if(bPlan && bPlan.expiryDate) {
+                let expiryDate = new Date(bPlan.expiryDate);
+                if(now > expiryDate) {
+                    localStorage.removeItem("current_business_plan");
+                    localStorage.removeItem("current_business_plan_details");
+                    if(notif) notif.style.display = "flex";
+                    if(pkgFront) pkgFront.style.display = "block";
+                    alert("⏰ तुमचे व्यावसायिक 'प्रीमियम सबस्क्रिप्शन' संपले आहे. कृपया ॲपच्या सर्व सुविधा वापरण्यासाठी तुमचे पॅकेज रिन्यू (Renew) करा.");
+                } else {
+                    if(notif) notif.style.display = "none";
+                    if(pkgFront) pkgFront.style.display = "none";
+                    document.getElementById('b1').innerHTML += `
+                        <div class="pricing-grid-new" style="margin-top:20px;">
+                            <div class="price-card popular" style="border-color:#2e7d32;">
+                                <div class="popular-tag" style="background:#2e7d32;">Active Plan</div>
+                                <h3 class="plan-name" style="color:#2e7d32;">${bPlan.name}</h3>
+                                <p style="font-size:12px; color:#555;"><b>Expiry:</b> ${expiryDate.toLocaleDateString()}</p>
+                                <button class="btn-action" style="background:#f8fafc; color:#333; border:1px solid #ccc; margin-top:10px;">सध्या सुरू आहे</button>
+                            </div>
+                        </div>`;
+                }
+            } else {
+                if(notif) notif.style.display = "flex";
+                if(pkgFront) pkgFront.style.display = "block";
+            }
+
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let unpaidCodExists = false;
+
+            orders.forEach(order => {
+                if(order.paymentMethod === 'COD' && order.commissionPaid !== true) {
+                    let orderDateParts = order.date.split('/');
+                    let orderDate;
+                    if(orderDateParts.length === 3) {
+                        orderDate = new Date(orderDateParts[2], orderDateParts[1] - 1, orderDateParts[0]);
+                    } else {
+                        orderDate = new Date(order.date); 
+                    }
+                    
+                    if(!isNaN(orderDate.getTime())) {
+                        let diffTime = Math.abs(now - orderDate);
+                        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        
+                        if(diffDays >= 8) {
+                            unpaidCodExists = true;
+                        }
+                    }
+                }
+            });
+
+            if(unpaidCodExists) {
+                isAccountLocked = true;
+                document.getElementById('strict_lock_modal').style.display = 'flex';
+            }
+        }
+
+        function redirectToLedger() {
+            document.getElementById('strict_lock_modal').style.display = 'none';
+            switchTab('b_ledger'); 
+        }
+
+        function goToUserPage() {
+            sessionStorage.setItem("visited_user_page", "true");
+            window.location.href = "index.html";
+        }
+
+        function logoutUser() {
+            if(confirm("तुम्हाला खरोखर लॉग आऊट करायचे आहे का?")) {
+                localStorage.removeItem("current_logged_in_role");
+                localStorage.removeItem("current_user_name");
+                localStorage.removeItem("current_user_mobile");
+                sessionStorage.removeItem("visited_user_page");
+                window.location.href = "login.html";
+            }
+        }
+
+        function switchTab(tabId) {
+            if(isAccountLocked && (tabId === 'b2' || tabId === 'b3')) {
+                document.getElementById('strict_lock_modal').style.display = 'flex';
+                return;
+            }
+
+            if(tabId === 'b_shop') {
+                let currentPlan = localStorage.getItem("current_business_plan");
+                if(currentPlan !== "Silver Seller" && currentPlan !== "Corporate Partner") {
+                    alert("❌ हे फीचर फक्त 'Silver' किंवा 'Gold/Platinum' प्लॅन घेतलेल्या विक्रेत्यांसाठी उपलब्ध आहे. कृपया तुमचा प्लॅन अपग्रेड करा.");
+                    switchTab('b1'); 
+                    return;
+                }
+                loadShopPreview();
+            }
+
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            const items = document.querySelectorAll('.menu-item');
+            items.forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            const clickedItem = document.querySelector(`[onclick="switchTab('${tabId}')"]`) || document.querySelector(`[onclick="checkGatekeeper('${tabId}')"]`);
+            if (clickedItem) {
+                clickedItem.classList.add('active');
+                document.getElementById('current_module_title').innerText = clickedItem.innerText.split('. ')[1] || clickedItem.innerText;
+            }
+            
+            if(tabId === 'b4') {
+                loadVendorProductsForAd();
+                setAdMode('product');
+            }
+            if (tabId === 'b2') {
+                refreshMyProducts();
+            }
+
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active-mobile');
+                document.getElementById('sidebar_overlay').classList.remove('active');
+                document.querySelector('.mobile-close-btn').style.display = 'none';
+            }
+        }
+
+        function loadShopPreview() {
+            const iframe = document.getElementById('shop_preview_iframe');
+            if (!iframe) return;
+
+            const vendorName = localStorage.getItem("current_user_name") || "अज्ञात विक्रेता";
+            const vendorMobile = localStorage.getItem("current_user_mobile") || "";
+
+            const allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            const myProducts = allProducts.filter(p => p.vendorName === vendorName || p.vendorName === vendorMobile);
+
+            const shopHTML = `<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${vendorName} - दुकान</title>
+    <style>
+        :root {
+            --primary: #0f0f1a;
+            --accent: #00f2fe;
+            --accent2: #4facfe;
+            --gold: #ffd700;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #fff;
+            --text-secondary: #b0b0b0;
+            --card-bg: rgba(20, 20, 35, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Poppins', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 80px;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0,242,254,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(79,172,254,0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(255,215,0,0.05) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+        @keyframes bgPulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .hero {
+            position: relative;
+            padding: 30px 20px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(0,242,254,0.15) 0%, rgba(0,0,0,0) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .hero-avatar {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 42px;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 30px rgba(0,242,254,0.4), 0 0 60px rgba(0,242,254,0.2);
+            border: 3px solid rgba(255,255,255,0.2);
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .verified-badge {
+            position: absolute; bottom: 0; right: 0;
+            background: #00c853; border-radius: 50%;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(0,200,83,0.5);
+        }
+        .shop-name {
+            font-size: 28px; font-weight: 900;
+            background: linear-gradient(to right, #fff, #b0b0b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .shop-location {
+            font-size: 13px; color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .shop-stats {
+            display: flex; justify-content: center; gap: 30px; margin-top: 20px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-size: 22px; font-weight: 900; color: var(--accent);
+            text-shadow: 0 0 10px rgba(0,242,254,0.5);
+        }
+        .stat-label {
+            font-size: 11px; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .action-buttons {
+            display: flex; justify-content: center; gap: 15px; margin-top: 20px;
+        }
+        .btn-action {
+            padding: 10px 20px; border-radius: 50px;
+            font-weight: bold; font-size: 13px;
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .btn-call {
+            background: rgba(0,242,254,0.15);
+            border: 1px solid rgba(0,242,254,0.3);
+            color: var(--accent);
+        }
+        .btn-wa {
+            background: rgba(37, 211, 102, 0.15);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            color: #25d366;
+        }
+        .section-title {
+            font-size: 18px; font-weight: 900;
+            padding: 20px 20px 10px;
+            display: flex; align-items: center; gap: 10px; color: #fff;
+        }
+        .section-title::before {
+            content: ''; width: 4px; height: 24px; background: var(--accent);
+            border-radius: 2px; box-shadow: 0 0 10px var(--accent);
+        }
+        .product-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 15px; padding: 0 20px 20px;
+        }
+        .product-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .product-card:hover {
+            transform: translateY(-8px) rotateX(2deg) rotateY(2deg);
+            box-shadow: 0 20px 40px rgba(0,242,254,0.15), 0 0 0 1px rgba(0,242,254,0.2);
+            border-color: rgba(0,242,254,0.3);
+        }
+        .card-img {
+            width: 100%; height: 140px; object-fit: cover;
+            background: linear-gradient(135deg, rgba(0,242,254,0.1), rgba(79,172,254,0.1));
+            display: flex; align-items: center; justify-content: center; font-size: 48px;
+        }
+        .card-body { padding: 12px; }
+        .card-brand { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .card-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-price { font-size: 18px; font-weight: 900; color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.3); }
+        .card-mrp { font-size: 12px; color: #666; text-decoration: line-through; margin-left: 6px; }
+        .card-discount {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255, 0, 0, 0.8); color: white;
+            font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .no-products { text-align: center; padding: 60px 20px; color: #666; }
+        .no-products .icon { font-size: 64px; margin-bottom: 15px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-avatar">🏪</div>
+        <h1 class="shop-name">${vendorName}</h1>
+        <div class="shop-location">📍 महाराष्ट्र, भारत</div>
+        <div class="shop-stats">
+            <div class="stat-item"><div class="stat-value">${myProducts.length}</div><div class="stat-label">उत्पादने</div></div>
+            <div class="stat-item"><div class="stat-value">⭐ 4.8</div><div class="stat-label">रेटिंग</div></div>
+        </div>
+        <div class="action-buttons">
+            <a href="tel:${vendorMobile}" class="btn-action btn-call"><span>📞</span> कॉल करा</a>
+            <a href="https://wa.me/91${vendorMobile}" class="btn-action btn-wa"><span>💬</span> WhatsApp</a>
+        </div>
+    </div>
+    <div class="section-title"><span>🛍️ उत्पादने</span></div>
+    <div class="product-grid" id="productGrid">${myProducts.map(p => {
+        const imgSrc = (p.images && p.images.length > 0) ? p.images[0] : '';
+        const imgHtml = imgSrc ? `<img src="${imgSrc}" class="card-img" alt="${p.name}" style="object-fit:cover;">` : `<div class="card-img">📦</div>`;
+        const discount = (p.mrp && p.offerPrice && p.mrp > p.offerPrice) ? Math.round((1 - p.offerPrice/p.mrp)*100) : 0;
+        return `<div class="product-card">
+            ${discount > 0 ? `<div class="card-discount">-${discount}%</div>` : ''}
+            ${imgHtml}
+            <div class="card-body">
+                <div class="card-brand">${p.brand || 'ब्रँड'}</div>
+                <div class="card-title">${p.name}</div>
+                <span class="card-price">₹${p.offerPrice || p.mrp}</span>
+                ${p.mrp && p.offerPrice && p.mrp > p.offerPrice ? `<span class="card-mrp">₹${p.mrp}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('')}</div>
+    ${myProducts.length === 0 ? `<div class="no-products"><div class="icon">📭</div><h3>अद्याप उत्पादने जोडली नाहीत</h3></div>` : ''}
+</body>
+</html>`;
+            iframe.srcdoc = shopHTML;
+        }
+
+        function initAutoScroll() {
+            const wrappers = document.querySelectorAll('.ad-scroll-wrapper');
+            wrappers.forEach(wrapper => {
+                let scrollInterval;
+                const startScroll = () => {
+                    scrollInterval = setInterval(() => {
+                        if (wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth) {
+                            wrapper.scrollTo({ left: 0, behavior: 'smooth' });
+                        } else {
+                            wrapper.scrollBy({ left: 235, behavior: 'smooth' });
+                        }
+                    }, 4000); 
+                };
+                startScroll();
+                wrapper.addEventListener('mouseenter', () => clearInterval(scrollInterval));
+                wrapper.addEventListener('mouseleave', startScroll);
+                wrapper.addEventListener('touchstart', () => clearInterval(scrollInterval));
+                wrapper.addEventListener('touchend', startScroll);
+            });
+        }
+        
+        function selectAdFromCard(adValue) {
+            let selectBox = document.getElementById('campaign_type');
+            selectBox.value = adValue;
+            document.getElementById('ad_creation_form').scrollIntoView({ behavior: 'smooth' });
+            calculateAdEstimation();
+            setAdMode('product'); 
+        }
+
+        function checkGatekeeper(targetTabId) {
+            let isVerified = localStorage.getItem("vendor_verified") === 'true';
+
+            if(isAccountLocked && (targetTabId === 'b2' || targetTabId === 'b3')) {
+                document.getElementById('strict_lock_modal').style.display = 'flex';
+                return;
+            }
+
+            if(isVerified) {
+                switchTab(targetTabId);
+            } else {
+                currentIntendedTab = targetTabId; 
+                document.getElementById('kyc_gatekeeper_modal').style.display = 'flex';
+            }
+        }
+
+        function checkGatekeeperGst(val) {
+            let manualDocs = document.getElementById('kyc_manual_docs');
+            let successMsg = document.getElementById('kyc_gst_success');
+            if(val.length === 15) {
+                manualDocs.style.display = 'none';
+                successMsg.style.display = 'block';
+            } else {
+                manualDocs.style.display = 'block';
+                successMsg.style.display = 'none';
+            }
+        }
+
+        function submitKYCDetails() {
+            let gstVal = document.getElementById('kyc_gst') ? document.getElementById('kyc_gst').value.trim() : '';
+            let aadhaar = document.getElementById('kyc_aadhaar').files.length;
+            let shop = document.getElementById('kyc_shop_proof').files.length;
+            let isChecked = document.getElementById('kyc_legal_check').checked;
+
+            if(gstVal.length !== 15) {
+                if(aadhaar === 0 || shop === 0) {
+                    alert("कृपया एकतर १५ अंकी GST नंबर टाका, किंवा आधार कार्ड आणि दुकानाचा फोटो अपलोड करा.");
+                    return;
+                }
+            }
+            
+            if(!isChecked) {
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
+                return;
+            }
+
+            let pendingKyc = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+            pendingKyc.push({
+                vendorName: localStorage.getItem("current_user_name") || "Unknown Vendor",
+                mobile: localStorage.getItem("current_user_mobile") || "Unknown",
+                gst: gstVal || "Not Provided",
+                date: new Date().toLocaleString(),
+                status: "Pending"
+            });
+            localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKyc));
+
+            alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
+            document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
+            checkVendorNotifications(); 
+        }
+
+        function payCommissionForOrder(orderId, amount) {
+            processAutoPayment(Math.ceil(amount), "Comm_" + orderId, () => {
+                let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                let orderIndex = orders.findIndex(o => o.id === orderId);
+                
+                if(orderIndex > -1) {
+                    orders[orderIndex].commissionPaid = true;
+                    localStorage.setItem('user_orders', JSON.stringify(orders));
+                }
+                
+                alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
+                loadDealerOrdersDashboard();
+            });
+        }
+
+        function unlockLead(btn, mobile, name) {
+            processAutoPayment(99, "Lead_Unlock", () => {
+                alert(`🎉 पेमेंट यशस्वी!\n\nया लीडचा मोबाईल नंबर अनलॉक झाला आहे: ${mobile}`);
+            });
+        }
+
+        function payLedgerDues() {
+            if(ledgerTotalDues <= 0) {
+                alert("तुमची कोणतीही थकबाकी नाही. धन्यवाद!");
+                return;
+            }
+            processAutoPayment(Math.ceil(ledgerTotalDues), "All_Dues_Clearance", () => {
+                let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                let myName = localStorage.getItem("current_user_name");
+                let myMobile = localStorage.getItem("current_user_mobile");
+                
+                orders.forEach(o => {
+                    if(o.paymentMethod === 'COD' && o.items.some(item => item.company === myName || item.company === myMobile)) {
+                        o.commissionPaid = true;
+                    }
+                });
+                localStorage.setItem('user_orders', JSON.stringify(orders));
+                
+                isAccountLocked = false; 
+                document.getElementById('strict_lock_modal').style.display = 'none';
+                
+                alert("🎉 तुमचे संपूर्ण बाकीचे पेमेंट यशस्वी झाले आहे.\n\nतुमचे खाते आता पूर्णपणे निरंक (Clear) झाले आहे!");
+                loadDealerOrdersDashboard();
+            });
+        }
+
+        function markOrderShipped(orderId) {
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let orderIndex = orders.findIndex(o => o.id === orderId);
+            
+            if(orderIndex > -1) {
+                orders[orderIndex].status = 'shipped';
+                localStorage.setItem('user_orders', JSON.stringify(orders));
+
+                let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+                appNotifs.unshift({
+                    id: Date.now(),
+                    type: 'order',
+                    title: '📦 ऑर्डर वाटेत आहे! (Shipped)',
+                    message: `तुमची ऑर्डर #${orderId} विक्रेत्याने पाठवली आहे. लवकरच तुमच्यापर्यंत पोहोचेल.`,
+                    date: new Date().toLocaleDateString(),
+                    receiver_mobile: orders[orderIndex].customer.mobile
+                });
+                localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+
+                alert('ऑर्डर Shipped मार्क केली आणि ग्राहकाला नोटिफिकेशन पाठवले!');
+                loadDealerOrdersDashboard();
+            }
+        }
+
+        function loadDealerOrdersDashboard() {
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            
+            let myOrders = orders.filter(o => {
+                return o.items.some(item => item.company === myName || item.company === myMobile);
+            });
+
+            let container = document.getElementById('dealer_orders_container');
+            let ledgerTbody = document.getElementById('ledger_body');
+            
+            if(myOrders.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">अद्याप कोणतीही आदेश (Order) आलेली नाही.</div>';
+                if(ledgerTbody) ledgerTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">कोणतेही व्यवहार नाहीत.</td></tr>';
+                return;
+            }
+
+            let feeConfig = JSON.parse(localStorage.getItem('admin_platform_fee_config')) || {
+                slab1: 500, perc1: 3, slab2: 8000, perc2: 2, perc3: 1, maxCap: 500
+            };
+
+            let html = '';
+            let ledgerHtml = '';
+            ledgerTotalDues = 0;
+
+            myOrders.forEach(order => {
+                let itemsList = '';
+                let totalCommission = 0;
+                
+                order.items.forEach(item => {
+                    if(item.company === myName || item.company === myMobile) {
+                        itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
+                        
+                        let itemTotal = item.price * item.qty;
+                        let feePercent = 0;
+
+                        if (itemTotal <= feeConfig.slab1) {
+                            feePercent = feeConfig.perc1;
+                        } else if (itemTotal > feeConfig.slab1 && itemTotal <= feeConfig.slab2) {
+                            feePercent = feeConfig.perc2;
+                        } else if (itemTotal > feeConfig.slab2) {
+                            feePercent = feeConfig.perc3;
+                        }
+
+                        let itemComm = itemTotal * (feePercent / 100);
+                        totalCommission += itemComm;
+                    }
+                });
+
+                if (totalCommission > feeConfig.maxCap) {
+                    totalCommission = feeConfig.maxCap;
+                }
+
+                let vendorReceives = order.totalAmount - totalCommission;
+
+                let paymentBadge = order.paymentMethod === 'COD' 
+                                 ? `<span style="background:#ffe0b2; color:#e65100; padding:2px 6px; border-radius:4px; font-size:10px;">COD</span>` 
+                                 : `<span style="background:#c8e6c9; color:#2e7d32; padding:2px 6px; border-radius:4px; font-size:10px;">Paid Online</span>`;
+
+                let isCommissionPaid = order.commissionPaid === true || order.paymentMethod !== 'COD'; 
+                let mobileDisplay = (order.paymentMethod === 'COD' && !isCommissionPaid) ? `+91 ******${order.customer.mobile ? order.customer.mobile.slice(-4) : 'XXXX'}` : order.customer.mobile;
+                
+                let actionButtons = '';
+                if(order.paymentMethod === 'COD' && !isCommissionPaid) {
+                    actionButtons = `<div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                        <p style="font-size: 11px; color: #d32f2f; margin: 0 0 5px 0;">⚠️ ही COD ऑर्डर आहे. ग्राहकाचा संपर्क क्रमांक पाहण्यासाठी आणि ऑर्डर पूर्ण करण्यासाठी आधी प्लॅटफॉर्म फी (₹${Math.ceil(totalCommission)}) भरा.</p>
+                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.id}', ${Math.ceil(totalCommission)})">🔒 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
+                    </div>`;
+                    
+                    ledgerTotalDues += totalCommission;
+                    ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Pending COD)</td><td style="text-align: right; color:#c62828; font-weight:bold;">₹${Math.ceil(totalCommission)}</td></tr>`;
+
+                } else {
+                    actionButtons = `<div style="display:flex; gap:10px;">
+                        <button class="status-btn btn-ship" onclick="markOrderShipped('${order.id}')">📦 Mark as Shipped</button>
+                    </div>`;
+                    
+                    ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Cleared)</td><td style="text-align: right; color:#2e7d32;">₹0</td></tr>`;
+                }
+
+                html += `
+                <div class="dealer-order-card">
+                    <div class="dealer-order-header">
+                        <div>
+                            <strong style="color:var(--b-primary);">${order.id}</strong>
+                            <div style="font-size:10px; color:#888;">${order.date}</div>
+                        </div>
+                        ${paymentBadge}
+                    </div>
+                    
+                    <div class="dealer-order-customer">
+                        <b>ग्राहक:</b> ${order.customer.name} (${mobileDisplay})<br>
+                        <b>पत्ता:</b> ${order.customer.address}, ${order.customer.district} - ${order.customer.pincode}
+                    </div>
+                    
+                    <ul style="font-size:12px; color:#555; padding-left:20px; margin-bottom:10px;">
+                        ${itemsList}
+                    </ul>
+                    
+                    <div style="background:#f8fafc; border:1px dashed #ccc; padding:10px; border-radius:6px; margin-bottom:10px; font-size:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span>ऑर्डर व्हॅल्यू (Customer Paid):</span> <b>₹${order.totalAmount}</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:#d32f2f; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                            <span>Platform Fee & Commission:</span> <b>- ₹${totalCommission.toFixed(2)}</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:#2e7d32; font-size:14px;">
+                            <span><b>तुमच्या खात्यात जमा होतील:</b></span> <b>₹${vendorReceives.toFixed(2)}</b>
+                        </div>
+                    </div>
+                    ${actionButtons}
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            
+            if(ledgerTbody) ledgerTbody.innerHTML = ledgerHtml || '<tr><td colspan="3" style="text-align:center;">कोणतेही व्यवहार नाहीत.</td></tr>';
+            let duesDisplay = document.getElementById('ledger_total_dues');
+            if(duesDisplay) duesDisplay.innerText = Math.ceil(ledgerTotalDues);
+        }
+
+        function changeBilling(cycle, btnElement) {
+            document.querySelectorAll('.toggle-btn-bill').forEach(b => b.classList.remove('active-toggle'));
+            btnElement.classList.add('active-toggle');
+
+            let adminPrices = JSON.parse(localStorage.getItem('admin_business_prices')) || { starter: 499, smart: 999, brand: 1999 };
+            let multiplier = 1; let discount = 0; 
+
+            if(cycle === 'half') { multiplier = 6; discount = 0.10; } 
+            else if (cycle === 'yearly') { multiplier = 12; discount = 0.20; }
+
+            let prices = [adminPrices.starter, adminPrices.smart, adminPrices.brand];
+            let priceElements = document.querySelectorAll('.price-val');
+            
+            priceElements.forEach((el, index) => {
+                let basePrice = prices[index];
+                let calculatedPrice = (basePrice * multiplier) * (1 - discount);
+                el.innerText = Math.round(calculatedPrice).toLocaleString('en-IN');
+            });
+        }
+
+        function buyPlan(businessPlanName, farmerBonusId) {
+            let priceVal = "0";
+            if(businessPlanName === 'Starter') priceVal = document.querySelectorAll('.price-val')[0].innerText.replace(/,/g, '');
+            if(businessPlanName === 'Silver Seller') priceVal = document.querySelectorAll('.price-val')[1].innerText.replace(/,/g, '');
+            if(businessPlanName === 'Corporate Partner') priceVal = document.querySelectorAll('.price-val')[2].innerText.replace(/,/g, '');
+
+            processAutoPayment(priceVal, "Plan_" + businessPlanName, () => {
+                let expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30); 
+                
+                let bPlanObj = {
+                    name: businessPlanName,
+                    expiryDate: expiryDate.toISOString(),
+                    activatedOn: new Date().toISOString()
+                };
+
+                localStorage.setItem("current_business_plan", businessPlanName);
+                localStorage.setItem("current_business_plan_details", JSON.stringify(bPlanObj));
+                localStorage.setItem("current_farmer_plan", farmerBonusId);
+                
+                alert(`🎉 पेमेंट यशस्वी!\nतुमचा '${businessPlanName}' प्लॅन स्वयंचलितपणे (Automatically) ३० दिवसांसाठी ऍक्टिव्हेट झाला आहे.`);
+                initializeDashboard();
+            });
+        }
+
+        function updateCCNumber() {
+            let currentPlan = localStorage.getItem("current_business_plan");
+            if(currentPlan !== "Corporate Partner") {
+                alert("❌ हे फीचर फक्त 'ब्रँड पार्टनर' (Corporate) प्लॅनमध्ये उपलब्ध आहे. कृपया तुमचा प्लॅन अपग्रेड करा.");
+                return;
+            }
+            
+            let num = document.getElementById("vendor_cc_number").value.trim();
+            if(num.length < 10) {
+                alert("कृपया योग्य मोबाईल किंवा कस्टमर केअर नंबर टाका.");
+                return;
+            }
+            
+            let vendorData = {
+                vendorName: localStorage.getItem("current_user_name") || "व्यापारी",
+                number: num,
+                status: "Pending"
+            };
+            localStorage.setItem("vendor_submitted_cc", JSON.stringify(vendorData));
+            
+            let msg = document.getElementById("cc_status_msg");
+            if(msg) {
+                msg.innerText = "⏳ तुमचा नंबर ॲडमिनकडे पडताळणीसाठी पाठवला आहे. लवकरच ॲक्टिव्हेट होईल.";
+                msg.style.color = "#f57c00";
+            }
+        }
+
+        function generateCoupon() {
+            let type = document.getElementById('coupon_type').value;
+            let code = document.getElementById('coupon_code').value.trim();
+            let val = document.getElementById('coupon_val').value.trim();
+            
+            if(!code || !val) {
+                alert("⚠️ कृपया प्रोमो कोड आणि डिस्काउंट व्हॅल्यू टाका.");
+                return;
+            }
+            
+            let coupons = JSON.parse(localStorage.getItem('vendor_coupons')) || [];
+            coupons.push({ type: type, code: code, value: val, date: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_coupons', JSON.stringify(coupons));
+            
+            alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
+            document.getElementById('coupon_code').value = '';
+            document.getElementById('coupon_val').value = '';
+        }
+
+        function approveDealer() {
+            let dealer = document.getElementById('dealer_pending').value;
+            let territory = document.getElementById('dealer_territory').value.trim();
+            let map = document.getElementById('dealer_map').value.trim();
+            
+            if(!territory) {
+                alert("⚠️ कृपया डीलरसाठी 'Territory' (विभाग) टाका.");
+                return;
+            }
+            
+            alert(`✅ ${dealer} यांना '${territory}' विभागासाठी यशस्वीरीत्या अप्रूव्ह केले आहे!`);
+            document.getElementById('dealer_territory').value = '';
+            document.getElementById('dealer_map').value = '';
+        }
+
+        function updateSupplyLedger() {
+            let item = document.getElementById('supply_item').value.trim();
+            let price = document.getElementById('supply_price').value;
+            let transport = document.getElementById('supply_transport').value.trim();
+            
+            if(!item || !price) {
+                alert("⚠️ कृपया घटक (Ingredient) आणि किंमत टाका.");
+                return;
+            }
+            
+            let supplies = JSON.parse(localStorage.getItem('supplier_ledger')) || [];
+            supplies.push({ item: item, price: price, transport: transport, date: new Date().toLocaleDateString() });
+            localStorage.setItem('supplier_ledger', JSON.stringify(supplies));
+            
+            alert(`✅ '${item}' ची माहिती सप्लाय लेजरमध्ये अपडेट केली आहे!`);
+            document.getElementById('supply_item').value = '';
+            document.getElementById('supply_price').value = '';
+            document.getElementById('supply_transport').value = '';
+        }
+
+        function postFranchiseJob() {
+            let jobType = document.getElementById('franchise_job_type').value;
+            let requirement = document.getElementById('franchise_req_input').value.trim();
+            
+            if(!requirement) {
+                alert("⚠️ कृपया फ्रँचायझी किंवा जॉब रिक्वायरमेंटची माहिती टाईप करा.");
+                return;
+            }
+            
+            let jobs = JSON.parse(localStorage.getItem('vendor_jobs')) || [];
+            jobs.push({ role: jobType, req: requirement, date: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_jobs', JSON.stringify(jobs));
+            
+            alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
+            document.getElementById('franchise_req_input').value = '';
+        }
+
+        function promoteTrainingEvent() {
+            let eventType = document.getElementById('training_event_type').value;
+            let eventDate = document.getElementById('training_event_date').value;
+            
+            if(!eventDate) {
+                alert("⚠️ कृपया इव्हेंटची तारीख आणि वेळ निवडा.");
+                return;
+            }
+            
+            let events = JSON.parse(localStorage.getItem('vendor_events')) || [];
+            events.push({ type: eventType, date: eventDate, createdOn: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_events', JSON.stringify(events));
+            
+            let d = new Date(eventDate);
+            let formattedDate = d.toLocaleString('mr-IN');
+            
+            alert(`🎉 तुमचा '${eventType}' इव्हेंट ${formattedDate} या वेळेसाठी यशस्वीरीत्या शेड्युल झाला आहे. शेतकऱ्यांना लवकरच याची नोटिफिकेशन मिळेल!`);
+            document.getElementById('training_event_date').value = '';
+        }
+
+        // 🔥 NEW: initiatePayment updated to support Automatic Ad Activation
+        function initiatePayment() {
+            let adTypeSelect = document.getElementById('campaign_type');
+            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
+            let location = document.getElementById('campaign_location').value;
+            let audience = document.getElementById('campaign_audience').value;
+            let title = document.getElementById('campaign_title').value;
+            let budget = parseFloat(document.getElementById('campaign_budget').value) || 0;
+            let campaignType = document.getElementById('campaign_type').value;
+            
+            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
+            if(isGenericAd) {
+                campaignType = 'Generic_Promotion';
+            }
+            let url = campaignType === 'Generic_Promotion' ? '#' : (document.getElementById('campaign_product_select').value || '#');
+            
+            let selectedProduct = document.getElementById('campaign_product_select').value;
+            if(!isGenericAd && !selectedProduct) {
+                alert("⚠️ जाहिरात करण्यापूर्वी प्रॉडक्ट निवडणे आवश्यक आहे! किंवा 'Generic Promotion' निवडा.");
+                return;
+            }
+            
+            let modelSelect = document.getElementById('campaign_model');
+            let fixedRateMatch = modelSelect.options[0].text.match(/₹(\d+)/);
+            let requiredFixedRate = fixedRateMatch ? parseInt(fixedRateMatch[1]) : 0;
+
+            if(!title || budget <= 0) { alert("कृपया जाहिरातीचा मजकूर आणि बजेट भरा!"); return; }
+            if(modelSelect.value === 'Fixed' && budget < requiredFixedRate) {
+                alert(`या जाहिरात प्रकारासाठी किमान ₹${requiredFixedRate} बजेट असणे आवश्यक आहे.`);
+                return;
+            }
+            
+            let imageContainer = document.getElementById('ad_image_preview_container');
+            let images = [];
+            let imageCards = imageContainer.querySelectorAll('img');
+            imageCards.forEach(img => images.push(img.src));
+            
+            if(images.length === 0) { 
+                alert("कृपया जाहिरातीसाठी किमान १ तरी फोटो/बॅनर अपलोड करा."); 
+                return; 
+            }
+
+            processAutoPayment(budget, "Ad_" + campaignType, () => {
+                // 1. Add to live ads directly
+                let liveAds = JSON.parse(localStorage.getItem('live_admin_ad_images')) || { ads: [], active: false, place: 'Home Slider' };
+                liveAds.ads.push({
+                    text: title,
+                    url: url,
+                    images: images
+                });
+                liveAds.active = true;
+                localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
+
+                // 2. Add to pending list as 'Approved & Live' so it shows in 'My Ads'
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+                let newAdId = "AD" + Math.floor(Math.random() * 90000);
+                pendingAds.push({
+                    id: newAdId,
+                    type: adType,
+                    location: location,
+                    audience: audience,
+                    title: title,
+                    url: url,
+                    budget: budget,
+                    images: images, 
+                    utr: "Auto_UPI",
+                    hasScreenshot: false,
+                    status: "Approved & Live", // Auto approved
+                    date: new Date().toLocaleDateString(),
+                    vendorName: localStorage.getItem("current_user_name") || "",
+                    isGeneric: isGenericAd
+                });
+                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
+
+                alert(`🎉 पेमेंट यशस्वी!\n\nतुमची जाहिरात स्वयंचलितपणे (Automatically) ॲपवर लाईव्ह झाली आहे.`);
+                
+                document.getElementById('campaign_title').value = '';
+                if (campaignType !== 'Generic_Promotion') document.getElementById('campaign_product_select').value = '';
+                document.getElementById('campaign_budget').value = '';
+                document.getElementById('ad_image_preview_container').innerHTML = '';
+                document.getElementById('ad_estimation_text').style.display = 'none';
+
+                refreshMyAds();
+            });
+        }
+
+        // Keep old function structures unmodified to prevent code cuts
+        function triggerUPIPayment() {
+            let amt = document.getElementById('pay_amt_display').innerText;
+            let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty" };
+            let payeeName = paymentSettings.payee_name ? encodeURIComponent(paymentSettings.payee_name) : "Dugdha%20Disha%20AI";
+            let upiId = paymentSettings.upi_id;
+
+            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amt}&cu=INR`;
+            window.location.href = upiLink;
+
+            let btn = document.getElementById('direct_pay_btn');
+            btn.innerHTML = "⏳ पेमेंट झाल्यानंतर खाली UTR नंबर टाका";
+            btn.style.background = "#f57c00";
+            btn.style.pointerEvents = "none";
+        }
+
+        function confirmOfflinePayment() {
+            let utr = document.getElementById('pay_utr').value.trim();
+            let screenshotUploaded = document.getElementById('pay_screenshot').files.length > 0;
+
+            if(utr.length < 10 && !screenshotUploaded) { 
+                alert("⚠️ कृपया ॲपमध्ये पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर टाका किंवा पेमेंटचा स्क्रीनशॉट अपलोड करा!"); 
+                return; 
+            }
+
+            if(window.pendingOrderCommission) {
+                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
+                pendingCommissions.push({
+                    id: "COM" + Math.floor(Math.random() * 90000),
+                    orderId: window.pendingOrderCommission,
+                    amount: document.getElementById('pay_amt_display').innerText,
+                    utr: utr,
+                    hasScreenshot: screenshotUploaded,
+                    status: "Pending Approval",
+                    date: new Date().toLocaleDateString()
+                });
+                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
+
+                alert(`🎉 पेमेंट रिक्वेस्ट (UTR: ${utr || 'Screenshot'}) ॲडमिनकडे गेली आहे!\n\nॲडमिनने पेमेंट कन्फर्म केल्यानंतर या ऑर्डरचा मोबाईल नंबर दिसेल आणि तुम्ही माल पाठवू शकाल.`);
+                closePaymentModal();
+                window.pendingOrderCommission = null;
+                return;
+            }
+
+            if(window.pendingLeadUnlock) {
+                alert(`🎉 पेमेंट रिक्वेस्ट ॲडमिनकडे गेली आहे!\n\nमंजुरीनंतर या लीडचा मोबाईल अनलॉक होईल.`);
+                closePaymentModal();
+                window.pendingLeadUnlock = null;
+                return;
+            }
+
+            if(window.pendingLedgerClearance) {
+                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
+                pendingCommissions.push({
+                    id: "COM" + Math.floor(Math.random() * 90000),
+                    orderId: "ALL_DUES",
+                    amount: document.getElementById('pay_amt_display').innerText,
+                    utr: utr,
+                    hasScreenshot: screenshotUploaded,
+                    status: "Pending Approval",
+                    date: new Date().toLocaleDateString()
+                });
+                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
+
+                alert(`🎉 तुमचे संपूर्ण बाकीचे पेमेंट (UTR: ${utr || 'Screenshot'}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरीनंतर तुमचे खाते निरंक होईल.`);
+                closePaymentModal();
+                window.pendingLedgerClearance = false;
+                
+                isAccountLocked = false; 
+                document.getElementById('strict_lock_modal').style.display = 'none';
+                return;
+            }
+
+            if(window.pendingPackageBuy) {
+                let expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30); 
+                
+                let bPlanObj = {
+                    name: window.pendingPackageBuy.bPlan,
+                    expiryDate: expiryDate.toISOString(),
+                    activatedOn: new Date().toISOString()
+                };
+
+                localStorage.setItem("current_business_plan", window.pendingPackageBuy.bPlan);
+                localStorage.setItem("current_business_plan_details", JSON.stringify(bPlanObj));
+                localStorage.setItem("current_farmer_plan", window.pendingPackageBuy.fPlan);
+                
+                alert(`🎉 पेमेंट यशस्वी! (UTR: ${utr || 'Screenshot'})\nतुमचा '${window.pendingPackageBuy.bPlan}' प्लॅन स्वयंचलितपणे (Automatically) ३० दिवसांसाठी ऍक्टिव्हेट झाला आहे.`);
+                
+                document.getElementById('payment_modal').style.display = 'none';
+                window.pendingPackageBuy = null;
+                document.getElementById('pay_utr').value = '';
+                
+                let btn = document.getElementById('direct_pay_btn');
+                btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
+                btn.style.background = "#1b5e20";
+                btn.style.pointerEvents = "auto";
+                
+                initializeDashboard();
+                return;
+            }
+
+            let adTypeSelect = document.getElementById('campaign_type');
+            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
+            let location = document.getElementById('campaign_location').value;
+            let audience = document.getElementById('campaign_audience').value;
+            let title = document.getElementById('campaign_title').value;
+            let budget = document.getElementById('campaign_budget').value;
+            let campaignType = document.getElementById('campaign_type').value;
+            
+            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
+            if(isGenericAd) {
+                campaignType = 'Generic_Promotion';
+            }
+            let url = campaignType === 'Generic_Promotion' ? '#' : (document.getElementById('campaign_product_select').value || '#');
+            
+            let imageContainer = document.getElementById('ad_image_preview_container');
+            let images = [];
+            let imageCards = imageContainer.querySelectorAll('img');
+            imageCards.forEach(img => images.push(img.src));
+            
+            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+            let newAdId = "AD" + Math.floor(Math.random() * 90000);
+            pendingAds.push({
+                id: newAdId,
+                type: adType,
+                location: location,
+                audience: audience,
+                title: title,
+                url: url,
+                budget: budget,
+                images: images, 
+                utr: utr,
+                hasScreenshot: screenshotUploaded,
+                status: "Pending Approval",
+                date: new Date().toLocaleDateString(),
+                vendorName: localStorage.getItem("current_user_name") || "",
+                isGeneric: isGenericAd
+            });
+            localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
+
+            document.getElementById('payment_modal').style.display = 'none';
+            alert(`🎉 तुमचे पेमेंट (UTR: ${utr || 'Screenshot'}) सिस्टीममध्ये सबमिट झाले आहे!\n\nॲडमिन पेमेंट तपासून लवकरच तुमची जाहिरात लाईव्ह करतील.`);
+            
+            document.getElementById('campaign_title').value = '';
+            if (campaignType !== 'Generic_Promotion') document.getElementById('campaign_product_select').value = '';
+            document.getElementById('campaign_budget').value = '';
+            document.getElementById('pay_utr').value = '';
+            document.getElementById('ad_image_preview_container').innerHTML = '';
+            document.getElementById('ad_estimation_text').style.display = 'none';
+
+            let btn = document.getElementById('direct_pay_btn');
+            btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
+            btn.style.background = "#1b5e20";
+            btn.style.pointerEvents = "auto";
+            
+            checkVendorNotifications(); 
+            refreshMyAds();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment_modal').style.display = 'none';
+            window.pendingPackageBuy = null;
+            window.pendingOrderCommission = null;
+            window.pendingLeadUnlock = null;
+            window.pendingLedgerClearance = false;
+            
+            let btn = document.getElementById('direct_pay_btn');
+            btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
+            btn.style.background = "#1b5e20";
+            btn.style.pointerEvents = "auto";
+            document.getElementById('pay_utr').value = '';
+        }
+    </script>
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

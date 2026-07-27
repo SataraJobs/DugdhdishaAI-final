@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - Vet Partner Portal</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root { --p-blue: #1565c0; --p-orange: #e65100; --p-green: #2e7d32; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        
+        .container { max-width: 700px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--p-blue); color: white; padding: 15px 20px; text-align: center; display: flex; justify-content: space-between; align-items: center;}
+        .header h2 { margin: 0; font-size: 18px; }
+        
+        .tabs { display: flex; background: #e3f2fd; }
+        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; color: #555; border-bottom: 3px solid transparent; transition: 0.3s;}
+        .tab.active { color: var(--p-blue); border-bottom-color: var(--p-blue); background: #bbdefb; }
+        
+        .content { padding: 15px; display: none; }
+        .content.active { display: block; }
+        
+        /* Form Sections */
+        .form-section { border: 1px solid #e0e6ed; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fafbfc; }
+        .form-section h4 { margin: 0 0 15px 0; color: var(--p-blue); border-bottom: 2px solid #e3f2fd; padding-bottom: 5px; font-size: 15px;}
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .field { margin-bottom: 12px; }
+        .field label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fff;}
+        input[type="file"] { padding: 8px; font-size: 12px; background: #e3f2fd; border-color: #90caf9;}
+        input:focus, select:focus { outline: none; border-color: var(--p-blue); }
+
+        .price-input-wrapper { position: relative; }
+        .price-input-wrapper span { position: absolute; left: 10px; top: 10px; color: #666; font-weight: bold; }
+        .price-input-wrapper input { padding-left: 25px; }
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.2s; color: white;}
+        .btn-blue { background: var(--p-blue); }
+        .btn-green { background: var(--p-green); }
+        .btn-outline { background: transparent; border: 2px solid var(--p-green); color: var(--p-green); }
+        
+        /* GPS Box */
+        .gps-box { background: #e8f5e9; border: 1px dashed #4caf50; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px;}
+        
+        /* Dashboard Styling */
+        .verified-badge { background: #e8f5e9; color: #2e7d32; font-size: 10px; padding: 3px 8px; border-radius: 12px; border: 1px solid #c8e6c9; margin-left: 5px;}
+        .pending-badge { background: #fff3e0; color: #e65100; font-size: 10px; padding: 3px 8px; border-radius: 12px; border: 1px solid #ffe0b2; margin-left: 5px;}
+        
+        .apt-card { background: #fff; border-left: 4px solid var(--p-orange); padding: 15px; margin-bottom: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 13px;}
+        .apt-card.accepted { border-left-color: var(--p-green); }
+        .apt-card h4 { margin: 0 0 8px 0; font-size: 15px; color: #333; }
+        .apt-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; color: white; font-weight: bold;}
+        
+        /* Notification Bell */
+        .notification-wrapper { position: relative; }
+        .notif-bell { font-size: 22px; cursor: pointer; }
+        .notif-badge { position: absolute; top: -8px; right: -8px; background: #e65100; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; display: none; }
+        .notif-dropdown { display: none; position: absolute; top: 35px; right: 0; background: white; width: 260px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e6ed; z-index: 1000; padding: 12px; text-align: left; color: #333; }
+    </style>
+</head>
+<body onload="checkVetStatus()">
+
+<div class="container">
+    <div class="header">
+        <h2>👨‍⚕️ दुग्ध दिशा - Vet Partner</h2>
+        <div class="notification-wrapper">
+            <span class="notif-bell" onclick="toggleVetNotifications()">🔔</span>
+            <span id="vet_notif_badge" class="notif-badge">0</span>
+            <div id="vetNotificationDropdown" class="notif-dropdown">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 8px;">सूचना (Notifications)</h4>
+                <div id="vet_notif_list" style="font-size: 12px; color: #444; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" id="btn_tab_register" onclick="switchTab('tab_register', this)">नवीन नोंदणी (Register)</div>
+        <div class="tab" id="btn_tab_dashboard" onclick="switchTab('tab_dashboard', this)" style="display: none;">माझा डॅशबोर्ड</div>
+    </div>
+
+    <!-- ================= 1. DOCTOR REGISTRATION (FULL KYC) ================= -->
+    <div id="tab_register" class="content active">
+        <div class="form-section">
+            <h4>👤 वैयक्तिक माहिती (Basic Details)</h4>
+            <div class="field"><label>संपूर्ण नाव (Full Name) *</label><input type="text" id="v_name" placeholder="उदा. डॉ. अमोल पाटील"></div>
+            <div class="grid-2">
+                <div class="field"><label>मोबाईल नंबर *</label><input type="number" id="v_mobile" placeholder="9876543210"></div>
+                <div class="field"><label>ईमेल आयडी (Optional)</label><input type="email" id="v_email" placeholder="example@gmail.com"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h4>🎓 शैक्षणिक व व्यावसायिक माहिती</h4>
+            <div class="grid-2">
+                <div class="field"><label>शिक्षण/पात्रता (Qualification) *</label>
+                    <select id="v_qual">
+                        <option value="Ph.D">Ph.D</option>
+                        <option value="MVSc">MVSc</option>
+                        <option value="BVSc. & AH.">BVSc. & AH.</option>
+                        <option value="MSc/Ph.D (Animal Husbandry)">MSc/Ph.D (Animal Husbandry)</option>
+                        <option value="LSS Diploma">LSS Diploma</option>
+                        <option value="Dairy Diploma">Dairy Diploma</option>
+                        <option value="Artificial Inseminator">Artificial Inseminator</option>
+                        <option value="Hoof Trimmer">Hoof Trimmer</option>
+                        <option value="Nutrition Consultant">Nutrition Consultant</option>
+                        <option value="Independent Practitioner">Independent Practitioner</option>
+                    </select>
+                </div>
+                <div class="field"><label>नोंदणी क्र. (Reg. No - जर असेल)</label><input type="text" id="v_reg_no" placeholder="MSVC-1234"></div>
+            </div>
+        </div>
+
+        <!-- NEW KYC SECTION (ONLY PHOTOS) -->
+        <div class="form-section">
+            <h4>📑 KYC आणि शैक्षणिक कागदपत्रे</h4>
+            <div class="field">
+                <label>शैक्षणिक प्रमाणपत्र अपलोड करा *</label>
+                <input type="file" id="v_doc_edu" accept="image/*, application/pdf">
+            </div>
+            <div class="grid-2">
+                <div class="field"><label>आधार कार्ड फोटो *</label><input type="file" id="v_doc_aadhar" accept="image/*"></div>
+                <div class="field"><label>पॅन कार्ड फोटो (ऑप्शनल)</label><input type="file" id="v_doc_pan" accept="image/*"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h4>💰 फी आणि कार्यक्षेत्र (Charges & Location)</h4>
+            <div class="grid-2">
+                <div class="field"><label>Farm Visit Fee (गोठ्यावरील व्हिजिट)</label><div class="price-input-wrapper"><span>₹</span><input type="number" id="c_farm" placeholder="500"></div></div>
+                <div class="field">
+                    <label>Working Radius (किती दूर जाऊ शकता?) *</label>
+                    <div style="position: relative;">
+                        <input type="number" id="v_radius" placeholder="10" value="10" style="padding-right: 35px; width: 100%;">
+                        <span style="position: absolute; right: 10px; top: 10px; color: #666; font-weight: bold; font-size: 14px;">km</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="field"><label>क्लिनिकचा संपूर्ण पत्ता (Clinic Address)</label><input type="text" id="v_address" placeholder="तुमच्या दवाखान्याचा किंवा घराचा पत्ता..."></div>
+
+            <div class="gps-box">
+                <h4 style="margin:0 0 8px; color:#2e7d32;">📍 लाईव्ह लोकेशन (Google GPS)</h4>
+                <p style="font-size:12px; color:#555; margin-bottom:10px;">शेतकऱ्यांना तुमचे प्रोफाईल दाखवण्यासाठी लोकेशन आवश्यक आहे.</p>
+                <button class="btn btn-outline" onclick="getDoctorLocation()" id="btn_doc_loc">📍 Get Current Location</button>
+                <div id="doc_loc_display" style="font-size:12px; font-weight:bold; color:#1565c0; margin-top:10px; display:none;"></div>
+                <input type="hidden" id="v_lat"><input type="hidden" id="v_lon">
+            </div>
+        </div>
+
+        <button class="btn btn-blue" onclick="registerDoctor()">✅ रजिस्टर करा (Submit Profile)</button>
+    </div>
+
+    <!-- ================= 2. VET DASHBOARD (LIVE) ================= -->
+    <div id="tab_dashboard" class="content">
+        <div style="background:var(--p-blue); color:white; padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div>
+                <h3 style="margin:0; font-size:18px;">वेलकम, <span id="dash_name">डॉक्टर</span> <span id="dash_badge" class="pending-badge">⏳ Under Review</span></h3>
+                <p style="margin:4px 0 0; font-size:12px; opacity:0.9;" id="dash_edu">LSS</p>
+                <span style="font-size:12px; color:#ffd54f; font-weight:bold; display:block; margin-top:5px;">⭐ <span id="dash_rating">0.0</span> (<span id="dash_reviews">0</span> Reviews)</span>
+            </div>
+            <div style="text-align: right;">
+                <select id="v_status" onchange="updateStatus()" style="border:none; background:white; font-size:12px; font-weight:bold; color:#333; padding:5px; border-radius:4px; margin-bottom:8px;">
+                    <option value="Online">🟢 Available</option>
+                    <option value="Offline">🔴 Busy</option>
+                </select>
+                <br>
+                <!-- TABS / BUTTONS -->
+                <button class="btn-sm" style="background:#43a047; width:100%; margin-bottom:5px;" onclick="goToUserPage()">🏠 युजर पेज</button>
+                <button class="btn-sm" style="background:#d32f2f; width:100%;" onclick="logoutVet()">🚪 लॉग आऊट</button>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:15px;">
+            <div style="background:#fff3e0; padding:15px; border-radius:8px; border:1px solid #ffe0b2; text-align:center;">
+                <h4 style="margin:0; color:#e65100; font-size:24px;" id="dash_apt_count">0</h4>
+                <p style="margin:5px 0 0; font-size:12px; font-weight:bold;">नवीन अपॉइंटमेंट्स</p>
+            </div>
+            <div style="background:#e8f5e9; padding:15px; border-radius:8px; border:1px solid #c8e6c9; text-align:center;">
+                <h4 style="margin:0; color:#2e7d32; font-size:24px;">₹ 0</h4>
+                <p style="margin:5px 0 0; font-size:12px; font-weight:bold;"> वॉलेट बॅलन्स</p>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4 style="color:#e65100; font-size:16px;">📅 अपॉइंटमेंट्स (Appointments)</h4>
+            <div id="vet_appointments_list">
+                <!-- Appointments will be loaded here dynamically -->
+                <p style="font-size:13px; color:#888; text-align:center; padding:20px 0;">सध्या कोणतीही नवीन अपॉइंटमेंट नाही.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // ========== 🔔 सिस्टम नोटिफिकेशन (system_notifications) ==========
+    const CURRENT_ROLE = 'vet';
+    const EIGHT_DAYS_MS = 8 * 24 * 60 * 60 * 1000;
+
+    function sendNotification(title, message, targetRole) {
+        let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+        let newNotif = {
+            id: Date.now(),
+            title: title,
+            message: message,
+            target: targetRole,
+            timestamp: new Date().toISOString(),
+            time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+        };
+        notifications.unshift(newNotif);
+        localStorage.setItem('system_notifications', JSON.stringify(notifications));
+    }
+
+    function autoClearOldNotifications() {
+        let allNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+        let now = Date.now();
+        let fresh = allNotifs.filter(n => {
+            let notifTime = new Date(n.timestamp || n.date).getTime();
+            return (now - notifTime) < EIGHT_DAYS_MS;
+        });
+        if (fresh.length !== allNotifs.length) {
+            localStorage.setItem('system_notifications', JSON.stringify(fresh));
+        }
+    }
+
+    function loadVetNotifications() {
+        let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+        let myNotifications = notifications.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+        return myNotifications;
+    }
+
+    function toggleVetNotifications() {
+        const dropdown = document.getElementById('vetNotificationDropdown');
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            buildVetNotificationDropdown();
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+    }
+
+    function buildVetNotificationDropdown() {
+        let myNotifs = loadVetNotifications();
+        let badge = document.getElementById('vet_notif_badge');
+        let listContainer = document.getElementById('vet_notif_list');
+        
+        if (myNotifs.length > 0) {
+            badge.style.display = 'block';
+            badge.innerText = myNotifs.length;
+            
+            let html = '';
+            myNotifs.slice(0, 5).forEach(n => {
+                html += `<div style="font-size: 12px; color: #444; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                            <b style="color:#0d47a1;">${n.title}</b><br>
+                            ${n.message}
+                            <div style="font-size:9px; color:#999; margin-top:3px;">⏰ ${n.time || new Date(n.timestamp).toLocaleTimeString('mr-IN')}</div>
+                         </div>`;
+            });
+            if (myNotifs.length > 5) {
+                html += `<a href="notifications.html" style="display:block; text-align:center; padding:6px; background:#e8f5e9; color:#1b5e20; font-weight:bold; border-radius:4px; margin-top:5px; text-decoration:none;">सर्व सूचना पहा →</a>`;
+            }
+            listContainer.innerHTML = html;
+        } else {
+            badge.style.display = 'none';
+            listContainer.innerHTML = '<div style="text-align:center; color:#888; padding:10px;">कोणतीही सूचना नाही.</div>';
+        }
+    }
+
+    // Call auto clear on load
+    autoClearOldNotifications();
+    // ---------------------------------------------------------
+    // 1. TABS & AUTO-DASHBOARD LOGIC
+    // ---------------------------------------------------------
+    function checkVetStatus() {
+        loadVetNotifications(); // Update badge on load
+        let loggedInDoc = localStorage.getItem("current_logged_in_doc");
+        if (loggedInDoc) {
+            // जर डॉक्टरने आधीच फॉर्म भरला असेल, तर थेट डॅशबोर्ड उघडा
+            document.getElementById("btn_tab_register").style.display = "none";
+            document.getElementById("btn_tab_dashboard").style.display = "block";
+            switchTab('tab_dashboard', document.getElementById("btn_tab_dashboard"));
+        } else {
+            // नवीन असेल तर नोंदणी फॉर्म दाखवा
+            document.getElementById("btn_tab_dashboard").style.display = "none";
+            document.getElementById("btn_tab_register").style.display = "block";
+            switchTab('tab_register', document.getElementById("btn_tab_register"));
+        }
+    }
+
+    function switchTab(tabId, element) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
+        
+        if(tabId === 'tab_dashboard') loadDashboardAppointments();
+    }
+
+    function goToUserPage() {
+        // हे तुम्हाला तुमच्या मुख्य युजर ॲपच्या पानावर घेऊन जाईल
+        window.location.href = "index.html"; 
+    }
+
+    function logoutVet() {
+        if(confirm("तुम्हाला नक्की लॉग आऊट करायचे आहे का?")) {
+            // डॉक्टर सेशन क्लिअर करा आणि पेज रिफ्रेश करा (जेणेकरून फॉर्म पुन्हा दिसेल)
+            localStorage.removeItem("current_logged_in_doc");
+            window.location.reload(); 
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 2. LIVE LOCATION & REGISTRATION LOGIC
+    // ---------------------------------------------------------
+    function getDoctorLocation() {
+        let btn = document.getElementById('btn_doc_loc');
+        btn.innerText = "⏳ लोकेशन शोधत आहे...";
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('v_lat').value = position.coords.latitude;
+                document.getElementById('v_lon').value = position.coords.longitude;
+                
+                btn.innerText = "📍 लोकेशन अपडेट झाले";
+                btn.style.background = "#2e7d32"; 
+                btn.style.color = "white";
+                btn.style.borderColor = "#2e7d32";
+                
+                let display = document.getElementById('doc_loc_display');
+                display.style.display = 'block';
+                display.innerText = `✅ Coordinates Saved (Lat: ${position.coords.latitude.toFixed(4)}, Lon: ${position.coords.longitude.toFixed(4)})`;
+            }, function(error) { 
+                alert("लोकेशन घेण्यास अडचण! कृपया तुमच्या डिव्हाईसचे Location/GPS चालू करा."); 
+                btn.innerText = "📍 Get Current Location"; 
+            });
+        } else {
+            alert("तुमचा ब्राऊझर GPS ला सपोर्ट करत नाही.");
+        }
+    }
+
+    function registerDoctor() {
+        let name = document.getElementById('v_name').value;
+        let mobile = document.getElementById('v_mobile').value;
+        let lat = document.getElementById('v_lat').value;
+        
+        if(!name || !mobile || !lat) { 
+            alert("नाव, मोबाईल नंबर आणि GPS लोकेशन भरणे अनिवार्य आहे."); 
+            return; 
+        }
+
+        // Create Profile Object
+        let docProfile = {
+            id: "DOC_" + new Date().getTime(), 
+            name: name, 
+            mobile: mobile,
+            email: document.getElementById('v_email').value,
+            qual: document.getElementById('v_qual').value,
+            regNo: document.getElementById('v_reg_no').value,
+            kycSubmitted: true, // Photo attachments check can be added later
+            lat: parseFloat(lat), 
+            lon: parseFloat(document.getElementById('v_lon').value),
+            radius: parseInt(document.getElementById('v_radius').value) || 10,
+            charges: { farm: document.getElementById('c_farm').value || "Not Set" },
+            status: "Online", 
+            isVerified: false, 
+            rating: 0.0, 
+            reviewsCount: 0
+        };
+
+        // Save Doctor Profile to Database
+        let allDoctors = JSON.parse(localStorage.getItem("live_vet_partners")) || [];
+        allDoctors.push(docProfile);
+        localStorage.setItem("live_vet_partners", JSON.stringify(allDoctors));
+        
+        // Set as Active Vet User
+        localStorage.setItem("current_logged_in_doc", JSON.stringify(docProfile));
+
+        // 🔥 Send Notification to Super Admin Panel using system_notifications
+        sendNotification(
+            "👨‍⚕️ नवीन व्हेटर्नरी डॉक्टर नोंदणी (KYC Pending)",
+            `${name} (${mobile}) यांनी व्हेटर्नरी डॉक्टर/मित्र बनण्यासाठी नोंदणी केली आहे. त्यांचे KYC तपासा.`,
+            'admin'
+        );
+
+        alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत!");
+        window.location.reload(); // Reload to activate auto-dashboard
+    }
+
+    // ---------------------------------------------------------
+    // 3. DASHBOARD & APPOINTMENTS LOGIC
+    // ---------------------------------------------------------
+    function loadDashboardAppointments() {
+        let doc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
+        if(!doc) return;
+        
+        document.getElementById('dash_name').innerText = doc.name;
+        document.getElementById('dash_edu').innerText = doc.qual;
+        document.getElementById('v_status').value = doc.status;
+        document.getElementById('dash_rating').innerText = doc.rating.toFixed(1);
+        document.getElementById('dash_reviews').innerText = doc.reviewsCount;
+
+        let badge = document.getElementById('dash_badge');
+        if(doc.isVerified) {
+            badge.className = "verified-badge";
+            badge.innerText = "✅ KYC Verified";
+        } else {
+            badge.className = "pending-badge";
+            badge.innerText = "⏳ KYC Pending";
+        }
+
+        // Fetch Live Appointments
+        let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
+        let myApts = allApts.filter(a => a.docId === doc.id);
+        
+        let activeCount = myApts.filter(a => a.status === 'Pending' || a.status === 'Accepted').length;
+        document.getElementById('dash_apt_count').innerText = activeCount;
+
+        let listContainer = document.getElementById('vet_appointments_list');
+        
+        if(myApts.length === 0) {
+            listContainer.innerHTML = '<p style="font-size:13px; color:#888; text-align:center; padding:20px 0;">सध्या कोणतीही नवीन अपॉइंटमेंट नाही.</p>';
+            return;
+        }
+
+        let html = '';
+        myApts.slice().reverse().forEach(apt => {
+            let actionBtns = '';
+            let statusStyle = '';
+            
+            if(apt.status === 'Pending') {
+                actionBtns = `
+                    <button class="btn-sm" style="background:var(--p-green);" onclick="updateAppointmentStatus('${apt.id}', 'Accepted')">✅ Accept (मंजूर करा)</button>
+                    <button class="btn-sm" style="background:#d32f2f;" onclick="updateAppointmentStatus('${apt.id}', 'Rejected')">❌ Reject</button>`;
+            } else if (apt.status === 'Accepted') {
+                actionBtns = `<span style="color:var(--p-green); font-weight:bold; font-size:13px;">✅ तुम्ही ही व्हिजिट मंजूर केली आहे.</span>`;
+                statusStyle = 'accepted';
+            } else {
+                actionBtns = `<span style="color:#d32f2f; font-weight:bold; font-size:13px;">❌ तुम्ही ही व्हिजिट रद्द केली आहे.</span>`;
+            }
+
+            html += `
+            <div class="apt-card ${statusStyle}">
+                <h4>शेतकरी: ${apt.farmerName}</h4>
+                <p style="margin:4px 0; color:#555; font-size:14px;">📞 <b>${apt.mobile}</b></p>
+                <p style="margin:4px 0; color:#555;">📅 ${apt.date} | 🕒 ${apt.time}</p>
+                <p style="margin:8px 0 0; font-weight:bold; color:#e65100; font-size:14px;">कारण: ${apt.reason}</p>
+                <div class="apt-actions">${actionBtns}</div>
+            </div>`;
+        });
+        listContainer.innerHTML = html;
+    }
+
+    function updateAppointmentStatus(aptId, newStatus) {
+        let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
+        let index = allApts.findIndex(a => a.id === aptId);
+        if(index !== -1) {
+            allApts[index].status = newStatus;
+            localStorage.setItem("live_appointments", JSON.stringify(allApts));
+            loadDashboardAppointments(); 
+        }
+    }
+
+    function updateStatus() {
+        let doc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
+        if(doc) {
+            doc.status = document.getElementById('v_status').value;
+            localStorage.setItem("current_logged_in_doc", JSON.stringify(doc));
+            
+            let allDocs = JSON.parse(localStorage.getItem("live_vet_partners"));
+            let index = allDocs.findIndex(d => d.id === doc.id);
+            if(index !== -1) { 
+                allDocs[index].status = doc.status; 
+                localStorage.setItem("live_vet_partners", JSON.stringify(allDocs)); 
+            }
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

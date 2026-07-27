@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - आहारातील आजार (Diet Diseases)</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; background: #f4f7f6; min-height: 100vh; }
+        
+        .top-dashboard { background: linear-gradient(135deg, #00695c, #004d40); padding: 25px 20px; border-radius: 0 0 25px 25px; color: white; box-shadow: 0 6px 15px rgba(0, 77, 64, 0.3); position: relative; overflow: hidden;}
+        .top-dashboard::after { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); transform: rotate(45deg); pointer-events: none; }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: 900; letter-spacing: 0.5px; position: relative; z-index: 2;}
+        .header-titles { position: relative; z-index: 2; margin-top: 15px;}
+        .header-titles h1 { margin: 0 0 5px; font-size: 26px; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;}
+        .header-titles p { margin: 0; font-size: 13px; color: #b2dfdb; font-weight: 600;}
+
+        /* Permanent Disclaimer */
+        .permanent-disclaimer { margin: 20px; padding: 15px; background: #fff3e0; border-left: 5px solid #ff9800; border-radius: 8px; font-size: 13.5px; color: #e65100; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); line-height: 1.5; }
+
+        .category-title { font-size: 16px; font-weight: 900; color: #111; margin: 20px 20px 10px; border-left: 5px solid #00695c; padding-left: 10px; text-shadow: 0 1px 1px rgba(0,0,0,0.05);}
+        
+        .form-section { background: #fff; padding: 25px 20px; margin: 0 20px 20px; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.02); }
+        .input-row { margin-bottom: 20px; }
+        .input-row label { display: block; font-weight: 900; color: #444; margin-bottom: 10px; font-size: 14px; }
+        
+        select { 
+            width: 100%; padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fdfdfd; box-sizing: border-box; font-family: inherit; font-size: 14px; font-weight: bold; color: #333; appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300695c%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        select:focus { outline: none; border-color: #00695c; background: #fff; box-shadow: 0 0 0 4px rgba(0, 105, 92, 0.15); transform: translateY(-2px); }
+
+        .btn-primary { background: linear-gradient(145deg, #00695c, #004d40); color: white; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 15px rgba(0, 77, 64, 0.3); margin-top: 10px; transition: all 0.2s; letter-spacing: 0.5px;}
+        .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 5px rgba(0, 77, 64, 0.2); }
+
+        /* Premium Result Box */
+        .result-box { background: #fff; margin: 0 20px 20px; padding: 25px 20px; border-radius: 16px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid #00695c; position: relative; animation: slideUp 0.4s ease-out;}
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .result-title { color: #00695c; margin: 0 0 15px; font-size: 18px; border-bottom: 2px dashed #e0e0e0; padding-bottom: 10px; font-weight: 900;}
+        
+        .ai-action-card { background: #fff; border: 1px solid #e0e0e0; border-left: 6px solid #ff9800; border-radius: 12px; padding: 18px; margin-bottom: 15px; font-size: 14px; line-height: 1.7; color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .ai-action-title { font-weight: 900; color: #e65100; margin-bottom: 10px; font-size: 17px; }
+        
+        .ai-action-card.danger { border-left-color: #d32f2f; background: #ffebee;}
+        .ai-action-card.danger .ai-action-title { color: #c62828; }
+        
+        .action-tags { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .tag-down { background: #fff; color: #c62828; padding: 8px 12px; border-radius: 8px; font-weight: 900; font-size: 12.5px; border: 1px solid #ffcdd2; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .tag-up { background: #fff; color: #2e7d32; padding: 8px 12px; border-radius: 8px; font-weight: 900; font-size: 12.5px; border: 1px solid #c8e6c9; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 15px; border-radius: 12px; margin-top: 15px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.3s ease;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(251, 192, 45, 0.2); }
+        .ai-recommendation-box h4 { margin: 0 0 8px; color: #f57f17; font-size: 15px; display: flex; align-items: center; gap: 6px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0 0 10px; font-size: 13px; color: #333; line-height: 1.5; font-weight: bold; }
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); border: 2px solid #00897b; }
+        .vendor-ad-box h4 { color: #00695c; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #4db6ac; padding-top: 12px; margin-top: 12px;}
+        .vendor-ad-box .sponsor-tag { font-size: 10px; background: #e0f2f1; padding: 4px 8px; border-radius: 6px; color: #00695c; display: inline-block; border: 1px solid #80cbc4; font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #00897b; color: white; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; box-shadow: 0 4px 10px rgba(0, 137, 123, 0.3); }
+        
+        .vendor-product-flex { display: flex; gap: 12px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #80cbc4; background: #fff;}
+    </style>
+</head>
+<body onload="initPage()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>आहारातील आजार 🌾</h1>
+            <p>चयापचयाचे आजार (Diet & Metabolic Diseases)</p>
+        </div>
+    </div>
+
+    <div class="permanent-disclaimer">
+        💡 <b>माहिती:</b> आहारातील कमतरतेमुळे किंवा चुकीच्या आहारामुळे जनावरांना 'मिल्क फिव्हर', 'कीटोसिस' सारखे चयापचयाचे आजार होतात.
+    </div>
+
+    <div class="category-title">आजाराची लक्षणे निवडा</div>
+    <div class="form-section">
+        <div class="input-row">
+            <label>जनावराला काय त्रास होत आहे?</label>
+            <select id="diet_symptom" onchange="hideResult()">
+                <option value="">-- लक्षणे निवडा --</option>
+                <option value="milk_fever">गाय विल्यानंतर बसून राहते, मान वळवून झोपते (Milk Fever)</option>
+                <option value="ketosis">अचानक चारा खाणे सोडते, दुधाला वेगळाच वास येतो (Ketosis)</option>
+                <option value="pica">जनावर माती, कापड, दोरी किंवा अखाद्य वस्तू खाते (Pica)</option>
+                <option value="acidosis">जास्त पेंड/धान्य खाल्ल्यामुळे पोट फुगलेय आणि हगवण लागलीय (Acidosis)</option>
+            </select>
+        </div>
+        <button class="btn-primary" onclick="showDietAnalysis()">🤖 AI आहार विश्लेषण करा</button>
+    </div>
+
+    <!-- Result Area -->
+    <div class="result-box" id="result_output">
+        <h3 class="result-title">📋 AI सल्ला व व्यवस्थापन</h3>
+        <div id="ai_report_container"></div>
+        
+        <!-- 🔥 Dynamic Pharma Ad Container -->
+        <div id="diet_pharma_ad"></div>
+
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> वरील सुचवलेली औषधे आणि सप्लीमेंट्स केवळ प्राथमिक माहितीसाठी आहेत. इमर्जन्सी असल्यास तुमच्या <b>पशुवैद्यकीय डॉक्टरांचा (Veterinary Doctor) त्वरित सल्ला घ्यावा.</b>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    function initPage() {
+        syncProducts();
+    }
+
+    // 🔥 Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ खास तुमच्या जनावरासाठी") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#00695c;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 50)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    function hideResult() {
+        document.getElementById('result_output').style.display = "none";
+    }
+
+    function showDietAnalysis() {
+        let symptom = document.getElementById('diet_symptom').value;
+        if (!symptom) {
+            alert("कृपया प्रथम लक्षणे निवडा.");
+            return;
+        }
+
+        let reportContainer = document.getElementById('ai_report_container');
+        let adContainer = document.getElementById('diet_pharma_ad');
+        let html = "";
+        let defaultAdHtml = "";
+        let targetFilterTag = "";
+
+        if (symptom === "milk_fever") {
+            html = `
+                <div class="ai-action-card danger">
+                    <div class="ai-action-title">🚨 आजार: मिल्क फिव्हर (Milk Fever)</div>
+                    <b>कारण:</b> रक्तातील कॅल्शियमची पातळी अचानक खूप कमी झाल्यामुळे हा आजार होतो. विशेषतः जास्त दूध देणाऱ्या गाई विल्यानंतर २४ ते ७२ तासांत या आजाराला बळी पडतात.<br><br>
+                    <b>उपाय आणि व्यवस्थापन:</b><br>
+                    १. गाईचे डोके जमिनीवर आपटणार नाही याची काळजी घ्या.<br>
+                    २. जर गायीला गिळता येत असेल, तर तिला त्वरित <b>कॅल्शियम जेल (Calcium Gel)</b> पाजा.<br>
+                    ३. डॉक्टरांना बोलावून शिरेतून (IV) कॅल्शियम द्या.
+                    <div class="action-tags">
+                        <span class="tag-up">🔺 तातडीने कॅल्शियम जेल पाजा</span>
+                        <span class="tag-up">🔺 डॉक्टरांना IV साठी बोलावा</span>
+                    </div>
+                </div>`;
+            targetFilterTag = "Calcium_Liquid"; // Using Calcium specific tag
+            defaultAdHtml = `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🦴 इन्स्टंट कॅल्शियम जेल</h4>
+                    <p>विल्यानंतर गाईला त्वरित कॅल्शियम मिळण्यासाठी आणि मिल्क फिव्हर टाळण्यासाठी <b>Virbac Calup Gel / Intas Caldico Gel</b> नक्की पाजा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Virbac / Intas</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        } 
+        else if (symptom === "ketosis") {
+            html = `
+                <div class="ai-action-card">
+                    <div class="ai-action-title">⚠️ आजार: कीटोसिस (Ketosis)</div>
+                    <b>कारण:</b> विल्यानंतर गाईला दुधासाठी जेवढी ऊर्जा (Energy) लागते, तेवढी आहारातून न मिळाल्यास तिच्या शरीरातील चरबी वितळू लागते. यामुळे रक्तात 'कीटोन्स' तयार होतात आणि दुधाला/श्वासाला गोडसर वास येतो.<br><br>
+                    <b>उपाय आणि व्यवस्थापन:</b><br>
+                    १. गाईच्या आहारात ऊर्जेचे प्रमाण (मका, गूळ) वाढवा.<br>
+                    २. तिला रेडीमेड <b>Energy Booster (ग्लुकोज/ऊर्जा द्रव)</b> पाजायला सुरुवात करा.<br>
+                    ३. यकृताच्या (Liver) संरक्षणासाठी टॉनिक द्या.
+                    <div class="action-tags">
+                        <span class="tag-down">🔻 वजन झपाट्याने कमी होणे थांबवा</span>
+                        <span class="tag-up">🔺 त्वरित एनर्जी बुस्टर पाजा</span>
+                    </div>
+                </div>`;
+            targetFilterTag = "Energy_Booster"; // Or "Weight_BypassFat" based on vendor options
+            defaultAdHtml = `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>⚡ जलद ऊर्जा (Energy Booster)</h4>
+                    <p>कीटोसिस मुळे गेलेली भूक आणि दूध परत मिळवण्यासाठी <b>Virbac Energy Booster / Gluco Boost</b> आजच सुरू करा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Virbac</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        }
+        else if (symptom === "pica") {
+            html = `
+                <div class="ai-action-card">
+                    <div class="ai-action-title">⚠️ आजार: पिका (Pica / अखाद्य वस्तू खाणे)</div>
+                    <b>कारण:</b> जनावरांच्या आहारात <b>फॉस्फरस (Phosphorus)</b> आणि इतर सूक्ष्म खनिजांची (Minerals) तीव्र कमतरता असल्यास जनावरे माती, प्लास्टीक, कापड किंवा स्वतःची लघवी पितात.<br><br>
+                    <b>उपाय आणि व्यवस्थापन:</b><br>
+                    १. जनावराचे <b>जंतनिर्मूलन (Deworming)</b> करून घ्या.<br>
+                    २. रोजच्या आहारात ५० ते १०० ग्रॅम उच्च प्रतीचे <b>खनिज मिश्रण (Mineral Mixture)</b> देणे सुरू करा.
+                    <div class="action-tags">
+                        <span class="tag-up">🔺 जंतनाशक औषध द्या</span>
+                        <span class="tag-up">🔺 दर्जेदार मिनरल मिक्सचर सुरू करा</span>
+                    </div>
+                </div>`;
+            targetFilterTag = "Daily_Ration_Mineral"; // Mineral mixture tag
+            defaultAdHtml = `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>⭐ उत्तम दर्जाचे खनिज मिश्रण</h4>
+                    <p>माती खाणे थांबवण्यासाठी आणि खनिजांची कमतरता भरून काढण्यासाठी <b>Godrej Chelated Mineral Mixture / Agrimin Forte</b> रोज खाद्यातून द्या.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Godrej / Virbac</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        }
+        else if (symptom === "acidosis") {
+            html = `
+                <div class="ai-action-card danger">
+                    <div class="ai-action-title">🚨 आजार: ॲसिडोसिस (Rumen Acidosis)</div>
+                    <b>कारण:</b> जनावराने अचानक मोठ्या प्रमाणात धान्य, पीठ, भात किंवा पेंड खाल्ल्यास त्याच्या कोटीपोटात (Rumen) लॅक्टिक ॲसिड मोठ्या प्रमाणात तयार होते. यामुळे हगवण लागते आणि पोट फुगते.<br><br>
+                    <b>उपाय आणि व्यवस्थापन:</b><br>
+                    १. जनावराला पेंड किंवा धान्य खायला देणे <b>तातडीने थांबवा</b>.<br>
+                    २. फक्त चांगल्या प्रतीचा सुका चारा (Hay) खायला द्या.<br>
+                    ३. पोटातील ॲसिडिटी कमी करण्यासाठी खाण्याचा सोडा (Sodium Bicarbonate) किंवा रुमेन बफर (Rumen Buffers) पाण्यातून द्या.
+                    <div class="action-tags">
+                        <span class="tag-down">🔻 पेंड आणि धान्य देणे पूर्ण बंद करा</span>
+                        <span class="tag-up">🔺 खाण्याचा सोडा (रुमेन बफर) द्या</span>
+                    </div>
+                </div>`;
+            targetFilterTag = "Digestion"; // Digestion & Rumen tag
+            defaultAdHtml = `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🌿 पचन सुधारण्यासाठी (Rumen Buffer)</h4>
+                    <p>पोटातील ॲसिडिटी (Acidosis) कमी करून रवंथ पूर्ववत करण्यासाठी <b>Ruchamax Powder / Himalaya Battisa</b> डॉक्टरांच्या सल्ल्याने द्या.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Ayurvet / Himalaya</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        }
+
+        reportContainer.innerHTML = html;
+        
+        // 🔥 Inject dynamic ad based on the tag
+        adContainer.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "🩺 सुचवलेले सप्लीमेंट / औषध");
+        
+        document.getElementById('result_output').style.display = "block";
+        setTimeout(() => {
+            document.getElementById('result_output').scrollIntoView({behavior: "smooth", block: "start"});
+        }, 100);
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

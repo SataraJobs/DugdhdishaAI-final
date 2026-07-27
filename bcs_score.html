@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - बॉडी कंडिशन स्कोअर (BCS)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; background: #f4f7f6; min-height: 100vh; }
+        
+        /* Premium Top Dashboard */
+        .top-dashboard { background: linear-gradient(135deg, #2e7d32, #1b5e20); padding: 25px 20px; border-radius: 0 0 25px 25px; color: white; box-shadow: 0 6px 15px rgba(27, 94, 32, 0.3); position: relative; overflow: hidden;}
+        .top-dashboard::after { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); transform: rotate(45deg); pointer-events: none; }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: 900; letter-spacing: 0.5px; position: relative; z-index: 2;}
+        .header-titles { position: relative; z-index: 2; margin-top: 15px;}
+        .header-titles h1 { margin: 0 0 5px; font-size: 26px; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;}
+        .header-titles p { margin: 0; font-size: 13px; color: #e8f5e9; font-weight: 600;}
+
+        /* Premium Form Section */
+        .category-title { font-size: 16px; font-weight: 900; color: #111; margin: 25px 20px 10px; border-left: 5px solid #ff9800; padding-left: 10px; text-shadow: 0 1px 1px rgba(0,0,0,0.05);}
+        
+        .form-section { background: #ffffff; padding: 25px 20px; margin: 0 20px 20px; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.02); }
+        
+        /* 🔥 FIXED IMAGE CONTAINER 🔥 */
+        .image-container { text-align: center; margin-bottom: 20px; background:#fafafa; border-radius: 12px; padding: 10px; border: 1px solid #eee;}
+        .img-wrapper { width: 100%; height: 220px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: #fff; border: 2px dashed #ccc; overflow: hidden;}
+        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; } /* object-fit: contain fixes the cutting issue */
+        .image-caption { font-size: 12px; color: #666; margin-top: 10px; font-weight: bold; }
+
+        .input-row { margin-bottom: 20px; }
+        .input-row label { display: block; font-weight: 900; color: #444; margin-bottom: 10px; font-size: 14px; }
+        
+        /* 3D Premium Select Dropdown */
+        select { 
+            width: 100%; 
+            padding: 16px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 12px; 
+            background: #fdfdfd; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #333; 
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232e7d32%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        select:focus { 
+            outline: none; 
+            border-color: #2e7d32; 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15); 
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 15px rgba(27, 94, 32, 0.3); margin-top: 10px; transition: all 0.2s; letter-spacing: 0.5px;}
+        .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 5px rgba(27, 94, 32, 0.2); }
+
+        /* Premium Result Box */
+        .result-box { background: #fff; margin: 0 20px 20px; padding: 25px 20px; border-radius: 16px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid #4caf50; position: relative; animation: slideUp 0.4s ease-out;}
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .result-title { color: #2e7d32; margin: 0 0 15px; font-size: 18px; border-bottom: 2px dashed #e0e0e0; padding-bottom: 10px; font-weight: 900;}
+        
+        .ai-action-card { background: #fff; border: 1px solid #e0e0e0; border-left: 6px solid #ff9800; border-radius: 12px; padding: 18px; margin-bottom: 12px; font-size: 14px; line-height: 1.7; color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .ai-action-title { font-weight: 900; color: #e65100; margin-bottom: 10px; font-size: 17px; }
+        .ai-action-card.danger { border-left-color: #d32f2f; background: #ffebee;}
+        .ai-action-card.danger .ai-action-title { color: #c62828; }
+        .ai-action-card.success { border-left-color: #4caf50; background: #e8f5e9; }
+        .ai-action-card.success .ai-action-title { color: #1b5e20; }
+        .ai-action-card.warning { border-left-color: #ff9800; background: #fff3e0; }
+        .ai-action-card.warning .ai-action-title { color: #e65100; }
+
+        .action-tags { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .tag-down { background: #fff; color: #c62828; padding: 8px 12px; border-radius: 8px; font-weight: 900; font-size: 12.5px; border: 1px solid #ffcdd2; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .tag-up { background: #fff; color: #2e7d32; padding: 8px 12px; border-radius: 8px; font-weight: 900; font-size: 12.5px; border: 1px solid #c8e6c9; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+
+        /* 🔥 HIGH-CONVERSION AI Recommendation Ad Section 🔥 */
+        .ai-recommendation-box { background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); border: 2px solid #fbc02d; padding: 18px; border-radius: 12px; margin-top: 25px; box-shadow: 0 6px 15px rgba(251, 192, 45, 0.2); cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(251, 192, 45, 0.3); }
+        .ai-recommendation-box:active { transform: scale(0.98); }
+        .ai-recommendation-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent); animation: shine 3s infinite;}
+        @keyframes shine { 100% { left: 200%; } }
+        
+        .ai-recommendation-box h4 { margin: 0 0 8px; color: #e65100; font-size: 16px; display: flex; align-items: center; gap: 6px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0 0 12px; font-size: 13.5px; color: #333; line-height: 1.5; font-weight: bold; }
+        
+        .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #fbc02d; padding-top: 12px;}
+        .sponsor-tag { font-size: 10px; background: #fff; padding: 4px 8px; border-radius: 6px; color: #555; font-weight: bold; border: 1px solid #e0e0e0; }
+        .buy-now-btn { background: #e65100; color: white; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3); display: flex; align-items: center; gap: 5px;}
+
+        /* Vendor Product Ad Style Override */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; }
+        .vendor-ad-box .sponsor-bottom-row { border-top-color: #64b5f6; }
+        .vendor-ad-box .buy-now-btn { background: #1976d2; box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3); }
+        .vendor-product-flex { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .vendor-product-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1>शरीर स्थिती (BCS) ⚖️</h1>
+            <p>जनावरांच्या आरोग्याचे आणि आहाराचे अचूक मापन</p>
+        </div>
+    </div>
+
+    <div class="category-title">१. खालील चित्रावरून गाईचा स्कोअर ओळखा</div>
+    <div class="form-section">
+        <div class="image-container">
+            <!-- 🔥 FIXED IMAGE TAG 🔥 -->
+            <div class="img-wrapper">
+                <img src="bcs.png" alt="BCS Image Guide" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'color:#999;\'>BCS Image Placeholder (bcs.png)</span>';">
+            </div>
+            <div class="image-caption">चित्रातील हाडांच्या स्थितीवरून तुमच्या जनावराची तुलना करा.</div>
+        </div>
+
+        <!-- NEW ADDITIONAL PARAMETER -->
+        <div class="input-row">
+            <label>जनावराची सध्याची अवस्था काय आहे?</label>
+            <select id="cow_stage" onchange="hideResult()">
+                <option value="milking">दुभती (दूध देणारी)</option>
+                <option value="dry">आटवलेली (गाभण आणि दूध न देणारी)</option>
+                <option value="heifer">कालवड (पहिली वेत येण्याआधी)</option>
+            </select>
+        </div>
+
+        <div class="input-row">
+            <label>तुमच्या जनावराचा स्कोअर निवडा (१ ते ५):</label>
+            <select id="bcs_val" onchange="hideResult()">
+                <option value="">-- स्कोअर निवडा --</option>
+                <option value="1">१ - अतिशय अशक्त (हाडे स्पष्ट दिसतात)</option>
+                <option value="2">२ - अशक्त (हाडे दिसतात पण थोडे मांस आहे)</option>
+                <option value="3">३ - योग्य स्थिती / आदर्श (शरीर प्रमाणबद्ध)</option>
+                <option value="4">४ - लठ्ठ (चरबीचे थर, हाडे अजिबात दिसत नाहीत)</option>
+                <option value="5">५ - अतिलठ्ठ (चालताना त्रास, अति चरबी)</option>
+            </select>
+        </div>
+
+        <button class="btn-primary" onclick="showBCSAnalysis()">🤖 AI विश्लेषण करा</button>
+    </div>
+
+    <div class="result-box" id="result_output">
+        <h3 class="result-title">📋 AI आरोग्य अहवाल व आहार सल्ला</h3>
+        <div id="ai_report_container"></div>
+        <div id="dynamic_ad_container"></div> <!-- 🔥 AD CONTAINER 🔥 -->
+    </div>
+
+</div>
+
+<!-- 🔥 FIREBASE SDK 🔥 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+    syncProducts();
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>✨ तुमच्या जनावरासाठी सुचवलेले</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 50)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    function hideResult() {
+        document.getElementById('result_output').style.display = "none";
+    }
+
+    function showBCSAnalysis() {
+        let score = document.getElementById('bcs_val').value;
+        let stage = document.getElementById('cow_stage').value;
+        
+        if (!score) {
+            alert("कृपया प्रथम चित्रावरून स्कोअर निवडा.");
+            return;
+        }
+
+        let reportContainer = document.getElementById('ai_report_container');
+        let adContainer = document.getElementById('dynamic_ad_container');
+        let html = "";
+        let defaultAdHtml = "";
+        let targetFilterTag = "";
+
+        // 🔥 DETAILED ESSAY-TYPE ADVICE & DYNAMIC AD INJECTION 🔥
+        if (score === "1") {
+            html = `
+                <div class="ai-action-card danger">
+                    <div class="ai-action-title">🚨 स्कोअर १: अतिशय अशक्त (Emaciated)</div>
+                    <b>धोक्याची पातळी: अत्यंत गंभीर</b><br>
+                    जनावराची प्रकृती अत्यंत गंभीर आहे. तिच्या शरीरातील सर्व चरबी आणि स्नायू संपले आहेत. 
+                    याचा थेट परिणाम म्हणजे दूध उत्पादन पूर्णपणे थांबेल, गाय माजावर येणार नाही आणि तिची प्रतिकारशक्ती संपल्यामुळे ती इतर आजारांना (उदा. कीटोसिस, मिल्क फिव्हर) सहज बळी पडेल.<br><br>
+                    <b>संभाव्य कारणे:</b> पोटातील जंतांचा प्रचंड प्रादुर्भाव, यकृताचा (Liver) जुना आजार किंवा आहारातून आवश्यक तेवढी ऊर्जा (Energy) न मिळणे.
+                    <div class="action-tags">
+                        <span class="tag-up">🔺 तातडीने जंतनिर्मूलन (Deworming) करा</span>
+                        <span class="tag-up">🔺 पशुवैद्यकीय डॉक्टरांकडून तपासणी करा</span>
+                        <span class="tag-up">🔺 ऊर्जायुक्त आहार व बायपास फॅट द्या</span>
+                    </div>
+                </div>`;
+                
+            targetFilterTag = "Weight_BypassFat"; // Look for Bypass Fat or weight gain products
+            defaultAdHtml = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>⚡ जलद ऊर्जा आणि वजन वाढ</h4>
+                    <p>अत्यंत अशक्त जनावराचे वजन भरून काढण्यासाठी आणि ऊर्जा देण्यासाठी <b>Virbac Energy Booster</b> किंवा उच्च दर्जाचे <b>बायपास फॅट</b> आजच सुरू करा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Virbac</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        } 
+        else if (score === "2") {
+            let stageAdvice = "";
+            if(stage === 'milking') stageAdvice = "दूध देण्यासाठी ती स्वतःच्या शरीरातील चरबी वितळवून ऊर्जा वापरत মাঠে. यामुळे गाय वेळेवर गाभण राहण्यास मोठी अडचण येईल.";
+            if(stage === 'dry') stageAdvice = "गाभण काळात हा स्कोअर खूपच कमी आहे. गाय विताना अशक्त असेल आणि विल्यानंतर दूध खूप कमी देईल.";
+            if(stage === 'heifer') stageAdvice = "कालवडीची वाढ खुंटली आहे. यामुळे ती लवकर माजावर येणार नाही आणि पहिले वेत उशिरा होईल.";
+
+            html = `
+                <div class="ai-action-card warning">
+                    <div class="ai-action-title">⚠️ स्कोअर २: अशक्त (Under-conditioned)</div>
+                    <b>धोक्याची पातळी: मध्यम</b><br>
+                    जनावर थोडे अशक्त आहे. ${stageAdvice}<br><br>
+                    <b>काय करावे?</b><br>
+                    गाईच्या आहारात ऊर्जा (Energy) वाढवणे गरजेचे आहे. खाद्यामध्ये मका भरडा किंवा कार्बोहायड्रेट्सचे प्रमाण वाढवा. रवंथ सुधारण्यासाठी चांगल्या प्रतीचा हिरवा चारा आणि सुका चारा (उदा. ज्वारीचा कडबा) योग्य प्रमाणात द्या.
+                    <div class="action-tags">
+                        <span class="tag-up">🔺 मका भरडा / चुनी (Energy) वाढवा</span>
+                        <span class="tag-up">🔺 चांगल्या प्रतीचा हिरवा चारा वाढवा</span>
+                    </div>
+                </div>`;
+                
+            targetFilterTag = "Fat_SNF"; // Suggest feed or SNF increasing products
+            defaultAdHtml = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🌾 दूध आणि आरोग्य टिकवा</h4>
+                    <p>दुभत्या गाईला अशक्तपणा येऊ न देण्यासाठी आणि तिचे वजन टिकवण्यासाठी तिच्या आहारात <b>गोदावरी हाय-प्रोटीन पेलेट</b> चा वापर करा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Godavari Feeds</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        } 
+        else if (score === "3") {
+            let extraText = (stage === 'dry') ? "<br><br><b>टीप:</b> आटवलेल्या गाईचा स्कोअर विण्यापूर्वी साधारण ३.२ ते ३.५ च्या दरम्यान असणे जास्त फायद्याचे असते, जेणेकरून वेतानंतर येणारा अशक्तपणा ती सहन करू शकेल." : "";
+            
+            html = `
+                <div class="ai-action-card success">
+                    <div class="ai-action-title">✅ स्कोअर ३: आदर्श स्थिती (Ideal)</div>
+                    <b>स्थिती: अतिशय उत्तम</b><br>
+                    उत्कृष्ट! जनावराचे शरीर अगदी प्रमाणबद्ध आहे. अशा स्थितीत गाय वेळेवर माजावर येते, पहिल्याच रेतनात (AI) गाभण राहते आणि दुधाचे उत्पादनही सर्वोच्च असते.${extraText}<br><br>
+                    <b>सल्ला:</b> सध्या देत असलेला आहार (रेशन) असाच चालू ठेवा. आहारात अचानक कोणतेही मोठे बदल करू नका.
+                </div>`;
+                
+            targetFilterTag = "Daily_Ration_Mineral"; // Suggest regular Daily Minerals
+            defaultAdHtml = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>⭐ हीच स्थिती कायम ठेवण्यासाठी</h4>
+                    <p>उत्तम आरोग्य आणि प्रजनन क्षमता दीर्घकाळ टिकवण्यासाठी रोज <b>गोदरेज मिनरल मिक्सचर</b> खाद्यातून नियमितपणे देणे सुरू ठेवा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Godrej Agrovet</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        } 
+        else if (score === "4") {
+            let extraText = (stage === 'dry') ? "<br><br><b>गंभीर धोका:</b> गाय गाभण असल्यास विताना (Calving) तिला खूप त्रास होऊ शकतो. 'मिल्क फिव्हर' आणि 'कीटोसिस' सारखे घातक आजार होण्याची शक्यता ८०% वाढते." : "यामुळे यकृतावर (Liver) ताण येतो आणि दूध उत्पादन घटते.";
+            
+            html = `
+                <div class="ai-action-card warning">
+                    <div class="ai-action-title">⚠️ स्कोअर ४: लठ्ठ (Over-conditioned)</div>
+                    <b>धोक्याची पातळी: मध्यम</b><br>
+                    जनावर गरजेपेक्षा जास्त लठ्ठ आहे. पाठीवर आणि खुब्यावर खूप जास्त चरबी जमा झाली आहे. ${extraText}<br><br>
+                    <b>काय करावे?</b><br>
+                    पेंड, सरकी आणि मक्याचे प्रमाण थोडे कमी करा. हिरवा आणि सुका चारा जास्त द्या. जनावराला थोडे फिरवणे (व्यायाम) गरजेचे आहे.
+                    <div class="action-tags">
+                        <span class="tag-down">🔻 पेंड आणि कार्बोहायड्रेट्स (मका) थोडे कमी करा</span>
+                        <span class="tag-up">🔺 जनावराला थोडा व्यायाम (मोकळे सोडणे) द्या</span>
+                    </div>
+                </div>`;
+                
+            targetFilterTag = "Poisoning_Liver"; // Suggest Liver Tonic
+            defaultAdHtml = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🩺 यकृताची काळजी (Liver Protection)</h4>
+                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हर (Fatty Liver) चा मोठा धोका असतो. यकृताच्या संरक्षणासाठी <b>Himalaya Liv.52</b> किंवा चांगले लिव्हर टॉनिक वापरून पहा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        } 
+        else if (score === "5") {
+            html = `
+                <div class="ai-action-card danger">
+                    <div class="ai-action-title">🚨 स्कोअर ५: अतिलठ्ठ (Obese)</div>
+                    <b>धोक्याची पातळी: अत्यंत गंभीर</b><br>
+                    गाय खूपच लठ्ठ झाली आहे. हाडांची रचना चरबीमुळे पूर्णपणे झाकली गेली आहे. 
+                    यामुळे यकृताचे आजार (Fatty Liver) आणि कासदाह (Mastitis) होण्याची शक्यता खूप जास्त असते. अशा गाई गाभण राहण्यात मोठ्या अडचणी येतात आणि विताना त्यांना जिवघेणा त्रास होऊ शकतो.<br><br>
+                    <b>काय करावे?</b><br>
+                    जनावराचे पशुखाद्य (Concentrates) तातडीने निम्म्यावर आणा. फक्त उच्च प्रतीचा सुका चारा (Hay) आणि थोडा हिरवा चारा द्या. डॉक्टरांच्या सल्ल्याने यकृताचे उपचार सुरू करा.
+                    <div class="action-tags">
+                        <span class="tag-down">🔻 पशुखाद्य (Concentrates) तातडीने कमी करा</span>
+                        <span class="tag-up">🔺 फक्त उच्च प्रतीचा सुका/हिरवा चारा द्या</span>
+                    </div>
+                </div>`;
+                
+            targetFilterTag = "Poisoning_Liver"; // Suggest Liver Tonic
+            defaultAdHtml = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🩺 यकृताची काळजी (Liver Protection)</h4>
+                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हर (Fatty Liver) चा धोका असतो. यकृताच्या सुरक्षिततेसाठी आणि पचन सुधारण्यासाठी <b>Himalaya Liv.52</b> आजच सुरू करा.</p>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
+                        <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                    </div>
+                </div>`;
+        }
+
+        reportContainer.innerHTML = html;
+        
+        // 🔥 Generate Ad matching the AI Tag, if no product found, show default ad 🔥
+        adContainer.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml);
+        
+        document.getElementById('result_output').style.display = "block";
+        
+        // 🔥 Firebase: Save User's BCS History
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("bcs_history").add({
+            name: fName,
+            mobile: fMob,
+            bcs_score: score,
+            stage: stage,
+            date: new Date().toLocaleDateString('mr-IN'),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error saving BCS record: ", err));
+
+        // Timeout to let display update before scrolling
+        setTimeout(() => {
+            document.getElementById('result_output').scrollIntoView({behavior: "smooth", block: "start"});
+        }, 100);
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

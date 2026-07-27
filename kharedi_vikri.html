@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - खरेदी विक्री</title>
+    <style>
+        :root{ --green:#2e7d32; --blue:#1976d2; --orange:#e65100; --bg:#f4f7f6; --card:#fff; --text:#222; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 85px !important;}
+        .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative;}
+        
+        /* Top Navigation */
+        .top-dashboard { background: linear-gradient(135deg, #2e7d32, #1b5e20); padding: 20px; border-radius: 0 0 20px 20px; color: white;}
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .header-titles h1 { margin: 10px 0 5px; font-size: 22px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);}
+        .header-titles p { margin: 0; font-size: 13px; color: #e8f5e9; }
+
+        /* Premium Banner Hook */
+        .premium-banner { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); margin: 15px 20px; padding: 15px; border-radius: 12px; border: 1px solid #ffb300; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 8px rgba(255, 152, 0, 0.15); cursor: pointer;}
+        .premium-text h4 { margin: 0 0 5px 0; color: #e65100; font-size: 15px;}
+        .premium-text p { margin: 0; font-size: 11.5px; color: #555; font-weight: bold;}
+        .premium-btn { background: #e65100; color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; border:none; box-shadow: 0 2px 5px rgba(230,81,0,0.3);}
+
+        /* Market Tabs */
+        .market-tabs { display: flex; margin: 0 20px 15px; border-bottom: 2px solid #ddd; }
+        .m-tab { flex: 1; text-align: center; padding: 10px; font-weight: bold; color: #777; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s;}
+        .m-tab.active { color: var(--green); border-bottom: 3px solid var(--green); }
+
+        /* Animal Cards */
+        .animal-list { padding: 0 20px; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee;}
+        .urgent-badge { position: absolute; top: 10px; left: -25px; background: #d32f2f; color: white; font-size: 10px; font-weight: 900; padding: 5px 30px; transform: rotate(-45deg); z-index: 10;}
+        
+        .card-img { width: 100%; height: 200px; background: #ddd; position: relative; cursor: pointer;}
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-count { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .price-tag { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 16px;}
+        
+        .card-content { padding: 15px; }
+        .card-title { margin: 0 0 5px; font-size: 18px; color: #222; display: flex; justify-content: space-between;}
+        .card-title .location { font-size: 12px; color: #777; font-weight: normal; margin-top: 4px;}
+        
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; margin-top: 10px;}
+        .detail-item { font-size: 12.5px; color: #555; background: #f9f9f9; padding: 6px 10px; border-radius: 6px; border: 1px solid #f0f0f0; font-weight: 600;}
+        .detail-item strong { color: #333; font-weight: 900;}
+
+        .call-btn { display: block; width: 100%; text-align: center; background: #e8f5e9; color: var(--green); padding: 12px; border-radius: 8px; font-weight: 900; text-decoration: none; border: 1px solid var(--green); box-sizing: border-box;}
+        
+        /* Action Buttons */
+        .action-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .sold-btn { flex: 1; background: #ff9800; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .delete-btn { flex: 1; background: #d32f2f; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* Sold Overlay */
+        .sold-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); display: flex; justify-content: center; align-items: center; z-index: 5; pointer-events: none;}
+        .sold-stamp { color: #d32f2f; font-size: 40px; font-weight: 900; border: 4px solid #d32f2f; padding: 5px 20px; transform: rotate(-20deg); letter-spacing: 2px;}
+
+        .fab-add { position: fixed; bottom: 85px; right: 25px; background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 15px rgba(25, 118, 210, 0.4); text-decoration: none; z-index: 100; border: none; cursor: pointer;}
+        
+        /* Full Screen Image Viewer Modal */
+        .image-viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .close-viewer-btn { position: absolute; top: 20px; right: 20px; background: white; color: black; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; z-index: 10000; }
+        .viewer-images-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 80%; gap: 10px; padding: 20px 0; }
+        .viewer-images-container img { scroll-snap-align: center; max-width: 90%; max-height: 100%; object-fit: contain; margin: 0 auto; flex-shrink: 0; }
+        .viewer-hint { color: white; margin-top: 10px; font-size: 14px; }
+
+        /* Bottom Nav */
+        .bottom-nav-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #ffffff; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); display: flex; justify-content: space-around; align-items: center; padding: 8px 0; z-index: 1000; border-radius: 15px 15px 0 0; }
+        .b-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #757575; padding: 5px 10px; border-radius: 10px; }
+        .b-nav-icon { font-size: 22px; margin-bottom: 2px; filter: grayscale(100%); }
+        .b-nav-text { font-size: 10px; font-weight: 800; }
+        .b-nav-item.active { background: #e8f5e9; color: #1b5e20; }
+        .b-nav-item.active .b-nav-icon { filter: grayscale(0%); transform: scale(1.15); }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);}
+        .modal-box { background: #fff; padding: 25px 20px; border-radius: 16px; width: 90%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; animation: popUp 0.3s ease-out;}
+        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-icon { font-size: 50px; margin-bottom: 10px; text-align: center; line-height: 1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2)); }
+        .modal-title { color: #d32f2f; font-size: 20px; font-weight: 900; margin: 0 0 10px; text-align: center;}
+        .modal-desc { font-size: 13.5px; color: #444; margin: 0 0 15px; line-height: 1.5; font-weight: 600; text-align: center;}
+        .feature-list { list-style: none; padding: 0; margin: 0 0 20px; font-size: 13px; color: #444; font-weight: bold;}
+        .feature-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;}
+        .feature-list li span { color: #4caf50; font-weight: 900;}
+        .pay-amount-box { background: #fff8e1; border: 2px dashed #ffb300; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;}
+        .pay-amount-box h2 { margin: 0; color: #e65100; font-size: 28px; font-weight: 900;}
+        .pay-amount-box p { margin: 5px 0 0; color: #666; font-size: 11px; font-weight: bold;}
+        .payment-form { display: none; margin-bottom: 15px;}
+        .input-field { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; box-sizing: border-box; background: #fafafa; font-weight: bold; margin-bottom: 10px;}
+        .btn-pay-now { background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(230,81,0,0.4); text-decoration: none; display: block; box-sizing: border-box; text-align: center;}
+        .btn-submit-utr { background: #2e7d32; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; width: 100%; display: none;}
+        .btn-close-modal { background: #e0e0e0; color: #333; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body onload="initializeMarketPage()">
+
+<div class="app-container">
+
+    <div class="top-dashboard">
+        <div class="header-titles">
+            <a href="index.html" style="font-size:12px; font-weight:normal; margin-bottom:5px; display:inline-block;">⬅️ मुख्य डॅशबोर्ड</a>
+            <h1>खरेदी - विक्री 🐄</h1>
+            <p>साताऱ्यातील सर्वात मोठा जनावरांचा बाजार</p>
+        </div>
+    </div>
+
+    <!-- Premium Banner -->
+    <div class="premium-banner" id="top_upgrade_banner" onclick="handleAdCreation()">
+        <div class="premium-text">
+            <h4>⭐ दिशा प्राईम (<span id="banner_price_text">₹९९</span>)</h4>
+            <p>तुमचे जनावर <b>'Urgent'</b> टॅग लावून सर्वात वर दाखवा <br>आणि <b>प्रो रेशन बॅलन्सर</b> मोफत मिळवा!</p>
+        </div>
+        <button class="premium-btn">अपग्रेड करा</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="market-tabs">
+        <div class="m-tab active" id="tab-buy" onclick="switchTab('buy')">बाजार (Buy)</div>
+        <div class="m-tab" id="tab-my-ads" onclick="switchTab('my-ads')">माझ्या जाहिराती</div>
+    </div>
+
+    <div class="animal-list" id="animal_list_container">
+        <!-- Live ads will be populated here via JavaScript -->
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="fab-add" onclick="handleAdCreation()">+</button>
+
+</div>
+
+<!-- Full Screen Image Viewer -->
+<div class="image-viewer-modal" id="imageViewerModal">
+    <button class="close-viewer-btn" onclick="closeImageViewer()">✕ बंद करा</button>
+    <div class="viewer-images-container" id="viewerImagesContainer"></div>
+    <div class="viewer-hint">👉 फोटो बाजूला सरकवा (Swipe)</div>
+</div>
+
+<!-- 🔥 STRICT PREMIUM GATEKEEPER MODAL 🔥 -->
+<div class="modal-overlay" id="add_animal_modal">
+    <div class="modal-box">
+        <div class="modal-icon">⭐</div>
+        <h3 class="modal-title">जनावर विकायचे आहे?</h3>
+        <p class="modal-desc">तुमची जाहिरात हजारो शेतकऱ्यांपर्यंत पोहोचवण्यासाठी कृपया <b>'दिशा प्राईम'</b> सबस्क्रिप्शन घ्या.</p>
+        
+        <div class="pay-amount-box">
+            <h2 id="modal_price_text">₹ ९९</h2>
+            <p>१ महिन्याच्या सबस्क्रिप्शनसाठी</p>
+            <p style="color:#d32f2f; font-size:10px; margin-top:5px;">(तुम्ही एका महिन्यात कितीही जनावरे ॲड करू शकता)</p>
+        </div>
+
+        <ul class="feature-list">
+            <li><span>✔</span> जाहिरात १ महिन्यासाठी ॲपवर राहील.</li>
+            <li><span>✔</span> <b>'URGENT'</b> टॅग लागून सर्वात वर दिसेल.</li>
+            <li><span>✔</span> अमर्यादित (Unlimited) खरेदीदारांचे कॉल्स येतील.</li>
+            <li><span>🎁</span> <b>मोफत:</b> 'प्रो-रेशन बॅलन्सर' मिळवा!</li>
+        </ul>
+        
+        <!-- INITIAL PAY BUTTON -->
+        <button class="btn-pay-now" id="btn_init_pay" onclick="showPaymentForm()">💳 पे करा आणि जाहिरात द्या</button>
+        
+        <!-- HIDDEN PAYMENT FORM -->
+        <div class="payment-form" id="payment_form_section">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="font-weight:900; color:#1b5e20; font-size:16px;">दुग्ध दिशा AI</div>
+                <div style="font-size:12px; color:#e65100; font-weight:bold;">UPI ID: <span id="payment_upi_text">9579535290@kotak</span></div>
+            </div>
+            
+            <a href="#" class="btn-pay-now" style="background:#1976d2; margin-bottom:15px;" onclick="triggerUPI()">📲 ॲपमधून थेट पे करा (GPay/PhonePe)</a>
+            
+            <label style="font-size: 11px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">पेमेंट झाल्यानंतर 12 अंकी UTR नंबर टाका:</label>
+            <input type="number" class="input-field" id="payment_utr" placeholder="उदा. 312345678901">
+        </div>
+
+        <button class="btn-submit-utr" id="btn_submit_utr" onclick="submitAdRequest()">✅ पेमेंट कन्फर्म करा</button>
+        <button class="btn-close-modal" onclick="closeAddAnimalModal()">✕ रद्द करा</button>
+    </div>
+</div>
+
+<!-- BOTTOM NAVIGATION BAR -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item"><span class="b-nav-icon">🏠</span><span class="b-nav-text">होम</span></a>
+    <a href="kharedi_vikri.html" class="b-nav-item active"><span class="b-nav-icon">🐄</span><span class="b-nav-text">बाजार</span></a>
+    <a href="krushi_mall.html" class="b-nav-item"><span class="b-nav-icon">🛒</span><span class="b-nav-text">मॉल</span></a>
+    <a href="ration_balancer.html" class="b-nav-item"><span class="b-nav-icon">⚖️</span><span class="b-nav-text">आहार</span></a>
+    <a href="my_account.html" class="b-nav-item"><span class="b-nav-icon">👤</span><span class="b-nav-text">खाते</span></a>
+</div>
+
+<!-- 🔥 FIREBASE SDK (डेटाबेसवरून डेटा आणण्यासाठी) 🔥 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+    // 🔥 तुमचा FIREBASE CONFIG CODE 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let currentTab = 'buy';
+
+    function initializeMarketPage() {
+        checkActivePlanOnLoad();
+        loadRealMarketAnimals();
+    }
+
+    function switchTab(tabName) {
+        currentTab = tabName;
+        document.getElementById('tab-buy').classList.remove('active');
+        document.getElementById('tab-my-ads').classList.remove('active');
+        
+        if (tabName === 'buy') {
+            document.getElementById('tab-buy').classList.add('active');
+        } else {
+            document.getElementById('tab-my-ads').classList.add('active');
+        }
+        loadRealMarketAnimals();
+    }
+
+    // 🔥 FIREBASE मधून जनावरांचा डेटा आणून दाखवणारे फंक्शन 🔥
+    function loadRealMarketAnimals() {
+        let container = document.getElementById('animal_list_container');
+        container.innerHTML = `<div style="text-align:center; padding: 30px; color:#666;">⏳ बाजार लोड होत आहे...</div>`;
+
+        // Firestore मधील market_animals कलेक्शनमधून डेटा फेच करणे
+        db.collection("market_animals").get()
+        .then((querySnapshot) => {
+            let liveAnimals = [];
+            querySnapshot.forEach((doc) => {
+                let animalData = doc.data();
+                animalData.firebaseDocId = doc.id; // डॉक्युमेंट आयडी सेव्ह करणे
+                liveAnimals.push(animalData);
+            });
+
+            // बॅकअपसाठी LocalStorage मध्ये सुद्धा अपडेट ठेवणे
+            localStorage.setItem('market_animals', JSON.stringify(liveAnimals));
+
+            if(liveAnimals.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 40px 20px; color:#888;"><div style="font-size: 50px; margin-bottom: 10px; filter: grayscale(100%);">🐄</div><div style="font-weight:bold; font-size: 16px;">सध्या कोणतीही जाहिरात नाही.</div></div>`;
+                return;
+            }
+
+            let html = '';
+            liveAnimals.forEach(animal => {
+                let identifier = animal.firebaseDocId || animal.id;
+                let isSold = (animal.status === 'sold');
+                
+                // "बाजार" टॅबमध्ये विकलेली जनावरे दाखवायची नाहीत
+                if(currentTab === 'buy' && isSold) return;
+
+                let urgentBadge = animal.isUrgent ? `<div class="urgent-badge">URGENT</div>` : '';
+                let imageSrc = (animal.images && animal.images[0]) ? animal.images[0] : 'https://via.placeholder.com/600x400?text=No+Photo';
+                let photoCount = animal.images ? animal.images.length : 0;
+                
+                let safeImagesString = encodeURIComponent(JSON.stringify(animal.images || []));
+
+                let actionButtons = '';
+                if(currentTab === 'my-ads' && !isSold) {
+                    actionButtons = `
+                    <div class="action-btns">
+                        <button class="sold-btn" onclick="markAsSold('${identifier}')">✅ विकले (Sold)</button>
+                        <button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ डिलीट (Delete)</button>
+                    </div>`;
+                } else if (currentTab === 'my-ads' && isSold) {
+                    actionButtons = `<div class="action-btns"><button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ कायमचे डिलीट करा</button></div>`;
+                }
+
+                let soldOverlay = isSold ? `<div class="sold-overlay"><div class="sold-stamp">SOLD</div></div>` : '';
+                let callButton = !isSold ? `<a href="tel:+91${animal.mobile}" class="call-btn">📞 मालकाला कॉल करा</a>` : '';
+
+                html += `
+                <div class="card">
+                    ${urgentBadge}
+                    
+                    <div class="card-img" onclick="openImageViewer('${safeImagesString}')">
+                        ${soldOverlay}
+                        <img src="${imageSrc}" alt="${animal.breed}">
+                        ${photoCount > 1 ? `<div class="photo-count">📸 +${photoCount - 1} फोटो</div>` : ''}
+                        <div class="price-tag">₹ ${animal.price}</div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <h3 class="card-title">${animal.breed} (${animal.type}) <span class="location">📍 ${animal.location}</span></h3>
+                        <div class="details-grid">
+                            <div class="detail-item">दूध: <strong>${animal.milk || '-'} लिटर</strong></div>
+                            <div class="detail-item">वेत: <strong>${animal.lactation || '-'}</strong></div>
+                            <div class="detail-item">दात: <strong>${animal.teeth || '-'}</strong></div>
+                            <div class="detail-item">गाभण: <strong>${animal.pregnant || '-'}</strong></div>
+                        </div>
+                        ${callButton}
+                        ${actionButtons}
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html === '' ? '<div style="text-align:center; padding: 20px; color:#888;">कोणतेही जनावर सापडले नाही.</div>' : html;
+        })
+        .catch((error) => {
+            console.error("Error getting documents: ", error);
+            // इंटरनेट वा एरर आल्यास लोकल स्टोरेजमधील डेटा दाखवणे
+            let liveAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
+            if(liveAnimals.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color:#d32f2f;">❌ डेटा लोड करण्यात अडचण आली. कृपया इंटरनेट तपासा.</div>`;
+            }
+        });
+    }
+
+    // --- Image Viewer Logic ---
+    function openImageViewer(encodedImages) {
+        let images = JSON.parse(decodeURIComponent(encodedImages));
+        if(!images || images.length === 0) return;
+        
+        let container = document.getElementById('viewerImagesContainer');
+        container.innerHTML = '';
+        images.forEach(src => {
+            container.innerHTML += `<img src="${src}">`;
+        });
+        document.getElementById('imageViewerModal').style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+        document.getElementById('imageViewerModal').style.display = 'none';
+    }
+
+    // --- Actions Logic (Firebase सपोर्टसह) ---
+    function markAsSold(identifier) {
+        if(confirm('हे जनावर नक्की विकले गेले आहे का?')) {
+            db.collection("market_animals").doc(identifier).update({
+                status: 'sold'
+            })
+            .then(() => {
+                loadRealMarketAnimals();
+            })
+            .catch((error) => {
+                // जर हा Local ID असेल तर LocalStorage मधून अपडेट करणे
+                let animals = JSON.parse(localStorage.getItem('market_animals')) || [];
+                let index = animals.findIndex(a => a.id == identifier || a.firebaseDocId == identifier);
+                if(index !== -1) {
+                    animals[index].status = 'sold';
+                    localStorage.setItem('market_animals', JSON.stringify(animals));
+                    loadRealMarketAnimals();
+                }
+            });
+        }
+    }
+
+    function deleteAd(identifier) {
+        if(confirm('तुम्हाला ही जाहिरात कायमची डिलीट करायची आहे का?')) {
+            db.collection("market_animals").doc(identifier).delete()
+            .then(() => {
+                loadRealMarketAnimals();
+            })
+            .catch((error) => {
+                // जर हा Local ID असेल तर LocalStorage मधून डिलीट करणे
+                let animals = JSON.parse(localStorage.getItem('market_animals')) || [];
+                animals = animals.filter(a => a.id != identifier && a.firebaseDocId != identifier);
+                localStorage.setItem('market_animals', JSON.stringify(animals));
+                loadRealMarketAnimals();
+            });
+        }
+    }
+
+    // --- Banner & Plan Logic ---
+    function getSilverPlanPrice() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let val = adminPrices.m25_f_silver;
+        if (val === undefined || val === null || val === '') return 0;
+        let parsedPrice = parseInt(val);
+        if (isNaN(parsedPrice) || parsedPrice <= 0) return 0;
+        return parsedPrice;
+    }
+
+    function checkActivePlanOnLoad() {
+        let currentPrice = getSilverPlanPrice();
+        document.getElementById('banner_price_text').innerText = currentPrice === 0 ? "मोफत (Free)" : `₹${currentPrice}`;
+        document.getElementById('modal_price_text').innerText = currentPrice === 0 ? "मोफत (Free)" : `₹${currentPrice}`;
+        
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        let topBanner = document.getElementById('top_upgrade_banner');
+        
+        if (currentPrice === 0) { topBanner.style.display = 'none'; }
+        else if (activePlan && new Date() <= new Date(activePlan.expiryDate)) { topBanner.style.display = 'none'; }
+        else { topBanner.style.display = 'flex'; }
+    }
+
+    function handleAdCreation() {
+        let currentPrice = getSilverPlanPrice();
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        
+        if (currentPrice === 0) {
+            sessionStorage.setItem('market_plan_free', 'true');
+            window.location.href = "add_animal_form.html"; 
+            return;
+        }
+
+        if (activePlan) {
+            let now = new Date();
+            let expiryDate = new Date(activePlan.expiryDate);
+            if (now <= expiryDate && (activePlan.name.includes("दिशा प्राईम") || activePlan.name.includes("Market") || activePlan.name.includes("Silver"))) {
+                window.location.href = "add_animal_form.html"; 
+                return;
+            }
+        }
+
+        openAddAnimalModal();
+    }
+
+    // --- Payment Modal Logic ---
+    function openAddAnimalModal() {
+        document.getElementById('btn_init_pay').style.display = 'block';
+        document.getElementById('payment_form_section').style.display = 'none';
+        document.getElementById('btn_submit_utr').style.display = 'none';
+        document.getElementById('payment_utr').value = '';
+        document.getElementById('add_animal_modal').style.display = 'flex';
+    }
+
+    function closeAddAnimalModal() {
+        document.getElementById('add_animal_modal').style.display = 'none';
+    }
+
+    function showPaymentForm() {
+        document.getElementById('btn_init_pay').style.display = 'none';
+        document.getElementById('payment_form_section').style.display = 'block';
+        document.getElementById('btn_submit_utr').style.display = 'block';
+    }
+
+    function triggerUPI() {
+        let amt = getSilverPlanPrice();
+        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { payee_name: "दुग्ध दिशा AI", upi_id: "9579535290@kotak" };
+        
+        let upiId = paymentSettings.upi_id;
+        let payeeName = encodeURIComponent(paymentSettings.payee_name);
+        
+        let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amt}&cu=INR`;
+        window.location.href = upiLink;
+    }
+
+    function submitAdRequest() {
+        let utr = document.getElementById('payment_utr').value.trim();
+        let amtPaid = getSilverPlanPrice();
+        
+        if(!utr || utr.length < 10) {
+            alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर नक्की टाका.");
+            return;
+        }
+
+        let pendingPayments = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+        pendingPayments.push({
+            farmerName: localStorage.getItem("current_user_name") || "शेतकरी (Market User)",
+            mobile: localStorage.getItem("current_user_mobile") || "Unknown",
+            name: "Silver Pack (Market) - 1 Month",
+            type: "Monthly",
+            amount: amtPaid,
+            utr: utr,
+            requestTime: new Date().toLocaleString()
+        });
+        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingPayments));
+
+        closeAddAnimalModal();
+        alert(`🎉 तुमचे पेमेंट (UTR: ${utr}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरी मिळताच तुम्हाला जनावराचा फोटो आणि माहिती ॲड करण्याचा फॉर्म उपलब्ध उपलब्ध होईल.`);
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DugdhdishaAI - फोटो अपलोड</title>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #e8f5e9; }
+        .box { background: white; padding: 30px 20px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { color: #1b5e20; margin: 0 0 5px 0; font-weight: 900; font-size: 26px;}
+        .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; font-weight: bold;}
+        
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 5px; }
+        input[type="file"] { width: 100%; padding: 10px; border: 1px dashed #2e7d32; border-radius: 10px; background: #f1f8e9; box-sizing: border-box; }
+        
+        .btn { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; padding: 15px 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 0 #1b5e20;}
+        .btn:active { top: 4px; box-shadow: 0 0 0 #1b5e20; position: relative; }
+        
+        #preview { width: 100%; margin-top: 20px; border-radius: 10px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid #e8f5e9;}
+        #status { font-size: 13px; font-weight: bold; color: #1565c0; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>DugdhdishaAI 🐄</h2>
+        <div class="subtitle">क्लाउड फोटो अपलोड टेस्ट ☁️</div>
+        
+        <div class="input-group">
+            <label>मोबाईलमधील फोटो निवडा:</label>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+        
+        <button class="btn" onclick="uploadImage()">क्लाउडवर अपलोड करा 🚀</button>
+        
+        <p id="status"></p>
+        <img id="preview" src="" alt="अपलोड केलेला फोटो">
+    </div>
+
+    <script>
+        // 🔥 FIREBASE INITIALIZATION 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        function uploadImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("कृपया आधी एक फोटो निवडा!");
+                return;
+            }
+
+            // युजरला प्रोग्रेस दाखवणे
+            const statusText = document.getElementById('status');
+            statusText.innerText = "DugdhdishaAI सर्व्हरवर फोटो अपलोड होत आहे... ⏳";
+            statusText.style.color = "#f57c00";
+
+            // डेटा तयार करणे
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            // ⚠️ तुम्ही Cloudinary मध्ये सेव्ह केलेले Upload Preset चे नाव इथे टाका
+            // जर तुम्ही 'dugdh_preset' नाव दिले असेल तर असेच राहू द्या.
+            formData.append("upload_preset", "DugdhdishaAI");
+            // तुमचा Cloudinary चा खरा URL (csahcejo हे तुमचे Cloud Name आहे)
+            const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload";
+
+            // सर्व्हरवर फोटो पाठवणे (API Call)
+            fetch(cloudinaryUrl, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.secure_url) {
+                    statusText.innerText = "✅ फोटो यशस्वीरित्या क्लाउडवर सेव्ह झाला!";
+                    statusText.style.color = "#2e7d32";
+                    
+                    // फोटो स्क्रीनवर दाखवणे
+                    const imgPreview = document.getElementById('preview');
+                    imgPreview.src = data.secure_url;
+                    imgPreview.style.display = "block";
+                    
+                    console.log("DugdhdishaAI फोटो लिंक:", data.secure_url);
+                    alert("अभिनंदन! DugdhdishaAI मध्ये फोटो अपलोड झाला.\n\nही तुमची लिंक आहे:\n" + data.secure_url);
+                } else {
+                    statusText.innerText = "❌ अपलोड फेल झाले. Preset Name बरोबर आहे का तपासा.";
+                    statusText.style.color = "red";
+                    console.error("Cloudinary Error:", data);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                statusText.innerText = "❌ इंटरनेट एरर आला.";
+                statusText.style.color = "red";
+            });
+        }
+    </script>
+    
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

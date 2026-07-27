@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - माझी जनावरे</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .search-box { background: #fff; padding: 15px; margin: -20px 20px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; }
+        .search-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .animal-list { padding: 0 20px; }
+        .animal-card { background: #eef2f5; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); cursor: pointer; }
+        .animal-info h3 { margin: 0 0 5px; color: #1b5e20; font-size: 16px; display: flex; align-items: center; }
+        .animal-info p { margin: 0; font-size: 12px; color: #555; }
+        .tag-badge { background: #1976d2; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .profile-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7f6; z-index: 100; overflow-y: auto; padding-bottom: 20px; }
+        .modal-header { background: #1b5e20; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { color: white; font-size: 24px; font-weight: bold; border: none; background: none; cursor: pointer; }
+        .profile-tabs { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .profile-tabs::-webkit-scrollbar { display: none; }
+        .tab { padding: 8px 15px; background: #e0e0e0; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+        .tab.active { background: #1976d2; color: white; }
+        .tab-content { padding: 20px; display: none; }
+        .tab-content.active { display: block; }
+        .record-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; border-left: 4px solid #1976d2; }
+        .record-card h4 { margin: 0 0 5px; font-size: 14px; }
+        .record-card p { margin: 0; font-size: 12px; color: #666; }
+        .btn-add { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; margin-bottom: 15px; font-weight: bold; cursor: pointer; }
+        .btn-delete { background: #d32f2f; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; box-shadow: 0 4px 0 #b71c1c; }
+        .btn-delete:active { top: 2px; box-shadow: 0 2px 0 #b71c1c; position: relative; }
+        
+        /* 🔥 AI Recommendation UI inside Cattle Profile */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="top-dashboard" style="padding-bottom: 40px; border-radius: 0 0 20px 20px; background:#1b5e20;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px; color:white;">
+            <h1 style="margin:0;">माझी जनावरे 🐄</h1>
+            <p style="margin:5px 0 0; color:#c8e6c9;">संपूर्ण गोठ्याचे स्मार्ट रेकॉर्ड बुक</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: -15px 20px 20px; text-align: center;">
+        <div style="background: white; padding: 10px 5px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 3px solid #1b5e20;">
+            <h3 id="count_cows" style="margin: 0; font-size: 16px; color: #1b5e20; font-weight: 900;">०</h3>
+            <p style="margin: 3px 0 0; font-size: 11px; color: #666; font-weight: bold;">गाई</p>
+        </div>
+        <div style="background: white; padding: 10px 5px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 3px solid #0d47a1;">
+            <h3 id="count_buffaloes" style="margin: 0; font-size: 16px; color: #0d47a1; font-weight: 900;">०</h3>
+            <p style="margin: 3px 0 0; font-size: 11px; color: #666; font-weight: bold;">म्हशी</p>
+        </div>
+        <div style="background: white; padding: 10px 5px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 3px solid #e65100;">
+            <h3 id="count_calves" style="margin: 0; font-size: 16px; color: #e65100; font-weight: 900;">०</h3>
+            <p style="margin: 3px 0 0; font-size: 11px; color: #666; font-weight: bold;">वासरे</p>
+        </div>
+        <div style="background: white; padding: 10px 5px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 3px solid #333;">
+            <h3 id="count_total" style="margin: 0; font-size: 16px; color: #333; font-weight: 900;">०</h3>
+            <p style="margin: 3px 0 0; font-size: 11px; color: #666; font-weight: bold;">एकूण</p>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 जनावराचे नाव किंवा टॅग नंबर शोधा..." onkeyup="filterCows()">
+    </div>
+
+    <div style="padding: 0 20px; margin-bottom: 15px;">
+        <button class="btn-add" onclick="window.location.href='add_animal.html'">+ नवीन जनावर जोडा</button>
+    </div>
+
+    <div class="animal-list" id="animalList"></div>
+</div>
+
+<div class="profile-modal" id="profileModal">
+    <div class="modal-header">
+        <div>
+            <h2 id="modal_cow_name" style="margin: 0; font-size: 20px;">नाव</h2>
+            <p id="modal_cow_tag" style="margin: 5px 0 0; font-size: 14px; opacity: 0.8;">टॅग नंबर</p>
+        </div>
+        <button class="close-btn" onclick="closeProfile()">✕</button>
+    </div>
+
+    <div class="profile-tabs">
+        <div class="tab active" onclick="switchTab('info')">📋 माहिती</div>
+        <div class="tab" onclick="switchTab('repro')">🧬 प्रजनन</div>
+        <div class="tab" onclick="switchTab('health')">💉 लसीकरण</div>
+        <div class="tab" onclick="switchTab('milk')">🥛 दूध</div>
+        <div class="tab" onclick="switchTab('calf')">🍼 वासरू</div>
+    </div>
+
+    <!-- 📋 Tab 1: Info & Targeted Ads -->
+    <div id="tab_info" class="tab-content active">
+        <!-- 🔥 Dynamic Targeted Ad Container -->
+        <div id="cattle_profile_ad"></div>
+
+        <div class="record-card">
+            <h4>जात (Breed):</h4><p id="prof_breed">--</p>
+        </div>
+        <div class="record-card">
+            <h4>सिमेन प्रकार (जर असेल):</h4><p id="prof_semen">--</p>
+        </div>
+        <button class="btn-delete" onclick="deleteCurrentAnimal()">🗑️ हे जनावर काढून टाका (विक्री / मृत्यू)</button>
+    </div>
+
+    <div id="tab_repro" class="tab-content">
+        <button class="btn-add" onclick="window.location.href='reproduction.html'">+ नवीन रेतन (AI) नोंदवा</button>
+        <div class="record-card" style="border-left-color: #ff9800;">
+            <p>कोणतीही अद्ययावत नोंद नाही. नवीन नोंद करण्यासाठी वरील बटन दाबा.</p>
+        </div>
+    </div>
+
+    <div id="tab_health" class="tab-content">
+        <button class="btn-add" onclick="window.location.href='vaccine_deworm.html'">+ लसीकरण नोंदवा</button>
+        <div class="record-card" style="border-left-color: #4caf50;">
+            <p>कोणतीही अद्ययावत नोंद नाही.</p>
+        </div>
+    </div>
+
+    <div id="tab_milk" class="tab-content">
+        <button class="btn-add" onclick="window.location.href='milk_analyzer.html'">+ दुधाची नोंद करा</button>
+        <div class="record-card" style="border-left-color: #9c27b0;">
+            <p>दुधाची नोंद अद्याप केलेली नाही.</p>
+        </div>
+    </div>
+
+    <div id="tab_calf" class="tab-content">
+        <button class="btn-add" onclick="window.location.href='calf_management.html'">+ नवीन वासरू नोंदवा</button>
+        <div class="record-card" style="border-left-color: #e91e63;">
+            <p>वासराची नोंद अद्याप केलेली नाही.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+    syncProducts();
+
+    let cows = [];
+    let currentOpenTagKey = "";
+    let currentFirebaseId = ""; // Track Firebase ID for deletion
+
+    function loadCowsFromStorage() {
+        cows = [];
+        let cowCount = 0;
+        let buffaloCount = 0;
+        let calfCount = 0;
+
+        let keysToUpgrade = [];
+
+        // 🔄 PHASE 1: Scan for calves older than 6 months (180 days) for auto-upgrade
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith("calf_")) {
+                try {
+                    let animalData = JSON.parse(localStorage.getItem(key));
+                    let referenceDate = animalData.birthDate || animalData.date;
+                    
+                    if (referenceDate) {
+                        let birthDate = new Date(referenceDate);
+                        let today = new Date();
+                        let diffDays = Math.ceil(Math.abs(today - birthDate) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays >= 180) { // 6 Months Threshold
+                            keysToUpgrade.push({ key: key, data: animalData });
+                        }
+                    }
+                } catch (e) { console.error(e); }
+            }
+        }
+
+        // Apply background auto-upgrades smoothly
+        keysToUpgrade.forEach(item => {
+            let animalData = item.data;
+            let breedText = (animalData.breed || "").toLowerCase();
+            let isBuffalo = animalData.type === 'buffalo' || breedText.includes("म्ह") || breedText.includes("मुर") || breedText.includes("पंढ");
+            
+            animalData.type = isBuffalo ? "buffalo" : "cow";
+            let newKey = "cow_" + (animalData.tag || Math.floor(Math.random() * 100000));
+            
+            localStorage.setItem(newKey, JSON.stringify(animalData));
+            localStorage.removeItem(item.key); // remove old calf record
+        });
+
+        // 📊 PHASE 2: Aggregate counters and load everything into UI list
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith("cow_") || key.startsWith("calf_")) {
+                try {
+                    let animalData = JSON.parse(localStorage.getItem(key));
+                    let isCalf = key.startsWith("calf_");
+                    let breedText = (animalData.breed || "").toLowerCase();
+                    let isBuffalo = animalData.type === 'buffalo' || breedText.includes("म्ह") || breedText.includes("मुर") || breedText.includes("पंढ");
+
+                    if (isCalf) { calfCount++; } 
+                    else if (isBuffalo) { buffaloCount++; } 
+                    else { cowCount++; }
+
+                    cows.push({
+                        key: key,
+                        id: animalData.id || "",
+                        tag: animalData.tag || "N/A",
+                        name: animalData.breed || "जनावर",
+                        breed: animalData.breed || "--",
+                        semen: animalData.semen || "--",
+                        isCalf: isCalf,
+                        isBuffalo: isBuffalo
+                    });
+                } catch (e) { console.error("Error reading data", e); }
+            }
+        }
+
+        document.getElementById("count_cows").innerText = cowCount;
+        document.getElementById("count_buffaloes").innerText = buffaloCount;
+        document.getElementById("count_calves").innerText = calfCount;
+        document.getElementById("count_total").innerText = (cowCount + buffaloCount + calfCount);
+
+        renderCows(cows);
+    }
+
+    function renderCows(data) {
+        let list = document.getElementById("animalList");
+        list.innerHTML = "";
+        
+        if (data.length === 0) {
+            list.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">कोणतेही जनावर नोंदवलेले नाही. कृपया 'नवीन जनावर जोडा' वर क्लिक करा.</p>`;
+            return;
+        }
+
+        data.forEach(cow => {
+            let typeLabel = "🐄 गाय";
+            if (cow.isCalf) typeLabel = "🍼 वासरू";
+            else if (cow.isBuffalo) typeLabel = "🐃 म्हैस";
+
+            list.innerHTML += `
+                <div class="animal-card" onclick="openProfile('${cow.key}', '${cow.tag}', '${cow.name}', '${cow.breed}', '${cow.semen}', ${cow.isCalf}, ${cow.isBuffalo}, '${cow.id}')">
+                    <div class="animal-info">
+                        <h3>टॅग: ${cow.tag} <span style="font-size:10px; font-weight:normal; background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:4px; margin-left:8px;">${typeLabel}</span></h3>
+                        <p>जात: ${cow.breed}</p>
+                    </div>
+                    <div class="tag-badge">🔍 पहा</div>
+                </div>`;
+        });
+    }
+
+    function filterCows() {
+        let search = document.getElementById("searchInput").value.toLowerCase();
+        let filtered = cows.filter(c => c.tag.includes(search) || c.name.toLowerCase().includes(search));
+        renderCows(filtered);
+    }
+
+    function openProfile(key, tag, name, breed, semen, isCalf, isBuffalo, firebaseId) {
+        currentOpenTagKey = key;
+        currentFirebaseId = firebaseId; // Set firebase ID
+        
+        document.getElementById("profileModal").style.display = "block";
+        document.getElementById("modal_cow_name").innerText = "टॅग नंबर: " + tag;
+        document.getElementById("modal_cow_tag").innerText = "जात: " + breed;
+        document.getElementById("prof_breed").innerText = breed;
+        document.getElementById("prof_semen").innerText = semen;
+        switchTab('info');
+
+        // --- 🔥 SMART TARGETED ADS LOGIC BASED ON LIVE VENDOR PRODUCTS ---
+        let adBox = document.getElementById('cattle_profile_ad');
+        adBox.innerHTML = ""; 
+
+        let isHighYielder = breed.toLowerCase().includes("hf") || breed.toLowerCase().includes("jersey");
+        let htmlAd = "";
+        
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+
+        if (isCalf) {
+            let pMatch = products.find(p => p.aiFilters && p.aiFilters.includes("Calf_Growth"));
+            if(pMatch) {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(pMatch.name)}'">
+                    <h4>🍼 वासरू संगोपन टीप</h4>
+                    <p>${pMatch.name} वापरल्यास वासराची तब्येत उत्तम राहते. ${pMatch.benefits.substring(0, 45)}...</p>
+                    <span class="sponsor-tag">Sponsored by ${pMatch.brand}</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            } else {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🍼 वासरू संगोपन टीप</h4>
+                    <p>काफ स्टार्टर (Calf Starter) वापरल्यास वासराची तब्येत उत्तम राहते.</p>
+                    <span class="sponsor-tag">Sponsored by गोदरेज ॲग्रोव्हेट</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+        } else if (isBuffalo) {
+            let pMatch = products.find(p => p.aiFilters && p.aiFilters.includes("Fat_SNF"));
+            if(pMatch) {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(pMatch.name)}'">
+                    <h4>🐃 म्हशीच्या दुधासाठी खास</h4>
+                    <p>${pMatch.name} वापरा. ${pMatch.benefits.substring(0, 45)}...</p>
+                    <span class="sponsor-tag">Sponsored by ${pMatch.brand}</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            } else {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🐃 म्हशीच्या दुधासाठी खास</h4>
+                    <p>हाय-फॅट म्हैस पेंड वापरा. म्हशीच्या दुधातील फॅट वाढवण्यासाठी उत्तम.</p>
+                    <span class="sponsor-tag">Sponsored by हिंदुस्तान फिड्स</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+        } else if (isHighYielder) {
+            let pMatch = products.find(p => p.aiFilters && p.aiFilters.includes("Milk_Increase"));
+            if(pMatch) {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(pMatch.name)}'">
+                    <h4>🐄 जास्त दूध देणाऱ्या गाईंसाठी</h4>
+                    <p>${pMatch.name} चा वापर करा. ${pMatch.benefits.substring(0, 45)}...</p>
+                    <span class="sponsor-tag">Sponsored by ${pMatch.brand}</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            } else {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🐄 जास्त दूध देणाऱ्या गाईंसाठी</h4>
+                    <p>बायपास फॅट आणि प्रोटीन चा वापर करा. दूध टिकवण्यासाठी आवश्यक.</p>
+                    <span class="sponsor-tag">Sponsored by गोदरेज ॲग्रोव्हेट</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+        } else {
+            let pMatch = products.find(p => p.aiFilters && p.aiFilters.includes("Daily_Ration_Mineral"));
+            if(pMatch) {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(pMatch.name)}'">
+                    <h4>🌿 दररोजच्या दुधासाठी</h4>
+                    <p>गाईसाठी ${pMatch.name} वापरून पहा. ${pMatch.benefits.substring(0, 45)}...</p>
+                    <span class="sponsor-tag">Sponsored by ${pMatch.brand}</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            } else {
+                htmlAd = `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🌿 दररोजच्या दुधासाठी</h4>
+                    <p>गाईसाठी सुग्रास मिल्क पेलेट वापरून पहा. दैनंदिन दूध उत्पादन आणि फॅट संतुलित ठेवण्यासाठी.</p>
+                    <span class="sponsor-tag">Sponsored by हिंदुस्तान फिड्स</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+        }
+
+        adBox.innerHTML = htmlAd;
+    }
+
+    function closeProfile() {
+        document.getElementById("profileModal").style.display = "none";
+        currentOpenTagKey = "";
+        currentFirebaseId = "";
+    }
+
+    function deleteCurrentAnimal() {
+        if (!currentOpenTagKey) return;
+        let confirmDelete = confirm("⚠️ चेतावणी: तुम्हाला खात्री आहे का की हे जनावर सिस्टीममधून कायमचे काढून टाकायचे आहे (विक्री किंवा मृत्यू)? हा डेटा परत मिळणार नाही.");
+        
+        if (confirmDelete) {
+            // १. Remove from Local Storage
+            localStorage.removeItem(currentOpenTagKey);
+            
+            // २. Remove from Firebase if ID exists
+            if(currentFirebaseId) {
+                db.collection("farmer_animals").where("id", "==", currentFirebaseId).get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.delete();
+                    });
+                })
+                .catch(err => console.error("Error deleting from Firebase: ", err));
+            }
+
+            alert("✅ जनावर सिस्टीममधून यशस्वीरित्या काढून टाकले.");
+            closeProfile();
+            loadCowsFromStorage();
+        }
+    }
+
+    function switchTab(tabId) {
+        let contents = document.getElementsByClassName("tab-content");
+        for(let i=0; i<contents.length; i++) contents[i].classList.remove("active");
+        let tabs = document.getElementsByClassName("tab");
+        for(let i=0; i<tabs.length; i++) tabs[i].classList.remove("active");
+        document.getElementById("tab_" + tabId).classList.add("active");
+        event.currentTarget.classList.add("active");
+    }
+
+    loadCowsFromStorage();
+</script>
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

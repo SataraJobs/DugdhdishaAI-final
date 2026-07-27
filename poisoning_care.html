@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - विषबाधा व्यवस्थापन</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .info-card {
+            background: #fff3e0; padding: 15px; margin: 15px 20px;
+            border-radius: 12px; border-left: 5px solid #ff9800;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.05);
+        }
+        .info-card h4 { margin: 0 0 8px; color: #e65100; font-size: 15px; }
+        .info-card p { margin: 0; font-size: 13px; color: #555; line-height: 1.6; }
+        
+        .form-section {
+            background: #eef2f5; padding: 20px; margin: 10px 20px 20px;
+            border-radius: 16px; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .form-section label { display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
+        select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+            background: #f9f9f9; box-sizing: border-box; font-family: inherit; font-size: 14px; margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #d32f2f, #b71c1c); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #7f0000, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #7f0000; }
+
+        /* Results Box */
+        .result-box {
+            background: #fff; margin: 0 20px 20px; padding: 20px; border-radius: 16px; display: none;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1); border-left: 5px solid #d32f2f;
+        }
+        .result-box h3 { margin: 0 0 10px; font-size: 16px; color: #c62828; }
+        .advice-text { font-size: 13px; color: #444; line-height: 1.6; }
+
+        .vet-warning {
+            background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px;
+            font-size: 12px; font-weight: bold; text-align: center; margin-top: 15px; border: 1px dashed #ef9a9a;
+        }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.3s ease;}
+        .ai-recommendation-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(251, 192, 45, 0.2); }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .sponsor-tag { font-size: 10px; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; color: #0d47a1; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body onload="syncProducts()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px; background: linear-gradient(135deg, #d32f2f, #b71c1c);">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="color: white; margin: 0;">सर्वसाधारण विषबाधा ☠️</h1>
+            <p style="color: #ffcdd2; margin: 5px 0 0;">लक्षणे आणि प्राथमिक व्यवस्थापन</p>
+        </div>
+    </div>
+
+    <!-- Educational Info from PDF -->
+    <div class="info-card">
+        <h4>⚠️ विषबाधा का होते?</h4>
+        <p>जनावरांमध्ये विषबाधा होण्यास बरेच झाडं-झुडपे व रासायनिक पदार्थ कारणीभूत असल्याचे दिसून येतात. त्यातील काही विषबाधा वेळीच उपचारObj न केले गेले तर जीवघेण्या पण ठरू शकतात. काही सर्वसाधारण विषबाधेबाबत आपणास अगोदर या संबंधीत अभ्यास आणि लक्षणांची योग्य माहिती असेल तर त्यावर वेळीच उपचार करणे सोईचे होईल.</p>
+    </div>
+
+    <!-- Symptom Checker -->
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 15px; color: #c62828; border-left: 5px solid #ff9800; padding-left: 10px;">१. विषबाधेचा प्रकार ओळखा</div>
+    <div class="form-section">
+        <label>कोणत्या प्रकारची विषबाधा झाल्याचा संशय आहे?</label>
+        <select id="poison_type">
+            <option value="none">-- विषबाधेचा प्रकार निवडा --</option>
+            <option value="gossypol">क. गॉसीपॉलची विषबाधा (सरकीची विषबाधा)</option>
+            <option value="cyanide">ख. सायनाईडची विषबाधा (किरळाची विषबाधा)</option>
+            <option value="organo">ग. ऑर्गनॉफॉसफरसची विषबाधा (किटकनाशकाची विषबाधा)</option>
+        </select>
+
+        <button class="btn-primary" onclick="checkPoisoning()">AI तातडीचे विश्लेषण</button>
+    </div>
+
+    <!-- Result & Management -->
+    <div class="result-box" id="disease_result">
+        <h3 id="disease_title">अहवाल येथे दिसेल</h3>
+        <div class="advice-text" id="disease_advice"></div>
+        
+        <!-- 🔥 Dynamic Pharma Ad Container -->
+        <div id="disease_pharma_ad"></div>
+
+        <div class="vet-warning">
+            ⚠️ <b>महत्त्वाची सूचना:</b> विषबाधा ही अत्यंत तातडीची (Emergency) स्थिती आहे. कोणत्याही घरगुती उपचारांवर विसंबून न राहता त्वरित पशुवैद्यकीय अधिकाऱ्यांशी संपर्क साधा.
+        </div>
+
+        <!-- 🔥 Small Font Legal Disclaimer -->
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> विषबाधेमध्ये घरगुती उपचारांवर अवलंबून राहू नये. येथे सुचवलेली औषधे केवळ प्राथमिक माहिती आणि त्यानंतरच्या उपचारांसाठी (उदा. लिव्हर टॉनिक) आहेत. कोणतेही औषध देण्यापूर्वी परवानाधारक <b>पशुवैद्यकाचा (Veterinary Doctor) त्वरित सल्ला घ्यावा</b>. 
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // 🔥 Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ आजारानंतरच्या रिकव्हरीसाठी") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    function checkPoisoning() {
+        let poisonSelect = document.getElementById('poison_type');
+        let poison = poisonSelect.value;
+        let poisonText = poisonSelect.options[poisonSelect.selectedIndex].text;
+        
+        let resultBox = document.getElementById('disease_result');
+        let title = document.getElementById('disease_title');
+        let advice = document.getElementById('disease_advice');
+        let adBox = document.getElementById('disease_pharma_ad');
+
+        if (poison === 'none') {
+            alert("कृपया विषबाधेचा प्रकार निवडा.");
+            return;
+        }
+
+        // 🔥 FIREBASE: LOG SEARCHED ISSUE 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("poisoning_searches").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            searchedPoison: poisonText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging poisoning search: ", err));
+
+        resultBox.style.display = "block";
+        adBox.innerHTML = ""; // Clear old ad
+        resultBox.scrollIntoView({behavior: "smooth"});
+
+        let targetFilterTag = "";
+        let defaultAdHtml = "";
+
+        // 🔥 ADMIN M6 SYNC LOGIC 🔥
+        let adminM6Data = JSON.parse(localStorage.getItem('admin_data_M6'));
+        let adminOverride = false;
+        
+        if (adminM6Data && adminM6Data.m6_1) {
+            let adminDiseaseName = adminM6Data.m6_1.toLowerCase();
+            let isMatch = false;
+            
+            if(poison === 'gossypol' && (adminDiseaseName.includes('सरकी') || adminDiseaseName.includes('gossypol'))) isMatch = true;
+            else if(poison === 'cyanide' && (adminDiseaseName.includes('सायनाईड') || adminDiseaseName.includes('किरळ') || adminDiseaseName.includes('cyanide'))) isMatch = true;
+            else if(poison === 'organo' && (adminDiseaseName.includes('कीटकनाशक') || adminDiseaseName.includes('organo'))) isMatch = true;
+            else if(adminDiseaseName.includes('विषबाधा') || adminDiseaseName.includes('poison')) isMatch = true;
+            
+            if(isMatch) {
+                adminOverride = true;
+                title.innerHTML = "🚨 आजार: " + adminM6Data.m6_1 + " (Admin Update)";
+                advice.innerHTML = "<b>माहिती व कारणे:</b> " + adminM6Data.m6_2 + "<br><br><b>प्राथमिक उपचार:</b> " + adminM6Data.m6_3;
+                
+                if(adminM6Data.m6_4) { 
+                    defaultAdHtml = `
+                    <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🩺 AI शिफारस (Admin Prescribed)</h4>
+                        <p>या विषबाधेवरील तातडीच्या उपचारासाठी <b>${adminM6Data.m6_4}</b> वापरण्याचा सल्ला दिला आहे.</p>
+                        <div class="sponsor-bottom-row">
+                            <span class="sponsor-tag" style="background:#e3f2fd; color:#0d47a1;">Recommended by Dugdha Disha</span>
+                            <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                        </div>
+                    </div>`;
+                }
+            }
+        }
+
+        // IF NO ADMIN OVERRIDE, USE DEFAULT LOGIC
+        if(!adminOverride) {
+            if (poison === 'gossypol') {
+                title.innerHTML = "🚨 क. गॉसीपॉलची विषबाधा (सरकीची विषबाधा)";
+                advice.innerHTML = "<b>विश्लेषण:</b> कपाशीच्या सरकीमध्ये 'गॉसीपॉल' नावाचा घटक असतो. सरकी किंवा सरकीची पेंड (Cottonseed Cake) प्रमाणापेक्षा जास्त खाऊ घातल्यास ही विषबाधा होते.<br><br><b>प्राथमिक उपाय:</b><br>• जनावराच्या आहारातून सरकीची पेंड तत्काळ पूर्णपणे बंद करा.<br>• जनावराला भरपूर स्वच्छ पाणी पिण्यास द्या आणि पशुवैद्यकाला पाचारण करा.";
+                
+                targetFilterTag = "Liver_Care"; // Liver tonic
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🩺 यकृताचे रक्षण (Liver Care)</h4>
+                        <p>विषबाधेनंतर यकृतावर येणारा ताण कमी करण्यासाठी आणि भूक परत वाढवण्यासाठी <b>Himalaya Liv.52</b> सिरप नक्की द्या.</p>
+                        <div class="sponsor-bottom-row">
+                            <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
+                            <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                        </div>
+                    </div>`;
+            } 
+            else if (poison === 'cyanide') {
+                title.innerHTML = "🚨 ख. सायनाईडची विषबाधा (किरळाची विषबाधा)";
+                advice.innerHTML = "<b>विश्लेषण:</b> पावसाळ्याच्या सुरुवातीला कोवळी ज्वारी (किरळ) किंवा सुकलेली ज्वारी खाल्ल्याने ही अत्यंत जलद आणि जीवघेणी विषबाधा होते.<br><br><b>प्राथमिक उपाय:</b><br>• ही अत्यंत तातडीची वेळ आहे. समोर असलेला सर्व चारा तत्काळ हटवा.<br>• यात जनावराला श्वास घेण्यास खूप त्रास होतो. एका मिनिटाचाही विलंब न करता डॉक्टरांना बोलावून सलाईनमधून 'अँटीडोट' (Antidote) देण्याची व्यवस्था करा.";
+                
+                targetFilterTag = "Digestion"; // Or Immunity/Recovery
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>⚡ इमर्जन्सी रिकव्हरी (Recovery)</h4>
+                        <p>विषबाधेच्या धक्क्यातून जनावराला सावरण्यासाठी <b>Intas Electrolyte</b> किंवा <b>Virbac Energy Booster</b> चा वापर डॉक्टरांच्या सल्ल्याने करा.</p>
+                        <div class="sponsor-bottom-row">
+                            <span class="sponsor-tag">Sponsored by Intas Pharmaceuticals</span>
+                            <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                        </div>
+                    </div>`;
+            } 
+            else if (poison === 'organo') {
+                title.innerHTML = "🚨 ग. ऑर्गनॉफॉसफरसची (किटकनाशकाची) विषबाधा";
+                advice.innerHTML = "<b>विश्लेषण:</b> पिकांवर फवारणी केलेले कीटकनाशक जनावराच्या खाण्यात आल्यास, किंवा चुकून औषध चाटल्यास ही विषबाधा होते. यात तोंडातून अचानक भरपूर फेस येतो आणि स्नायू थरथरतात.<br><br><b>प्राथमिक उपाय:</b><br>• जर जनावराच्या अंगावर औषध पडले असेल, तर अंग भरपूर पाण्याने व साबणाने धुवून काढा.<br>• जनावराला मोकळ्या आणि हवेशीर जागी बांधा.<br>• त्वरित डॉक्टरांना बोलावून विषनाशक (Atropine सारखी औषधे) देण्याची व्यवस्था करा.";
+
+                targetFilterTag = "Daily_Ration_Mineral"; // Or Toxin Binder
+                defaultAdHtml = `
+                    <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                        <h4>🛡️ विषारी घटक नष्ट करण्यासाठी (Toxin Binder)</h4>
+                        <p>पोटातील विषारी घटक शोषून घेण्यासाठी पशुखाद्यात <b>Toxin Binder</b> पावडर नियमित मिसळा.</p>
+                        <div class="sponsor-bottom-row">
+                            <span class="sponsor-tag">Sponsored by Godrej Agrovet</span>
+                            <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // 🔥 Inject Dynamic Ad 🔥
+        adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "🩺 उपचारांनंतर रिकव्हरीसाठी सुचवलेले");
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

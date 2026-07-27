@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - ज्ञान केंद्र</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .search-box {
+            background: #fff;
+            padding: 15px;
+            margin: -20px 20px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 10;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .accordion {
+            background-color: #ffffff;
+            color: #333;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            border-bottom: 1px solid #eee;
+            outline: none;
+            font-size: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion.active, .accordion:hover {
+            background-color: #f1f8e9;
+            color: #2e7d32;
+        }
+        .panel {
+            padding: 0 15px;
+            background-color: white;
+            display: none;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #444;
+            border-bottom: 2px solid #4CAF50;
+        }
+        
+        .formula-box {
+            background: #e3f2fd;
+            padding: 10px;
+            border-left: 4px solid #1976d2;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 13px;
+            color: #0d47a1;
+        }
+        .example-box {
+            background: #fff3e0;
+            padding: 10px;
+            border-left: 4px solid #ff9800;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        
+        .topic-container {
+            margin: 0 20px 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* 🔥 AI Recommendation UI inside Learning Center */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body onload="loadAdminArticles()">
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="background: #1b5e20; padding-bottom: 40px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px; color:white;">
+            <h1 style="margin:0;">ज्ञान केंद्र व लॉजिक 📚</h1>
+            <p style="margin:5px 0 0; color:#c8e6c9;">पशुपालनाचे विज्ञान सोप्या मराठीत</p>
+        </div>
+    </div>
+
+    <!-- Smart Search -->
+    <div class="search-box">
+        <input type="text" id="searchInput" onkeyup="searchTopics()" placeholder="शोधा... उदा. 'प्रोटीन' किंवा 'मस्टायटीस'">
+    </div>
+
+    <!-- Section 1: Calculations (Feature 17) -->
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">🧮 हे कसे काढले? (वैज्ञानिक सूत्रे)</div>
+    
+    <div class="topic-container" id="logicTopics">
+        
+        <!-- Protein Logic -->
+        <button class="accordion">१. प्रथिनांची (Protein) गरज कशी काढली? <span>➕</span></button>
+        <div class="panel">
+            <p>गाईला प्रामुख्याने दोन गोष्टींसाठी प्रथिने (CP - Crude Protein) लागतात: स्वतःचे शरीर जगवण्यासाठी आणि दूध तयार करण्यासाठी.</p>
+            <div class="formula-box">
+                <b>सूत्र:</b><br>
+                शरीरासाठी = वजन (Kg) × १ ग्रॅम<br>
+                दुधासाठी = दूध (Ltr) × १०० ग्रॅम
+            </div>
+            <div class="example-box">
+                <b>📌 उदाहरण:</b> जर तुमची गाय ५०० किलोची आहे आणि ती २० लिटर दूध देते:<br>
+                • शरीरासाठी: ५०० × १ = ५०० ग्रॅम<br>
+                • दुधासाठी: २० × १०० = २००० ग्रॅम<br>
+                <b>• एकूण गरज: २५०० ग्रॅम (२.५ किलो प्रथिने)</b>
+            </div>
+            <p><b>शास्त्रीय कारण:</b> दुधात केसीन (Casein) नावाचे प्रोटीन असते. जर आहारात प्रथिने कमी पडली, तर गाय तिच्या स्नायूंमधील प्रोटीन वापरते, ज्यामुळे गाय रोड (बारीक) होते आणि दुधाचा उतारा घटतो.</p>
+            
+            <!-- 🔥 Contextual Ad for Protein -->
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>🧬 प्रथिनांची कमतरता भरून काढा</h4>
+                <p>गाईचे आरोग्य आणि दूध टिकवण्यासाठी <b>गोदावरी बायपास प्रोटीन पेलेट</b> वापरा.</p>
+                <span class="sponsor-tag">Sponsored by Godavari Feeds</span>
+                <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये खरेदी करा ➔</span>
+            </div>
+        </div>
+
+        <!-- DM Logic -->
+        <button class="accordion">२. शुष्क आहार (Dry Matter) म्हणजे काय? <span>➕</span></button>
+        <div class="panel">
+            <p>कोणत्याही चाऱ्यातील पाण्याचा अंश (Moisture) काढून टाकल्यावर जो कोरडा भाग उरतो, त्याला 'शुष्क आहार' (Dry Matter - DM) म्हणतात. जनावराचे पोट भरण्यासाठी हे अत्यंत महत्त्वाचे असते.</p>
+            <div class="formula-box">
+                <b>सूत्र:</b><br>
+                DMI = (वजन × ०.०२) + (दूध ÷ ३)
+            </div>
+            <div class="example-box">
+                <b>📌 उदाहरण:</b> (५०० किलो गाय, १५ लिटर दूध)<br>
+                • वजनानुसार: ५०० × ०.०२ = १० किलो<br>
+                • दुधानुसार: १५ ÷ ३ = ५ किलो<br>
+                <b>• एकूण पोट भरण्यासाठी: १५ किलो DM</b>
+            </div>
+            <p><b>लक्षात ठेवा:</b> १०० किलो हिरव्या चाऱ्यात फक्त २० किलो DM असतो (८०% पाणी असते). तर १०० किलो कडब्यात ९० किलो DM असतो.</p>
+        </div>
+
+        <!-- Energy Logic -->
+        <button class="accordion">३. ऊर्जा (Energy / ME) कशी काढली? <span>➕</span></button>
+        <div class="panel">
+            <p>गाईला चालण्यासाठी, रवंथ करण्यासाठी आणि दुधात फॅट आणण्यासाठी ऊर्जेची (Metabolizable Energy) गरज असते.</p>
+            <div class="formula-box">
+                <b>सूत्र:</b><br>
+                एकूण ऊर्जा = ८ Mcal (शरीरासाठी) + (दूध × ०.७ Mcal)
+            </div>
+            <p>ऊर्जा कमी पडल्यास गाईला 'कीटोसिस' (Ketosis) आजार होऊ शकतो. ऊर्जा वाढवण्यासाठी मका भरडा, ऊसाची मळी किंवा बायपास फॅट चा वापर केला जातो.</p>
+            
+            <!-- 🔥 Contextual Ad for Energy -->
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>⚡ ऊर्जेची कमतरता (Energy Boost)</h4>
+                <p>कमी ऊर्जेमुळे होणारे आजार टाळण्यासाठी <b>Virbac Energy Booster</b> नेहमी तयार ठेवा.</p>
+                <span class="sponsor-tag">Sponsored by Virbac</span>
+                <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: PDF Knowledge Base (Feature 16) -->
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">📚 पशुखाद्य व चारा ज्ञान (Articles)</div>
+    
+    <div class="topic-container" id="articleTopics">
+        <!-- 🔥 Dynamic Admin Articles Will Load Here -->
+
+        <button class="accordion">हिरवा चारा आणि सुका चारा यांचे प्रमाण <span>➕</span></button>
+        <div class="panel">
+            <p>दुभत्या जनावरांसाठी चारा आणि खाद्याचे प्रमाण त्यांच्या दुधाच्या काळानुसार बदलते:</p>
+            <ul>
+                <li><b>सुरुवातीचा काळ (Early Lactation):</b> चारा ५०% आणि पशुखाद्य ५०%</li>
+                <li><b>मध्य काळ (Mid Lactation):</b> चारा ६०% आणि पशुखाद्य ४०%</li>
+                <li><b>शेवटचा काळ (Late Lactation):</b> चारा ७०% आणि पशुखाद्य ३०%</li>
+            </ul>
+        </div>
+
+        <button class="accordion">NDF आणि ADF फायबर म्हणजे काय? <span>➕</span></button>
+        <div class="panel">
+            <p>दुधाची फॅट (Fat %) वाढवण्यासाठी फायबर अत्यंत आवश्यक असते.</p>
+            <ul>
+                <li><b>NDF (Neutral Detergent Fiber):</b> हा चाऱ्याचा तो भाग आहे जो जनावराचे पोट भरल्याची जाणीव करून देतो. (उदा. कडबा, काड).</li>
+                <li><b>ADF (Acid Detergent Fiber):</b> हा न पचणारा भाग आहे (लिग्निन). हा जेवढा कमी, तेवढा चारा चांगला.</li>
+            </ul>
+            <p>म्हणूनच खूप जुना किंवा जून झालेला चारा गाईला पचत नाही.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🔥 FIREBASE SDK 🔥 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // --- 🔥 ADMIN SYNC LOGIC (Load custom articles from Admin Panel) ---
+    function loadAdminArticles() {
+        // Checking M6 module which holds Custom Admin Content
+        let adminKnowledgeData = JSON.parse(localStorage.getItem('admin_data_M6'));
+        
+        if(adminKnowledgeData && adminKnowledgeData.m6_1 && adminKnowledgeData.m6_2) {
+            let articleContainer = document.getElementById('articleTopics');
+            
+            // Create New Accordion for Admin Article
+            let newAccordionBtn = document.createElement("button");
+            newAccordionBtn.className = "accordion";
+            newAccordionBtn.innerHTML = `🌟 ${adminKnowledgeData.m6_1} (नवीन लेख) <span>➕</span>`;
+            
+            let newPanel = document.createElement("div");
+            newPanel.className = "panel";
+            
+            // Combine symptom and treatment as article text
+            let contentHtml = `<p><b>माहिती:</b> ${adminKnowledgeData.m6_2}</p>`;
+            contentHtml += `<p><b>उपाय / निष्कर्ष:</b> ${adminKnowledgeData.m6_3}</p>`;
+            
+            if(adminKnowledgeData.m6_4) {
+                contentHtml += `
+                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                    <h4>🩺 शिफारस केलेले औषध</h4>
+                    <p>या विषयावरील उपचारासाठी <b>${adminKnowledgeData.m6_4}</b> वापरण्याचा सल्ला दिला आहे.</p>
+                    <span class="sponsor-tag">Recommended by Dugdha Disha</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+            newPanel.innerHTML = contentHtml;
+            
+            // Prepend so it appears at the top
+            articleContainer.prepend(newPanel);
+            articleContainer.prepend(newAccordionBtn);
+        }
+        
+        // Re-initialize Accordion Listeners after dynamic DOM insertion
+        initAccordions();
+    }
+
+    // Accordion Logic
+    function initAccordions() {
+        var acc = document.getElementsByClassName("accordion");
+        for (var i = 0; i < acc.length; i++) {
+            // Remove old listeners to prevent duplicates
+            let newElement = acc[i].cloneNode(true);
+            acc[i].parentNode.replaceChild(newElement, acc[i]);
+            
+            newElement.addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                var icon = this.querySelector("span");
+                
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                    icon.innerHTML = "➕";
+                } else {
+                    panel.style.display = "block";
+                    icon.innerHTML = "➖";
+                }
+            });
+        }
+    }
+
+    // Search Logic (Feature 26) with Firebase Logging
+    let searchTimeout;
+    function searchTopics() {
+        let input = document.getElementById('searchInput').value.toLowerCase();
+        let accordions = document.getElementsByClassName('accordion');
+        
+        for (let i = 0; i < accordions.length; i++) {
+            let title = accordions[i].innerText.toLowerCase();
+            let content = accordions[i].nextElementSibling.innerText.toLowerCase();
+            
+            if (title.includes(input) || content.includes(input)) {
+                accordions[i].style.display = "flex";
+            } else {
+                accordions[i].style.display = "none";
+                accordions[i].nextElementSibling.style.display = "none"; // Hide panel if open
+                accordions[i].classList.remove("active");
+                accordions[i].querySelector("span").innerHTML = "➕";
+            }
+        }
+
+        // 🔥 FIREBASE: LOG SEARCH KEYWORD (Debounced)
+        clearTimeout(searchTimeout);
+        if(input.trim().length > 2) {
+            searchTimeout = setTimeout(() => {
+                let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+                let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+                
+                db.collection("learning_searches").add({
+                    farmerName: fName,
+                    farmerMobile: fMob,
+                    searchQuery: input.trim(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Firebase Search Log Error: ", e));
+            }, 2000); // User थांबल्यावर 2 सेकंदांनी सेव्ह होईल (Data Spam टाळण्यासाठी)
+        }
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

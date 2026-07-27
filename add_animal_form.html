@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>जनावर ॲड करा - दुग्ध दिशा AI</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --accent: #ff9800;
+            --bg-color: #e0e5ec;
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            padding-bottom: 30px;
+        }
+
+        .app-bar {
+            background: linear-gradient(145deg, #2e7d32, #246428);
+            color: white;
+            padding: 20px 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
+            border-radius: 0 0 25px 25px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .app-bar h2 { margin: 0; font-size: 20px; }
+
+        .form-container { margin: 30px 20px; }
+        .form-card {
+            background: #e0e5ec;
+            border-radius: 20px;
+            padding: 25px 20px;
+            box-shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; font-size: 14px; font-weight: 800; color: #555; margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%; padding: 15px; font-size: 15px; font-weight: 600;
+            background: #e0e5ec; border: none; border-radius: 15px; box-sizing: border-box;
+            box-shadow: inset 6px 6px 10px 0 rgba(163, 177, 198, 0.7), inset -6px -6px 10px 0 rgba(255, 255, 255, 0.8);
+            outline: none; transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            box-shadow: inset 2px 2px 5px 0 rgba(163, 177, 198, 0.7), inset -2px -2px 5px 0 rgba(255, 255, 255, 0.8), 0 0 0 2px rgba(46, 125, 50, 0.3);
+        }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .photo-upload-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px; border-radius: 15px; background: #e0e5ec;
+            box-shadow: inset 6px 6px 10px 0 rgba(163, 177, 198, 0.7), inset -6px -6px 10px 0 rgba(255, 255, 255, 0.8);
+            cursor: pointer; text-align: center; position: relative; overflow: hidden;
+        }
+        .photo-upload-box input[type="file"] {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
+
+        .upload-icon { font-size: 40px; color: var(--primary); margin-bottom: 10px; }
+        .upload-text { font-size: 13px; font-weight: bold; color: #666; }
+        
+        .preview-img {
+            width: 70px; height: 70px; object-fit: cover; border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2); position: relative;
+        }
+
+        .submit-btn {
+            width: 100%; padding: 16px; font-size: 18px; font-weight: 900; color: white;
+            background: linear-gradient(145deg, #328636, #2a712d); border: none; border-radius: 15px;
+            cursor: pointer; margin-top: 20px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.8), -6px -6px 12px rgba(255, 255, 255, 0.8);
+        }
+        .submit-btn:active {
+            box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.2), inset -4px -4px 10px rgba(255, 255, 255, 0.1); transform: scale(0.98);
+        }
+        .submit-btn:disabled {
+            background: #9e9e9e; cursor: not-allowed; box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-bar">
+        <a href="kharedi_vikri.html" class="back-btn">⬅</a>
+        <h2>जनावर विकायची माहिती भरा</h2>
+    </div>
+
+    <div class="form-container">
+        <div class="form-card">
+            <!-- फॉर्म novalidate ठेवा -->
+            <form id="addAnimalForm" novalidate>
+                
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>जनावराचा प्रकार</label>
+                        <select class="form-control" id="animalType">
+                            <option value="">निवडा...</option>
+                            <option value="गाय">गाय</option>
+                            <option value="म्हैस">म्हैस</option>
+                            <option value="शेळी">शेळी</option>
+                            <option value="बैल">बैल</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>जात (Breed)</label>
+                        <input type="text" class="form-control" id="animalBreed" placeholder="उदा. जर्सी">
+                    </div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>दूध क्षमता (लिटर/दिवस)</label>
+                        <input type="number" class="form-control" id="animalMilk" placeholder="उदा. 15">
+                    </div>
+                    <div class="form-group">
+                        <label>वेत (Lactation)</label>
+                        <input type="number" class="form-control" id="animalLactation" placeholder="उदा. 1, 2">
+                    </div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>गाभण आहे का?</label>
+                        <select class="form-control" id="animalPregnant">
+                            <option value="">निवडा...</option>
+                            <option value="नाही">नाही</option>
+                            <option value="होय">होय</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>दात (Teeth)</label>
+                        <select class="form-control" id="animalTeeth">
+                            <option value="">निवडा...</option>
+                            <option value="२ दात">२ दात</option>
+                            <option value="४ दात">४ दात</option>
+                            <option value="६ दात">६ दात</option>
+                            <option value="जुळली">जुळली</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>किंमत (₹) *</label>
+                    <input type="number" class="form-control" id="animalPrice" placeholder="अपेक्षित किंमत" style="font-size: 20px; color: #2e7d32;">
+                </div>
+
+                <div class="form-group">
+                    <label>तुमचा पत्ता (गाव/तालुका) *</label>
+                    <input type="text" class="form-control" id="animalLocation" placeholder="उदा. सातारा">
+                </div>
+
+                <div class="form-group">
+                    <label>मोबाईल नंबर *</label>
+                    <input type="tel" class="form-control" id="animalMobile" placeholder="10 अंकी नंबर">
+                </div>
+
+                <div class="form-group">
+                    <label>जनावराचे फोटो (जास्तीत जास्त ४) *</label>
+                    <div class="photo-upload-box">
+                        <div class="upload-icon">📸</div>
+                        <div class="upload-text">+ आणखी फोटो ॲड करा</div>
+                        <input type="file" id="animalImage" accept="image/*" multiple onchange="previewImages(event)">
+                    </div>
+                    <div id="imagePreviewContainer" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- 🔥 onclick जोडला – थेट फंक्शन कॉल -->
+                <button type="button" class="submit-btn" onclick="submitAnimalForm()">✅ जाहिरात पब्लिश करा</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🔥 FIREBASE SDK (डेटाबेस जोडण्यासाठी) 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // 🔥 तुमचा FIREBASE CONFIG CODE 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Cloudinary च्या लिंक्स स्टोअर करण्यासाठी नवीन Array
+        let uploadedImagesUrls = [];
+
+        function previewImages(event) {
+            const files = event.target.files;
+            const container = document.getElementById('imagePreviewContainer');
+            const submitBtn = document.querySelector('.submit-btn');
+
+            if (uploadedImagesUrls.length + files.length > 4) {
+                alert("⚠️ तुम्ही एकूण जास्तीत जास्त ४ फोटो सिलेक्ट करू शकता.");
+                return;
+            }
+
+            // फोटो अपलोड होत असताना सबमिट बटण डिसेबल करणे
+            submitBtn.innerHTML = "⏳ फोटो अपलोड होत आहेत... कृपया थांबा";
+            submitBtn.disabled = true;
+
+            let uploadPromises = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file) {
+                    // तात्पुरता प्रिव्ह्यू दाखवणे (अंधुक स्वरूपात)
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.style.position = "relative";
+                    imgWrapper.style.display = "inline-block";
+
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.className = 'preview-img';
+                    img.style.opacity = "0.4"; // अपलोड होईपर्यंत अंधुक दिसेल
+
+                    imgWrapper.appendChild(img);
+                    container.appendChild(imgWrapper);
+
+                    // 🔥 Cloudinary वर फोटो पाठवण्याचे लॉजिक 🔥
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("upload_preset", "DugdhdishaAI"); // तुमचा Cloudinary Preset
+                    
+                    const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; // तुमचे Cloud Name
+
+                    let uploadTask = fetch(cloudinaryUrl, {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.secure_url) {
+                            img.src = data.secure_url; // खरी Cloudinary लिंक
+                            img.style.opacity = "1";   // फोटो क्लिअर करणे
+                            uploadedImagesUrls.push(data.secure_url);
+                            
+                            // फोटो काढण्यासाठी (Delete) '✖' बटण जोडणे
+                            let delBtn = document.createElement('span');
+                            delBtn.innerHTML = "✖";
+                            delBtn.style.cssText = "position:absolute; top:-5px; right:-5px; background:#d32f2f; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;";
+                            delBtn.onclick = function() { 
+                                imgWrapper.remove(); 
+                                uploadedImagesUrls = uploadedImagesUrls.filter(url => url !== data.secure_url);
+                            };
+                            imgWrapper.appendChild(delBtn);
+                        } else {
+                            imgWrapper.remove();
+                            alert("❌ फोटो अपलोड फेल झाले.");
+                        }
+                    })
+                    .catch(error => {
+                        imgWrapper.remove();
+                        console.error("Error:", error);
+                        alert("❌ इंटरनेट एरर आला. फोटो अपलोड होऊ शकला नाही.");
+                    });
+
+                    uploadPromises.push(uploadTask);
+                }
+            }
+
+            // सर्व फोटो यशस्वीरीत्या अपलोड झाल्यावरच बटण पुन्हा चालू करणे
+            Promise.all(uploadPromises).then(() => {
+                submitBtn.innerHTML = "✅ जाहिरात पब्लिश करा";
+                submitBtn.disabled = false;
+            });
+
+            event.target.value = "";
+        }
+
+        // 🔥 सबमिट हाताळण्यासाठी स्वतंत्र फंक्शन (FIREBASE सह)
+        function submitAnimalForm() {
+            // पूर्ण मॅन्युअल व्हॅलिडेशन
+            const animalType = document.getElementById('animalType').value.trim();
+            const animalBreed = document.getElementById('animalBreed').value.trim();
+            const animalPrice = document.getElementById('animalPrice').value.trim();
+            const animalLocation = document.getElementById('animalLocation').value.trim();
+            const animalMobile = document.getElementById('animalMobile').value.trim();
+            const animalMilk = document.getElementById('animalMilk').value.trim();
+            const animalLactation = document.getElementById('animalLactation').value.trim();
+            const animalPregnant = document.getElementById('animalPregnant').value.trim();
+            const animalTeeth = document.getElementById('animalTeeth').value.trim();
+
+            if (!animalType) { alert("कृपया जनावराचा प्रकार निवडा."); return; }
+            if (!animalBreed) { alert("कृपया जात (Breed) टाका."); return; }
+            if (!animalPrice) { alert("कृपया किंमत टाका."); return; }
+            if (!animalLocation) { alert("कृपया तुमचा पत्ता (गाव/तालुका) टाका."); return; }
+            if (!animalMobile || animalMobile.length !== 10 || !/^\d+$/.test(animalMobile)) { 
+                alert("कृपया योग्य 10 अंकी मोबाईल नंबर टाका."); 
+                return; 
+            }
+            if (uploadedImagesUrls.length === 0) {
+                alert("कृपया किमान १ फोटो अपलोड करा.");
+                return;
+            }
+
+            // डेटाबेसमध्ये पाठवण्यासाठी ऑब्जेक्ट तयार करणे
+            const newAnimal = {
+                id: Date.now(), 
+                type: animalType,
+                breed: animalBreed,
+                milk: animalMilk || '',
+                lactation: animalLactation || '',
+                pregnant: animalPregnant || '',
+                teeth: animalTeeth || '',
+                price: animalPrice,
+                location: animalLocation,
+                mobile: animalMobile,
+                images: uploadedImagesUrls, // Cloudinary लिंक्स
+                status: 'active',
+                isUrgent: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() // सेव्ह केल्याची अचूक वेळ
+            };
+
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.innerHTML = "⏳ ढगात (Database) सेव्ह होत आहे...";
+            submitBtn.disabled = true;
+
+            // 🔥 FIREBASE मध्ये डेटा सेव्ह करणे 🔥
+            db.collection("market_animals").add(newAnimal)
+            .then((docRef) => {
+                // बॅकअप म्हणून LocalStorage मध्ये सुद्धा सेव्ह ठेवणे (ऑफलाईनसाठी)
+                let currentAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
+                newAnimal.firebaseId = docRef.id;
+                currentAnimals.unshift(newAnimal); 
+                localStorage.setItem('market_animals', JSON.stringify(currentAnimals));
+
+                alert("🎉 जनावराची जाहिरात यशस्वीरित्या Firebase (लाईव्ह मार्केट) वर ॲड झाली आहे!");
+                window.location.href = "kharedi_vikri.html";
+            })
+            .catch((error) => {
+                console.error("Firebase Error: ", error);
+                alert("❌ डेटाबेसमध्ये सेव्ह करताना अडचण आली. कृपया इंटरनेट तपासा.");
+                submitBtn.innerHTML = "✅ जाहिरात पब्लिश करा";
+                submitBtn.disabled = false;
+            });
+        }
+    </script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

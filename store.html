@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - ई-स्टोअर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* Store Specific 3D Styles */
+        .store-header {
+            background: linear-gradient(135deg, #f57c00, #e65100);
+            color: white;
+            padding: 25px 20px 40px 20px;
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            box-shadow: 0 10px 20px rgba(230, 81, 0, 0.3), inset 0 -3px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px;
+            margin-top: -20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            background: #eef2f5;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            white-space: nowrap;
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.1), -4px -4px 8px rgba(255,255,255,0.9);
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #ff9800;
+            color: white;
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2), inset -3px -3px 6px rgba(255,255,255,0.3);
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+        .product-card {
+            background: #eef2f5;
+            border-radius: 16px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            position: relative;
+        }
+        .product-img {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05);
+        }
+        .product-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #4caf50;
+            color: white;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .product-name { font-size: 13px; font-weight: bold; color: #333; margin: 5px 0; }
+        .product-price { font-size: 15px; font-weight: 900; color: #d32f2f; margin-bottom: 10px; }
+        
+        .btn-add-cart {
+            background: #fff;
+            border: 2px solid #ff9800;
+            color: #ff9800;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-add-cart:active {
+            background: #ff9800;
+            color: white;
+        }
+
+        /* Pincode & Delivery Section */
+        .delivery-check {
+            background: #eef2f5;
+            margin: 0 20px 20px;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .delivery-check h4 { margin: 0 0 10px; font-size: 14px; color: #1b5e20; }
+        .pin-input-flex {
+            display: flex;
+            gap: 10px;
+        }
+        .pin-input-flex input { flex: 1; }
+        
+        #delivery_status {
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 8px;
+            display: none;
+        }
+        .local-dealer { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .direct-ship { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+
+        /* Cart Floating Button */
+        .cart-fab {
+            position: fixed;
+            bottom: 25px;
+            left: calc(50% - 220px);
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #81c784, #4caf50, #2e7d32);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4), inset 4px 4px 8px rgba(255,255,255,0.4);
+            z-index: 1000;
+        }
+        @media (max-width: 480px) { .cart-fab { left: 25px; } }
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #d32f2f;
+            color: white;
+            font-size: 12px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="store-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ डॅशबोर्ड</a>
+            <span style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 10px;">सर्टिफाइड प्रॉडक्ट्स ✅</span>
+        </div>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1>दुग्ध दिशा स्टोअर 🛒</h1>
+            <p>थेट कंपनी आणि स्थानिक डीलर्सकडून खरेदी</p>
+        </div>
+    </div>
+
+    <div class="category-tabs">
+        <button class="tab-btn active">सर्व (All)</button>
+        <button class="tab-btn">पशुखाद्य (Feed)</button>
+        <button class="tab-btn">सप्लिमेंट्स (Supplements)</button>
+        <button class="tab-btn">लहान पॅकेट्स (Trial)</button>
+        <button class="tab-btn">मशिनरी (Equipment)</button>
+    </div>
+
+    <div class="category-title">📍 डिलिव्हरी तपासा</div>
+    <div class="delivery-check">
+        <h4>तुमचा पिनकोड टाका:</h4>
+        <div class="pin-input-flex">
+            <input type="number" id="pincode" placeholder="उदा. 415001" onkeyup="if(this.value.length === 6) checkDelivery()">
+            <button class="btn-calculate" style="margin-top: 0; width: auto; padding: 0 15px;" onclick="checkDelivery()">तपासा</button>
+        </div>
+        <div id="delivery_status"></div>
+    </div>
+
+    <div class="category-title">🔥 शिफारस केलेली उत्पादने</div>
+    
+    <div class="product-grid">
+        
+        <div class="product-card">
+            <div class="product-tag">#Energy</div>
+            <div class="product-img">🧈</div>
+            <div class="product-name">प्रिमियम बायपास फॅट (१ किलो)</div>
+            <div class="product-price">₹ २५०</div>
+            <button class="btn-add-cart" onclick="addToCart()">कार्टमध्ये टाका</button>
+        </div>
+
+        <div class="product-card">
+            <div class="product-tag">#Protein</div>
+            <div class="product-img">🌾</div>
+            <div class="product-name">टाईप १ गोळी पेंड (५० किलो)</div>
+            <div class="product-price">₹ १,४५०</div>
+            <button class="btn-add-cart" onclick="addToCart()">कार्टमध्ये टाका</button>
+        </div>
+
+        <div class="product-card">
+            <div class="product-tag">#Health</div>
+            <div class="product-img">🧪</div>
+            <div class="product-name">लिक्विड कॅल्शियम (५ लिटर)</div>
+            <div class="product-price">₹ ५८०</div>
+            <button class="btn-add-cart" onclick="addToCart()">कार्टमध्ये टाका</button>
+        </div>
+
+        <div class="product-card">
+            <div class="product-tag">#Trial Pack</div>
+            <div class="product-img">🍼</div>
+            <div class="product-name">काफ स्टार्टर सॅम्पल (२ किलो)</div>
+            <div class="product-price">₹ १२०</div>
+            <button class="btn-add-cart" onclick="addToCart()">कार्टमध्ये टाका</button>
+        </div>
+
+    </div>
+
+    <div class="cart-fab">
+        🛒
+        <div class="cart-badge" id="cartCount">0</div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let cartItems = 0;
+
+    function addToCart() {
+        cartItems++;
+        let badge = document.getElementById('cartCount');
+        badge.innerText = cartItems;
+        
+        // Simple animation
+        badge.style.transform = "scale(1.5)";
+        setTimeout(() => { badge.style.transform = "scale(1)"; }, 200);
+    }
+
+    function checkDelivery() {
+        let pin = document.getElementById('pincode').value;
+        let statusBox = document.getElementById('delivery_status');
+        
+        if(pin.length !== 6) {
+            alert("कृपया ६ अंकी योग्य पिनकोड टाका.");
+            return;
+        }
+
+        statusBox.style.display = "block";
+
+        // Logic (Simulation of Hybrid Supply Chain)
+        if (pin.startsWith("415")) {
+            // Local Match
+            statusBox.className = "local-dealer";
+            statusBox.innerHTML = "🚚 <b>स्थानिक डीलर उपलब्ध!</b><br>तुमच्या जवळ 'श्रीराम ॲग्रो एजन्सी' कडून आज संध्याकाळपर्यंत डिलिव्हरी मिळेल (किंवा स्वतः आणू शकता).";
+        } else {
+            // Direct Company Shipping
+            statusBox.className = "direct-ship";
+            statusBox.innerHTML = "📦 <b>थेट कंपनीतून डिलिव्हरी!</b><br>येथे स्थानिक डीलर नाही. कुरिअरद्वारे ३ ते ४ दिवसांत थेट कंपनीच्या गोदामातून माल तुमच्या दारात येईल.";
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

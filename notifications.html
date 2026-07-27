@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>सूचना | दुग्ध दिशा AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+        .notif-page {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .notif-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid #2e7d32;
+        }
+        .notif-card h4 {
+            margin: 0 0 5px;
+            color: #1b5e20;
+            font-size: 16px;
+        }
+        .notif-card p {
+            margin: 0;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .notif-time {
+            font-size: 11px;
+            color: #888;
+            display: block;
+            margin-top: 8px;
+        }
+        .back-btn {
+            background: #1b5e20;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        .clear-btn {
+            background: #d32f2f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 15px;
+        }
+        .empty-msg {
+            text-align: center;
+            color: #888;
+            margin-top: 30px;
+            font-size: 16px;
+        }
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1b5e20;
+            margin: 0;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+    <div class="notif-page">
+        <div class="header-area">
+            <button class="back-btn" onclick="history.back()">⬅️ मागे</button>
+            <h2>📢 सर्व सूचना</h2>
+            <button class="clear-btn" onclick="clearMyNotifications()">सर्व साफ करा</button>
+        </div>
+        <div id="notif_container"></div>
+    </div>
+
+    <script>
+        // वर्तमान युजरची भूमिका (role)
+        const CURRENT_ROLE = localStorage.getItem("current_logged_in_role") || 'farmer';
+        const EIGHT_DAYS_MS = 8 * 24 * 60 * 60 * 1000;
+
+        // 8 दिवस जुन्या नोटिफिकेशन्स आपोआप हटवा आणि उरलेली दाखवा
+        function loadNotificationsPage() {
+            let allNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let now = Date.now();
+
+            // 8 दिवसांपेक्षा जुनी काढा
+            let freshNotifs = allNotifs.filter(n => {
+                let notifTime = new Date(n.timestamp || n.date).getTime(); // सपोर्ट जुन्या/नवीन की
+                return (now - notifTime) < EIGHT_DAYS_MS;
+            });
+
+            // जर फिल्टर केल्याने काही काढली असतील तर localStorage अपडेट करा
+            if (freshNotifs.length !== allNotifs.length) {
+                localStorage.setItem('system_notifications', JSON.stringify(freshNotifs));
+            }
+
+            // फक्त या युजरसाठी (त्याच्या role किंवा 'all' साठी) असलेली नोटिफिकेशन्स
+            let myNotifs = freshNotifs.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+
+            // नवीनतम वर दिसावी म्हणून उतरता क्रम
+            myNotifs.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+
+            let container = document.getElementById('notif_container');
+            if (myNotifs.length === 0) {
+                container.innerHTML = '<div class="empty-msg">कोणतीही सूचना नाही.</div>';
+                return;
+            }
+
+            let html = '';
+            myNotifs.forEach(n => {
+                let timeStr = n.time || '';
+                if (n.timestamp) {
+                    timeStr = new Date(n.timestamp).toLocaleString('mr-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } else if (n.date) {
+                    timeStr = new Date(n.date).toLocaleString('mr-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+                html += `
+                    <div class="notif-card">
+                        <h4>${n.title || 'सूचना'}</h4>
+                        <p>${n.message || ''}</p>
+                        <span class="notif-time">⏰ ${timeStr}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // फक्त या युजरच्या नोटिफिकेशन्स क्लिअर करा (बाकीच्या भूमिकांना त्रास होणार नाही)
+        function clearMyNotifications() {
+            if (!confirm("तुम्हाला खात्री आहे? सर्व सूचना कायमच्या हटवल्या जातील.")) return;
+
+            let allNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            // इतर भूमिकांच्या नोटिफिकेशन्स ठेवा, फक्त CURRENT_ROLE आणि 'all' काढा
+            let remainingNotifs = allNotifs.filter(n => n.target !== CURRENT_ROLE && n.target !== 'all');
+            localStorage.setItem('system_notifications', JSON.stringify(remainingNotifs));
+            loadNotificationsPage();
+        }
+
+        window.onload = loadNotificationsPage;
+    </script>
+    
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

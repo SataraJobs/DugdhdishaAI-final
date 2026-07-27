@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - नफा-तोटा व ॲनालायझर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .form-section {
+            background: #fff;
+            padding: 15px 20px;
+            margin: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+        .form-section label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .form-section input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: #f9f9f9;
+            box-sizing: border-box;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Profit Dashboard Design */
+        .dashboard-result {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .s-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .s-card h4 { margin: 0; font-size: 12px; color: #666; }
+        .s-card h2 { margin: 5px 0 0; font-size: 20px; }
+        
+        .income-text { color: #2e7d32; }
+        .expense-text { color: #d32f2f; }
+        .profit-text { color: #1976d2; }
+
+        .main-profit-card {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3);
+        }
+        .main-profit-card h3 { margin: 0; font-size: 14px; font-weight: normal; opacity: 0.9; }
+        .main-profit-card h1 { margin: 5px 0 0; font-size: 32px; }
+
+        .ai-optimizer {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .ai-optimizer h4 { margin: 0 0 8px 0; color: #e65100; font-size: 14px; }
+        
+        .btn-calculate {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .btn-calculate:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="top-dashboard" style="background: #1976d2; padding-bottom: 20px; border-radius: 0 0 20px 20px; color: white; padding: 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="margin: 0;">अर्थशास्त्र व मिल्क ॲनालायझर</h1>
+            <p style="margin: 5px 0 0; color: #bbdefb;">खर्च, उत्पन्न आणि फीड ऑप्टिमायझेशन</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 15px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">१. दूध उत्पादन (Milk Data)</div>
+    <div class="form-section">
+        <div class="input-row">
+            <div style="flex: 1;">
+                <label>आजचे दूध (लिटर):</label>
+                <input type="number" id="milk_qty" placeholder="उदा. 20">
+            </div>
+            <div style="flex: 1;">
+                <label>दुधाचा दर (₹/लिटर):</label>
+                <input type="number" id="milk_rate" placeholder="उदा. 35">
+            </div>
+        </div>
+        <div class="input-row">
+            <div style="flex: 1;">
+                <label>फॅट (Fat %):</label>
+                <input type="number" id="milk_fat" step="0.1" placeholder="उदा. 3.5">
+            </div>
+            <div style="flex: 1;">
+                <label>एस.एन.एफ (SNF %):</label>
+                <input type="number" id="milk_snf" step="0.1" placeholder="उदा. 8.5">
+            </div>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 15px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">२. दैनंदिन खर्च (Daily Expenses)</div>
+    <div class="form-section">
+        <label>आजचा एकूण खाद्याचा खर्च (₹):</label>
+        <input type="number" id="feed_cost" placeholder="उदा. 350">
+        
+        <label>इतर खर्च (मजुरी/वीज/औषधे) (₹):</label>
+        <input type="number" id="other_cost" placeholder="उदा. 50">
+        
+        <button class="btn-calculate" onclick="calculateEconomics()" style="width: 100%; margin: 15px 0 0;">नफा व ॲनालिसिस तपासा</button>
+    </div>
+
+    <div class="dashboard-result" id="resultDashboard">
+        <div class="category-title" style="margin-left: 0; margin-right: 0;">📊 आजचा आर्थिक अहवाल</div>
+        
+        <div class="main-profit-card" id="profit_bg">
+            <h3>आजचा निव्वळ नफा (Net Profit)</h3>
+            <h1 id="res_net_profit">₹ 0</h1>
+            <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.9;" id="res_profit_margin">नफा मार्जिन: --%</p>
+        </div>
+
+        <div class="summary-cards">
+            <div class="s-card">
+                <h4>एकूण उत्पन्न</h4>
+                <h2 class="income-text" id="res_income">₹ 0</h2>
+            </div>
+            <div class="s-card">
+                <h4>एकूण खर्च</h4>
+                <h2 class="expense-text" id="res_expense">₹ 0</h2>
+            </div>
+            <div class="s-card">
+                <h4>१ लिटरचा खर्च</h4>
+                <h2 class="expense-text" id="res_cost_per_liter">₹ 0</h2>
+            </div>
+            <div class="s-card">
+                <h4>१ लिटरमागे नफा</h4>
+                <h2 class="profit-text" id="res_profit_per_liter">₹ 0</h2>
+            </div>
+        </div>
+
+        <div class="ai-optimizer" id="ai_optimizer_box">
+            <h4>🤖 फीड कॉस्ट ऑप्टिमायझर (AI सल्ला):</h4>
+            <div id="ai_advice"></div>
+            
+            <div id="profit_targeted_ad" style="margin-top: 15px;"></div>
+        </div>
+        
+        <!-- 🔥 Small Font Legal Disclaimer -->
+        <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
+            * ⚠️ <b>कायदेशीर सूचना:</b> येथे सुचवलेली उत्पादने (पेंड, मिनरल मिक्सचर, इ.) ही ॲपद्वारे प्रायोजित (Sponsored) आहेत. कोणतेही नवीन औषध, खाद्य किंवा पावडर गोठ्यात वापरण्यास सुरुवात करण्यापूर्वी तुमच्या परवानाधारक <b>पशुवैद्यकीय अधिकाऱ्याचा (Veterinary Doctor) सल्ला नक्की घ्यावा.</b>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    function calculateEconomics() {
+        // Get Inputs
+        let milkQty = parseFloat(document.getElementById('milk_qty').value);
+        let milkRate = parseFloat(document.getElementById('milk_rate').value);
+        let fat = parseFloat(document.getElementById('milk_fat').value) || 0;
+        let snf = parseFloat(document.getElementById('milk_snf').value) || 0;
+        let feedCost = parseFloat(document.getElementById('feed_cost').value);
+        let otherCost = parseFloat(document.getElementById('other_cost').value) || 0;
+
+        if(!milkQty || !milkRate || !feedCost) {
+            alert("कृपया दूध (लिटर), दुधाचा दर आणि खाद्याचा खर्च नक्की भरा!");
+            return;
+        }
+
+        // Calculations
+        let totalIncome = milkQty * milkRate;
+        let totalExpense = feedCost + otherCost;
+        let netProfit = totalIncome - totalExpense;
+        
+        let costPerLiter = totalExpense / milkQty;
+        let profitPerLiter = netProfit / milkQty;
+        let profitMargin = (netProfit / totalIncome) * 100;
+        let feedCostPercentage = (feedCost / totalIncome) * 100;
+
+        // 🔥 FIREBASE: LOG PROFIT ANALYTICS 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        
+        db.collection("profit_analysis_logs").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            totalIncome: totalIncome,
+            totalExpense: totalExpense,
+            netProfit: netProfit,
+            profitMargin: profitMargin,
+            feedCostPercentage: feedCostPercentage,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging profit analysis: ", err));
+
+        // Update UI
+        document.getElementById('res_income').innerText = `₹ ${totalIncome.toFixed(0)}`;
+        document.getElementById('res_expense').innerText = `₹ ${totalExpense.toFixed(0)}`;
+        document.getElementById('res_net_profit').innerText = `₹ ${netProfit.toFixed(0)}`;
+        document.getElementById('res_profit_margin').innerText = `नफा मार्जिन: ${profitMargin.toFixed(1)}%`;
+        document.getElementById('res_cost_per_liter').innerText = `₹ ${costPerLiter.toFixed(2)}`;
+        document.getElementById('res_profit_per_liter').innerText = `₹ ${profitPerLiter.toFixed(2)}`;
+
+        // Change Main Card Color based on Profit/Loss
+        let profitBg = document.getElementById('profit_bg');
+        if(netProfit < 0) {
+            profitBg.style.background = "linear-gradient(135deg, #d32f2f, #b71c1c)"; // Red for loss
+        } else {
+            profitBg.style.background = "linear-gradient(135deg, #1976d2, #1565c0)"; // Blue for profit
+        }
+
+        // AI Optimizer Logic (Feature 8 & 9)
+        let aiAdvice = "";
+        let adBox = document.getElementById('profit_targeted_ad');
+        adBox.innerHTML = ""; // Clear previous ads
+        
+        // --- 🔥 DATA POOL FOR DYNAMIC AD CAMPAIGNS ---
+        const bulkFeedSponsors = [
+            { company: "हिंदुस्तान फिड्स", details: "बल्क गोळी पेंड (घाऊक डिस्काउंट)", offer: "थेट डीलरकडून खरेदीवर ७% सूट", color: "linear-gradient(145deg, #e65100, #d84315)" },
+            { company: "गोदरेज ॲग्रोव्हेट", details: "कमर्शियल गोठा फिडिंग प्लॅन", offer: "बल्क बुकिंगवर मोफत डिलिव्हरी", color: "linear-gradient(145deg, #2e7d32, #1b5e20)" },
+            { company: "इंटास (Intas)", details: "रुमेन हेल्थ आणि न्यूट्रिशन पॅक", offer: "१० बॅग्सवर १ बॅग मोफत ऑफर", color: "linear-gradient(145deg, #8e24aa, #6a1b9a)" }
+        ];
+
+        const qualityBoosterSponsors = [
+            { company: "Virbac", name: "एनर्जी बूस्टर (Energy Booster)", benefit: "SNF आणि फॅटची टक्केवारी वाढवण्यासाठी", color: "linear-gradient(145deg, #1976d2, #1565c0)" },
+            { company: "गोदरेज ॲग्रोव्हेट", name: "मिनरल मिक्सचर (Gold)", benefit: "दुधातील फॅट जलद वाढवण्यासाठी", color: "linear-gradient(145deg, #2e7d32, #1b5e20)" },
+            { company: "हिंदुस्तान फिड्स", name: "बायपास प्रोटीन मिल्क पेलेट", benefit: "दूध आणि सॉलिड फॅट वाढवण्यासाठी", color: "linear-gradient(145deg, #e65100, #d84315)" }
+        ];
+
+        // Feed Cost Rule: Ideal feed cost is around 60-70% of milk income
+        if (feedCostPercentage > 70) {
+            aiAdvice += `⚠️ तुमचा खाद्याचा खर्च खूप जास्त आहे (उत्पन्नाच्या <b>${feedCostPercentage.toFixed(0)}%</b>). <br><b>सल्ला:</b> महागड्या गोळी पेंडीऐवजी मका भरडा किंवा घरगुती चुणीचा वापर करून खर्च कमी करा.<br><br>`;
+            
+            // 🎯 INJECT BULK FEED AD: Pick a random sponsor to show bulk saving options
+            let randomFeedAd = bulkFeedSponsors[Math.floor(Math.random() * bulkFeedSponsors.length)];
+            adBox.innerHTML += `
+                <div style="background: white; border: 1px solid #ffcc80; padding: 12px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-top: 10px; border-left: 4px solid #ff9800;">
+                    <span style="font-size: 9px; background: #fff8e1; color: #e65100; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ffe0b2;">Sponsored Offer</span>
+                    <div style="font-size:12px; color:#333; margin: 6px 0;">खाद्याचा खर्च कमी करण्यासाठी <b>${randomFeedAd.company}</b> कडून बल्क ऑफर्स मिळवा:</div>
+                    <div style="background: ${randomFeedAd.color}; color: white; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 13px; cursor: pointer;" onclick="window.location.href='krushi_mall.html'">
+                        ${randomFeedAd.details}<br><span style="font-size:11px; opacity:0.9;">${randomFeedAd.offer} 👉</span>
+                    </div>
+                </div>
+            `;
+        } else if (feedCostPercentage < 40) {
+            aiAdvice += `⚠️ खाद्याचा खर्च खूप कमी आहे. जनावराला कुपोषण तर होत नाहीये ना? कृपया <b>रेशन बॅलन्सर</b> वापरून आहार तपासा.<br><br>`;
+        } else {
+            aiAdvice += `✅ तुमचा खाद्याचा खर्च संतुलित आहे (उत्पन्नाच्या <b>${feedCostPercentage.toFixed(0)}%</b>). <br><br>`;
+        }
+
+        // Quality Rule (Milk Analyzer Ad Trigger)
+        if (fat > 0 && snf > 0) {
+            if (fat < 3.5 || snf < 8.5) {
+                if (fat < 3.5) {
+                    aiAdvice += `📉 <b>फॅट ॲनालिसिस:</b> दुधाची फॅट (${fat}%) कमी आहे. आहारात 'सुका चारा' (कडबा/काड) किंवा बायपास फॅट वाढवा.<br>`;
+                }
+                if (snf < 8.5) {
+                    aiAdvice += `📉 <b>SNF ॲनालिसिस:</b> SNF (${snf}%) कमी आहे. गाईला ऊर्जा (Energy) कमी पडत आहे. आहारात मका किंवा धान्याचे प्रमाण वाढवा.<br>`;
+                }
+
+                // 🎯 INJECT QUALITY BOOSTER AD
+                let randomBoosterAd = qualityBoosterSponsors[Math.floor(Math.random() * qualityBoosterSponsors.length)];
+                adBox.innerHTML += `
+                    <div style="background: white; border: 1px solid #ffcc80; padding: 12px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-top: 10px; border-left: 4px solid #ff9800;">
+                        <span style="font-size: 9px; background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #bbdefb;">Quality Suggestion</span>
+                        <div style="font-size:12px; color:#333; margin: 6px 0;">दुधाचा दर आणि फॅट वाढवण्यासाठी <b>${randomBoosterAd.company}</b> चे उत्पादन वापरा:</div>
+                        <div style="background: ${randomBoosterAd.color}; color: white; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 13px; cursor: pointer;" onclick="window.location.href='krushi_mall.html'">
+                            ${randomBoosterAd.name}<br><span style="font-size:11px; opacity:0.9;">${randomBoosterAd.benefit} 👉</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        if (netProfit < 0) {
+            aiAdvice += `<br>🚨 <b>धोक्याची घंटा:</b> तुमचा गोठा तोट्यात चालला आहे. कृपया खाद्याचा अपव्यय टाळा आणि डॉक्टरांचा सल्ला घ्या.`;
+        }
+
+        document.getElementById('ai_advice').innerHTML = aiAdvice;
+
+        // Show Dashboard
+        let dashboard = document.getElementById('resultDashboard');
+        dashboard.style.display = 'block';
+        dashboard.scrollIntoView({behavior: "smooth"});
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

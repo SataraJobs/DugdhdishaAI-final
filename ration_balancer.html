@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - प्रगत रेशन बॅलन्सर</title>
+    
+    <!-- 🔥 NEW: html2pdf.js for Multi-Page Reliable PDF Generation 🔥 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root{
+            --green:#2e7d32;
+            --blue:#1976d2;
+            --purple:#8e24aa;
+            --orange:#e65100;
+            --yellow:#fbc02d;
+            --red:#c62828;
+            --bg:#f4f7f6;
+            --card:#fff;
+            --text:#222;
+            --muted:#666;
+            
+            /* Dynamic Theme Colors */
+            --theme-bg: #f4f7f6;
+            --theme-card-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            --theme-border: #ccc;
+            --theme-input-bg: #fafafa;
+            --theme-heading-bg: transparent;
+            --theme-heading-text: #2e7d32;
+            --theme-heading-border: #ff9800;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--theme-bg); margin: 0; padding: 0; color: var(--text); transition: background-color 0.4s ease; padding-bottom: 85px !important;}
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; min-height: 100vh; position: relative;}
+        
+        .top-dashboard { background: var(--green); padding: 20px; border-radius: 0 0 20px 20px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: background 0.4s ease; }
+        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .header-titles h1 { margin: 10px 0 5px; font-size: 22px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);}
+        .header-titles p { margin: 0; font-size: 13px; opacity: 0.9; }
+
+        /* 🔥 PREMIUM 3D TABS DESIGN 🔥 */
+        .level-tabs { display: flex; margin: 20px; background: #e0e0e0; border-radius: 12px; padding: 5px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); gap: 5px;}
+        .level-tab { flex: 1; text-align: center; padding: 12px 5px; font-size: 13px; font-weight: bold; color: #555; cursor: pointer; border-radius: 8px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); line-height: 1.3; position: relative; background: transparent; border: 1px solid transparent;}
+        
+        .level-tab.active { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); border-color: rgba(255,255,255,0.5); z-index: 2;}
+        
+        /* Basic Tab */
+        .level-tab.active.basic { background: linear-gradient(145deg, #ffffff, #f1f8e9); color: var(--green); border-bottom: 3px solid var(--green); }
+        
+        /* Pro Tab Premium */
+        .level-tab.pro { color: #1565c0; }
+        .level-tab.active.pro { background: linear-gradient(145deg, #e3f2fd, #bbdefb); color: #0d47a1; border-bottom: 3px solid #1565c0; box-shadow: 0 6px 15px rgba(25, 118, 210, 0.2); }
+        
+        /* Advance Tab Ultra Premium */
+        .level-tab.adv { color: #6a1b9a; }
+        .level-tab.active.adv { background: linear-gradient(145deg, #f3e5f5, #e1bee7); color: #4a148c; border-bottom: 3px solid #8e24aa; box-shadow: 0 6px 15px rgba(142, 36, 170, 0.2); position: relative; overflow: hidden;}
+        .level-tab.active.adv::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%); transform: rotate(45deg); pointer-events: none; }
+
+        /* 🔥 DYNAMIC CATEGORY TITLES WITH GRADIENTS 🔥 */
+        .category-title { 
+            font-size: 16px; 
+            font-weight: 900; 
+            color: var(--theme-heading-text); 
+            margin: 15px 20px 10px; 
+            border-left: 5px solid var(--theme-heading-border); 
+            padding: 8px 12px; 
+            background: var(--theme-heading-bg);
+            border-radius: 0 8px 8px 0;
+            transition: all 0.4s ease;
+            box-shadow: var(--theme-card-shadow);
+        }
+        
+        .form-section { background: var(--card); padding: 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: var(--theme-card-shadow); transition: box-shadow 0.4s ease; border: 1px solid rgba(0,0,0,0.05); }
+
+        .input-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 15px; }
+        .input-row label { display: block; font-weight: bold; color: #555; margin-bottom: 5px; font-size: 12px; }
+        
+        /* Dynamic Inputs */
+        select, input { width: 100%; padding: 12px; border: 1px solid var(--theme-border); border-radius: 8px; background: var(--theme-input-bg); font-size: 14px; box-sizing: border-box; transition: all 0.3s ease; font-weight: bold; color: #333;}
+        select:focus, input:focus { outline: none; border-color: var(--theme-heading-border); background: #fff; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); transform: translateY(-1px);}
+
+        .custom-input { display: none; width: 100%; padding: 10px; margin-top: 5px; border: 1px dashed #1976d2; border-radius: 6px; font-size: 13px; background: #e3f2fd; }
+        .dm-info { font-size: 11.5px; color: var(--blue); font-weight: bold; margin-top: 5px; padding-left: 2px; }
+        
+        .category-header { font-size: 14px; color: var(--theme-heading-text); font-weight: 900; margin: 15px 0 10px; border-bottom: 2px dashed var(--theme-border); padding-bottom: 5px; transition: color 0.4s ease;}
+
+        /* SIDE-BY-SIDE ALIGNMENT */
+        .feed-input-group { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 15px;}
+        .feed-select-col { flex: 2; }
+        .feed-qty-col { flex: 1; }
+
+        /* Dynamic Main Button */
+        .btn-primary { background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.15); margin-top: 10px; transition: all 0.2s; letter-spacing: 0.5px;}
+        .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .btn-pdf { background: linear-gradient(145deg, #d32f2f, #c62828); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; width: 100%; margin-top: 15px; display: none; box-shadow: 0 4px 10px rgba(198, 40, 40, 0.3); transition: 0.2s;}
+        .btn-pdf:active { transform: translateY(3px); box-shadow: none;}
+
+        /* 🔥 NEW: AI Gemini Button Styles 🔥 */
+        .btn-gemini-ai { background: linear-gradient(145deg, #fbc02d, #f57f17); color: #3e2723; border: 2px solid #f9a825; padding: 14px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; width: 100%; margin-top: 15px; display: none; box-shadow: 0 4px 10px rgba(251, 192, 45, 0.3); animation: pulse-glow 2s infinite;}
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); } }
+
+        #pro_inputs, #adv_inputs { display: none; padding-top: 15px; border-top: 2px dashed var(--theme-border); margin-top: 15px; }
+
+        .result-box { background: var(--card); margin: 20px; padding: 20px; border-radius: 12px; display: none; box-shadow: var(--theme-card-shadow); border-top: 5px solid var(--theme-heading-border); transition: border-color 0.4s ease; }
+        
+        /* PDF specific classes to prevent cutoff */
+        .pdf-page-break { page-break-inside: avoid; }
+        
+        .result-list { display: flex; flex-direction: column; gap: 12px; margin: 15px 0; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-top: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;}
+        .res-label { font-size: 14px; font-weight: 900; color: #444; }
+        .res-data { text-align: right; }
+        .res-val { display: block; font-size: 20px; font-weight: 900; color: #111; letter-spacing: -0.5px;}
+        .res-req { display: block; font-size: 11px; color: #d32f2f; font-weight: 900; margin-top: 2px; }
+
+        .ai-report { margin-bottom: 25px; padding-bottom: 20px; }
+        .ai-report h3 { color: var(--theme-heading-text); margin: 0 0 15px; font-size: 18px; display: flex; align-items: center; gap: 8px; font-weight: 900;}
+        .report-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .report-section h4 { margin: 0 0 10px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-weight: 900;}
+        .report-section p { margin: 5px 0; font-size: 13.5px; line-height: 1.6; color: #444; font-weight: 600;}
+        .report-section ul { margin: 5px 0; padding-left: 20px; font-size: 13.5px; color: #444; }
+        .report-section li { margin-bottom: 5px; font-weight: 600;}
+
+        /* 🔥 Dynamic AI Content Box 🔥 */
+        .gemini-response-box { background: #fffde7; border: 2px dashed #fbc02d; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .gemini-response-box h4 { color: #f57f17; margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px;}
+        .gemini-content { font-size: 14px; color: #3e2723; line-height: 1.6; }
+        .gemini-loader { font-size: 13px; color: #f57f17; font-weight: bold; font-style: italic; display: none; text-align: center; padding: 10px;}
+
+        .status-ok { color: var(--green); font-weight: 900; }
+        .status-warn { color: var(--orange); font-weight: 900; }
+        .status-danger { color: var(--red); font-weight: 900; }
+
+        .highlight-box { background: #f0f7ff; border-left: 4px solid #1976d2; padding: 12px; border-radius: 6px; margin-top: 10px; box-shadow: 0 2px 5px rgba(25, 118, 210, 0.1);}
+        .marketing-hook { background: linear-gradient(145deg, #fff3e0, #ffe0b2); border: 1px dashed #ff9800; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(230, 81, 0, 0.1);}
+        .marketing-hook:active { transform: scale(0.98); }
+        .marketing-hook p { margin: 0 0 8px; font-size: 15px; color: #e65100; font-weight: 900; line-height: 1.4;}
+        .marketing-hook span { background: #e65100; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(230, 81, 0, 0.3); display: inline-block;}
+
+        .final-verdict { text-align: center; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 900; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        
+        /* 🔥 FIXED GLOSSARY BOX ALIGNMENT 🔥 */
+        .glossary-box { background: #e8f5e9; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #c8e6c9; display: flex; flex-direction: column;}
+        .glossary-item { font-size: 12.5px; margin-bottom: 8px; color: #444; line-height: 1.4; display: block; width: 100%;}
+        .glossary-item-highlight { font-size: 12.5px; margin-bottom: 8px; background: white; padding: 8px; border-radius: 6px; display: block; width: 100%; box-sizing: border-box;}
+
+        .mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .pill { display:inline-block; padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:800; margin:4px 6px 0 0; background:#eef3ff; color:#224; border:1px solid #d9e4ff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .pill.good { background:#e8f5e9; color:#1b5e20; border-color:#c8e6c9; }
+        .pill.warn { background:#fff3e0; color:#e65100; border-color:#ffe0b2; }
+        .pill.bad { background:#ffebee; color:#c62828; border-color:#ffcdd2; }
+
+        /* 🔥 PAYWALL OVERLAY STYLES 🔥 */
+        .paywall-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);}
+        .paywall-box { background: #fff; padding: 25px 20px; border-radius: 16px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; animation: popUp 0.3s ease-out;}
+        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .paywall-icon { font-size: 50px; margin-bottom: 10px; line-height: 1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2)); }
+        .paywall-title { color: #d32f2f; font-size: 20px; font-weight: 900; margin: 0 0 5px; }
+        .paywall-desc { font-size: 13px; color: #555; margin: 0 0 15px; line-height: 1.5; font-weight: 600;}
+        
+        .paywall-price-tag { background: #fff3e0; color: #e65100; border: 2px dashed #ffb300; padding: 10px; border-radius: 8px; font-size: 18px; font-weight: 900; margin-bottom: 20px;}
+        
+        .btn-pay-now { background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(230,81,0,0.4); text-decoration: none; display: block; box-sizing: border-box;}
+        .btn-pay-close { background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* Payment Form Inside Modal */
+        .payment-form { display: none; margin-bottom: 15px;}
+        .input-field { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; box-sizing: border-box; background: #fafafa; font-weight: bold; margin-bottom: 10px;}
+        .input-field:focus { border-color: #e65100; outline: none; background: #fff;}
+        .btn-submit-utr { background: #2e7d32; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; width: 100%; display: none; box-shadow: 0 4px 10px rgba(46, 125, 50, 0.4);}
+
+        /* 🖨️ PDF Printing Specific Styles 🖨️ */
+        #pdf_content_wrapper { width: 100%; box-sizing: border-box;}
+        .pdf-disclaimer { margin-top: 20px; font-size: 11px; color: #666; text-align: center; border-top: 1px dashed #ccc; padding-top: 15px; background: #fff8e1; border-radius: 8px; padding-bottom: 15px;}
+        .pdf-header-logo { display:none; text-align:center; padding-bottom: 15px; border-bottom: 3px solid #2e7d32; margin-bottom: 25px; }
+
+        /* 🔥 BOTTOM NAVIGATION BAR STYLES 🔥 */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .b-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #757575;
+            transition: 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+        
+        .b-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+            transition: 0.3s;
+        }
+        
+        .b-nav-text {
+            font-size: 10px;
+            font-weight: 800;
+        }
+        
+        /* Active State */
+        .b-nav-item.active {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        
+        .b-nav-item.active .b-nav-icon {
+            filter: grayscale(0%);
+            transform: scale(1.15);
+        }
+
+        @media (max-width: 768px) {
+            .input-row, .mini-grid { grid-template-columns: 1fr; }
+            .input-row { flex-direction: column; }
+        }
+
+        /* 🔥 Dynamic Ad Box Styling 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; display: none;}
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900; margin: 0 0 8px;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .sponsor-tag { font-size: 10px; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; color: #0d47a1; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+
+        /* 🔥 NEW NUTRIENT TABLE STYLES 🔥 */
+        .nutrient-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .nutrient-table th, .nutrient-table td { border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: 600; }
+        .nutrient-table th { background: #f5f5f5; color: #444; font-size: 12px; }
+        .nutrient-table td { color: #222; }
+        .nutrient-table .diff-positive { color: #2e7d32; }
+        .nutrient-table .diff-negative { color: #c62828; }
+        .nutrient-table .impact-cell { font-size: 11.5px; color: #d32f2f; text-align: left; }
+        
+        /* Loader Overlay for Auto-Paytm */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body onload="initRationBalancer()">
+
+<div class="app-container">
+
+    <div class="top-dashboard" id="main_top_header">
+        <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles">
+            <h1 id="main_title_text">प्रगत रेशन बॅलन्सर ⚖️</h1>
+            <p id="main_subtitle_text">वैज्ञानिक विश्लेषण आणि सविस्तर मार्गदर्शन</p>
+        </div>
+    </div>
+<!-- 🔥 3D PREMIUM TABS WITH LOCK INDICATOR 🔥 -->
+<div class="level-tabs">
+    <div class="level-tab active basic" id="tab_basic" onclick="setLevel('basic')">🟢 बेसिक<br><span style="font-size:9px; font-weight:bold; color:#666;">(फ्री)</span></div>
+    <div class="level-tab pro" id="tab_pro" onclick="setLevel('pro')">🔵 प्रो-ॲक्टिव्ह<br><span id="tab_price_pro" style="font-size:9px; font-weight:bold; color:#d32f2f;">🔒 ₹२९</span></div>
+    <div class="level-tab adv" id="tab_adv" onclick="setLevel('adv')">🟣 ॲडव्हान्स<br><span id="tab_price_adv" style="font-size:9px; font-weight:bold; color:#d32f2f;">🔒 ₹४९</span></div>
+</div>
+
+<div class="category-title">१. गाईची माहिती</div>
+<div class="form-section">
+    <div class="input-row" style="flex-direction: row;">
+        <div style="flex: 1;">
+            <label>वजन (किलो):</label>
+            <input type="number" id="cow_weight" placeholder="500" value="500" min="1">
+        </div>
+        <div style="flex: 1;">
+            <label>रोजचे दूध (लिटर):</label>
+            <input type="number" id="cow_milk" placeholder="20" value="20" min="0">
+        </div>
+    </div>
+    
+    <div id="pro_inputs">
+        <div class="input-row" style="flex-direction: row;">
+            <div style="flex: 1;">
+                <label>दुधातील फॅट (Fat %):</label>
+                <input type="number" id="cow_fat" placeholder="उदा. 4.0" value="4.0" step="0.1" min="0">
+            </div>
+            <div style="flex: 1;">
+                <label>खाद्याचा खर्च (₹/दिवस):</label>
+                <input type="number" id="feed_cost" placeholder="उदा. 250" min="0">
+            </div>
+        </div>
+    </div>
+    
+    <div id="adv_inputs">
+        <div class="input-row" style="flex-direction: row;">
+            <div style="flex: 1;">
+                <label>गर्भावस्था (महिने):</label>
+                <select id="cow_preg">
+                    <option value="0">गाभण नाही (0)</option>
+                    <option value="7">७ महिने</option>
+                    <option value="8">८ महिने</option>
+                    <option value="9">९ महिने</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label>हवामान (Heat Stress):</label>
+                <select id="cow_thi">
+                    <option value="normal">सामान्य</option>
+                    <option value="high">कडक उन्हाळा (High)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="category-title">२. उपलब्ध चारा व खाद्य नोंदवा</div>
+<div class="form-section">
+    
+    <div class="category-header">🥬 हिरवा चारा व मुरघास</div>
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="green_1" onchange="handleSelect(this, 'dm_green_1', 'custom_green_1', 'green')">
+                <option value="">-- हिरवा चारा १ --</option>
+                <option value="25" data-cp="3.6" data-me="2.1" data-ndf="62.2" data-adf="37.4" data-ca="0.6" data-p="0.3">हिरवी मका (CP:3.6%, ME:2.1)</option>
+                <option value="20" data-cp="7" data-me="1.8" data-ndf="65" data-adf="40" data-ca="0.4" data-p="0.2">हत्ती गवत / नेपियर (CP:7%, ME:1.8)</option>
+                <option value="35" data-cp="8" data-me="2.4" data-ndf="45" data-adf="25" data-ca="0.5" data-p="0.3">मका मुरघास (CP:8%, ME:2.4)</option>
+                <option value="30" data-cp="5" data-me="1.9" data-ndf="70" data-adf="45" data-ca="0.3" data-p="0.1">उसाचे वाढे (CP:5%, ME:1.9)</option>
+                <option value="30" data-cp="7.5" data-me="2.0" data-ndf="60" data-adf="40" data-ca="0.4" data-p="0.2">पूर्ण ऊस कुट्टी (Whole Sugarcane) (CP:7.5%, ME:2.0)</option>
+                <option value="20" data-cp="16" data-me="2.0" data-ndf="43.6" data-adf="35.8" data-ca="1.5" data-p="0.2">लुसर्न / लसूणघास (Alfalfa) (CP:16%, ME:2.0)</option>
+                <option value="15" data-cp="15" data-me="2.4" data-ndf="49.6" data-adf="50.4" data-ca="1.4" data-p="0.2">बरसीम / मेथी घास (CP:15%, ME:2.4)</option>
+                <option value="20" data-cp="5.6" data-me="2.0" data-ndf="58.0" data-adf="36.4" data-ca="0.6" data-p="0.3">ओट्स हिरवा चारा (CP:5.6%, ME:2.0)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_green_1" class="custom-input" placeholder="चाऱ्याचे नाव...">
+            <div id="dm_green_1" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_green_1" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="green_2" onchange="handleSelect(this, 'dm_green_2', 'custom_green_2', 'green')">
+                <option value="">-- हिरवा चारा २ --</option>
+                <option value="25" data-cp="3.6" data-me="2.1" data-ndf="62.2" data-adf="37.4" data-ca="0.6" data-p="0.3">हिरवी मका (CP:3.6%, ME:2.1)</option>
+                <option value="20" data-cp="7" data-me="1.8" data-ndf="65" data-adf="40" data-ca="0.4" data-p="0.2">हत्ती गवत / नेपियर (CP:7%, ME:1.8)</option>
+                <option value="35" data-cp="8" data-me="2.4" data-ndf="45" data-adf="25" data-ca="0.5" data-p="0.3">मका मुरघास (CP:8%, ME:2.4)</option>
+                <option value="30" data-cp="5" data-me="1.9" data-ndf="70" data-adf="45" data-ca="0.3" data-p="0.1">उसाचे वाढे (CP:5%, ME:1.9)</option>
+                <option value="30" data-cp="7.5" data-me="2.0" data-ndf="60" data-adf="40" data-ca="0.4" data-p="0.2">पूर्ण ऊस कुट्टी (Whole Sugarcane) (CP:7.5%, ME:2.0)</option>
+                <option value="20" data-cp="16" data-me="2.0" data-ndf="43.6" data-adf="35.8" data-ca="1.5" data-p="0.2">लुसर्न / लसूणघास (Alfalfa) (CP:16%, ME:2.0)</option>
+                <option value="15" data-cp="15" data-me="2.4" data-ndf="49.6" data-adf="50.4" data-ca="1.4" data-p="0.2">बरसीम / मेथी घास (CP:15%, ME:2.4)</option>
+                <option value="20" data-cp="5.6" data-me="2.0" data-ndf="58.0" data-adf="36.4" data-ca="0.6" data-p="0.3">ओट्स हिरवा चारा (CP:5.6%, ME:2.0)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_green_2" class="custom-input" placeholder="चाऱ्याचे नाव...">
+            <div id="dm_green_2" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_green_2" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="category-header">🌾 सुका चारा (Dry Fodder)</div>
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="dry_1" onchange="handleSelect(this, 'dm_dry_1', 'custom_dry_1', 'dry')">
+                <option value="">-- सुका चारा १ --</option>
+                <option value="90" data-cp="7.0" data-me="1.9" data-ndf="56.5" data-adf="40.3" data-ca="0.4" data-p="0.2">ज्वारीचा कडबा (CP:7.0%, ME:1.9)</option>
+                <option value="90" data-cp="3.5" data-me="1.9" data-ndf="72.3" data-adf="43.5" data-ca="0.3" data-p="0.1">गव्हाचे काड / भुसा (CP:3.5%, ME:1.9)</option>
+                <option value="85" data-cp="15.0" data-me="1.9" data-ndf="59.0" data-adf="42.8" data-ca="0.5" data-p="0.2">सोयाबीन कुट्टी (CP:15.0%, ME:1.9)</option>
+                <option value="90" data-cp="4" data-me="1.4" data-ndf="76" data-adf="46" data-ca="0.4" data-p="0.2">बाजरीचा कडबा (CP:4%, ME:1.4)</option>
+                <option value="90" data-cp="10" data-me="1.8" data-ndf="65" data-adf="40" data-ca="0.6" data-p="0.3">हाय (Hay) (CP:10%, ME:1.8)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_dry_1" class="custom-input" placeholder="चाऱ्याचे नाव...">
+            <div id="dm_dry_1" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_dry_1" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="category-header">🪣 पशुखाद्य व पारंपारिक खाद्य</div>
+    
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="conc_1" onchange="handleSelect(this, 'dm_conc_1', 'custom_conc_1', 'conc')">
+                <option value="">-- गोळी पेंड / सुग्रास --</option>
+                <option value="90" data-cp="22" data-me="2.8" data-cf="4" data-ndf="25" data-adf="12" data-ca="1.0" data-p="0.5">टाईप १ खाद्य (CP:22%, Fat:4%)</option>
+                <option value="90" data-cp="20" data-me="3.0" data-cf="3" data-ndf="22" data-adf="10" data-ca="0.9" data-p="0.5">टाईप २ खाद्य (CP:20%, Fat:3%)</option>
+                <option value="90" data-cp="24" data-me="3.0" data-ndf="20" data-adf="9" data-ca="1.2" data-p="0.6">बायपास प्रोटीन खाद्य (CP:24%, ME:3.0)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_conc_1" class="custom-input" placeholder="नाव टाका...">
+            <div id="dm_conc_1" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_conc_1" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="conc_2" onchange="handleSelect(this, 'dm_conc_2', 'custom_conc_2', 'conc')">
+                <option value="">-- सरकी / शेंगदाणा / इतर --</option>
+                <option value="90" data-cp="22.8" data-me="2.5" data-cf="24.1" data-ndf="53.9" data-adf="41.2" data-ca="0.12" data-p="0.30">सरकी पेंड (CP:22.8%, ME:2.5)</option>
+                <option value="92" data-cp="40" data-me="2.8" data-cf="7.4" data-ndf="23.3" data-adf="18.2" data-ca="0.18" data-p="0.60">शेंगदाणा पेंड (CP:40%, ME:2.8)</option>
+                <option value="88" data-cp="53" data-me="2.5" data-cf="7.0" data-ndf="18.6" data-adf="8.8" data-ca="0.22" data-p="0.63">सोयाबीन DOC / पेंड (CP:53%, ME:2.5)</option>
+                <option value="90" data-cp="42" data-me="2.5" data-cf="8.5" data-ndf="23.8" data-adf="15.4" data-ca="0.73" data-p="0.85">मोहरी पेंड (Mustard Cake) (CP:42%, ME:2.5)</option>
+                <option value="92" data-cp="22.0" data-me="3.3" data-cf="18.0" data-ndf="48.0" data-adf="42.7" data-ca="1.0" data-p="0.5">कापूस बियाणे / सरकी (Whole Cotton Seed) (CP:22.0%, ME:3.3)</option>
+                <option value="90" data-cp="60" data-me="3.3" data-cf="2" data-ndf="10" data-adf="5" data-ca="2.0" data-p="1.0">मक्याचा ग्लूटेन (Maize Gluten) (CP:60%, ME:3.3)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_conc_2" class="custom-input" placeholder="नाव टाका...">
+            <div id="dm_conc_2" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_conc_2" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="conc_3" onchange="handleSelect(this, 'dm_conc_3', 'custom_conc_3', 'conc')">
+                <option value="">-- मका चुनी / भरडा --</option>
+                <option value="88" data-cp="9.0" data-me="3.1" data-cf="2.0" data-ndf="15.6" data-adf="3.5" data-ca="0.02" data-p="0.35">मका भरडा / चुनी (CP:9.0%, ME:3.1)</option>
+                <option value="89" data-cp="12.0" data-me="2.8" data-cf="5.9" data-ndf="20.0" data-adf="7.0" data-ca="0.05" data-p="0.38">बार्ली / जव (CP:12.0%, ME:2.8)</option>
+                <option value="88" data-cp="14" data-me="2.9" data-cf="3" data-ndf="12" data-adf="7" data-ca="0.5" data-p="0.3">कळना (CP:14%, ME:2.9)</option>
+                <option value="90" data-cp="17" data-me="2.8" data-cf="4" data-ndf="18" data-adf="10" data-ca="0.6" data-p="0.3">हरभरा चुनी (CP:17%, ME:2.8)</option>
+                <option value="89" data-cp="16.0" data-me="2.7" data-cf="15.0" data-ndf="64.0" data-adf="14.5" data-ca="0.17" data-p="0.93">गव्हाचा कोंडा / Wheat Bran (CP:16.0%, ME:2.7)</option>
+                <option value="88" data-cp="15" data-me="2.7" data-cf="2" data-ndf="16" data-adf="9" data-ca="0.6" data-p="0.4">तूर चुनी (CP:15%, ME:2.7)</option>
+                <option value="90" data-cp="14.0" data-me="2.7" data-cf="12.0" data-ndf="19.4" data-adf="15.0" data-ca="0.07" data-p="1.58">राईस ब्रॅन / Rice Bran (CP:14.0%, ME:2.7)</option>
+                <option value="90" data-cp="12" data-me="2.4" data-cf="2" data-ndf="65" data-adf="45" data-ca="0.5" data-p="0.3">सोया हल्स / Soy Hulls (CP:12%, ME:2.4)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_conc_3" class="custom-input" placeholder="नाव टाका...">
+            <div id="dm_conc_3" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_conc_3" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <div class="category-header">🪣 फीड सप्लीमेंट</div>
+    <div class="input-row" style="flex-direction: row; align-items: center;">
+        <div style="flex: 2;">
+            <label style="margin-bottom: 0;">खनिज मिश्रण (मिनरल मिक्स्चर) - ग्रॅम:</label>
+        </div>
+        <div style="flex: 1;">
+            <input type="number" id="mineral_grams" placeholder="उदा. 100" min="0">
+        </div>
+    </div>
+    
+    <button class="btn-primary" id="btn_calculate_ration" onclick="calculateRation()">📊 रेशन तपासा आणि विश्लेषण करा</button>
+</div>
+<!-- 🔥 REPORT CONTAINER FOR PDF GENERATION 🔥 -->
+    <div id="pdf_content_wrapper">
+        
+        <!-- 🔥 LOGO & HEADER FOR PDF 🔥 -->
+        <div class="pdf-header-logo" id="pdf_main_heading">
+            <div style="font-size: 35px; margin-bottom: 5px;">🐄</div>
+            <h2 style="margin: 0; color: #1b5e20; font-weight: 900; font-size: 26px;">दुग्ध दिशा AI</h2>
+            <p style="margin: 5px 0 0; font-size: 14px; color: #555; font-weight: bold;">प्रगत रेशन विश्लेषण आणि सल्ला अहवाल</p>
+            <p style="margin: 8px 0 0; font-size: 11px; color: #1b5e20; background: #e8f5e9; display: inline-block; padding: 4px 10px; border-radius: 4px; border: 1px solid #c8e6c9;">📝 संदर्भ: ही मूल्ये NRC, ICAR व NDDB मानकांवर आधारित एक अचूक फील्ड-लेव्हल अंदाज (Thumb Rule) आहेत.</p>
+        </div>
+
+        <div class="result-box" id="result_output">
+
+            <div style="text-align:center; margin-bottom:15px; padding: 0 10px;">
+                <span style="font-size: 10px; color: #1b5e20; background: #e8f5e9; padding: 6px 12px; border-radius: 12px; border: 1px solid #c8e6c9; font-weight:bold; display: inline-block; line-height: 1.4;">📝 संदर्भ: ही मूल्ये NRC, ICAR व NDDB मानकांवर आधारित एक अचूक फील्ड-लेव्हल अंदाज (Thumb Rule) आहेत.</span>
+            </div>
+
+            <!-- 🔥 NEW: INPUT SUMMARY INJECTED FOR PDF 🔥 (DISPLAY BLOCK KELA) -->
+            <div id="pdf_input_summary" class="report-section pdf-page-break" style="display:block; background:#f0f7ff; border-color:#1976d2; margin-top:15px; margin-bottom:20px; box-shadow:none;">
+            </div>
+
+            <div id="glossary_section" class="glossary-box adv-result pdf-page-break" style="margin-top: 0; margin-bottom: 20px; display:none;">
+                <h4 style="margin: 0 0 10px; color: #1b5e20; font-size: 14px;">📖 शब्दावली (Terms Explained)</h4>
+                <div class="glossary-item"><b>DM (Dry Matter - शुष्क घटक):</b> चाऱ्यातील पाण्याचा अंश काढून उरलेला खरा पौष्टिक भाग. गाईचे पोट भरण्यासाठी हे आवश्यक आहे.</div>
+                <div class="glossary-item"><b>CP (Crude Protein - प्रथिने):</b> स्नायू आणि दूध तयार करण्यासाठी आवश्यक घटक. कमतरतेमुळे दूध उत्पादनात थेट घट होते.</div>
+                <div class="glossary-item"><b>ME (Metabolizable Energy - ऊर्जा):</b> अन्नातून मिळणारी प्रत्यक्ष ताकद. उर्जा कमी असल्यास गाय स्वतःच्या शरीरातील चरबी वितळवून दूध देते व हाडकुळी पडते.</div>
+                <div class="glossary-item-highlight" style="color: #1b5e20; border-left: 3px solid #4caf50;"><b>NDF/ADF (फायबर):</b> चाऱ्यातील फायबर. हे योग्य असेल तरच गाय चांगला <b>रवंथ करते</b> आणि दुधाची <b>फॅट टिकवून ठेवते</b>.</div>
+                <div class="glossary-item-highlight" style="color: #e65100; border-left: 3px solid #ff9800;"><b>CF (Crude Fat - स्निग्धांश):</b> खाद्यातून मिळणारी स्निग्धता. दुधाची फॅट व ऊर्जा मिळवण्यासाठी महत्त्वाची.</div>
+                <div class="glossary-item"><b>Mineral Mixture (खनिज मिश्रण):</b> हाडांची बळकटी, रोगप्रतिकारशक्ती आणि प्रजननासाठी आवश्यक क्षार. (नियम: 50g बेस + 10g/लिटर दूध).</div>
+            </div>
+
+            <h3 style="color:#2e7d32; margin:0 0 15px;">📊 आहार सारांश (Summary)</h3>
+            <div class="result-list pdf-page-break">
+                <div class="result-row" style="border-left-color: #795548;">
+                    <div class="res-label">ड्रायमॅटर (DM)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_dm">0.0 Kg</span>
+                        <span class="res-req">गरज: <span id="req_dm">0.0</span> Kg</span>
+                    </div>
+                </div>
+                <div class="result-row" style="border-left-color: #1976d2;">
+                    <div class="res-label">प्रोटीन (CP)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_cp">0 ग्रॅम</span>
+                        <span class="res-req">गरज: <span id="req_cp">0</span> ग्रॅम</span>
+                    </div>
+                </div>
+                <div class="result-row" style="border-left-color: #fbc02d;">
+                    <div class="res-label">ऊर्जा (ME)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_me">0 Mcal</span>
+                        <span class="res-req">गरज: <span id="req_me">0</span> Mcal</span>
+                    </div>
+                </div>
+                
+                <div class="result-row pro-result" style="border-left-color: #e65100; display:none;">
+                    <div class="res-label">खाद्य खर्च (प्रति लिटर)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_cost_ltr">₹0.0</span>
+                        <span class="res-req" style="color: #666;">अंदाजे</span>
+                    </div>
+                </div>
+                
+                <div class="result-row adv-result" style="border-left-color: #4caf50; display:none;">
+                    <div class="res-label">NDF (रवंथ गरज)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_ndf">0 Kg</span>
+                        <span class="res-req">गरज: <span id="req_ndf">0</span> Kg</span>
+                    </div>
+                </div>
+                <div class="result-row adv-result" style="border-left-color: #00acc1; display:none;">
+                    <div class="res-label">ADF (पचनक्षमता)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_adf">0 Kg</span>
+                        <span class="res-req">गरज: <span id="req_adf">0</span> Kg</span>
+                    </div>
+                </div>
+                <div class="result-row adv-result" style="border-left-color: #f57c00; display:none;">
+                    <div class="res-label">फॅट / स्निग्धांश (CF)</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_cf">0 ग्रॅम</span>
+                        <span class="res-req">गरज: <span id="req_cf">0</span> ग्रॅम</span>
+                    </div>
+                </div>
+                <div class="result-row adv-result" style="border-left-color: #5e35b1; display:none;">
+                    <div class="res-label">पाणी गरज</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_water">0 L</span>
+                        <span class="res-req">गरज: <span id="req_water">0</span> L</span>
+                    </div>
+                </div>
+                <div class="result-row" style="border-left-color: #8e24aa;">
+                    <div class="res-label">चारा : खाद्य प्रमाण</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_ratio">0 : 0</span>
+                        <span class="res-req" style="color: #666;">आदर्श: ६०:४०</span>
+                    </div>
+                </div>
+                
+                <div class="result-row" style="border-left-color: #455a64;">
+                    <div class="res-label">Nutrition Score</div>
+                    <div class="res-data">
+                        <span class="res-val" id="res_score">0/100</span>
+                        <span class="res-req" style="color: #666;">AI Score</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inline Disclaimer right after summary -->
+            <div class="pdf-disclaimer" id="inline_pdf_disclaimer" style="display:none; font-size:11px; color:#555; text-align:center; margin-bottom: 20px; line-height: 1.5; padding: 10px;">
+                ⚠️ <b>महत्त्वाची नोंद:</b> ही मूल्ये NRC, ICAR आणि NDDB यांच्या तत्त्वांवर आधारित फील्ड-लेव्हल अंदाज (Thumb Rule) आहेत. अचूक रेशनसाठी प्रत्यक्ष पशुखाद्य विश्लेषण, जनावराची अवस्था, गर्भावस्था आणि जातीचा विचार करूनच आहारात मोठा बदल करण्यापूर्वी डॉक्टरांचा सल्ला घ्या. सदर एनालिसिस हे तीन महिन्यासाठी व्हॅलिड राहील.
+            </div>
+
+            <div class="ai-report" id="ai_report_container" style="margin-top: 25px; border-top: 2px dashed #ccc; padding-top: 20px;"></div>
+            
+            <!-- 🔥 NEW: DYNAMIC VENDOR AD CONTAINER 🔥 -->
+            <div id="ration_vendor_ad_container"></div>
+            
+            <!-- 🔥 NEW: GEMINI AI INTEGRATION BUTTON & BOX 🔥 -->
+            <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)</button>
+            
+            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
+            
+            <div class="gemini-response-box pdf-page-break" id="gemini_response_box">
+                <h4>✨ दुग्ध दिशा AI विशेष सल्ला:</h4>
+                <div class="gemini-content" id="gemini_content_text"></div>
+            </div>
+
+            <!-- 🔥 MAIN DISCLAIMER AT BOTTOM OF PDF 🔥 -->
+            <div class="pdf-disclaimer pdf-page-break" id="pdf_disclaimer" style="display:none; font-size:11px; text-align:left; line-height:1.6; color:#444; background:#fff8e1; border:1px dashed #ffb300; padding:15px; border-radius:8px;">
+                <b>⚠️ कायदेशीर सूचना (Disclaimer):</b> ही मूल्ये NRC, ICAR आणि NDDB यांच्या तत्त्वांवर आधारित फील्ड-लेव्हल अंदाज (Thumb Rule) आहेत. अचूक रेशन तयार करताना प्रत्यक्ष पशुखाद्य विश्लेषण, जनावराची अवस्था, गर्भावस्था, वाढ, जाती आणि इतर घटकांचा विचार करणे आवश्यक आहे. सदर माहिती केवळ शैक्षणिक हेतू आणि प्राथमिक मार्गदर्शनासाठी आहे. जनावरांच्या आहारात कोणताही मोठा बदल करण्यापूर्वी स्थानिक पशुवैद्यकाचा (Veterinary Doctor) सल्ला घेणे बंधनकारक आहे. सदर एनालिसिस हे तीन महिन्यासाठी व्हॅलिड राहील. 'दुग्ध दिशा AI' कोणत्याही थेट किंवा अप्रत्यक्ष नुकसानीस जबाबदार राहणार नाही.
+            </div>
+        </div>
+    </div>
+    
+    <!-- PDF Button is kept OUTSIDE the wrapper so it doesn't get printed or disrupt layout -->
+    <div style="padding:0 20px 20px;">
+        <button id="btn_pdf_download" class="btn-pdf" onclick="downloadRealPDF()">📥 सविस्तर PDF रिपोर्ट डाऊनलोड करा</button>
+    </div>
+
+</div>
+
+<!-- 🔥 STRICT PAYWALL OVERLAY MODAL 🔥 -->
+<div class="paywall-overlay" id="ration_paywall_overlay">
+    <div class="paywall-box">
+        <div class="paywall-icon">🔒</div>
+        <h3 class="paywall-title" id="paywall_title">प्रो ॲक्टिव्ह रेशन बॅलन्सर</h3>
+        <p class="paywall-desc">हे प्रीमियम फीचर लॉक आहे. यातून तुम्हाला दुधातील फॅट आणि SNF वाढवण्यासाठी अचूक आहार योजना मिळते.</p>
+        
+        <div class="paywall-price-tag" id="paywall_price">₹ २९ / २४ तास</div>
+        
+        <a href="#" class="btn-pay-now" id="btn_init_pay" onclick="triggerUPI()">💳 पे करा आणि अनलॉक करा</a>
+        <p style="font-size:11px; color:#888; margin-top:5px; margin-bottom:15px;">(क्लिक केल्यावर थेट PhonePe/GPay उघडेल)</p>
+        
+        <!-- HIDDEN PAYMENT FORM -->
+        <div class="payment-form" id="payment_form_section">
+            <label style="font-size: 11px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">पेमेंट झाल्यानंतर 12 अंकी UTR नंबर टाका:</label>
+            <input type="number" class="input-field" id="payment_utr" placeholder="उदा. 312345678901">
+        </div>
+
+        <button class="btn-submit-utr" id="btn_submit_utr" onclick="submitPlanRequest()">✅ पेमेंट कन्फर्म करा</button>
+        <button class="btn-pay-close" onclick="closePaywall()">✕ रद्द करा (फ्री बेसिक वापरा)</button>
+    </div>
+</div>
+
+<!-- Loader Overlay for Auto-Paytm -->
+<div id="loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white;">
+    <div style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+    <h3 style="margin:0;">कृपया थांबा...</h3>
+    <p style="font-size:12px; color:#aaa; text-align:center; padding:0 20px;">पेमेंट प्रोसेस होत आहे. ॲप बंद करू नका.</p>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+</div>
+
+<!-- 🔥 BOTTOM NAVIGATION BAR 🔥 -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item"> 
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item active"> <!-- Active for Ration Page -->
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item">
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<script>
+    let currentMode = 'basic';
+    let pendingPlanType = '';
+    let pendingPlanName = '';
+    let pendingPlanAmount = 0;
+    const mNum = ['०','१','२','३','४','५','६','७','८','९','१०'];
+
+    // 🔥 GLOBAL DATA OBJECT TO SEND TO GEMINI API 🔥
+    let globalCalculationData = {}; 
+    let CURRENT_MODEL = ""; // Auto-discovery variable
+
+    // --- 🔥 FIREBASE INITIALIZATION 🔥 ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
+    function generateDynamicAd(targetTag) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            return `
+                <div class="vendor-ad-box" style="display:block;" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>✨ आहारातील कमतरतेनुसार सुचवलेले:</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        return ""; // Return empty if no product matches
+    }
+
+    // --- 🔥 DYNAMIC SEASON DETECTION LOGIC ---
+    function getSeasonTips(mode) {
+        let month = new Date().getMonth() + 1; // 1-12
+        let season = ""; let tips = ""; let vaccine = "";
+        
+        if(month >= 2 && month <= 5) {
+            season = "उन्हाळा (Summer)";
+            tips = "उन्हाळ्यात जनावरांना उष्णतेचा ताण (Heat Stress) येतो. पिण्यासाठी २४ तास थंड पाणी, गोठ्यात पंखे/फॉगर्स आणि आहारात 'बायपास फॅट' व 'इलेक्ट्रोलाईट्स' (मिनरल मिक्सचर) नक्की वापरा.";
+            vaccine = "उन्हाळ्यापूर्वी 'लाळ्या खुरकूत (FMD)' ची लस देणे फायदेशीर ठरते.";
+        } else if (month >= 6 && month <= 9) {
+            season = "पावसाळा (Monsoon)";
+            tips = "पावसाळ्यात गोठ्यात ओलावा राहिल्याने कासदाह (Mastitis) आणि खुरांचे आजार वाढतात. गोठा कोरडा ठेवा. हिरवा चारा जास्त खाल्ल्याने 'पोटफुगी' होऊ शकते, त्यामुळे सुक्या चाऱ्याचे प्रमाण थोडे वाढवा.";
+            vaccine = "पावसाळ्याच्या सुरुवातीला 'घटसर्प (HS)' आणि 'फऱ्या (BQ)' ची लस देणे अत्यंत आवश्यक आहे.";
+        } else {
+            season = "हिवाळा (Winter)";
+            tips = "हिवाळ्यात जनावरांची ऊर्जा टिकवण्यासाठी आहारात उर्जायुक्त (ME) खाद्य वाढवा (उदा. मका भरडा, गूळ). गोठ्यात रात्रीच्या वेळी उबदारपणा राहील याची काळजी घ्या.";
+            vaccine = "हिवाळ्यात जंतनिर्मूलन (De-worming) आणि आवश्यकतेनुसार 'ब्रुसेलोसिस' ची लस तपासा.";
+        }
+        
+        if (mode === 'pro') {
+            return `<div class="report-section pdf-page-break" style="background:#e3f2fd; border-color:#90caf9;">
+                        <h4 style="color:#1565c0;">🌦️ ऋतूनुसार टिप्स: ${season}</h4><p>${tips}</p>
+                    </div>`;
+        } else if (mode === 'adv') {
+            return `<div class="report-section pdf-page-break" style="background:#e8f5e9; border-color:#a5d6a7;">
+                        <h4 style="color:#2e7d32;">🌦️ ऋतूनुसार ॲडव्हान्स टिप्स आणि लसीकरण: ${season}</h4>
+                        <p><b>काळजी व व्यवस्थापन:</b> ${tips}</p>
+                        <p style="margin-top:8px; color:#c62828;"><b>💉 सध्याचे लसीकरण वेळापत्रक:</b> ${vaccine}</p>
+                    </div>`;
+        }
+        return "";
+    }
+
+    // --- 🔥 ACTUAL PDF GENERATION LOGIC WITH HTML2PDF 🔥 ---
+    function downloadRealPDF() {
+        window.scrollTo(0, 0);
+        
+        // PDF साठी लपवलेले भाग दृश्यमान करणे
+        document.getElementById('pdf_main_heading').style.display = 'block';
+        document.getElementById('pdf_input_summary').style.display = 'block'; 
+        document.getElementById('pdf_disclaimer').style.display = 'block';
+        document.getElementById('inline_pdf_disclaimer').style.display = 'block';
+        
+        let hooks = document.querySelectorAll('.marketing-hook');
+        hooks.forEach(h => h.style.display = 'none');
+        
+        // Also hide dynamic ads in PDF to keep it clean
+        let vendorAds = document.querySelectorAll('.vendor-ad-box');
+        vendorAds.forEach(a => a.style.display = 'none');
+        
+        let wrapper = document.getElementById('pdf_content_wrapper');
+        let resultBox = document.getElementById('result_output');
+        
+        let oldMargin = resultBox.style.margin;
+        let oldShadow = resultBox.style.boxShadow;
+        let oldBorder = resultBox.style.borderTop;
+        
+        resultBox.style.margin = '0'; resultBox.style.boxShadow = 'none'; resultBox.style.borderTop = 'none';
+        wrapper.style.background = '#fff'; wrapper.style.padding = '20px';
+        
+        const opt = {
+            margin:       [10, 10, 10, 10],
+            filename:     'Dugdha_Disha_Ration_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(wrapper).save().then(() => {
+            // काम झाल्यावर पुन्हा मूळ स्थितीत आणणे
+            document.getElementById('pdf_main_heading').style.display = 'none';
+            document.getElementById('pdf_input_summary').style.display = 'block'; 
+            document.getElementById('pdf_disclaimer').style.display = 'none';
+            document.getElementById('inline_pdf_disclaimer').style.display = 'none';
+            
+            hooks.forEach(h => h.style.display = 'block');
+            vendorAds.forEach(a => a.style.display = 'block'); // Restore ads
+            
+            resultBox.style.margin = oldMargin; resultBox.style.boxShadow = oldShadow; resultBox.style.borderTop = oldBorder;
+            wrapper.style.background = 'transparent'; wrapper.style.padding = '0';
+        });
+    }
+
+    function applyTheme() {
+        let root = document.documentElement;
+        let btn = document.getElementById('btn_calculate_ration');
+        
+        if (currentMode === 'basic') {
+            root.style.setProperty('--theme-bg', '#f4f7f6'); root.style.setProperty('--theme-card-shadow', '0 4px 10px rgba(0,0,0,0.05)'); root.style.setProperty('--theme-border', '#ccc'); root.style.setProperty('--theme-input-bg', '#fafafa'); root.style.setProperty('--theme-heading-bg', 'transparent'); root.style.setProperty('--theme-heading-text', '#2e7d32'); root.style.setProperty('--theme-heading-border', '#ff9800');
+            document.querySelector('.top-dashboard').style.background = '#2e7d32';
+            btn.style.background = 'linear-gradient(145deg, #4caf50, #2e7d32)'; btn.style.boxShadow = '0 4px 0 #1b5e20';
+        } else if (currentMode === 'pro') {
+            root.style.setProperty('--theme-bg', '#e3f2fd'); root.style.setProperty('--theme-card-shadow', '0 8px 20px rgba(25, 118, 210, 0.15)'); root.style.setProperty('--theme-border', '#90caf9'); root.style.setProperty('--theme-input-bg', '#ffffff'); root.style.setProperty('--theme-heading-bg', 'linear-gradient(90deg, #e3f2fd, #ffffff)'); root.style.setProperty('--theme-heading-text', '#1565c0'); root.style.setProperty('--theme-heading-border', '#1976d2');
+            document.querySelector('.top-dashboard').style.background = 'linear-gradient(145deg, #1976d2, #1565c0)';
+            btn.style.background = 'linear-gradient(145deg, #1976d2, #1565c0)'; btn.style.boxShadow = '0 4px 0 #0d47a1';
+        } else if (currentMode === 'adv') {
+            root.style.setProperty('--theme-bg', '#f3e5f5'); root.style.setProperty('--theme-card-shadow', '0 10px 25px rgba(142, 36, 170, 0.2)'); root.style.setProperty('--theme-border', '#ce93d8'); root.style.setProperty('--theme-input-bg', '#ffffff'); root.style.setProperty('--theme-heading-bg', 'linear-gradient(90deg, #f3e5f5, #ffffff)'); root.style.setProperty('--theme-heading-text', '#6a1b9a'); root.style.setProperty('--theme-heading-border', '#8e24aa');
+            document.querySelector('.top-dashboard').style.background = 'linear-gradient(145deg, #8e24aa, #6a1b9a)';
+            btn.style.background = 'linear-gradient(145deg, #8e24aa, #6a1b9a)'; btn.style.boxShadow = '0 4px 0 #4a148c';
+        }
+    }
+
+    function initRationBalancer() {
+        document.getElementById('pro_inputs').style.display = 'none';
+        document.getElementById('adv_inputs').style.display = 'none';
+        applyTheme();
+        
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25'));
+        if(adminPrices) {
+            let proPrice = adminPrices.m25_f_pro || 0;
+            let advPrice = adminPrices.m25_f_adv || 0;
+            
+            if(proPrice > 0) { document.getElementById('tab_price_pro').innerHTML = `🔒 ₹${proPrice}`; } 
+            else { document.getElementById('tab_price_pro').innerHTML = `✅ ॲक्टिव्ह`; document.getElementById('tab_price_pro').style.color = '#1565c0'; }
+
+            if(advPrice > 0) { document.getElementById('tab_price_adv').innerHTML = `🔒 ₹${advPrice}`; } 
+            else { document.getElementById('tab_price_adv').innerHTML = `✅ ॲक्टिव्ह`; document.getElementById('tab_price_adv').style.color = '#8e24aa'; }
+        }
+    }
+
+    function isPlanActive(featureType) {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        if(featureType === 'pro' && (adminPrices.m25_f_pro == 0 || !adminPrices.m25_f_pro)) return true;
+        if(featureType === 'adv' && (adminPrices.m25_f_adv == 0 || !adminPrices.m25_f_adv)) return true;
+
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        if(!activePlan) return false;
+
+        let now = new Date(); let expiry = new Date(activePlan.expiryDate);
+        if(now > expiry) { localStorage.removeItem('farmer_active_plan'); return false; }
+
+        let planName = activePlan.name;
+        if(featureType === 'pro') { if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('प्रो रेशन') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम')) return true; } 
+        else if(featureType === 'adv') { if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम')) return true; }
+        return false;
+    }
+
+    function setLevel(mode) {
+        if(mode === 'pro' && !isPlanActive('pro')) { showPaywall('pro'); return; }
+        else if(mode === 'adv' && !isPlanActive('adv')) { showPaywall('adv'); return; }
+
+        currentMode = mode;
+        document.getElementById('tab_basic').className = 'level-tab basic';
+        document.getElementById('tab_pro').className = 'level-tab pro';
+        document.getElementById('tab_adv').className = 'level-tab adv';
+
+        let activeClass = mode === 'pro' ? 'active pro' : (mode === 'adv' ? 'active adv' : 'active basic');
+        document.getElementById('tab_' + mode).className = 'level-tab ' + activeClass;
+
+        document.getElementById('pro_inputs').style.display = (mode === 'pro' || mode === 'adv') ? 'block' : 'none';
+        document.getElementById('adv_inputs').style.display = (mode === 'adv') ? 'block' : 'none';
+        
+        document.getElementById('result_output').style.display = "none";
+        document.getElementById('btn_pdf_download').style.display = "none";
+        document.getElementById('gemini_response_box').style.display = "none";
+        
+        applyTheme();
+    }
+
+    function showPaywall(type) {
+        let overlay = document.getElementById('ration_paywall_overlay');
+        let title = document.getElementById('paywall_title');
+        let price = document.getElementById('paywall_price');
+        
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        document.getElementById('btn_init_pay').style.display = 'block';
+        document.getElementById('payment_form_section').style.display = 'none';
+        document.getElementById('btn_submit_utr').style.display = 'none';
+        document.getElementById('payment_utr').value = '';
+
+        if(type === 'pro') {
+            pendingPlanName = 'प्रो रेशन बॅलन्सर (Pro Ration)'; pendingPlanType = '24h';
+            pendingPlanAmount = adminPrices.m25_f_pro || 29;
+            title.innerText = 'प्रो ॲक्टिव्ह रेशन बॅलन्सर'; price.innerText = `₹ ${pendingPlanAmount} / २४ तास`;
+        } else if(type === 'adv') {
+            pendingPlanName = 'ॲडव्हान्स रेशन बॅलन्सर (Advance Ration)'; pendingPlanType = '24h';
+            pendingPlanAmount = adminPrices.m25_f_adv || 49;
+            title.innerText = 'ॲडव्हान्स रेशन बॅलन्सर'; price.innerText = `₹ ${pendingPlanAmount} / २४ तास`;
+        }
+        overlay.style.display = 'flex';
+    }
+
+    function closePaywall() { document.getElementById('ration_paywall_overlay').style.display = 'none'; }
+    
+    // --- 🔥 UPDATED: PAYTM AUTO ACTIVATION LOGIC 🔥 ---
+    function triggerUPI() {
+        let numAmount = parseFloat(pendingPlanAmount);
+        
+        // Free logic just in case
+        if(numAmount === 0) {
+            activatePlanAutomatically(pendingPlanType, pendingPlanName);
+            return;
+        }
+
+        let userMobile = localStorage.getItem('current_user_mobile') || 'Guest';
+        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
+        let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
+        let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+
+        if(confirm(`तुम्ही '${pendingPlanName}' हा प्लॅन निवडला आहे.\nएकूण रक्कम: ₹${numAmount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर फीचर आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
+            
+            let transactionNote = encodeURIComponent(`DD_${userMobile}_${pendingPlanName}`);
+            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${numAmount}&cu=INR&tn=${transactionNote}`;
+
+            document.getElementById('loader').style.display = 'flex';
+            window.location.href = upiLink;
+
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
+                
+                if(confirmation) {
+                    activatePlanAutomatically(pendingPlanType, pendingPlanName);
+                } else {
+                    alert("पेमेंट पूर्ण झाले नाही. जर पैसे कट झाले असतील तर खाली UTR नंबर टाका.");
+                    // Fallback to manual entry if they claim it failed but want to enter UTR
+                    document.getElementById('btn_init_pay').style.display = 'none'; 
+                    document.getElementById('payment_form_section').style.display = 'block'; 
+                    document.getElementById('btn_submit_utr').style.display = 'block';
+                }
+            }, 8000);
+        }
+    }
+
+    function activatePlanAutomatically(type, planName) {
+        let now = new Date();
+        let expiryDate = new Date();
+        let is8pmPassed = now.getHours() >= 20; 
+
+        if(type === '24h' || type === '1Day') {
+            if(is8pmPassed) {
+                expiryDate.setDate(expiryDate.getDate() + 1); 
+                expiryDate.setHours(8, 0, 0, 0); 
+                expiryDate.setHours(expiryDate.getHours() + 24); 
+                alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, तुमचा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
+            } else {
+                expiryDate.setHours(expiryDate.getHours() + 24);
+            }
+        } 
+        else if(type === 'Monthly') {
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+        }
+        else if(type === '6Months') {
+            expiryDate.setMonth(expiryDate.getMonth() + 6);
+        }
+
+        let activePlan = {
+            name: planName,
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active",
+            paymentMethod: "Paytm Auto UPI"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        localStorage.removeItem('farmer_pending_plan');
+        
+        alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच अनलॉक करण्यात आला आहे!`);
+        
+        closePaywall();
+        
+        // Auto select the requested tab
+        if(planName.includes('प्रो') || planName.includes('Pro')) {
+            setLevel('pro');
+        } else if (planName.includes('ॲडव्हान्स') || planName.includes('Advance')) {
+            setLevel('adv');
+        }
+    }
+
+    // Fallback Manual Submission
+    function submitPlanRequest() {
+        let utr = document.getElementById('payment_utr').value.trim();
+        if(!utr || utr.length < 10) { alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर नक्की टाका."); return; }
+        
+        let reqData = { 
+            farmerName: localStorage.getItem("current_user_name") || "शेतकरी", 
+            mobile: localStorage.getItem("current_user_mobile") || "Unknown", 
+            name: pendingPlanName, 
+            type: pendingPlanType, 
+            amount: pendingPlanAmount, 
+            utr: utr, 
+            requestTime: new Date().toLocaleString(),
+            status: "Pending"
+        };
+
+        let pendingPayments = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+        pendingPayments.push(reqData);
+        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingPayments));
+
+        db.collection("admin_pending_farmer_payments").add({
+            ...reqData,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Firebase Logging Error: ", err));
+
+        closePaywall();
+        alert(`🎉 तुमचे पेमेंट (UTR: ${utr}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरी मिळताच तुम्हाला '${pendingPlanName}' चे सर्व प्रीमियम फीचर्स वापरता येतील.`);
+    }
+
+    // --- 🧮 CALCULATION LOGICS ---
+    function handleSelect(selectElement, displayId, customInputId, category) {
+        let displayObj = document.getElementById(displayId);
+        let customInput = document.getElementById(customInputId);
+        let val = selectElement.value;
+
+        if (val === "other") { customInput.style.display = "block"; displayObj.innerHTML = `💧 अंदाजे माहिती वापरली जाईल`; } 
+        else if (val) {
+            customInput.style.display = "none";
+            let cp = selectElement.options[selectElement.selectedIndex].getAttribute('data-cp') || 0;
+            let me = selectElement.options[selectElement.selectedIndex].getAttribute('data-me') || 0;
+            let cf = selectElement.options[selectElement.selectedIndex].getAttribute('data-cf') || null;
+            let ndf = selectElement.options[selectElement.selectedIndex].getAttribute('data-ndf') || null;
+            let adf = selectElement.options[selectElement.selectedIndex].getAttribute('data-adf') || null;
+            let ca = selectElement.options[selectElement.selectedIndex].getAttribute('data-ca') || null;
+            let p = selectElement.options[selectElement.selectedIndex].getAttribute('data-p') || null;
+
+            let bits = [`💧 DM: ${val}%`, `🧬 CP: ${cp}%`, `⚡ ME: ${me}`];
+            if (cf) bits.push(`🛢️ Fat: ${cf}%`);
+            if (ca) bits.push(`🦴 Ca: ${ca}%`);
+            if (p) bits.push(`🦷 P: ${p}%`);
+            if (category !== 'conc' && ndf) bits.push(`🌿 NDF: ${ndf}%`);
+            if (category !== 'conc' && adf) bits.push(`🌾 ADF: ${adf}%`);
+            displayObj.innerHTML = bits.join(' | ');
+        } else { customInput.style.display = "none"; displayObj.innerHTML = ``; }
+    }
+
+    function getSelectedProfile(selectId, qtyId, category) {
+        let select = document.getElementById(selectId);
+        let qty = parseFloat(document.getElementById(qtyId).value) || 0;
+
+        if (qty === 0 || !select.value) {
+            return { qty: 0, dm: 0, cp_g: 0, me_mcal: 0, ndf_kg: 0, adf_kg: 0, cf_g: 0, ca_g: 0, p_g: 0, category: category, itemText: '', dmPercent: 0 };
+        }
+
+        let opt = select.options[select.selectedIndex];
+        let dmPercent = 0, cpPercent = 0, meVal = 0, ndfPercent = 0, adfPercent = 0, cfPercent = 0, caPercent = 0, pPercent = 0;
+
+        if (select.value === 'other') {
+            if (category === 'green') { dmPercent = 22; cpPercent = 8; meVal = 2.0; ndfPercent = 55; adfPercent = 30; cfPercent = 2; caPercent = 0.5; pPercent = 0.2; }
+            else if (category === 'dry') { dmPercent = 90; cpPercent = 4; meVal = 1.5; ndfPercent = 78; adfPercent = 48; cfPercent = 1; caPercent = 0.4; pPercent = 0.2; }
+            else { dmPercent = 90; cpPercent = 18; meVal = 2.8; ndfPercent = 25; adfPercent = 12; cfPercent = 3; caPercent = 0.8; pPercent = 0.5; }
+        } else {
+            dmPercent = parseFloat(select.value) || (category === 'green' ? 25 : 90);
+            cpPercent = parseFloat(opt.getAttribute('data-cp')) || (category === 'green' ? 8 : category === 'dry' ? 4 : 20);
+            meVal = parseFloat(opt.getAttribute('data-me')) || (category === 'green' ? 2.0 : category === 'dry' ? 1.5 : 2.8);
+            cfPercent = parseFloat(opt.getAttribute('data-cf')) || (category === 'green' ? 2 : category === 'dry' ? 1 : 3);
+            ndfPercent = parseFloat(opt.getAttribute('data-ndf')) || (category === 'green' ? 50 : category === 'dry' ? 75 : 25);
+            adfPercent = parseFloat(opt.getAttribute('data-adf')) || (category === 'green' ? 30 : category === 'dry' ? 45 : 12);
+            caPercent = parseFloat(opt.getAttribute('data-ca')) || (category === 'green' ? 0.5 : category === 'dry' ? 0.4 : 0.8);
+            pPercent = parseFloat(opt.getAttribute('data-p')) || (category === 'green' ? 0.2 : category === 'dry' ? 0.2 : 0.5);
+        }
+
+        let dm_kg = (qty * dmPercent) / 100;
+        return {
+            qty: qty, dm: dm_kg, cp_g: (dm_kg * cpPercent / 100) * 1000, me_mcal: dm_kg * meVal, ndf_kg: dm_kg * (ndfPercent / 100), adf_kg: dm_kg * (adfPercent / 100), cf_g: (dm_kg * cfPercent / 100) * 1000,
+            ca_g: (dm_kg * caPercent / 100) * 1000, p_g: (dm_kg * pPercent / 100) * 1000,
+            category: category, itemText: opt.textContent || '', dmPercent: dmPercent
+        };
+    }
+
+    function getFeedName(selectId, customId) {
+        let sel = document.getElementById(selectId);
+        if (!sel || !sel.value) return "";
+        if (sel.value === 'other') return document.getElementById(customId).value || "इतर (Custom)";
+        return sel.options[sel.selectedIndex].text.split(' (')[0];
+    }
+
+    function fmt1(n) { return (isFinite(n) ? n : 0).toFixed(1); }
+    function fmt0(n) { return Math.round(isFinite(n) ? n : 0); }
+
+    function calculateRation() {
+        let weight = parseFloat(document.getElementById('cow_weight').value) || 0;
+        let milk = parseFloat(document.getElementById('cow_milk').value) || 0;
+        let minerals = parseFloat(document.getElementById('mineral_grams').value) || 0;
+        let fatPercent = parseFloat(document.getElementById('cow_fat')?.value || 4.0) || 4.0;
+        let feedCost = parseFloat(document.getElementById('feed_cost')?.value || 0) || 0;
+        let pregMonths = parseInt(document.getElementById('cow_preg')?.value || 0);
+        let heatStress = document.getElementById('cow_thi')?.value || "normal";
+
+        if (weight <= 0 || milk < 0) { alert("कृपया गाईचे वजन आणि दूध नक्की भरा."); return; }
+
+        let reqDM = (weight * 0.02) + (milk / 3);
+        let reqCP = (weight * 1) + (milk * 100);
+        if (pregMonths >= 7) reqCP += 200; 
+
+        let meMaintenance = 8;
+        let milkME = milk * 0.7;
+        let pregnancyME = (pregMonths === 7 ? 2.5 : pregMonths === 8 ? 4 : pregMonths >= 9 ? 6 : 0); 
+        let heatMEBase = meMaintenance + milkME + pregnancyME;
+        let heatME = heatStress === "high" ? heatMEBase * 0.10 : 0;
+        let reqME = heatMEBase + heatME;
+
+        let reqNDF = reqDM * 0.32; let reqADF = reqDM * 0.21; let reqCF = (reqDM * 0.04) * 1000; 
+        let reqWater = 50 + (milk * 4) + (reqDM * 3) + (heatStress === 'high' ? 20 : 0);
+        let reqMinerals = (weight * 0.1) + (milk * 2); 
+
+        // Ca, P requirements (thumb rules)
+        let reqCa = reqDM * 6; // grams per kg DM
+        let reqP = reqDM * 4;
+
+        let feeds = [
+            getSelectedProfile('green_1', 'qty_green_1', 'green'), getSelectedProfile('green_2', 'qty_green_2', 'green'),
+            getSelectedProfile('dry_1', 'qty_dry_1', 'dry'), getSelectedProfile('conc_1', 'qty_conc_1', 'conc'),
+            getSelectedProfile('conc_2', 'qty_conc_2', 'conc'), getSelectedProfile('conc_3', 'qty_conc_3', 'conc')
+        ];
+
+        let totalDM = feeds.reduce((s, x) => s + x.dm, 0);
+        let totalCP = feeds.reduce((s, x) => s + x.cp_g, 0);
+        let totalME = feeds.reduce((s, x) => s + x.me_mcal, 0);
+        let totalNDF = feeds.reduce((s, x) => s + x.ndf_kg, 0);
+        let totalADF = feeds.reduce((s, x) => s + x.adf_kg, 0);
+        let totalCF = feeds.reduce((s, x) => s + x.cf_g, 0);
+        let totalCa = feeds.reduce((s, x) => s + x.ca_g, 0);
+        let totalP = feeds.reduce((s, x) => s + x.p_g, 0);
+
+        let roughageDM = feeds[0].dm + feeds[1].dm + feeds[2].dm;
+        let concDM = feeds[3].dm + feeds[4].dm + feeds[5].dm;
+        let ratioR = totalDM > 0 ? Math.round((roughageDM / totalDM) * 100) : 0;
+        let ratioC = totalDM > 0 ? Math.round((concDM / totalDM) * 100) : 0;
+        let costPerLtr = milk > 0 ? (feedCost / milk) : 0;
+
+        document.getElementById('req_dm').innerText = fmt1(reqDM); document.getElementById('res_dm').innerText = fmt1(totalDM) + " Kg";
+        document.getElementById('req_cp').innerText = fmt0(reqCP); document.getElementById('res_cp').innerText = fmt0(totalCP) + " ग्रॅम";
+        document.getElementById('req_me').innerText = fmt0(reqME); document.getElementById('res_me').innerText = fmt0(totalME) + " Mcal";
+        document.getElementById('res_ratio').innerText = ratioR + " : " + ratioC;
+
+        document.getElementById('req_ndf').innerText = fmt1(reqNDF); document.getElementById('res_ndf').innerText = fmt1(totalNDF) + " Kg";
+        document.getElementById('req_adf').innerText = fmt1(reqADF); document.getElementById('res_adf').innerText = fmt1(totalADF) + " Kg";
+        document.getElementById('req_cf').innerText = fmt0(reqCF); document.getElementById('res_cf').innerText = fmt0(totalCF) + " ग्रॅम";
+        document.getElementById('req_water').innerText = fmt0(reqWater); document.getElementById('res_water').innerText = fmt0(reqWater) + " L";
+
+        document.querySelectorAll('.pro-result').forEach(el => { el.style.display = (currentMode === 'pro' || currentMode === 'adv') ? 'flex' : 'none'; });
+        document.querySelectorAll('.adv-result').forEach(el => { el.style.display = (currentMode === 'adv') ? 'flex' : 'none'; });
+        
+        document.getElementById('btn_pdf_download').style.display = (currentMode === 'pro' || currentMode === 'adv') ? "block" : "none";
+        document.getElementById('btn_gemini_trigger').style.display = (currentMode === 'pro' || currentMode === 'adv') ? "block" : "none";
+        document.getElementById('gemini_response_box').style.display = "none";
+        document.getElementById('ration_vendor_ad_container').innerHTML = ""; 
+
+        if (currentMode === 'pro' || currentMode === 'adv') { document.getElementById('res_cost_ltr').innerText = "₹" + fmt1(costPerLtr); }
+
+        if (totalDM === 0) { alert("कृपया चाऱ्याचे आणि खाद्याचे वजन भरा."); return; }
+
+        let score = 100; let issues = [];
+        // 🔥 नवीन: कमतरता टॅगचा अ‍ॅरे
+        let deficiencyTags = [];
+
+        function penalize(cond, points, msg) { if (cond) { score -= points; if (msg) issues.push(msg); } }
+
+        penalize(totalDM < reqDM * 0.90, 12, "ड्राय मॅटर कमी आहे."); penalize(totalDM > reqDM * 1.10, 6, "ड्राय मॅटर जास्त आहे.");
+        penalize(totalCP < reqCP * 0.95, 15, "प्रोटीन कमी आहे."); penalize(totalCP > reqCP * 1.15, 5, "प्रोटीन जास्त आहे.");
+        penalize(totalME < reqME * 0.95, 18, "ऊर्जा कमी आहे."); penalize(totalME > reqME * 1.20, 6, "ऊर्जा जास्त आहे.");
+        
+        // कमतरतानुसार टॅग जोडा
+        if (minerals === 0 || minerals < reqMinerals * 0.90) {
+            deficiencyTags.push("Daily_Ration_Mineral");
+        }
+        if (totalCP < reqCP * 0.95) {
+            deficiencyTags.push("Milk_Increase");
+        }
+        if (totalME < reqME * 0.95) {
+            deficiencyTags.push("Weight_BypassFat");
+        }
+        // कॅल्शियम आणि फॉस्फरस
+        if (totalCa < reqCa * 0.90) {
+            deficiencyTags.push("Calcium");
+        }
+        if (totalP < reqP * 0.90) {
+            deficiencyTags.push("Phosphorus");
+        }
+
+        if(currentMode === 'adv') {
+            penalize(totalNDF < reqNDF * 0.90, 10, "NDF कमी आहे."); penalize(totalNDF > reqNDF * 1.25, 5, "NDF जास्त आहे.");
+            penalize(totalADF < reqADF * 0.90, 5, "ADF कमी आहे."); penalize(totalCF < reqCF * 0.85, 5, "खाद्यातील फॅट (CF) कमी आहे.");
+            if (heatStress === 'high') score -= 3;
+            if (ratioC > 50) deficiencyTags.push("Digestion");
+            // NDF आणि CF साठी टॅग
+            if (totalNDF < reqNDF * 0.90) {
+                deficiencyTags.push("Rumen_Fiber");
+            }
+            if (totalCF < reqCF * 0.85) {
+                deficiencyTags.push("Fat_Supplement");
+            }
+        }
+
+        penalize(minerals === 0, 10, "खनिज मिश्रण (Mineral Mixture) दिलेले नाही."); 
+        penalize(minerals > 0 && minerals < reqMinerals * 0.90, 6, "खनिज मिश्रणाचे प्रमाण गरजेपेक्षा कमी आहे.");
+
+        score = Math.max(0, Math.min(100, score));
+        document.getElementById('res_score').innerText = score + "/100";
+
+        // प्रत्येक कमतरतेसाठी जाहिरात दाखवा
+        let adContainer = document.getElementById('ration_vendor_ad_container');
+        adContainer.innerHTML = ""; // आधी साफ करा
+        deficiencyTags.forEach(tag => {
+            let adHtml = generateDynamicAd(tag);
+            if (adHtml) {
+                adContainer.innerHTML += adHtml;
+            }
+        });
+
+        globalCalculationData = { weight: weight, milk: milk, reqDM: reqDM, totalDM: totalDM, reqCP: reqCP, totalCP: totalCP, reqME: reqME, totalME: totalME, score: score, totalCa: totalCa, totalP: totalP };
+
+        let inputHtml = `
+        <h4 style="color:#1565c0; margin-top:0; margin-bottom:10px; border-bottom:1px solid #bbdefb; padding-bottom:5px;">📋 गाईची माहिती व वापरलेला आहार</h4>
+        <div class="mini-grid" style="margin-bottom:10px; font-size:12px; color:#333;">
+            <div><b>वजन:</b> ${weight} Kg</div>
+            <div><b>दूध:</b> ${milk} Ltr</div>`;
+        
+        if (currentMode === 'pro' || currentMode === 'adv') {
+            inputHtml += `<div><b>फॅट:</b> ${fatPercent}%</div><div><b>खाद्य खर्च:</b> ₹${feedCost}/दिवस</div>`;
+        }
+        if (currentMode === 'adv') {
+            inputHtml += `<div><b>गर्भावस्था:</b> ${pregMonths} महिने</div><div><b>हवामान:</b> ${heatStress === 'high' ? 'उन्हाळा' : 'सामान्य'}</div>`;
+        }
+        
+        inputHtml += `</div>
+        <h5 style="margin:10px 0 5px; color:#333; font-size:13px; border-bottom:1px dashed #ccc; padding-bottom:3px;">दिलेला चारा व खाद्य प्रमाण:</h5>
+        <table style="width:100%; font-size:12px; border-collapse:collapse; color:#444;">`;
+        
+        let allFeeds = [
+            { cat: 'हिरवा चारा', name: getFeedName('green_1', 'custom_green_1'), qty: document.getElementById('qty_green_1').value },
+            { cat: 'हिरवा चारा', name: getFeedName('green_2', 'custom_green_2'), qty: document.getElementById('qty_green_2').value },
+            { cat: 'सुका चारा', name: getFeedName('dry_1', 'custom_dry_1'), qty: document.getElementById('qty_dry_1').value },
+            { cat: 'पशुखाद्य', name: getFeedName('conc_1', 'custom_conc_1'), qty: document.getElementById('qty_conc_1').value },
+            { cat: 'पशुखाद्य', name: getFeedName('conc_2', 'custom_conc_2'), qty: document.getElementById('qty_conc_2').value },
+            { cat: 'पशुखाद्य', name: getFeedName('conc_3', 'custom_conc_3'), qty: document.getElementById('qty_conc_3').value },
+        ];
+        
+        allFeeds.forEach(f => {
+            let q = parseFloat(f.qty);
+            if (f.name && q > 0) {
+                inputHtml += `<tr><td style="padding:4px 0; border-bottom:1px solid #eee;">${f.cat}: <b>${f.name}</b></td><td style="text-align:right; border-bottom:1px solid #eee; color:#111;"><b>${q} Kg</b></td></tr>`;
+            }
+        });
+        if (minerals > 0) {
+             inputHtml += `<tr><td style="padding:4px 0; border-bottom:1px solid #eee;">फीड सप्लीमेंट: <b>मिनरल मिक्स्चर</b></td><td style="text-align:right; border-bottom:1px solid #eee; color:#111;"><b>${minerals} ग्रॅम</b></td></tr>`;
+        }
+        inputHtml += `</table>`;
+        document.getElementById('pdf_input_summary').innerHTML = inputHtml;
+
+        let reportHtml = `<h3>📋 सविस्तर विश्लेषण ${currentMode === 'adv' ? '(AI Advanced)' : (currentMode === 'pro' ? '(Pro)' : '(Basic)')}</h3>`;
+        let sNum = 1;
+
+        reportHtml += `<div class="report-section pdf-page-break"><h4>🎯 अंतिम AI स्कोअर</h4>
+            <div class="mini-grid">
+                <div><span class="pill good">Nutrition ${fmt0(score)}/100</span></div>
+                <div><span class="pill ${score >= 80 ? 'good' : score >= 60 ? 'warn' : 'bad'}">${score >= 80 ? 'चांगले' : score >= 60 ? 'सुधारणा हवी' : 'तातडीने बदल'}</span></div>
+            </div>
+        </div>`;
+
+        // 1. DRY MATTER
+        reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#795548;">🌾 ${mNum[sNum++]}. ड्राय मॅटर (DM)</h4>`;
+        if (totalDM > reqDM * 1.1) {
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत आहे आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>गाय पुरेसा आहार खात आहे, परंतु जास्त DM मुळे तुमचा खाद्य खर्च वाढत आहे. <br><br><b>✅ हमखास उपाय:</b> संतुलित आहारासाठी १-२ किलो सुका चारा कमी करा.</p>`;
+            else reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>अतिरिक्त DM मुळे पोट जास्त भरते व पचनाचा वेग मंदावतो, तसेच तुमचा चारा खर्च विनाकारण वाढतो. <br><br><b>✅ ॲडव्हान्स उपाय:</b> रवंथ प्रक्रियेवर लक्ष ठेवा. कमी दर्जाचा सुका चारा (उदा. गव्हाचे काड किंवा वाढे) १-२ किलोने कमी करा आणि पाण्याचे प्रमाण तपासा.</p>`;
+        } else if (totalDM < reqDM * 0.9) {
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-danger">❌ गाईचे पोट पूर्ण भरत नाहीये.</span></p><p>पोट न भरल्यामुळे दूध उत्पादनात अचानक घट होऊ शकते आणि वजन कमी होईल. अचूक चारा नियोजन पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-danger">❌ ड्राय मॅटर गरजेपेक्षा कमी आहे.</span></p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> गाईचे पोट भरत नाहीये. दूध टिकवण्यासाठी सुका किंवा हिरवा चारा योग्य प्रमाणात वाढवा.</div>`;
+            else reportHtml += `<p><span class="status-danger">❌ ड्राय मॅटर गरजेपेक्षा अत्यंत कमी आहे.</span></p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> गाईचे पोट (Rumen Fill) अपूर्ण आहे. दूध टिकवण्यासाठी आहार वाढवा. सुका चारा किंवा हिरवा चारा वाढवा (विशेषतः NDF मेंटेन करण्यासाठी). खाद्याची चव वाढवण्यासाठी गुळवणी किंवा मीठ वापरा.</div>`;
+        } else {
+            reportHtml += `<p><span class="status-ok">✅ ड्राय मॅटर योग्य आहे.</span> गाईचे पोट व्यवस्थित भरत0  भरत आहे.</p>`;
+        }
+        reportHtml += `<ul><li>गरज: ${fmt1(reqDM)} Kg | उपलब्ध: ${fmt1(totalDM)} Kg</li></ul></div>`;
+
+        // 2. PROTEIN
+        let cpAdHTML = "";
+        let adminAds = JSON.parse(localStorage.getItem('live_admin_ad_images'));
+        if(adminAds && adminAds.ads) {
+            let rationAd = adminAds.ads.find(a => a.type === "Target_Ration");
+            if(rationAd) {
+                cpAdHTML = `
+                <div class="pdf-page-break" style="background:#e3f2fd; border:1px solid #90caf9; padding:12px; border-radius:8px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:10px; color:#1976d2; font-weight:bold;">Sponsored Recommendation</div>
+                        <div style="font-size:13px; font-weight:bold; color:#0d47a1;">${rationAd.title}</div>
+                    </div>
+                    <button onclick="window.location.href='${rationAd.url || 'krushi_mall.html'}'" style="background:#1976d2; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">Buy Now</button>
+                </div>`;
+            }
+        }
+
+        reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#1976d2;">🥜 ${mNum[sNum++]}. प्रोटीन (CP)</h4>`;
+        let deficitCP = Math.max(0, reqCP - totalCP); 
+        let soyaNeeded = (deficitCP / 440).toFixed(1);
+        
+        if (totalCP < reqCP * 0.95) {
+            if(currentMode === 'basic') {
+                reportHtml += `<p><span class="status-danger">❌ प्रोटीनची कमतरता आहे.</span></p><p>यामुळे दूध उत्पादनात आणि फॅटमध्ये घट होऊ शकते. तसेच गाय वेळेवर <b>माजावर न येण्याची समस्या</b> उद्भवू शकते. योग्य उपाय जाणून घेण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+                reportHtml += cpAdHTML;
+            } else if(currentMode === 'pro') {
+                reportHtml += `<p><span class="status-danger">❌ प्रोटीन कमी आहे.</span></p><p>दुधातील वाढ, फॅट आणि प्रजननावर वाईट परिणाम होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> सुमारे ${soyaNeeded} किलो चांगल्या दर्जाची पेंड (उदा. सरकी, भुईमूग किंवा सोयाबीन) वाढवा.</div>`;
+                reportHtml += cpAdHTML;
+            } else {
+                reportHtml += `<p><span class="status-danger">❌ प्रोटीन कमी आहे (Protein Deficit).</span></p><p>दुधातील SNF आणि प्रजननावर (Fertility) थेट नकारात्मक परिणाम होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> सुमारे ${soyaNeeded} किलो चांगल्या दर्जाची पेंड (उदा. सोयाबीन DOC, शेंगदाणा, मोहरी किंवा सरकी पेंड) वाढवा. तसेच नैसर्गिक प्रथिनांसाठी कडधान्यांचा हिरवा चारा (लुसर्न, बरसीम, चवळी, स्टायलो) किंवा <b>'अझोला' (Azolla)</b> prompt पूरक आहार समाविष्ट करा. उच्च दूध देणाऱ्या गाईंसाठी 'बायपास प्रोटीन' (Bypass Protein) चा वापर केल्यास जलद फायदा दिसेल.</div>`;
+                reportHtml += cpAdHTML;
+            }
+        } else if (totalCP > reqCP * 1.15) {
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ प्रोटीन जास्त होत आहे.</span></p><p>अतिरिक्त प्रोटीनमुळे पचनावर ताण येऊ शकतो. कोणता घटक कमी करावा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ प्रोटीन जास्त आहे.</span></p><div style="background:#fff3e0; border:1px dashed #ff9800; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> अतिरिक्त प्रोटीन वाया जात आहे. महागडे पशुखाद्य किंवा पेंड थोडी कमी करा जेणेकरून तुमचा चारा खर्च वाचेल.</div>`;
+            else reportHtml += `<p><span class="status-warn">⚠️ प्रोटीन खूप जास्त आहे (Excess CP).</span></p><div style="background:#fff3e0; border:1px dashed #ff9800; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> अतिरिक्त प्रोटीनमुळे दुधात युरिया (MUN - Milk Urea Nitrogen) वाढू शकतो आणि यकृतावर (Liver) ताण येतो. विनाकारण खर्च वाढतोय. संतुलित आहारासाठी महागडे पशुखाद्य किंवा पेंड लागलीच थोडी कमी करा.</div>`;
+        } else {
+            reportHtml += `<p><span class="status-ok">✅ प्रोटीनची मात्रा योग्य आहे.</span> दूध उत्पादन आणि प्रजननासाठी हे उत्तम आहे.</p>`;
+        }
+        reportHtml += `<ul><li>गरज: ${fmt0(reqCP)} g | उपलब्ध: ${fmt0(totalCP)} g</li></ul></div>`;
+
+        // 3. ENERGY 
+        reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#fbc02d;">⚡ ${mNum[sNum++]}. ऊर्जा (ME)</h4>`;
+        if (totalME < reqME * 0.95) {
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-danger">❌ ऊर्जेची (ताकदीची) कमतरता आहे.</span></p><p>यामुळे गाय दुधावर टिकून राहणार नाही व तिचे वजन कमी होईल. ताकद भरून काढण्यासाठी योग्य व स्वस्त उपाय पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-danger">❌ ऊर्जा (ME) कमी आहे.</span></p><p>गाय स्वतःच्या शरीरातील ऊर्जा वापरून दूध देईल, ज्यामुळे वजन कमी होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> ऊर्जा वाढवण्यासाठी <b>मका भरडा, बाजरी, बार्ली किंवा गुळाचे</b> प्रमाण वाढवा. (टीप: येथे पेंड वाढवू नका).</div>`;
+            else reportHtml += `<p><span class="status-danger">❌ ऊर्जा (ME) अत्यंत कमी आहे (Negative Energy Balance).</span></p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> गाय स्वतःच्या अंगावरची चरबी वितळवून दूध देईल, ज्यामुळे 'कीटोसिस' (Ketosis) चा धोका वाढतो आणि 'बॉडी कंडिशन स्कोअर' (BCS) घसरतो. त्वरित ऊर्जा मिळण्यासाठी <b>मका भरडा, बाजरी, बार्ली किंवा गूळ/मोलॅसिस</b> वाढवा. वर्षभर ऊर्जा मिळण्यासाठी 'मक्याचा सायलेज' वापरा. तसेच बाजारात मिळणारे 'बायपास फॅट' (Bypass Fat) दिल्यास उत्कृष्ट परिणाम दिसतील.</div>`;
+        } else if (totalME > reqME * 1.20) {
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ ऊर्जा गरजेपेक्षा जास्त आहे.</span></p><p>संतुलित आहारासाठी कोणते बदल करावेत हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ऊर्जा (ME) जास्त आहे.</span></p><div style="background:#fff3e0; border:1px dashed #ff9800; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> अतिरिक्त ऊर्जेमुळे गाय चरबी वाढवेल. स्टार्चयुक्त धान्य (मका भरडा) थोडे कमी करा.</div>`;
+            else reportHtml += `<p><span class="status-warn">⚠️ ऊर्जा (ME) गरजेपेक्षा जास्त आहे.</span></p><div style="background:#fff3e0; border:1px dashed #ff9800; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> अतिरिक्त ऊर्जा शरीरात चरबी साठवते, ज्यामुळे गाभण काळात गुंतागुंत (Fatty Liver Syndrome) वाढू शकते व भाकड काळात समस्या येतात. मका किंवा धान्याचे प्रमाण कमी करून फायबरयुक्त चारा वाढवा.</div>`;
+        } else {
+            reportHtml += `<p><span class="status-ok">✅ ऊर्जा पातळी योग्य आहे.</span> गाईचे आरोग्य चांगले राहील.</p>`;
+        }
+        reportHtml += `<ul><li>गरज: ${fmt1(reqME)} Mcal | उपलब्ध: ${fmt1(totalME)} Mcal</li></ul></div>`;
+
+        // 4. MINERAL MIXTURE
+        reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#8e24aa;">🧪 ${mNum[sNum++]}. खनिज मिश्रण (Mineral Mixture)</h4>`;
+        let deficitMinerals = Math.max(0, reqMinerals - minerals);
+        if (minerals === 0) {
+            reportHtml += `<p><span class="status-danger">❌ तुम्ही खनिज मिश्रण देत नाही आहात!</span></p>
+            <p>खनिज मिश्रणाशिवाय गायीची हाडे ठिसूळ होतात, दुधाची फॅट पडते आणि सर्वांत महत्त्वाचे म्हणजे <b>गाय वेळेवर माजावर येत नाही.</b></p>
+            <div style="background:#ffebee; border:1px dashed #e53935; padding:10px; border-radius:6px; margin-top:8px;">
+                <b>✅ आवश्यक उपाय:</b> तुमच्या गाईला दररोज <b>${fmt0(reqMinerals)} ग्रॅम</b> खनिज मिश्रणाची गरज आहे. लवकरात लवकर दर्जेदार पावडर सुरू करा.
+            </div>`;
+        } else if (minerals < reqMinerals * 0.90) {
+            reportHtml += `<p><span class="status-warn">⚠️ खनिज मिश्रणाचे प्रमाण कमी आहे.</span></p>
+            <p>तुम्ही देत असलेले प्रमाण अपुरे आहे. तुमच्या गाईला सध्या <b>${fmt0(deficitMinerals)} ग्रॅम</b> जास्त पावडरची गरज आहे.</p>
+            <div style="background:#fff3e0; border:1px dashed #ff9800; padding:10px; border-radius:6px; margin-top:8px;">
+                <b>✅ फायदे:</b> जर तुम्ही प्रमाण वाढवून दररोज <b>${fmt0(reqMinerals)} ग्रॅम</b> दिले, तर गाईची रोगप्रतिकारशक्ती वाढेल, कासदाह (Mastitis) होणार नाही आणि प्रजननाचे (Fertility) प्रश्न सुटतील.
+            </div>`;
+        } else {
+            reportHtml += `<p><span class="status-ok">✅ उत्कृष्ट! खनिज मिश्रणाचे प्रमाण अगदी योग्य आहे.</span></p>
+            <p>यामुळे गाईचे आरोग्य आणि प्रजननाचे चक्र (Reproductive Cycle) सुरळीत राहील. हेच प्रमाण चालू ठेवा.</p>`;
+        }
+        reportHtml += `<ul><li>तुमच्या गाईची रोजची गरज: <b>${fmt0(reqMinerals)} ग्रॅम</b></li></ul>`;
+        reportHtml += `<div style="margin-top:15px;"><b>🦴 कॅल्शियम (Ca):</b> ${fmt0(totalCa)} ग्रॅम | <b>🦷 फॉस्फरस (P):</b> ${fmt0(totalP)} ग्रॅम</div>`;
+        reportHtml += `</div>`;
+
+        // SEASONAL TIPS 
+        if(currentMode === 'pro' || currentMode === 'adv') {
+            reportHtml += getSeasonTips(currentMode);
+        }
+
+        // ADVANCE TIER SPECIFIC
+        if(currentMode === 'adv') {
+            reportHtml += `<div class="report-section pdf-page-break" style="background:#f9fbe7; border-color:#fbc02d;">
+                <h4 style="color:#f57f17;">🦠 रवंथ आणि पचन क्षमता (Rumen Health)</h4>`;
+            if (totalNDF < reqNDF * 0.90) {
+                reportHtml += `<p><span class="status-danger">❌ NDF (फायबर) खूप कमी आहे.</span> गाय योग्य रवंथ करणार नाही आणि दुधाची फॅट पडेल. <b>उपाय:</b> चांगल्या दर्जाचा सुका चारा (उदा. ज्वारीचा कडबा) वाढवा.</p>`;
+            } else {
+                reportHtml += `<p><span class="status-ok">✅ NDF (फायबर) योग्य आहे.</span> गाय उत्तम रवंथ करेल आणि दुधाची फॅट स्थिर राहील.</p>`;
+            }
+            if (ratioC > 50) {
+                reportHtml += `<p><span class="status-warn">⚠️ कॉन्सन्ट्रेट (पेंड/खाद्य) चे प्रमाण ५०% पेक्षा जास्त आहे!</span> यामुळे गाईच्या पोटात ॲसिडिटी (Acidosis) होऊ शकते. खाद्याचे प्रमाण चारा:खाद्य = ६०:४० किंवा ५०:५० ठेवा.</p>`;
+            }
+            reportHtml += `</div>`;
+
+            reportHtml += `<div class="report-section pdf-page-break" style="background:#e8f5e9; border-color:#a5d6a7;">
+                <h4 style="color:#2e7d32;">📋 ICAR व पशुवैद्यकीय आहार व्यवस्थापन नियम</h4>
+                <ul>
+                    <li>चारा आणि खाद्यामध्ये <b>अचानक बदल करू नये</b>, तो टप्प्याटप्प्याने (५-७ दिवसांत) बदलावा.</li>
+                    <li>गाईला २४ तास <b>स्वच्छ पाणी</b> उपलब्ध असावे (पाण्याची गरज: ${fmt0(reqWater)} लिटर).</li>
+                    <li>चारा पूर्णपणे <b>बुरशीमुक्त आणि स्वच्छ</b> असावा.</li>
+                    <li>हिरवा + वाळलेला + पशुखाद्य यांचे योग्य प्रमाण ठेवून रेशन द्यावे.</li>
+                </ul>
+            </div>`;
+        }
+
+        // BASIC PLAN UPSELL BANNER 
+        if (currentMode === 'basic') {
+            reportHtml += `
+            <div class="marketing-hook" onclick="setLevel('pro')">
+                <p>🚀 दुग्ध व्यवसायातून लाखोंचा नफा कमवायचा आहे?</p>
+                <div style="font-size:12px; color:#555; margin-bottom:10px; text-align:left;">
+                    <b>प्रो प्लॅनमध्ये तुम्हाला मिळेल:</b><br>
+                    ✅ 🔒 ड्राय मॅटर, प्रोटीन आणि ऊर्जा संतुलित करण्याचे हमखास उपाय<br>
+                    ✅ 🔒 जनावरांचे गंभीर आजार (कीटोसिस, उलटणे) टाळण्याचे तंत्र<br>
+                    ✅ 🔒 ऋतूनुसार चारा व्यवस्थापन टिप्स<br>
+                    ✅ 🔒 सविस्तर PDF रिपोर्ट डाऊनलोड
+                </div>
+                <span>👉 आमचा प्रो प्लॅन ॲक्टिव्हेट करा (फक्त ₹२९)</span>
+            </div>`;
+        }
+
+        // PRO PLAN UPSELL BANNER 
+        if (currentMode === 'pro') {
+            reportHtml += `
+            <div class="marketing-hook" style="border-color:#8e24aa; background:linear-gradient(145deg, #f3e5f5, #e1bee7);" onclick="setLevel('adv')">
+                <p style="color:#6a1b9a;">👑 दुग्ध व्यवसाय टेक्निकली आणि ॲडव्हान्स करायचा आहे?</p>
+                <div style="font-size:12px; color:#4a148c; margin-bottom:10px; text-align:left;">
+                    <b>ॲडव्हान्स प्लॅनमध्ये तुम्हाला मिळेल:</b><br>
+                    ✅ NDF/ADF आणि पचनक्षमता तपासण्याचे ॲडव्हान्स तंत्र<br>
+                    ✅ रवंथ (Rumen Health) आणि ICAR चे व्यवस्थापन नियम<br>
+                    ✅ VIP गाईंचे गाभण काळ व उन्हाळा व्यवस्थापन<br>
+                    ✅ सविस्तर प्रगत PDF रिपोर्ट
+                </div>
+                <span style="background:#8e24aa;">👉 आमचा ॲडव्हान्स प्लॅन ॲक्टिव्हेट करा (फक्त ₹४९)</span>
+            </div>`;
+        }
+
+        // FINANCIALS FOR PRO AND ADV
+        if (currentMode === 'pro' || currentMode === 'adv') {
+            reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#455a64;">💰 ${mNum[sNum++]}. आर्थिक विश्लेषण</h4><p><b>खाद्य खर्च/दिवस:</b> ₹${fmt1(feedCost)}</p><p><b>खाद्य खर्च/लिटर:</b> ₹${fmt1(costPerLtr)}</p>`;
+            if (milk > 0) {
+                let adminData = JSON.parse(localStorage.getItem('admin_data_M11')) || {};
+                let milkRate = adminData.m11_1 ? parseFloat(adminData.m11_1) : 35; 
+                let milkValue = milk * milkRate; let gross = milkValue - feedCost;
+                reportHtml += `<p><b>दूध उत्पन्न (अंदाजे):</b> ₹${fmt1(milkValue)}</p><p><b>दैनंदिन नफा/तोटा:</b> <span class="${gross >= 0 ? 'status-ok' : 'status-danger'}">₹${fmt1(gross)}</span></p>`;
+            }
+            reportHtml += `</div>`;
+            
+            reportHtml += `<div class="report-section pdf-page-break" style="background:#fff9c4; border:1px solid #fbc02d;"><h4 style="color:#f57f17;">📌 AI अंतिम निष्कर्ष व अपेक्षित परिणाम</h4>`;
+            if (score >= 85) { reportHtml += `<div class="final-verdict" style="background:#e8f5e9; color:#1b5e20;">⭐ AI ची शिफारस: उत्कृष्ट (Excellent)</div><p>तुमचे रेशन संतुलित आहे! रवंथ, पचन, दूध उत्पादन आणि फॅट टिकून राहील. हाच आहार चालू ठेवा.</p>`; } 
+            else if (score >= 65) { reportHtml += `<div class="final-verdict" style="background:#fff3e0; color:#e65100;">⭐ AI ची शिफारस: थोडी सुधारणा आवश्यक (Good)</div><p>आहार बऱ्यापैकी चांगला आहे, पण वरील सुधारणा केल्यास खर्च कमी आणि उत्पादन जास्त होईल.</p>`; } 
+            else { reportHtml += `<div class="final-verdict" style="background:#ffebee; color:#c62828;">⭐ AI ची शिफारस: तातडीने बदल करा (Critical)</div><p>आहारात मोठा असमतोल आहे. गाईचे आरोग्य आणि तुमचा आर्थिक तोटा वाढू शकतो. तातडीने सुधारणा करा.</p>`; }
+
+            if (issues.length > 0) {
+                reportHtml += `<div style="margin-top:12px;"><b>⚠️ ओळखलेल्या समस्या:</b><ul>`;
+                issues.forEach(i => reportHtml += `<li>${i}</li>`);
+                reportHtml += `</ul></div>`;
+            }
+            reportHtml += `</div>`;
+
+            // ✅ NUTRIENT COMPARISON CHART ADDED HERE (After final conclusion)
+            reportHtml += generateNutrientComparisonTable(currentMode, {
+                reqDM, totalDM, reqCP, totalCP, reqME, totalME, reqMinerals, minerals,
+                reqNDF, totalNDF, reqADF, totalADF, reqCF, totalCF,
+                reqCa, totalCa, reqP, totalP, reqWater, ratioR, ratioC
+            });
+        }
+
+        document.getElementById('ai_report_container').innerHTML = reportHtml;
+        document.getElementById('result_output').style.display = "block";
+        document.getElementById('result_output').scrollIntoView({ behavior: "smooth" });
+    }
+
+    // 🔥 NEW: Nutrient Comparison Table Generator
+    function generateNutrientComparisonTable(mode, data) {
+        let rows = '';
+        const addRow = (label, unit, req, actual, impactMsg) => {
+            let diff = actual - req;
+            let diffStr = diff >= 0 ? `+${fmt1(diff)}` : fmt1(diff);
+            let diffClass = diff >= 0 ? 'diff-positive' : 'diff-negative';
+            let impact = '';
+            if (actual < req * 0.95) {
+                impact = impactMsg;
+            } else if (actual > req * 1.10) {
+                impact = 'जास्त प्रमाण (खर्च वाढू शकतो)';
+            } else {
+                impact = '—';
+            }
+            return `<tr>
+                <td>${label}</td>
+                <td>${fmt1(req)} ${unit}</td>
+                <td>${fmt1(actual)} ${unit}</td>
+                <td class="${diffClass}">${diffStr} ${unit}</td>
+                <td class="impact-cell">${impact}</td>
+            </tr>`;
+        };
+
+        // Pro mode: DM, CP, ME, Minerals (Mineral Mixture) + Ca, P? basic ones
+        if (mode === 'pro') {
+            rows += addRow('ड्राय मॅटर (DM)', 'Kg', data.reqDM, data.totalDM, 'पोट न भरल्याने दूध उत्पादन घटेल, वजन कमी होईल.');
+            rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध आणि SNF कमी होईल, माजावर येण्यास उशीर.');
+            rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन कमी होईल, दूध उत्पादन घटेल, अशक्तपणा.');
+            rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या, दूध फॅट कमी.');
+            // Also show Ca and P as extra info
+            rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
+            rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
+        } else if (mode === 'adv') {
+            // Full detailed table
+            rows += addRow('ड्राय मॅटर (DM)', 'Kg', data.reqDM, data.totalDM, 'पोट न भरल्याने दूध उत्पादन घटेल, वजन कमी होईल.');
+            rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध SNF कमी, माजावर उशीर.');
+            rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन घटेल, दूध कमी, अशक्तपणा.');
+            rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या.');
+            rows += addRow('NDF (फायबर)', 'Kg', data.reqNDF, data.totalNDF, 'रवंथ बिघडेल, दुधातील फॅट कमी होईल.');
+            rows += addRow('ADF (पचनक्षमता)', 'Kg', data.reqADF, data.totalADF, 'पचन मंदावेल, आहाराचा फायदा कमी.');
+            rows += addRow('CF (फॅट)', 'ग्रॅम', data.reqCF, data.totalCF, 'दुधातील फॅट कमी, ऊर्जा अपुरी.');
+            rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
+            rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
+            rows += addRow('पाणी', 'लिटर', data.reqWater, data.reqWater, 'दूध कमी, शरीर तापमान वाढेल.'); // water actual is requirement (we assume same)
+            // Ratio row not nutrient, but can show as note
+        }
+
+        return `
+        <div class="report-section pdf-page-break" style="margin-top:20px;">
+            <h4 style="color:#1b5e20;">📊 पोषक घटक तुलना सारणी</h4>
+            <div style="overflow-x:auto;">
+                <table class="nutrient-table">
+                    <thead>
+                        <tr>
+                            <th>पोषक घटक</th>
+                            <th>गरज</th>
+                            <th>चाऱ्यातून मिळाले</th>
+                            <th>तफावत (+/-)</th>
+                            <th>परिणाम</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+            <p style="font-size:11px; color:#888; margin-top:10px;">* जर तफावत ऋण (कमी) असेल तर परिणाम गंभीर असू शकतो. जास्त प्रमाण असल्यास खर्च वाढतो.</p>
+        </div>`;
+    }
+
+    // --- 🔥 HYBRID GEMINI AI LOGIC (CENTRALIZED KEY & AUTO-DISCOVERY) 🔥 ---
+    async function fetchGeminiAdvice() {
+        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+        let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
+
+        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+            alert("⚠️ ॲडमिन पॅनेलमध्ये (M16 टॅब) Google Gemini ची योग्य API Key (AIzaSy...) जोडलेली नाही. कृपया आधी ती सेट करा.");
+            return;
+        }
+
+        document.getElementById('btn_gemini_trigger').style.display = "none";
+        document.getElementById('gemini_loader').style.display = "block";
+        document.getElementById('gemini_response_box').style.display = "none";
+
+        let gData = globalCalculationData;
+        let promptText = `
+        तू दुग्ध दिशा ॲपचा एक तज्ज्ञ पशुवैद्यक आणि आहारतज्ज्ञ आहेस. 
+        मी एका गाईच्या आहाराचे विश्लेषण केले आहे. आकडेवारी खालीलप्रमाणे आहे:
+        - गाईचे वजन: ${gData.weight} किलो
+        - रोजचे दूध: ${gData.milk} लिटर
+        - ड्राय मॅटर (DM) गरज: ${fmt1(gData.reqDM)} kg, दिलेले: ${fmt1(gData.totalDM)} kg
+        - प्रोटीन (CP) गरज: ${fmt0(gData.reqCP)}g, दिलेले: ${fmt0(gData.totalCP)}g
+        - ऊर्जा (ME) गरज: ${fmt0(gData.reqME)} Mcal, दिलेली: ${fmt0(gData.totalME)} Mcal
+        - कॅल्शियम: ${fmt0(gData.totalCa)}g, फॉस्फरस: ${fmt0(gData.totalP)}g
+        - न्यूट्रिशन स्कोअर: ${gData.score}/100
+        
+        शेतकऱ्याला मराठीत अत्यंत सोप्या ५-६ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
+        १. आहारात नेमकी काय कमी किंवा जास्त आहे?
+        २. कोणते खाद्य वाढवावे किंवा कमी करावे (उदा. पेंड, सुका चारा, किंवा हिरवा चारा)?
+        टीप: जर ऊर्जा (ME) कमी असेल, तर सोयाबीन पेंड सांगू नकोस, मका किंवा गूळ सुचव.
+        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस, जसे की DM, CP. शेतकऱ्याला समजेल अशी साधी भाषा वापर.
+        `;
+
+        try {
+            if(!CURRENT_MODEL) {
+                let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                let mData = await mRes.json();
+                
+                if(mData.models) {
+                    let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                    
+                    if(validModel) {
+                        CURRENT_MODEL = validModel.name; 
+                    }
+                }
+                if(!CURRENT_MODEL) CURRENT_MODEL = "models/gemini-1.5-flash"; 
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
+            const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
+                if(response.status === 400 && errMsg.includes("API key not valid")) {
+                    alert("⚠️ तांत्रिक त्रुटी: ॲडमिन पॅनेलमधील API Key चुकीची (Invalid) आहे.");
+                } else if(response.status === 403) {
+                    alert("⚠️ तांत्रिक त्रुटी: API Key ची मुदत किंवा परवानगी संपली आहे.");
+                } else {
+                    alert("AI Server Error: " + errMsg);
+                }
+                CURRENT_MODEL = ""; 
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+                return;
+            }
+
+            if (data.candidates && data.candidates.length > 0) {
+                let aiResponse = data.candidates[0].content.parts[0].text;
+                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                
+                document.getElementById('gemini_content_text').innerHTML = aiResponse;
+                document.getElementById('gemini_loader').style.display = "none";
+                document.getElementById('gemini_response_box').style.display = "block";
+                
+                document.getElementById('gemini_response_box').scrollIntoView({ behavior: "smooth" });
+            } else {
+                alert("AI कडून कोणतेही उत्तर आले नाही. कृपया पुन्हा प्रयत्न करा.");
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+            }
+        } catch (error) {
+            alert("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये समस्या आहे.");
+            document.getElementById('btn_gemini_trigger').style.display = "block";
+            document.getElementById('gemini_loader').style.display = "none";
+            CURRENT_MODEL = ""; 
+        }
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

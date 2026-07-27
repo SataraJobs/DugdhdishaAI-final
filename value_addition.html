@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - मूल्यवर्धन व जोडधंदा</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .module-card-large { background: #fff; padding: 20px; margin: 15px 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 5px solid #2e7d32; }
+        .module-card-large h3 { margin: 0 0 10px; color: #1b5e20; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .module-card-large p { margin: 0 0 15px; font-size: 13px; color: #555; }
+        
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group { flex: 1; }
+        .input-group label { display: block; font-weight: bold; color: #333; margin-bottom: 5px; font-size: 12px; }
+        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+
+        .btn-calc { background: #ff9800; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #e65100; margin-bottom: 10px; transition: 0.2s;}
+        .btn-calc:active { top: 4px; box-shadow: 0 0px 0 #e65100; position: relative; }
+
+        .profit-box { background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #4caf50; display: none; margin-top: 15px; }
+        .profit-box h4 { margin: 0 0 10px; color: #2e7d32; font-size: 16px; }
+        .profit-val { font-size: 16px; font-weight: 900; color: #d32f2f; }
+        
+        .info-list { padding-left: 20px; font-size: 13px; color: #444; line-height: 1.6; margin: 5px 0 15px; }
+        .highlight-bg { background: #fff3e0; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ff9800; }
+        .highlight-bg h5 { margin: 0 0 5px; color: #e65100; font-size: 14px; }
+
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; box-shadow: inset 2px 2px 5px rgba(255,255,255,0.5); display: none;}
+        .vendor-ad-box h4 { margin: 0 0 5px; color: #0d47a1; font-size: 13px; font-weight: 900;}
+        .vendor-ad-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 8px; margin-top: 8px;}
+        .vendor-ad-box .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #0d47a1; display: inline-block; border: 1px solid rgba(0,0,0,0.1); font-weight:bold;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+        .vendor-product-flex { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #64b5f6; background: #fff;}
+    </style>
+</head>
+<body onload="syncProducts()">
+
+<div class="app-container">
+    <div class="top-dashboard" style="background: #2e7d32; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="color: white; margin: 0;">मूल्यवर्धन व जोडधंदा 💰</h1>
+            <p style="color: #e8f5e9; margin: 5px 0 0;">दुधाचे प्रॉडक्ट्स आणि गांडूळ खत नफा कॅल्क्युलेटर</p>
+        </div>
+    </div>
+
+    <!-- Dairy Products Calculator -->
+    <div class="module-card-large">
+        <h3>🧀 दुग्धजन्य पदार्थ (पनीर, तूप, खवा, दही)</h3>
+        <p>दुधाची थेट डेअरीला विक्री करण्यापेक्षा त्याचे मूल्यवर्धन (Value Addition) केल्यास नफा अनेक पटींनी वाढतो. खालील फॉर्म भरा आणि जादू पहा.</p>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label>दूध प्रकार:</label>
+                <select id="milk_type">
+                    <option value="cow">गाईचे दूध (Cow)</option>
+                    <option value="buffalo">म्हशीचे दूध (Buffalo)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>तुमच्याकडील दूध (लिटर):</label>
+                <input type="number" id="milk_qty" placeholder="उदा. 10">
+            </div>
+        </div>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label>डेअरीचा सध्याचा दूध दर (₹/L):</label>
+                <input type="number" id="milk_rate" placeholder="उदा. 35">
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="calcDairyProducts()">🧮 सर्व प्रॉडक्ट्सचा नफा तपासा</button>
+
+        <div class="profit-box" id="product_result">
+            <h4>📊 तुमचे मूल्यवर्धन अहवाल:</h4>
+            <p style="margin:0 0 10px; font-size:14px; background:#c8e6c9; padding:8px; border-radius:6px;">
+                फक्त दूध विकल्यास मिळणारी रक्कम: <b style="color:#1b5e20;">₹ <span id="raw_milk_income">0</span></b>
+            </p>
+            
+            <div class="highlight-bg">
+                <h5>१. पनीर (Paneer) बनवल्यास:</h5>
+                <ul class="info-list">
+                    <li>अंदाजे पनीर उत्पादन: <b><span id="paneer_qty">0</span> किलो</b></li>
+                    <li>पनीर विक्रीतून मिळणारी रक्कम: <b style="color:#2e7d32;">₹ <span id="paneer_income">0</span></b></li>
+                    <li>दुधापेक्षा जास्तीचा नफा: <b class="profit-val">₹ <span id="paneer_profit">0</span></b></li>
+                </ul>
+            </div>
+
+            <div class="highlight-bg">
+                <h5>२. तूप (Ghee) बनवल्यास:</h5>
+                <ul class="info-list">
+                    <li>अंदाजे तूप उत्पादन: <b><span id="ghee_qty">0</span> किलो</b></li>
+                    <li>तूप विक्रीतून मिळणारी रक्कम: <b style="color:#2e7d32;">₹ <span id="ghee_income">0</span></b></li>
+                    <li>दुधापेक्षा जास्तीचा नफा: <b class="profit-val">₹ <span id="ghee_profit">0</span></b></li>
+                </ul>
+            </div>
+
+            <div class="highlight-bg">
+                <h5>३. खवा / मावा (Khoa) बनवल्यास:</h5>
+                <ul class="info-list">
+                    <li>अंदाजे खवा उत्पादन: <b><span id="khoa_qty">0</span> किलो</b></li>
+                    <li>खवा विक्रीतून मिळणारी रक्कम: <b style="color:#2e7d32;">₹ <span id="khoa_income">0</span></b></li>
+                    <li>दुधापेक्षा जास्तीचा नफा: <b class="profit-val">₹ <span id="khoa_profit">0</span></b></li>
+                </ul>
+            </div>
+
+            <div class="highlight-bg" style="border-left-color: #0288d1; background: #e1f5fe;">
+                <h5 style="color: #0288d1;">४. दही (Curd) बनवल्यास:</h5>
+                <ul class="info-list">
+                    <li>अंदाजे दही उत्पादन: <b><span id="curd_qty">0</span> किलो</b></li>
+                    <li>दही विक्रीतून मिळणारी रक्कम: <b style="color:#0288d1;">₹ <span id="curd_income">0</span></b></li>
+                    <li>दुधापेक्षा जास्तीचा नफा: <b class="profit-val" style="color:#0288d1;">₹ <span id="curd_profit">0</span></b></li>
+                </ul>
+            </div>
+            
+            <p style="font-size: 11px; color: #666; margin:0; text-align:right;">* हे आकडे सरासरी फॅट व SNF वर आधारित आहेत.</p>
+
+            <!-- 🔥 CONTAINER FOR DYNAMIC PHARMA ADS -->
+            <div id="value_addition_ad_container"></div>
+        </div>
+    </div>
+
+    <!-- Vermicompost / Dung Management -->
+    <div class="module-card-large" style="border-top-color: #795548;">
+        <h3 style="color: #5d4037;">🪱 शेणखत आणि गांडूळ खत (Vermicompost)</h3>
+        <p>शेण फक्त उकिरड्यावर फेकण्यापेक्षा त्यातून व्यावसायिक पद्धतीने गांडूळ खत तयार केल्यास उत्तम उत्पन्न मिळते.</p>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label>गोठ्यातील एकूण मोठी जनावरे:</label>
+                <input type="number" id="cow_count" placeholder="उदा. 10">
+            </div>
+        </div>
+        
+        <button class="btn-calc" style="background: #795548; box-shadow: 0 4px 0 #4e342e;" onclick="calcDungProfit()">🌱 खताचा नफा तपासा</button>
+
+        <div class="profit-box" id="dung_result" style="border-color: #795548; background: #efebe9;">
+            <h4 style="color: #4e342e;">📊 सेंद्रिय खत उत्पन्न:</h4>
+            <ul class="info-list">
+                <li>रोजचे अंदाजे शेण: <b><span id="daily_dung">0</span> किलो</b></li>
+                <li>महिन्याला तयार होणारे गांडूळ खत: <b><span id="monthly_vermi">0</span> किलो</b></li>
+            </ul>
+            <p style="margin-top:10px; font-size:14px; font-weight:bold;">गांडूळ खताच्या विक्रीतून (₹१०/kg) महिन्याची कमाई:<br><span class="profit-val" style="color:#2e7d32; font-size:22px;">₹ <span id="vermi_income">0</span> / महिना</span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
+    function generateDynamicAd(targetTag, fallbackHtml, customTitle) {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        let matchedProducts = products.filter(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProducts.length > 0) {
+            let matchedProduct = matchedProducts[Math.floor(Math.random() * matchedProducts.length)]; // Randomize Ad
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:18px;">📦</div>`;
+            
+            return `
+                <div class="vendor-ad-box" style="display:block;" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:13.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:2px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        return fallbackHtml; // Return static HTML if no dynamic match is found
+    }
+
+    // --- Paneer, Ghee, Khoa & Curd Calculation Logic ---
+    function calcDairyProducts() {
+        let typeSelect = document.getElementById('milk_type');
+        let type = typeSelect.value;
+        let typeText = typeSelect.options[typeSelect.selectedIndex].text;
+        
+        let qty = parseFloat(document.getElementById('milk_qty').value);
+        let rate = parseFloat(document.getElementById('milk_rate').value);
+        let adBox = document.getElementById('value_addition_ad_container');
+
+        if (!qty || !rate) { alert("कृपया दुधाचे लिटर आणि दर टाका."); return; }
+
+        let rawIncome = qty * rate;
+
+        // --- Yield Assumptions per Liter ---
+        // Cow Milk: Paneer ~150g, Ghee ~40g, Khoa ~180g, Curd ~950g
+        // Buffalo Milk: Paneer ~200g, Ghee ~65g, Khoa ~220g, Curd ~980g
+        let paneerYield = (type === 'cow') ? 0.15 : 0.20;
+        let gheeYield = (type === 'cow') ? 0.04 : 0.065;
+        let khoaYield = (type === 'cow') ? 0.18 : 0.22;
+        let curdYield = (type === 'cow') ? 0.95 : 0.98;
+
+        let totalPaneer = qty * paneerYield;
+        let totalGhee = qty * gheeYield;
+        let totalKhoa = qty * khoaYield;
+        let totalCurd = qty * curdYield;
+
+        // --- Market Rates (Default) ---
+        let paneerRate = 350; // Per kg
+        let gheeRate = (type === 'cow') ? 700 : 600; // Cow ghee is premium
+        let khoaRate = 300; // Per kg
+        let curdRate = 60; // Per kg
+
+        // 🔥 ADMIN M12 SYNC (If Admin updated market rates)
+        let adminM12Data = JSON.parse(localStorage.getItem('admin_data_M12'));
+        if(adminM12Data) {
+            if(adminM12Data.m12_2) paneerRate = parseFloat(adminM12Data.m12_2);
+            if(adminM12Data.m12_3) gheeRate = parseFloat(adminM12Data.m12_3);
+            if(adminM12Data.m12_4) khoaRate = parseFloat(adminM12Data.m12_4);
+        }
+
+        // --- Calculate Income ---
+        let paneerIncome = totalPaneer * paneerRate;
+        let gheeIncome = totalGhee * gheeRate;
+        let khoaIncome = totalKhoa * khoaRate;
+        let curdIncome = totalCurd * curdRate;
+
+        // 🔥 FIREBASE: LOG VALUE ADDITION SEARCH 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("value_addition_logs").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            milkType: typeText,
+            milkQuantity: qty,
+            rawMilkIncome: rawIncome,
+            paneerProfit: Math.round(paneerIncome - rawIncome),
+            gheeProfit: Math.round(gheeIncome - rawIncome),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging value addition calculation: ", err));
+
+        // --- Update UI ---
+        document.getElementById('raw_milk_income').innerText = Math.round(rawIncome);
+        
+        // Paneer
+        document.getElementById('paneer_qty').innerText = totalPaneer.toFixed(2);
+        document.getElementById('paneer_income').innerText = Math.round(paneerIncome);
+        document.getElementById('paneer_profit').innerText = Math.round(paneerIncome - rawIncome);
+
+        // Ghee
+        document.getElementById('ghee_qty').innerText = totalGhee.toFixed(2);
+        document.getElementById('ghee_income').innerText = Math.round(gheeIncome);
+        document.getElementById('ghee_profit').innerText = Math.round(gheeIncome - rawIncome);
+
+        // Khoa
+        document.getElementById('khoa_qty').innerText = totalKhoa.toFixed(2);
+        document.getElementById('khoa_income').innerText = Math.round(khoaIncome);
+        document.getElementById('khoa_profit').innerText = Math.round(khoaIncome - rawIncome);
+
+        // Curd
+        document.getElementById('curd_qty').innerText = totalCurd.toFixed(2);
+        document.getElementById('curd_income').innerText = Math.round(curdIncome);
+        document.getElementById('curd_profit').innerText = Math.round(curdIncome - rawIncome);
+
+        // --- Inject Dynamic Ads ---
+        let fallbackAd = `
+            <div class="vendor-ad-box" style="display:block;" onclick="window.location.href='krushi_mall.html'">
+                <h4>🥛 दुधाची गुणवत्ता वाढवण्यासाठी</h4>
+                <p>पनीर आणि तूप जास्त निघण्यासाठी दुधाची फॅट उत्तम असणे गरजेचे आहे. त्यासाठी आजच दर्जेदार <b>बायपास फॅट (Bypass Fat)</b> खरेदी करा.</p>
+                <div class="sponsor-bottom-row">
+                    <span class="sponsor-tag">Sponsored Suggestion</span>
+                    <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                </div>
+            </div>`;
+        
+        // We trigger Fat and SNF booster ads to help them get more paneer/ghee yield.
+        let targetTag = Math.random() > 0.5 ? "Milk_Fat_SNF" : "Weight_BypassFat";
+        adBox.innerHTML = generateDynamicAd(targetTag, fallbackAd, "🥛 जास्त उत्पन्नासाठी सुचवलेले:");
+
+        document.getElementById('product_result').style.display = "block";
+        document.getElementById('product_result').scrollIntoView({behavior: "smooth"});
+    }
+
+    // --- Vermicompost Calculation Logic ---
+    function calcDungProfit() {
+        let cows = parseInt(document.getElementById('cow_count').value);
+        if (!cows) { alert("कृपया जनावरांची संख्या टाका."); return; }
+
+        // Assumption: 1 adult cow gives ~15 kg dung/day. 
+        // Vermicompost recovery is approx 40% of raw dung.
+        let dailyDung = cows * 15; 
+        let monthlyDung = dailyDung * 30;
+        let monthlyVermi = monthlyDung * 0.40; // 40% conversion
+        
+        let vermiRate = 10; // Rs 10 per kg market rate
+        let monthlyIncome = monthlyVermi * vermiRate;
+
+        document.getElementById('daily_dung').innerText = dailyDung;
+        document.getElementById('monthly_vermi').innerText = Math.round(monthlyVermi);
+        document.getElementById('vermi_income').innerText = Math.round(monthlyIncome);
+
+        document.getElementById('dung_result').style.display = "block";
+        document.getElementById('dung_result').scrollIntoView({behavior: "smooth"});
+    }
+</script>
+
+<script src="fcm_setup.js"></script>
+</body>
+</html>

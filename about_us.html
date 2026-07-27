@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - आमच्याबद्दल</title>
+    <style>
+        :root { --green: #1b5e20; --light-green: #e8f5e9; --orange: #ff9800; --blue: #1565c0; --bg: #f4f7f6; --card: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 15px 30px; }
+
+        /* Header */
+        .header { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; padding: 30px 20px; border-radius: 0 0 30px 30px; text-align: center; margin-bottom: 25px; box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+        .logo-img { width: 90px; height: 90px; border-radius: 50%; border: 4px solid white; margin-bottom: 15px; object-fit: cover; }
+        .header h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px; }
+        .header p { font-size: 16px; opacity: 0.95; margin-top: 10px; }
+
+        /* Cards */
+        .section { background: var(--card); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
+        .section h2 { color: var(--green); font-size: 22px; border-left: 6px solid var(--orange); padding-left: 15px; margin: 0 0 18px; }
+        .section h3 { color: var(--blue); font-size: 18px; margin: 20px 0 10px; }
+        .section p, .section li { font-size: 15px; line-height: 1.8; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+
+        /* Founder Card */
+        .founder-card { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; background: #fdfaf6; border: 1px solid #ffcc80; border-radius: 16px; padding: 20px; margin-top: 15px; }
+        .founder-card img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--orange); }
+        .founder-info h3 { margin: 0 0 5px; color: var(--green); font-size: 22px; }
+        .founder-info p { margin: 5px 0; font-size: 14px; color: #555; }
+
+        /* Feature grid */
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+        .feature-item { background: #f9fbe7; border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #dcedc8; transition: transform 0.2s; }
+        .feature-item:hover { transform: translateY(-3px); }
+        .feature-icon { font-size: 36px; margin-bottom: 8px; }
+        .feature-title { font-weight: 900; font-size: 16px; color: #33691e; margin-bottom: 5px; }
+        .feature-desc { font-size: 13px; color: #555; line-height: 1.5; }
+
+        /* Team */
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+        .team-card { text-align: center; background: #f9f9f9; border-radius: 12px; padding: 20px 10px; border: 1px solid #e0e0e0; }
+        .team-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--orange); margin-bottom: 10px; }
+        .team-card h3 { margin: 0; font-size: 16px; color: var(--green); }
+        .team-card p { margin: 4px 0; font-size: 13px; color: #666; }
+
+        .contact-box { background: var(--light-green); border-left: 6px solid var(--green); padding: 18px; border-radius: 10px; margin-top: 15px; }
+        .contact-box a { color: var(--blue); text-decoration: none; font-weight: bold; }
+
+        .steps { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0; }
+        .step { flex: 1 1 120px; background: white; border-radius: 10px; padding: 15px; text-align: center; border: 1px dashed var(--orange); position: relative; }
+        .step-number { background: var(--orange); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 900; }
+        .step-title { font-weight: bold; font-size: 14px; }
+
+        .footer-note { text-align: center; font-size: 13px; color: #888; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; }
+
+        .back-btn { display: inline-block; margin-top: 25px; background: #1976d2; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; transition: background 0.3s; }
+        .back-btn:hover { background: #0d47a1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header with Logo -->
+    <div class="header">
+        <img src="logo.png" alt="दुग्ध दिशा AI लोगो" class="logo-img" onerror="this.style.display='none'">
+        <h1>🐄 दुग्ध दिशा AI</h1>
+        <p>शेतकरी आणि व्यापारी यांना एकत्र आणणारे, AI-आधारित प्रगत डेअरी इकोसिस्टम</p>
+    </div>
+
+    <!-- परिचय -->
+    <div class="section">
+        <h2>🌟 आमची ओळख</h2>
+        <p>
+            <b>दुग्ध दिशा AI</b> हे एक क्रांतिकारक मोबाइल ॲप आहे जे पशुपालन व्यवसायाला २१ व्या शतकाच्या तंत्रज्ञानाशी जोडते. 
+            या ॲपच्या माध्यमातून आम्ही शेतकरी, पशुवैद्यक, पशुखाद्य विक्रेते, आणि डेअरी उद्योगातील सर्व घटकांना एकाच व्यासपीठावर आणतो. 
+            पारंपरिक पद्धतींना आधुनिक कृत्रिम बुद्धिमत्ता (AI) आणि डेटा विज्ञानाची जोड देऊन, दूध उत्पादन वाढविणे, जनावरांचे आरोग्य सुधारणे, आणि शेतकऱ्यांचे उत्पन्न दुप्पट करणे हे आमचे ध्येय आहे.
+        </p>
+    </div>
+
+    <!-- उद्देश आणि दृष्टी -->
+    <div class="section">
+        <h2>🎯 आमचा उद्देश व दृष्टी</h2>
+        <p>
+            <b>उद्देश:</b> प्रत्येक दुभत्या जनावराची काळजी घेणारा शेतकरी आर्थिकदृष्ट्या सक्षम व्हावा, त्याला योग्य वेळी योग्य सल्ला मिळावा आणि उच्च प्रतीचे दूध उत्पादन घेता यावे.<br>
+            <b>दृष्टी:</b> महाराष्ट्रासह संपूर्ण भारतातील प्रत्येक गोठ्यात AI च्या सहाय्याने शाश्वत पशुपालन पद्धती रुजविणे, जेणेकरून शेतकरी आत्मनिर्भर बनतील आणि डेअरी उद्योग अधिक सशक्त होईल.
+        </p>
+    </div>
+
+    <!-- संस्थापक विभाग -->
+    <div class="section">
+        <h2>👤 संस्थापक</h2>
+        <div id="founder_container">
+            <!-- JavaScript द्वारे भरले जाईल -->
+        </div>
+        <p style="font-size:12px; color:#888; margin-top:10px;">(ही माहिती प्रशासकाद्वारे अपडेट केली जाते.)</p>
+    </div>
+
+    <!-- शेतकऱ्यांसाठी फीचर्स -->
+    <div class="section">
+        <h2>👨‍🌾 शेतकऱ्यांसाठी प्रमुख सुविधा</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <div class="feature-icon">⚖️</div>
+                <div class="feature-title">रेशन बॅलन्सर</div>
+                <div class="feature-desc">गाई/म्हशीच्या वजन व दूध उत्पादनानुसार संतुलित आहार योजना. AI आधारित फॉर्म्युला.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🩺</div>
+                <div class="feature-title">डॉक्टर कॉल</div>
+                <div class="feature-desc">अनुभवी पशुवैद्यकांशी थेट फोन सल्ला. आजार ओळख व उपचार मार्गदर्शन.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🧬</div>
+                <div class="feature-title">प्रजनन व्यवस्थापन</div>
+                <div class="feature-desc">माजाची नोंद, गर्भधारणा तपासणी, कॅलेंडर आणि वासरू संगोपन सल्ला.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🥛</div>
+                <div class="feature-title">दूध संकलन नोंदी</div>
+                <div class="feature-desc">रोजच्या दूध विक्रीचा हिशोब, फॅट/SNF विश्लेषण व उत्पन्न तक्ता.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🛒</div>
+                <div class="feature-title">कृषी मॉल</div>
+                <div class="feature-desc">प्रमाणित विक्रेत्यांकडून खाद्य, मिनरल्स, औषधे, मशिनरी थेट खरेदी.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🐄</div>
+                <div class="feature-title">पशु बाजार</div>
+                <div class="feature-desc">जनावरांची खरेदी-विक्री करण्यासाठी ऑनलाइन प्लॅटफॉर्म. सुरक्षित व्यवहार.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">📈</div>
+                <div class="feature-title">BCS स्कोअर</div>
+                <div class="feature-desc">गायीच्या शरीर स्थितीचे मापन करून आहारात सुधारणा करण्यासाठी मार्गदर्शन.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🌡️</div>
+                <div class="feature-title">हवामान अंदाज</div>
+                <div class="feature-desc">उष्णतेचा ताण (Heat Stress) व्यवस्थापन, ऋतूनुसार खबरदारी.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">📚</div>
+                <div class="feature-title">ज्ञान केंद्र</div>
+                <div class="feature-desc">व्हिडिओ, पुस्तके, आजार माहिती, लसीकरण वेळापत्रक, यशोगाथा.</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💬</div>
+                <div class="feature-title">AI चॅटबॉट</div>
+                <div class="feature-desc">कोणत्याही प्रश्नाचे त्वरित उत्तर मिळवा – आहार, आजार, व्यवस्थापन.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- व्यापारी / सप्लायर साठी फीचर्स -->
+    <div class="section">
+        <h2>🏢 व्यापारी व पुरवठादारांसाठी (Business Hub)</h2>
+        <div class="feature-grid">
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">🛍️</div>
+                <div class="feature-title">प्रॉडक्ट स्टोअर</div>
+                <div class="feature-desc">स्वतःची उत्पादने (खाद्य, औषधे) ॲपवर सहज लिस्ट करा आणि हजारो शेतकऱ्यांपर्यंत पोहोचवा.</div>
+            </div>
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">📢</div>
+                <div class="feature-title">स्मार्ट जाहिरात</div>
+                <div class="feature-desc">शेतकरी ज्या पानावर असेल तिथेच तुमची जाहिरात दाखवा. पेज-स्पेसिफिक टार्गेटिंग.</div>
+            </div>
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">📦</div>
+                <div class="feature-title">ऑर्डर मॅनेजमेंट</div>
+                <div class="feature-desc">येणाऱ्या ऑर्डर्स ट्रॅक करा, शिपिंग अपडेट करा आणि पेमेंटची स्थिती पाहा.</div>
+            </div>
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">👨‍⚕️</div>
+                <div class="feature-title">कंपनी डॉक्टर</div>
+                <div class="feature-desc">शेतकऱ्यांच्या कॉलसाठी स्वतःचा डॉक्टर नंबर जोडा. (कॉर्पोरेट प्लॅन).</div>
+            </div>
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">लीड जनरेशन</div>
+                <div class="feature-desc">मोठ्या ऑर्डर्सच्या चौकशी (Tenders) पाहा आणि कमिशन भरून लीड अनलॉक करा.</div>
+            </div>
+            <div class="feature-item" style="background: #e3f2fd; border-color: #90caf9;">
+                <div class="feature-icon">💰</div>
+                <div class="feature-title">बिलिंग आणि लेजर</div>
+                <div class="feature-desc">प्लॅटफॉर्म फी, कमिशनचा हिशोब. एका क्लिकवर पेमेंट.</div>
+            </div>
+        </div>
+        <p style="margin-top: 20px; font-weight: 600;">व्यापारी म्हणून सामील होण्यासाठी KYC प्रक्रिया पूर्ण करावी लागेल. यामुळे शेतकऱ्यांना विश्वासार्ह विक्रेते मिळतात.</p>
+    </div>
+
+    <!-- ॲप कसे वापरावे -->
+    <div class="section">
+        <h2>📱 ॲप कसे वापरावे?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-title">रजिस्टर करा</div>
+                <div style="font-size:12px;">मोबाइल नंबरने विनामूल्य खाते तयार करा.</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">जनावर जोडा</div>
+                <div style="font-size:12px;">तुमच्या गाई/म्हशींची माहिती भरा.</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">डॅशबोर्ड</div>
+                <div style="font-size:12px;">दूध, आहार, आरोग्य यांचे लाइव्ह अपडेट पाहा.</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-title">सुविधा वापरा</div>
+                <div style="font-size:12px;">रेशन बॅलन्सर, डॉक्टर, मॉल, बाजार.</div>
+            </div>
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-title">वाढवा उत्पन्न</div>
+                <div style="font-size:12px;">योग्य व्यवस्थापनाने नफा वाढवा.</div>
+            </div>
+        </div>
+        <p style="text-align:center; font-weight:bold; margin-top:15px;">व्यापाऱ्यांसाठी "Business Hub" मध्ये स्वतंत्र डॅशबोर्ड उपलब्ध.</p>
+    </div>
+
+    <!-- तंत्रज्ञान -->
+    <div class="section">
+        <h2>🤖 तंत्रज्ञान</h2>
+        <p>
+            आमचे ॲप अत्याधुनिक <b>कृत्रिम बुद्धिमत्ता (AI)</b> आणि <b>मशीन लर्निंग</b> वर आधारित आहे. 
+            आहार विश्लेषणासाठी <b>ICAR, NRC, NDDB</b> या संस्थांच्या मानकांचा वापर केला जातो. 
+            <b>Google Gemini</b> सारख्या शक्तिशाली मॉडेल्सचा वापर करून आम्ही शेतकऱ्यांना तत्काळ वैयक्तिक सल्ला देतो. 
+            भविष्यात <b>क्लाउड स्टोरेज</b> आणि <b>लाइव्ह GPS ट्रॅकिंग</b> देखील जोडण्यात येणार आहे.
+        </p>
+    </div>
+
+    <!-- टीम (डायनॅमिक) -->
+    <div class="section" id="team_section">
+        <h2>👥 आमची टीम</h2>
+        <p style="font-size:14px; color:#555;">(ही यादी प्रशासकाद्वारे अपडेट केली जाते. सध्या कोणतीही नावे नोंदलेली नाहीत.)</p>
+        <div class="team-grid" id="team_container">
+            <!-- JavaScript द्वारे भरले जाईल -->
+        </div>
+    </div>
+
+    <!-- संपर्क -->
+    <div class="section">
+        <h2>📞 संपर्क</h2>
+        <div class="contact-box">
+            <p><b>📱 मोबाईल:</b> ९५७९५३५२९०</p>
+            <p><b>📧 ईमेल:</b> <a href="mailto:dugdhdisa@gmail.com">dugdhdisa@gmail.com</a></p>
+            <p><b>📍 पत्ता:</b> दुग्ध दिशा AI, मुख्य कार्यालय, सातारा, महाराष्ट्र, भारत.</p>
+            <p style="margin-top:12px;"><b>⏰ कार्यालयीन वेळ:</b> सकाळी ९:०० ते संध्याकाळी ७:०० (सोमवार ते शनिवार)</p>
+        </div>
+    </div>
+
+    <!-- तळटीप -->
+    <div class="footer-note">
+        © २०२६ दुग्ध दिशा AI. सर्व हक्क राखीव.<br>
+        हे ॲप फक्त मार्गदर्शनासाठी आहे. कोणताही वैद्यकीय निर्णय घेण्यापूर्वी तज्ज्ञांचा सल्ला घ्या.
+    </div>
+
+    <a href="index.html" class="back-btn">⬅️ मुख्य पानावर जा</a>
+</div>
+
+<!-- 🔥 FIREBASE SDK 🔥 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // ========== संस्थापक माहिती लोड करा (Firebase Sync) ==========
+    function loadFounder() {
+        // 🔥 Firebase Logic Added 🔥
+        db.collection("cms_pages").doc("about_us_founder").get().then((doc) => {
+            let founderData = null;
+            if (doc.exists) {
+                founderData = doc.data();
+                localStorage.setItem('about_us_founder', JSON.stringify(founderData)); // Sync local
+            } else {
+                founderData = JSON.parse(localStorage.getItem('about_us_founder'));
+            }
+            renderFounder(founderData);
+        }).catch((e) => {
+            console.error("Firebase fetch error, falling back to local storage.", e);
+            renderFounder(JSON.parse(localStorage.getItem('about_us_founder')));
+        });
+    }
+
+    function renderFounder(founderData) {
+        const container = document.getElementById('founder_container');
+        if (founderData && founderData.name) {
+            container.innerHTML = `
+                <div class="founder-card">
+                    <img src="${founderData.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" alt="${founderData.name}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                    <div class="founder-info">
+                        <h3>${founderData.name}</h3>
+                        <p><b>${founderData.role || 'संस्थापक'}</b></p>
+                        <p>${founderData.message || 'दुग्ध दिशा AI च्या माध्यमातून शेतकऱ्यांच्या आयुष्यात सकारात्मक बदल घडविण्यासाठी कटिबद्ध.'}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = '<p style="text-align:center; color:#888;">लवकरच संस्थापकाची माहिती येथे प्रसिद्ध केली जाईल.</p>';
+        }
+    }
+
+    // ========== टीम मेंबर्स लोड करा (Firebase Sync) ==========
+    function loadTeam() {
+        // 🔥 Firebase Logic Added 🔥
+        db.collection("cms_pages").doc("about_us_team").get().then((doc) => {
+            let savedTeam = [];
+            if (doc.exists && doc.data().team) {
+                savedTeam = doc.data().team;
+                localStorage.setItem('about_us_team', JSON.stringify(savedTeam)); // Sync local
+            } else {
+                savedTeam = JSON.parse(localStorage.getItem('about_us_team')) || [];
+            }
+            renderTeam(savedTeam);
+        }).catch((e) => {
+            console.error("Firebase fetch error, falling back to local storage.", e);
+            renderTeam(JSON.parse(localStorage.getItem('about_us_team')) || []);
+        });
+    }
+
+    function renderTeam(savedTeam) {
+        const container = document.getElementById('team_container');
+        if (savedTeam.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">लवकरच टीम सदस्यांची माहिती येथे प्रसिद्ध केली जाईल.</p>';
+            return;
+        }
+        container.innerHTML = '';
+        savedTeam.forEach(member => {
+            const card = document.createElement('div');
+            card.className = 'team-card';
+            card.innerHTML = `
+                <img src="${member.photo || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" alt="${member.name}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <h3>${member.name}</h3>
+                <p>${member.role}</p>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    loadFounder();
+    loadTeam();
+</script>
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

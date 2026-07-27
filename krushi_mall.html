@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - कृषी मॉल (Smart Marketplace)</title>
+    
+    <!-- 🔥 NEW: Cropper.js CSS for Image Cropping 🔥 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #1b5e20; --secondary: #ff9800; --bg: #f4f7f9; --text: #333; --card-bg: #fff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; padding-bottom: 70px; color: var(--text); }
+        a { text-decoration: none; }
+        
+        /* 1. Header & Search Bar */
+        .top-header { background: var(--primary); padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header-title { color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-title h2 { margin: 0; font-size: 20px; font-weight: 900; flex: 1;}
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .cart-icon { position: relative; font-size: 22px; color: white; cursor: pointer; }
+        .cart-badge { position: absolute; top: -5px; right: -8px; background: #d32f2f; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 50%; display: none; }
+        
+        .search-container { display: flex; background: white; border-radius: 12px; padding: 5px 15px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .search-container input { border: none; outline: none; width: 100%; font-size: 14px; padding: 10px 5px; }
+        .search-icons { display: flex; gap: 15px; color: #666; font-size: 18px; cursor: pointer; }
+
+        /* 🔥 NEW: PRIME SUBSCRIPTION BANNER (B2C Model) */
+        .prime-banner { background: linear-gradient(135deg, #111, #333); color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 3px solid #ffca28; }
+        .prime-banner-text h4 { margin: 0 0 4px; font-size: 15px; color: #ffca28; display: flex; align-items: center; gap: 5px; }
+        .prime-banner-text p { margin: 0; font-size: 11px; color: #ccc; font-weight: bold; }
+        .prime-btn { background: #ffca28; color: #111; border: none; padding: 6px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; }
+
+        /* 2. Categories (Horizontal Scroll) */
+        .scroll-section { display: flex; overflow-x: auto; gap: 15px; padding: 15px 20px; scroll-scrollbar-width: none; }
+        .scroll-section::-webkit-scrollbar { display: none; }
+        .category-item { display: flex; flex-direction: column; align-items: center; min-width: 70px; cursor: pointer; }
+        .cat-icon { width: 55px; height: 55px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 8px; border: 1px solid #eee; }
+        .cat-name { font-size: 11px; font-weight: bold; color: #555; text-align: center; }
+
+        /* 3. Advertisement Banners */
+        .banner-container { padding: 0 20px; margin-bottom: 15px; }
+        .banner { width: 100%; height: 100px; background: linear-gradient(145deg, #1565c0, #0d47a1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .banner-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #ffeb3b; border: 1px solid #ffeb3b;}
+
+        /* 4. AI Smart Shopping Feature (Hidden by default until dynamic) */
+        .ai-recommendation { background: linear-gradient(145deg, #fff3e0, #ffe0b2); margin: 0 20px 20px; padding: 15px; border-radius: 16px; border: 1px solid #ffcc80; box-shadow: 0 6px 15px rgba(255, 152, 0, 0.15); position: relative; display: none; }
+        .ai-title { font-size: 14px; font-weight: 900; color: #e65100; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .ai-text { font-size: 12.5px; color: #555; font-weight: bold; line-height: 1.4; margin-bottom: 12px; }
+        .ai-product { display: flex; background: white; padding: 10px; border-radius: 10px; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #4caf50; }
+        .ai-product img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .ai-prod-details { flex: 1; }
+        .ai-prod-name { font-size: 13px; font-weight: bold; color: #333; margin: 0 0 3px; }
+        .ai-prod-price { font-size: 12px; color: #2e7d32; font-weight: bold; margin: 0; }
+        .ai-add-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
+        /* 5. Quick Filter Buttons */
+        .quick-filters { display: flex; overflow-x: auto; gap: 10px; padding: 0 20px 15px; scroll-scrollbar-width: none; }
+        .quick-filters::-webkit-scrollbar { display: none; }
+        .filter-btn { background: white; border: 1px solid #ddd; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #555; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .filter-btn.active { background: #e8f5e9; border-color: var(--primary); color: var(--primary); }
+
+        /* 6. Product Grid & Cards */
+        .section-header { padding: 0 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .section-header h3 { margin: 0; font-size: 16px; font-weight: 900; color: #333; }
+        .section-header a { font-size: 12px; color: var(--primary); font-weight: bold; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px 20px; }
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; position: relative; display: flex; flex-direction: column; }
+        .card-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 5px; z-index: 10; }
+        .badge-sponsored { background: #fff8e1; color: #f57c00; font-size: 9px; font-weight: bold; padding: 3px 6px; border-radius: 4px; border: 1px solid #ffe0b2; }
+        .badge-discount { background: #d32f2f; color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 4px; }
+        
+        .card-img { width: 100%; height: 130px; object-fit: cover; background: #e0e0e0; cursor: pointer; }
+        .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+        .company-name { font-size: 10px; color: #777; font-weight: bold; margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
+        .prod-title { font-size: 13.5px; font-weight: bold; color: #222; margin: 0 0 5px; line-height: 1.3; cursor: pointer; }
+        .prod-weight { font-size: 11px; color: #666; background: #f5f5f5; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+        
+        .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+        .offer-price { font-size: 16px; font-weight: 900; color: #2e7d32; }
+        .mrp-price { font-size: 11px; color: #999; text-decoration: line-through; }
+        
+        .rating-row { font-size: 11px; color: #555; display: flex; align-items: center; gap: 5px; margin-bottom: 12px; }
+        .stars { color: #ff9800; font-size: 12px; }
+
+        .card-actions { display: flex; gap: 8px; margin-top: auto; }
+        .btn-cart { flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 0 #0d3b11; transition: 0.2s;}
+        .btn-cart:active { top: 2px; position: relative; box-shadow: none; }
+        .btn-icon { background: #f0f0f0; color: #555; border: none; padding: 8px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+
+        /* NEW: Shop button */
+        .btn-shop { margin-top: 6px; background: #1565c0; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; width: 100%; box-shadow: 0 2px 0 #0d47a1; }
+        .btn-shop:active { top: 2px; position: relative; box-shadow: none; }
+
+        /* 7. Modals (Product & Cart) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; padding-bottom: 70px; }
+        .modal-header { position: sticky; top: 0; background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; z-index: 10; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .modal-header h3 { margin: 0; font-size: 16px; font-weight: bold; }
+        .close-modal { font-size: 24px; cursor: pointer; color: #333; }
+        
+        .prod-detail-img { width: 100%; height: 250px; object-fit: cover; background: #eee; }
+        
+        .image-gallery-container { display: flex; gap: 10px; padding: 10px 20px; overflow-x: auto; background: #f9f9f9; border-bottom: 1px solid #eee; }
+        .gallery-thumb { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 2px solid transparent; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .gallery-thumb.active { border-color: var(--primary); }
+
+        .detail-body { padding: 20px; padding-bottom: 90px; }
+        .detail-title { font-size: 20px; font-weight: 900; margin: 0 0 10px; }
+        
+        .nutrition-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .nutri-box { background: #f9f9f9; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
+        .nutri-val { font-size: 14px; font-weight: bold; color: var(--primary); }
+        .nutri-lbl { font-size: 10px; color: #666; font-weight: bold; }
+
+        .info-section { margin-bottom: 20px; }
+        .info-section h4 { margin: 0 0 10px; font-size: 15px; border-left: 4px solid var(--secondary); padding-left: 10px; }
+        .info-section p { margin: 0; font-size: 13px; color: #555; line-height: 1.5; }
+
+        /* Action Bar for Modal */
+        .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; gap: 10px; box-sizing: border-box; z-index: 100; }
+        .btn-buy { flex: 2; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 0 #e65100; cursor: pointer;}
+        .btn-buy:active { top: 2px; position: relative; box-shadow: none; }
+        .btn-quote { flex: 1; background: #fff; color: var(--primary); border: 2px solid var(--primary); border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        
+        /* Custom Toast Alert */
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 12px; position: fixed; z-index: 2500; left: 50%; bottom: 30px; font-size: 14px; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* Checkout Form Styles */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; }
+        
+        /* Qty Button */
+        .qty-btn { background: #eee; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Checkout Actions */
+        .checkout-actions { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #eee; background: #f9f9f9; padding: 15px 20px; }
+        .btn-action-large { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 900; font-size: 15px; color: white; cursor: pointer; position: relative; }
+        .btn-action-large:active { top: 2px; }
+
+        /* Crop Modal */
+        .crop-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; overflow: hidden;}
+        .crop-modal-content { background: transparent; width: 100%; max-width: 500px; padding: 20px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; position: relative;}
+        .crop-container { width: 100%; height: 50vh; max-height: 400px; background: #000; margin-bottom: 20px; display: block; position: relative;}
+        #crop_image_element { display: block; max-width: 100%; height: auto; } 
+        .crop-controls { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; width: 100%; position: relative; z-index: 4000;}
+        .crop-btn { background: #1976d2; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; flex: 1; min-width: 80px; position: relative; z-index: 4000;}
+        .crop-btn.save { background: #2e7d32; font-size: 15px; padding: 12px 20px;}
+
+        /* Bottom Nav */
+        body { padding-bottom: 85px !important; }
+        .bottom-nav-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #ffffff; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); display: flex; justify-content: space-around; align-items: center; padding: 8px 0; z-index: 1000; border-radius: 15px 15px 0 0; }
+        .b-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #757575; transition: 0.3s ease; padding: 5px 10px; border-radius: 10px; }
+        .b-nav-icon { font-size: 22px; margin-bottom: 2px; filter: grayscale(100%); transition: 0.3s; }
+        .b-nav-text { font-size: 10px; font-weight: 800; }
+        .b-nav-item.active { background: #e8f5e9; color: #1b5e20; }
+        .b-nav-item.active .b-nav-icon { filter: grayscale(0%); transform: scale(1.15); }
+    </style>
+</head>
+<body onload="initializeStore()">
+
+    <header class="top-header">
+        <div class="header-title">
+            <a href="index.html" style="color: white; font-size: 20px; margin-right: 10px;">⬅️</a>
+            <h2>कृषी मॉल 🛒</h2>
+            <div class="header-actions">
+                <div style="position: relative; cursor: pointer;" onclick="toggleNotifications()">
+                    <span style="font-size: 22px;">🔔</span>
+                    <span id="notif_badge" style="position: absolute; top: -5px; right: -5px; background: #e65100; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 50%; display: none;">०</span>
+                    
+                    <div id="notificationDropdown" style="display: none; position: absolute; top: 35px; right: -40px; background: white; width: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e0e0; z-index: 1000; padding: 12px; text-align: left; color: #333;">
+                    </div>
+                </div>
+                
+                <div class="cart-icon" onclick="openCart()">
+                    🛒<span class="cart-badge" id="main_cart_badge" style="display:none;">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="search-container">
+            <span style="color:#999; margin-right: 10px;">🔍</span>
+            <input type="text" placeholder="पशुखाद्य, औषधे किंवा मशीन शोधा...">
+            <div class="search-icons">
+                <span>🎤</span>
+                <span onclick="document.getElementById('camera_upload').click()">📷</span>
+                <input type="file" id="camera_upload" accept="image/*" style="display:none;" onchange="openCropModal(event)">
+            </div>
+        </div>
+    </header>
+
+    <!-- CATEGORIES -->
+    <div class="scroll-section">
+        <div class="category-item"><div class="cat-icon">🐄</div><span class="cat-name">पशुखाद्य</span></div>
+        <div class="category-item"><div class="cat-icon">🌾</div><span class="cat-name">चारा/मुरघास</span></div>
+        <div class="category-item"><div class="cat-icon">🥣</div><span class="cat-name">Minerals</span></div>
+        <div class="category-item"><div class="cat-icon">💊</div><span class="cat-name">औषधे व लस</span></div>
+        <div class="category-item"><div class="cat-icon">🥛</div><span class="cat-name">मिल्किंग मशीन</span></div>
+        <div class="category-item"><div class="cat-icon">🚜</div><span class="cat-name">मशिनरी</span></div>
+        <div class="category-item"><div class="cat-icon">📚</div><span class="cat-name">पुस्तके</span></div>
+    </div>
+
+    <!-- BANNERS & AI -->
+    <div class="banner-container">
+        <div class="banner" id="dynamic_mall_banner" style="display: none;"></div>
+    </div>
+
+    <!-- AI Recommendation Container (Hidden until dynamic data is added) -->
+    <div class="ai-recommendation" id="ai_recommendation_container">
+        <!-- Live AI Recommendations will be shown here -->
+    </div>
+
+    <div class="quick-filters">
+        <div class="filter-btn active">🔥 Best Seller</div>
+        <div class="filter-btn">📍 Near Me (Local Dealer)</div>
+        <div class="filter-btn">⭐ Top Rated</div>
+        <div class="filter-btn">🆕 New Arrival</div>
+        <div class="filter-btn">🚚 Free Delivery</div>
+    </div>
+
+    <div class="section-header">
+        <h3>दुभत्या जनावरांसाठी खास</h3>
+        <a href="#">सर्व पहा &gt;</a>
+    </div>
+
+    <!-- MAIN PRODUCT GRID -->
+    <div class="product-grid" id="main_product_grid">
+        <div id="dynamic_mineral_card" style="display: contents;"></div>
+    </div>
+    
+    <div id="no_product_msg" style="text-align: center; padding: 20px; color: #888; font-weight: bold; display: none;">
+        सध्या कोणतेही प्रॉडक्ट उपलब्ध नाही.
+    </div>
+
+    <!-- 🔥 PRODUCT MODAL 🔥 -->
+    <div class="modal" id="productModal">
+        <div class="modal-header">
+            <h3>प्रॉडक्ट तपशील</h3>
+            <div class="close-modal" onclick="closeProduct()">✕</div>
+        </div>
+        
+        <div class="prod-detail-img" id="main_product_image" style="display:flex; align-items:center; justify-content:center; font-size:80px; background:linear-gradient(to bottom, #e8f5e9, #c8e6c9); transition: 0.3s;">🌾</div>
+        
+        <div class="image-gallery-container" id="product_gallery_container"></div>
+        
+        <div class="detail-body">
+            <div class="company-name" style="font-size:12px; margin-bottom:8px;"><span id="detail_company">दुग्ध दिशा प्रमाणित विक्रेता</span> <span style="color:#1976d2; background:#e3f2fd; padding:2px 4px; border-radius:4px; font-weight:bold;">✅ Verified Seller</span></div>
+            <h2 class="detail-title" id="detail_title">-</h2>
+            <div class="rating-row" style="font-size:13px; margin-bottom:15px;"><span class="stars">★★★★★</span> ४.८ (३४५ Reviews) • 📍 तुमच्यापासून ४ किमी वर उपलब्ध</div>
+            
+            <div class="price-row" style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                <span class="offer-price" style="font-size:24px;" id="detail_offer_price">₹0</span>
+                <span class="mrp-price" style="font-size:14px;" id="detail_mrp_price">₹0</span>
+                <span class="badge-discount" style="padding:4px 8px; font-size:12px; margin-left:10px;" id="detail_discount">0% OFF</span>
+            </div>
+            
+            <button id="whatsapp_share_btn" onclick="shareProductWhatsApp()" style="background:#25D366; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; margin-bottom: 20px; width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.3);">
+                <span style="font-size:18px;">💬</span> WhatsApp वर प्रॉडक्ट शेअर करा
+            </button>
+
+            <!-- 🔥 दुकान पहा बटण (डिटेल मोडल) -->
+            <a id="detail_shop_link" href="#" style="display:none; background:#1565c0; color:white; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; margin-bottom: 20px; width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(21, 101, 192, 0.3); text-decoration: none;">
+                <span style="font-size:18px;">🏪</span> विक्रेत्याचे दुकान पहा
+            </a>
+            
+            <div class="info-section" id="nutrition_section" style="display: none;">
+                <h4>📊 पोषण मूल्य (Nutrition Profile)</h4>
+                <div class="nutrition-grid">
+                    <div class="nutri-box"><div class="nutri-val" id="val_protein">-</div><div class="nutri-lbl">Protein (CP)</div></div>
+                    <div class="nutri-box"><div class="nutri-val" id="val_dm">-</div><div class="nutri-lbl">Dry Matter</div></div>
+                    <div class="nutri-box"><div class="nutri-val" id="val_energy">-</div><div class="nutri-lbl">Energy (ME)</div></div>
+                    <div class="nutri-box"><div class="nutri-val" id="val_fat">-</div><div class="nutri-lbl">Fat</div></div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h4>📄 उत्पादन माहिती (Description)</h4>
+                <p id="dynamic_description_text" style="display: none;"></p>
+                <ul style="font-size:13px; color:#555; padding-left:20px; margin-top:10px;">
+                    <li><b>Category:</b> <span id="detail_category">Feed</span></li>
+                    <li><b>Status:</b> <span id="detail_stock" style="color:green; font-weight:bold;">In Stock</span></li>
+                </ul>
+            </div>
+            
+        </div>
+
+        <div class="bottom-action-bar">
+            <button class="btn-quote" id="detail_quote_btn">📝 Request Quote<br><span style="font-weight:normal; font-size:10px;">(Tender / Bulk)</span></button>
+            <button class="btn-buy" id="detail_buy_btn">🛒 Buy Now</button>
+        </div>
+    </div>
+
+    <!-- 🔥 CART MODAL 🔥 -->
+    <div class="modal" id="cartModal">
+        <div class="modal-header">
+            <h3>तुमची खरेदी (Cart) 🛒</h3>
+            <div class="close-modal" onclick="closeCart()">✕</div>
+        </div>
+        <div class="detail-body" id="cartItemsContainer" style="padding-bottom: 90px; padding-top: 10px;"></div>
+        <div class="bottom-action-bar" style="justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+            <div>
+                <div style="font-size: 12px; color: #666; font-weight: bold;">एकूण रक्कम:</div>
+                <div style="font-size: 20px; font-weight: 900; color: #d32f2f;" id="cartTotalAmt">₹0</div>
+            </div>
+            <button class="btn-buy" style="flex: none; padding: 12px 25px; background: #ff9800; color: white;" onclick="openCheckout()">पुढे जा (Checkout) ➡️</button>
+        </div>
+    </div>
+
+    <!-- 🔥 CHECKOUT MODAL 🔥 -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-header">
+            <h3>चेकआउट (Checkout) 🚚</h3>
+            <div class="close-modal" onclick="closeCheckout()">✕</div>
+        </div>
+        <div class="detail-body" style="padding-bottom: 20px;">
+            <h4 style="margin: 0 0 10px; font-size: 14px;">📍 डिलिव्हरीचा पत्ता (Shipping Address)</h4>
+            <div class="form-group"><input type="text" id="chk_name" placeholder="पूर्ण नाव (उदा. रमेश पाटील)"></div>
+            <div class="form-group"><input type="number" id="chk_mobile" placeholder="मोबाईल नंबर (उदा. 9822XXXXXX)"></div>
+            <div class="form-group"><textarea id="chk_address" rows="3" placeholder="संपूर्ण पत्ता (घर क्र., रस्ता, गाव...)"></textarea></div>
+            <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;"><input type="number" id="chk_pincode" placeholder="पिनकोड (415001)" onblur="calculateFinalBill()"></div>
+                <div style="flex:1;"><input type="text" id="chk_district" placeholder="जिल्हा (उदा. सातारा)"></div>
+            </div>
+
+            <div style="background: white; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                <h4 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 8px;">🧾 बिल तपशील (Order Summary)</h4>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #555;">
+                    <span>प्रॉडक्ट्सची किंमत:</span> <span id="chk_subtotal" style="font-weight:bold;">₹0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 12px; color: #555;">
+                    <span>डिलिव्हरी चार्ज: <span id="delivery_courier_name" style="font-size:10px; color:#1b5e20;"></span></span> 
+                    <span id="chk_delivery" style="font-weight:bold; color:#2e7d32;">₹0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="checkout-actions">
+            <button class="btn-action-large" style="background:#ff9800; box-shadow: 0 4px 0 #e65100;" onclick="processCOD()">
+                🏠 कॅश ऑन डिलिव्हरी (COD) <br>
+                <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_cod" style="font-weight:bold; font-size:14px;">₹0</span></span>
+            </button>
+            <div style="text-align:center; font-size:12px; color:#888; font-weight:bold; margin: 2px 0;">-- किंवा --</div>
+            <button class="btn-action-large" style="background:linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #0d3b11;" onclick="processPayment()">
+                ⚡ ऑनलाईन पेमेंट (Online UPI) <br>
+                <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_online" style="font-weight:bold; font-size:14px;">₹0</span></span>
+                <div id="btn_save_text" style="font-size:11px; background:#c8e6c9; color:#1b5e20; padding:2px 8px; border-radius:4px; display:inline-block; margin-top:5px; font-weight:bold;">तुमची बचत: ₹0</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div class="crop-modal-overlay" id="crop_modal">
+        <div class="crop-modal-content">
+            <div class="crop-container"><img id="crop_image_element" src="" alt="Image to crop"></div>
+            <div class="crop-controls">
+                <button class="crop-btn" onclick="cropper.rotate(-90)">↺ Rotate</button>
+                <button class="crop-btn" onclick="cropper.rotate(90)">↻ Rotate</button>
+                <button class="crop-btn" onclick="cropper.setAspectRatio(1)">1:1 Square</button>
+                <button class="crop-btn" onclick="cropper.setAspectRatio(4/3)">4:3 Banner</button>
+            </div>
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="crop-btn save" style="flex:1;" onclick="saveCroppedImage()">✅ Save Photo</button>
+                <button class="crop-btn" style="background:#e0e0e0; color:#333; flex:1;" onclick="closeCropModal()">✕ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">✅ कार्टमध्ये प्रॉडक्ट ॲड झाले!</div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav-bar">
+        <a href="index.html" class="b-nav-item"><span class="b-nav-icon">🏠</span><span class="b-nav-text">होम</span></a>
+        <a href="kharedi_vikri.html" class="b-nav-item"><span class="b-nav-icon">🐄</span><span class="b-nav-text">बाजार</span></a>
+        <a href="krushi_mall.html" class="b-nav-item active"><span class="b-nav-icon">🛒</span><span class="b-nav-text">मॉल</span></a>
+        <a href="ration_balancer.html" class="b-nav-item"><span class="b-nav-icon">⚖️</span><span class="b-nav-text">आहार</span></a>
+        <a href="my_account.html" class="b-nav-item"><span class="b-nav-icon">👤</span><span class="b-nav-text">खाते</span></a>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // 🔥 FIREBASE INITIALIZATION 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        window.currentBaseTotal = 0;
+        window.currentOnlineTotal = 0;
+        window.currentDeliveryFee = 0;
+        let cropper = null;
+
+        function initializeStore() {
+            if(typeof loadNotifications === 'function') loadNotifications('farmer');
+            updateCartBadge();
+            
+            let liveAdsData = JSON.parse(localStorage.getItem('live_admin_ad_images'));
+            let sponsorCard = document.getElementById('dynamic_mineral_card');
+            let bannerBox = document.getElementById('dynamic_mall_banner');
+            
+            let hasBannerAd = false;
+            let hasSponsorAd = false;
+
+            if(liveAdsData && liveAdsData.ads && liveAdsData.ads.length > 0) {
+                if(liveAdsData.place === "Krushi Mall Header") {
+                    hasBannerAd = true;
+                    
+                    let allAds = liveAdsData.ads;
+                    let counterKey = "ad_rotation_mall_counter";
+                    let currentCounter = parseInt(localStorage.getItem(counterKey) || "0");
+                    if (isNaN(currentCounter)) currentCounter = 0;
+                    let selectedAd = allAds[currentCounter % allAds.length];
+                    localStorage.setItem(counterKey, (currentCounter + 1) % allAds.length);
+                    
+                    if (bannerBox && selectedAd) {
+                        let bgImg = selectedAd.images && selectedAd.images[0] ? `url(${selectedAd.images[0]}) center/cover` : 'linear-gradient(145deg, #1565c0, #0d47a1)';
+                        bannerBox.style.background = bgImg;
+                        bannerBox.innerHTML = `<span class="banner-tag">Sponsored</span><div style="text-align:center; background:rgba(0,0,0,0.5); padding:10px; width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer;" onclick="window.location.href='${selectedAd.url || '#'}';"><span style="font-size:18px;">${selectedAd.text || 'विशेष ऑफर'}</span></div>`;
+                        bannerBox.style.display = 'flex';
+                    }
+                } 
+                else if (liveAdsData.place === "Sponsored Product" || liveAdsData.place === "Krushi Mall Sponsored") {
+                    let ad = liveAdsData.ads[0];
+                    hasSponsorAd = true;
+                    if(sponsorCard) {
+                        let adImgHtml = ad.images && ad.images[0] ? `<img src="${ad.images[0]}" style="width:100%; height:100%; object-fit:cover;">` : `🥣`;
+                        sponsorCard.innerHTML = `
+                            <div class="product-card" style="border: 2px solid #ff9800;">
+                                <div class="card-badges"><span class="badge-sponsored">Sponsored</span></div>
+                                <div class="card-img" style="background:#fff3e0; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="window.location.href='${ad.url || '#'}';">${adImgHtml}</div>
+                                <div class="card-body">
+                                    <div class="company-name">Premium Seller <span style="color:#1976d2; background:#e3f2fd; padding:2px 4px; border-radius:4px; font-size:9px;">✅ Verified Seller</span></div>
+                                    <h4 class="prod-title" onclick="window.location.href='${ad.url || '#'}';">${ad.text || 'प्रीमियम उत्पादन'}</h4>
+                                    <div class="rating-row" style="margin-top:10px;"><span class="stars">★★★★★</span> ४.८</div>
+                                </div>
+                            </div>`;
+                    }
+                }
+            }
+
+            if(!hasBannerAd && bannerBox) {
+                bannerBox.style.display = 'none';
+            }
+
+            loadDynamicProducts(hasSponsorAd);
+        }
+
+        // 🔥 FIREBASE: प्रॉडक्ट्स डेटाबेसमधून थेट आणणे 🔥
+        function loadDynamicProducts(hasSponsorAd) {
+            let productGrid = document.getElementById('main_product_grid');
+            let noProductMsg = document.getElementById('no_product_msg');
+            let originalHtml = productGrid.innerHTML; // Sponsor card included
+
+            db.collection("vendor_products").get()
+            .then((querySnapshot) => {
+                let products = [];
+                querySnapshot.forEach((doc) => {
+                    let pData = doc.data();
+                    pData.id = doc.id; // Assign actual Firebase ID
+                    products.push(pData);
+                });
+
+                localStorage.setItem('vendor_products', JSON.stringify(products));
+                renderProducts(products, hasSponsorAd, originalHtml);
+            })
+            .catch((error) => {
+                console.error("Firebase Error:", error);
+                let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+                renderProducts(products, hasSponsorAd, originalHtml);
+            });
+            
+            function renderProducts(products, hasSponsorAd, originalHtml) {
+                if(products.length === 0 && !hasSponsorAd) {
+                    if(noProductMsg) noProductMsg.style.display = 'block';
+                    return;
+                }
+                if(noProductMsg) noProductMsg.style.display = 'none';
+
+                let html = originalHtml; 
+
+                products.forEach(prod => {
+                    let mainImgHtml = '';
+                    let bgGradient = '';
+                    
+                    if(prod.images && prod.images.length > 0) {
+                        mainImgHtml = `<img src="${prod.images[0]}" style="width:100%; height:100%; object-fit:cover;">`;
+                        bgGradient = 'none';
+                    } else {
+                        mainImgHtml = '📦';
+                        bgGradient = 'linear-gradient(to bottom, #e3f2fd, #bbdefb)';
+                    }
+
+                    let discount = 0;
+                    if(prod.mrp > prod.offerPrice) {
+                        discount = Math.round(((prod.mrp - prod.offerPrice) / prod.mrp) * 100);
+                    }
+
+                    let prodJsonStr = encodeURIComponent(JSON.stringify(prod));
+                    
+                    let isPaidPlan = (prod.vendorPlan === 'Silver Seller' || prod.vendorPlan === 'Corporate Partner');
+                    let shopLinkHtml = '';
+                    if (isPaidPlan) {
+                        let vendorShopUrl = `supplier_shop.html?vendor=${encodeURIComponent(prod.vendorName || '')}`;
+                        shopLinkHtml = `<a href="${vendorShopUrl}" class="btn-shop" style="display:block;">🏪 दुकान पहा</a>`;
+                    }
+
+                    html += `
+                    <div class="product-card">
+                        <div class="card-badges">
+                            ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
+                        </div>
+                        <div class="card-img" style="background:${bgGradient}; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="openDynamicProduct('${prodJsonStr}')">
+                            ${mainImgHtml}
+                        </div>
+                        <div class="card-body">
+                            <div class="company-name">दुग्ध दिशा प्रमाणित विक्रेता <span style="color:#1976d2; margin-left:4px;">✅</span></div>
+                            <h4 class="prod-title" onclick="openDynamicProduct('${prodJsonStr}')">${prod.name}</h4>
+                            <div class="prod-weight">${prod.category}</div>
+                            
+                            <div class="price-row">
+                                <span class="offer-price">₹${prod.offerPrice}</span>
+                                ${discount > 0 ? `<span class="mrp-price">₹${prod.mrp}</span>` : ''}
+                            </div>
+                            <div class="rating-row"><span class="stars">★★★★★</span> ४.५ (नवीन)</div>
+                            
+                            <div class="card-actions">
+                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${prod.name}', ${prod.offerPrice}, '📦', '${prod.vendorName}', '${prod.category}')">🛒 Add</button>
+                                <button class="btn-icon">❤️</button>
+                            </div>
+                            ${shopLinkHtml}
+                        </div>
+                    </div>`;
+                });
+
+                productGrid.innerHTML = html;
+            }
+        }
+
+        function openDynamicProduct(prodJsonStr) {
+            let prod = JSON.parse(decodeURIComponent(prodJsonStr));
+            
+            document.getElementById('detail_title').innerText = prod.name;
+            document.getElementById('detail_company').innerHTML = `दुग्ध दिशा प्रमाणित विक्रेता`;
+            document.getElementById('detail_category').innerText = prod.category;
+            
+            let shopLink = document.getElementById('detail_shop_link');
+            let isPaidPlan = (prod.vendorPlan === 'Silver Seller' || prod.vendorPlan === 'Corporate Partner');
+            if (isPaidPlan) {
+                let vendorShopUrl = `supplier_shop.html?vendor=${encodeURIComponent(prod.vendorName || '')}`;
+                shopLink.href = vendorShopUrl;
+                shopLink.style.display = 'flex';
+            } else {
+                shopLink.style.display = 'none';
+            }
+
+            let stockEl = document.getElementById('detail_stock');
+            if(prod.stockStatus === 'In Stock') {
+                stockEl.innerText = 'In Stock';
+                stockEl.style.color = 'green';
+            } else {
+                stockEl.innerText = 'Out of Stock';
+                stockEl.style.color = 'red';
+            }
+
+            document.getElementById('detail_offer_price').innerText = '₹' + prod.offerPrice;
+            
+            if(prod.mrp > prod.offerPrice) {
+                document.getElementById('detail_mrp_price').innerText = '₹' + prod.mrp;
+                document.getElementById('detail_discount').innerText = Math.round(((prod.mrp - prod.offerPrice) / prod.mrp) * 100) + "% OFF";
+                document.getElementById('detail_mrp_price').style.display = 'inline';
+                document.getElementById('detail_discount').style.display = 'inline';
+            } else {
+                document.getElementById('detail_mrp_price').style.display = 'none';
+                document.getElementById('detail_discount').style.display = 'none';
+            }
+
+            let nutritionSection = document.getElementById('nutrition_section');
+            if (prod.protein || prod.dm || prod.energy || prod.fat) {
+                nutritionSection.style.display = 'block'; 
+                document.getElementById('val_protein').innerText = prod.protein ? prod.protein + "%" : "-";
+                document.getElementById('val_dm').innerText = prod.dm ? prod.dm + "%" : "-";
+                document.getElementById('val_energy').innerText = prod.energy ? prod.energy : "-";
+                document.getElementById('val_fat').innerText = prod.fat ? prod.fat + "%" : "-";
+            } else {
+                nutritionSection.style.display = 'none'; 
+            }
+
+            let descTextEl = document.getElementById('dynamic_description_text');
+            if (prod.description && prod.description.trim() !== "") {
+                descTextEl.style.display = 'block';
+                descTextEl.innerText = prod.description;
+            } else {
+                descTextEl.style.display = 'none';
+            }
+
+            let galleryContainer = document.getElementById('product_gallery_container');
+            let mainImageArea = document.getElementById('main_product_image');
+            galleryContainer.innerHTML = '';
+            
+            if(prod.images && prod.images.length > 0) {
+                mainImageArea.innerHTML = `<img src="${prod.images[0]}" style="width:100%; height:100%; object-fit:cover;">`;
+                mainImageArea.style.background = 'none';
+                
+                prod.images.forEach((imgSrc, index) => {
+                    let thumb = document.createElement('div');
+                    thumb.className = index === 0 ? 'gallery-thumb active' : 'gallery-thumb';
+                    thumb.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;">`;
+                    thumb.onclick = function() {
+                        document.querySelectorAll('.gallery-thumb').forEach(el => el.classList.remove('active'));
+                        this.classList.add('active');
+                        mainImageArea.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    galleryContainer.appendChild(thumb);
+                });
+            } else {
+                mainImageArea.innerHTML = '📦';
+                mainImageArea.style.background = 'linear-gradient(to bottom, #e3f2fd, #bbdefb)';
+            }
+
+            let buyBtn = document.getElementById('detail_buy_btn');
+            buyBtn.innerText = `🛒 Buy Now (₹${prod.offerPrice})`;
+            buyBtn.onclick = function() {
+                addToCart(prod.id, prod.name, prod.offerPrice, '📦', prod.vendorName, prod.category);
+                closeProduct();
+                openCart();
+            };
+
+            let quoteBtn = document.getElementById('detail_quote_btn');
+            quoteBtn.onclick = function() {
+                requestQuote(prod.name, prod.vendorName);
+            };
+
+            document.getElementById('productModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProduct() {
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; 
+        }
+
+        function openCropModal(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let imageElement = document.getElementById('crop_image_element');
+                document.getElementById('crop_modal').style.display = 'flex';
+                imageElement.onload = function() {
+                    if(cropper) { cropper.destroy(); }
+                    cropper = new Cropper(imageElement, {
+                        aspectRatio: 1, viewMode: 2, autoCropArea: 0.8, background: true, responsive: true, checkOrientation: false
+                    });
+                };
+                imageElement.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+            event.target.value = ""; 
+        }
+
+        function closeCropModal() {
+            document.getElementById('crop_modal').style.display = 'none';
+            if(cropper) { cropper.destroy(); cropper = null; }
+        }
+
+        function saveCroppedImage() {
+            if(!cropper) return;
+            let canvas = cropper.getCroppedCanvas({ width: 600, height: 600, imageSmoothingQuality: 'high' });
+            let finalImageSrc = canvas.toDataURL('image/jpeg', 0.8);
+            alert("✅ तुमचा फोटो यशस्वीरीत्या क्रॉप आणि सेट झाला आहे!");
+            closeCropModal();
+        }
+
+        function addToCart(id, name, price, icon, company, category = 'Feed') {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            let existingItem = cart.find(i => i.id === id);
+            
+            if(existingItem) { existingItem.qty += 1; } 
+            else { cart.push({id, name, price, icon, company, category, qty: 1}); }
+            
+            localStorage.setItem('krushi_cart', JSON.stringify(cart));
+            updateCartBadge();
+            showToast('✅ ' + name + ' कार्टमध्ये ॲड केले!');
+        }
+
+        function updateQty(id, change) {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            let itemIndex = cart.findIndex(i => i.id === id);
+            if(itemIndex > -1) {
+                cart[itemIndex].qty += change;
+                if(cart[itemIndex].qty <= 0) { cart.splice(itemIndex, 1); }
+                localStorage.setItem('krushi_cart', JSON.stringify(cart));
+                updateCartBadge();
+                renderCartItems(); 
+            }
+        }
+
+        function updateCartBadge() {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            let totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            let badge = document.getElementById('main_cart_badge');
+            badge.innerText = totalQty;
+            badge.style.display = totalQty > 0 ? 'block' : 'none';
+        }
+
+        function openCart() {
+            renderCartItems();
+            document.getElementById('cartModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCart() {
+            document.getElementById('cartModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function renderCartItems() {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            let container = document.getElementById('cartItemsContainer');
+            let totalEl = document.getElementById('cartTotalAmt');
+
+            if(cart.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 50px 20px; color:#999; font-weight:bold;"><div style="font-size:50px; margin-bottom:10px;">🛒</div>तुमची कार्ट रिकामी आहे.<br>कृपया खरेदी सुरू करा!</div>';
+                totalEl.innerText = '₹0';
+                return;
+            }
+
+            let html = '';
+            let totalBill = 0;
+            
+            cart.forEach((item) => {
+                totalBill += (item.price * item.qty);
+                html += `
+                <div style="display:flex; align-items:center; gap:12px; background:white; padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="width:55px; height:55px; background:#f4f7f9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:28px; border:1px solid #eee;">${item.icon}</div>
+                    <div style="flex:1;">
+                        <div style="font-size:10px; color:#1976d2; font-weight:bold; margin-bottom:2px;">दुग्ध दिशा प्रमाणित विक्रेता</div>
+                        <div style="font-size:13px; font-weight:900; color:#333; line-height:1.2; margin-bottom:6px;">${item.name}</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
+                            <span style="font-size:13px; font-weight:bold;">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                        <button onclick="removeFromCart('${item.id}')" style="background:transparent; color:#c62828; border:none; padding:4px 0; font-size:14px; cursor:pointer;">🗑️</button>
+                        <div style="font-size:15px; font-weight:900; color:#d32f2f; margin-top:auto;">₹${item.price * item.qty}</div>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            totalEl.innerText = '₹' + totalBill.toLocaleString('en-IN');
+        }
+
+        function removeFromCart(id) {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            cart = cart.filter(i => i.id !== id);
+            localStorage.setItem('krushi_cart', JSON.stringify(cart));
+            updateCartBadge();
+            renderCartItems();
+        }
+
+        function openCheckout() {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            if(cart.length === 0) { alert('कार्ट रिकामी आहे! आधी प्रॉडक्ट निवडा.'); return; }
+            
+            let userName = localStorage.getItem("current_user_name");
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if(userName) document.getElementById('chk_name').value = userName;
+            if(userMobile) document.getElementById('chk_mobile').value = userMobile.replace("+91 ", "");
+
+            document.getElementById('checkoutModal').style.display = 'block';
+            document.getElementById('cartModal').style.display = 'none'; 
+            calculateFinalBill();
+        }
+
+        function calculateFinalBill() {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            let userPincode = document.getElementById('chk_pincode').value;
+            let deliveryFee = 0;
+            let courierName = "";
+            let adminRates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
+
+            if(userPincode && adminRates[userPincode]) {
+                deliveryFee = adminRates[userPincode].charge;
+                courierName = "(" + adminRates[userPincode].courier + ")";
+            } else { deliveryFee = subtotal >= 1000 ? 0 : 50; }
+
+            let adminSettings = JSON.parse(localStorage.getItem('admin_data_M33')) || {};
+            let onlineDiscountPercent = parseFloat(adminSettings.m33_online_benefit) || 1;
+            let benefitAmount = subtotal * (onlineDiscountPercent / 100);
+            
+            window.currentBaseTotal = subtotal + deliveryFee;
+            window.currentOnlineTotal = window.currentBaseTotal - benefitAmount;
+            window.currentDeliveryFee = deliveryFee;
+
+            document.getElementById('chk_subtotal').innerText = '₹' + subtotal.toLocaleString('en-IN');
+            document.getElementById('chk_delivery').innerText = deliveryFee === 0 ? 'मोफत (Free)' : '₹' + deliveryFee;
+            document.getElementById('delivery_courier_name').innerText = courierName;
+            document.getElementById('btn_amt_cod').innerText = '₹' + window.currentBaseTotal.toLocaleString('en-IN');
+            document.getElementById('btn_amt_online').innerText = '₹' + window.currentOnlineTotal.toLocaleString('en-IN');
+            
+            let saveTextEl = document.getElementById('btn_save_text');
+            if(benefitAmount > 0) {
+                saveTextEl.innerText = `तुमची बचत: ₹${Math.round(benefitAmount)}`;
+                saveTextEl.style.display = 'inline-block';
+            } else { saveTextEl.style.display = 'none'; }
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkoutModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function validateAddress() {
+            let name = document.getElementById('chk_name').value;
+            let mob = document.getElementById('chk_mobile').value;
+            let add = document.getElementById('chk_address').value;
+            let pin = document.getElementById('chk_pincode').value;
+            if(!name || !mob || !add || !pin) {
+                alert("कृपया ऑर्डर कन्फर्म करण्यापूर्वी डिलिव्हरीचा संपूर्ण पत्ता आणि माहिती भरा!"); return false;
+            }
+            return name;
+        }
+
+        // 🔥 FIREBASE: ऑर्डर सेव्ह करणे 🔥
+        function saveOrderToHistory(paymentType, finalAmount) {
+            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+            if(cart.length === 0) return;
+
+            let name = document.getElementById('chk_name').value;
+            let mobile = document.getElementById('chk_mobile').value;
+            let address = document.getElementById('chk_address').value;
+            let pincode = document.getElementById('chk_pincode').value;
+            let district = document.getElementById('chk_district').value;
+
+            let orderId = "#DD-" + Math.floor(10000 + Math.random() * 90000);
+            let today = new Date();
+            let dateStr = today.toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + " • " + today.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+
+            let newOrder = {
+                id: orderId, 
+                date: dateStr, 
+                customer: { name, mobile, address, pincode, district },
+                items: cart, 
+                totalAmount: finalAmount, 
+                paymentMethod: paymentType, 
+                status: "pending", 
+                commissionPaid: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Firebase ला पाठवा
+            db.collection("mall_orders").add(newOrder).catch(err => console.error(err));
+
+            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            allOrders.unshift(newOrder); 
+            localStorage.setItem('user_orders', JSON.stringify(allOrders));
+
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let uniqueVendors = [...new Set(cart.map(item => item.company))];
+            
+            uniqueVendors.forEach(vendorName => {
+                appNotifs.push({
+                    receiver_mobile: vendorName, title: "📦 नवीन ऑर्डर प्राप्त!",
+                    message: `तुम्हाला कृषी मॉलवरून श्री. ${name} यांची नवीन ऑर्डर आली आहे.`,
+                    date: new Date().toLocaleDateString('mr-IN'), orderId: orderId, isRead: false
+                });
+            });
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+        }
+
+        function processCOD() {
+            let customerName = validateAddress();
+            if(!customerName) return;
+
+            if(confirm(`श्री. ${customerName},\nतुमची ₹${window.currentBaseTotal} ची ऑर्डर कॅश ऑन डिलिव्हरी (COD) वर कन्फर्म करायची आहे का?`)) {
+                saveOrderToHistory('COD', window.currentBaseTotal); 
+                localStorage.removeItem('krushi_cart');
+                updateCartBadge();
+                closeCheckout();
+                alert("🎉 तुमची COD ऑर्डर यशस्वीरीत्या नोंदवली गेली आहे!\n\nमाल तुमच्या पत्त्यावर पोहोचल्यावर ₹" + window.currentBaseTotal + " रोख द्यावे लागतील.");
+                window.location.href = "my_orders.html";
+            }
+        }
+
+        function processPayment() {
+            let customerName = validateAddress();
+            if(!customerName) return;
+
+            let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { payee_name: "दुग्ध दिशा AI", upi_id: "9579535290@kotak" };
+            let merchantUPI = paymentSettings.upi_id;
+            let payeeName = encodeURIComponent(paymentSettings.payee_name); 
+            let upiLink = `upi://pay?pa=${merchantUPI}&pn=${payeeName}&am=${window.currentOnlineTotal}&cu=INR`;
+            
+            if(confirm(`श्री. ${customerName},\nतुमचे एकूण बिल ₹${window.currentOnlineTotal} आहे. (तुम्ही बचत केली!)\n\nपेमेंट करण्यासाठी तुमच्या मोबाईलवरील (PhonePe/Google Pay) उघडायचे का?`)) {
+                window.location.href = upiLink;
+                setTimeout(() => {
+                    if(confirm("पेमेंट यशस्वी झाले का? (डेमो मोड)")) {
+                        saveOrderToHistory('Online Paid', window.currentOnlineTotal); 
+                        let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                        if(allOrders.length > 0) {
+                            allOrders[0].commissionPaid = true;
+                            localStorage.setItem('user_orders', JSON.stringify(allOrders));
+                        }
+                        localStorage.removeItem('krushi_cart');
+                        updateCartBadge();
+                        closeCheckout();
+                        alert("🎉 पेमेंट यशस्वी! तुमची ऑर्डर नोंदवली गेली आहे. लवकरच माल तुमच्या पत्त्यावर पोहोचेल.");
+                        window.location.href = "my_orders.html";
+                    }
+                }, 3000);
+            }
+        }
+
+        function showToast(msg) {
+            var x = document.getElementById("toast");
+            x.innerText = msg;
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        function shareProductWhatsApp() {
+            let title = document.getElementById('detail_title').innerText;
+            let price = document.getElementById('detail_offer_price').innerText;
+            
+            let appLink = "https://play.google.com/store/apps/details?id=com.dugdhadisha.app"; 
+            let productLink = "https://dugdhadisha.com/krushi_mall.html"; 
+            
+            let message = `*${title}*\n💰 किंमत: ${price}\n\nहे उत्कृष्ट प्रॉडक्ट 'दुग्ध दिशा कृषी मॉल' वर उपलब्ध आहे. खरेदीसाठी खालील लिंकवर क्लिक करा:\n\n🛒 प्रॉडक्ट लिंक: ${productLink}\n📱 दुग्ध दिशा ॲप लिंक: ${appLink}`;
+            
+            let whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // 🔥 FIREBASE: कोटेशन रिक्वेस्ट सेव्ह करणे 🔥
+        function requestQuote(prodName, vendorName) {
+            let qty = prompt(prodName + "\n\nतुम्हाला किती किलो/नग (Quantity) हवे आहेत? (उदा. 500 kg, 100 bags):");
+            
+            if(qty) {
+                let userName = localStorage.getItem("current_user_name") || "शेतकरी/ग्राहक";
+                let userMobile = localStorage.getItem("current_user_mobile") || "माहिती नाही";
+
+                // Firebase ला कोटेशन पाठवणे
+                let quoteData = {
+                    prodName: prodName,
+                    vendorName: vendorName || "Unknown",
+                    qty: qty,
+                    userName: userName,
+                    userMobile: userMobile,
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                db.collection("quote_requests").add(quoteData).catch(e => console.error(e));
+
+                let adminNotifs = JSON.parse(localStorage.getItem("admin_notifications")) || [];
+                adminNotifs.unshift({
+                    title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)",
+                    message: `${userName} (${userMobile}) यांना '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. सप्लायरला (Vendor: ${vendorName}) संपर्क करा.`,
+                    date: new Date().toLocaleDateString('mr-IN')
+                });
+                localStorage.setItem("admin_notifications", JSON.stringify(adminNotifs));
+
+                if (vendorName) {
+                    let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+                    appNotifs.push({
+                        receiver_mobile: vendorName, 
+                        title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
+                        message: `श्री. ${userName} यांना तुमच्या '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
+                        date: new Date().toLocaleDateString('mr-IN'),
+                        orderId: "#REQ-" + Math.floor(1000 + Math.random() * 9000),
+                        isRead: false
+                    });
+                    localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+                }
+
+                alert("✅ तुमची रिक्वेस्ट ॲडमिन आणि सप्लायर दोघांनाही पाठवली आहे! लवकरच तुम्हाला संपर्क केला जाईल.");
+                closeProduct();
+            }
+        }
+
+        function loadNotifications(userRole) {
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let currentUserMobile = localStorage.getItem("current_user_mobile");
+            
+            let userNotifs = appNotifs.filter(n => n.receiver_mobile === currentUserMobile);
+            let unreadCount = userNotifs.filter(n => !n.isRead).length;
+            
+            let badge = document.getElementById("notif_badge");
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = "inline-block";
+                } else {
+                    badge.style.display = "none";
+                }
+            }
+            
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown) {
+                if (userNotifs.length === 0) {
+                    dropdown.innerHTML = "<div style='padding:10px; font-size:12px; color:#666; text-align:center;'>कोणतेही नवीन नोटिफिकेशन नाही.</div>";
+                } else {
+                    let html = "";
+                    userNotifs.reverse().forEach((n, idx) => {
+                        let bg = n.isRead ? "#fff" : "#fff8e1";
+                        let id = n.orderId || idx;
+                        html += `<div style="padding:10px; border-bottom:1px solid #eee; background:${bg}; cursor:pointer;" onclick="markNotifRead('${id}')">
+                                    <div style="font-size:13px; font-weight:bold; color:#d32f2f;">${n.title}</div>
+                                    <div style="font-size:11px; color:#555; margin-top:3px;">${n.message}</div>
+                                    <div style="font-size:9px; color:#999; margin-top:5px; text-align:right;">${n.date}</div>
+                                 </div>`;
+                    });
+                    dropdown.innerHTML = html;
+                }
+            }
+        }
+
+        function toggleNotifications() {
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === "none" || dropdown.style.display === "" ? "block" : "none";
+                if(dropdown.style.display === "block") {
+                    loadNotifications();
+                }
+            }
+        }
+
+        function markNotifRead(id) {
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let currentUserMobile = localStorage.getItem("current_user_mobile");
+            
+            appNotifs.forEach((n, idx) => {
+                let currentId = n.orderId || idx;
+                if (n.receiver_mobile === currentUserMobile && currentId.toString() === id.toString()) {
+                    n.isRead = true;
+                }
+            });
+            
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+            loadNotifications();
+        }
+
+        document.addEventListener('click', function(event) {
+            let bell = document.querySelector('.header-actions div[onclick="toggleNotifications()"]');
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown && dropdown.style.display === 'block') {
+                if (bell && !bell.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+    </script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>

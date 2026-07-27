@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - ग्रोथ मॉनिटर</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        .form-section {
+            background: #eef2f5;
+            padding: 15px 20px;
+            margin: 10px 20px;
+            border-radius: 16px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
+        }
+        .form-section label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        select, input {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+            background: #fff; box-sizing: border-box; font-family: inherit; font-size: 14px;
+        }
+
+        .btn-calculate {
+            background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%;
+            padding: 15px; border: none; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2); margin-top: 15px;
+        }
+        .btn-calculate:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+        
+        .chart-container {
+            background: #fff;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,1);
+            display: none;
+        }
+        .chart-title {
+            font-size: 15px;
+            color: #1b5e20;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* 3D Steps / Points Simulation for Chart */
+        .growth-path {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 120px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .growth-point {
+            width: 15px;
+            height: 15px;
+            background: #ff9800;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .growth-point::after {
+            content: attr(data-val);
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .month-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+        
+        .ai-feedback {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #0d47a1;
+        }
+
+        /* 🔥 AI Recommendation Ad Section */
+        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
+        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 900;}
+        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
+        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); font-weight: bold;}
+        
+        /* 🔥 Vendor Product Ad Style Override 🔥 */
+        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
+        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
+        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
+        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
+        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+    </style>
+</head>
+<body onload="initPage()">
+
+<div class="app-container">
+    <div class="top-dashboard" style="background: #1b5e20; padding: 20px; color: white; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
+        <div class="header-titles" style="margin-top: 15px;">
+            <h1 style="margin:0;">वाढ व वजन मॉनिटर 📈</h1>
+            <p style="margin:5px 0 0; color:#c8e6c9;">जनावरांच्या आरोग्याचा ग्रोथ आलेख</p>
+        </div>
+    </div>
+
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 15px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">नवीन नोंद करा</div>
+    <div class="form-section">
+        <label>जनावराचे नाव / टॅग:</label>
+        <select id="animal_select">
+            <option>गोदावरी (गाय)</option>
+            <option>गौरी (वासरू)</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div style="flex: 1;">
+                <label>आजचे वजन (Kg):</label>
+                <input type="number" id="current_weight" placeholder="उदा. 55">
+            </div>
+            <div style="flex: 1;">
+                <label>BCS (1-5):</label>
+                <input type="number" step="0.5" id="current_bcs" placeholder="उदा. 3.0">
+            </div>
+        </div>
+
+        <button class="btn-calculate" id="btn_save_growth" onclick="updateGrowth()">रेकॉर्ड सेव्ह करा</button>
+    </div>
+
+    <div class="chart-container" id="growthChart">
+        <div class="chart-title">📊 वजन वाढीचा आलेख (Growth Curve)</div>
+        
+        <div class="growth-path">
+            <div class="growth-point" data-val="25kg" style="margin-bottom: 10px;"></div>
+            <div class="growth-point" data-val="35kg" style="margin-bottom: 30px;"></div>
+            <div class="growth-point" data-val="45kg" style="margin-bottom: 60px;"></div>
+            <div class="growth-point" id="new_point" data-val="--kg" style="margin-bottom: 90px; background:#4CAF50;"></div>
+        </div>
+        <div class="month-labels">
+            <span>महिना १</span>
+            <span>महिना २</span>
+            <span>महिना ३</span>
+            <span style="color:#4CAF50;">आज</span>
+        </div>
+
+        <div class="ai-feedback" id="feedbackBox">
+            🤖 <b>AI विश्लेषण:</b> वासराची वाढ अतिशय उत्तम गतीने होत आहे. आहारात <b>'काफ स्टार्टर'</b> चे प्रमाण असेच चालू ठेवा.
+        </div>
+
+        <!-- 🔥 Dynamic Ad Container -->
+        <div id="growth_ad_container"></div>
+    </div>
+</div>
+
+<script>
+    // 🔥 FIREBASE INITIALIZATION 🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    function syncProducts() {
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    function initPage() {
+        syncProducts();
+        loadAnimalsIntoDropdown();
+    }
+
+    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ तुमच्या जनावरासाठी सुचवलेले") {
+        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+        
+        // Find a product that contains the specific tag in its aiFilters array
+        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
+        
+        if (matchedProduct) {
+            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
+            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+            
+            // Generate Vendor Ad UI (linking to krushi mall)
+            return `
+                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
+                    <h4>${customTitle}</h4>
+                    <div class="vendor-product-flex">
+                        ${imgHtml}
+                        <div>
+                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
+                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
+                        </div>
+                    </div>
+                    <div class="sponsor-bottom-row">
+                        <span class="sponsor-tag" style="background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;">Sponsored by ${matchedProduct.brand}</span>
+                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
+                    </div>
+                </div>`;
+        }
+        
+        // Return default static AD if no vendor product matches
+        return defaultHtml;
+    }
+
+    // --- Load saved animals into dropdown dynamically ---
+    function loadAnimalsIntoDropdown() {
+        let selectBox = document.getElementById('animal_select');
+        let optionsHtml = '';
+        let found = false;
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith("cow_") || key.startsWith("calf_")) {
+                try {
+                    let animal = JSON.parse(localStorage.getItem(key));
+                    let typeIcon = animal.type === 'buffalo' ? '🐃' : (animal.type === 'calf' ? '🍼' : '🐄');
+                    optionsHtml += `<option value="${key}">${typeIcon} ${animal.breed} (टॅग: ${animal.tag})</option>`;
+                    found = true;
+                } catch(e) {}
+            }
+        }
+        
+        // If animals exist in DB, replace default options
+        if(found) {
+            selectBox.innerHTML = optionsHtml;
+        }
+    }
+
+    function updateGrowth() {
+        let animalSelect = document.getElementById("animal_select");
+        let animalText = animalSelect.options[animalSelect.selectedIndex].text;
+        let weight = document.getElementById("current_weight").value;
+        let bcs = document.getElementById("current_bcs").value;
+        let adContainer = document.getElementById("growth_ad_container");
+        let defaultAdHtml = "";
+        let targetFilterTag = "";
+
+        if(!weight) {
+            alert("कृपया आजचे वजन टाका.");
+            return;
+        }
+
+        let saveBtn = document.getElementById('btn_save_growth');
+        let originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
+        saveBtn.disabled = true;
+
+        let newPoint = document.getElementById("new_point");
+        newPoint.setAttribute("data-val", weight + "kg");
+        
+        let feedback = document.getElementById("feedbackBox");
+        
+        // --- Feedback and Ad Logic ---
+        if(bcs < 2.5 && bcs > 0) {
+            feedback.innerHTML = `🤖 <b>AI विश्लेषण:</b> वजन वाढत आहे पण BCS (${bcs}) कमी आहे. जनावराला ऊर्जा (Energy) कमी पडत आहे.`;
+            feedback.style.background = "#ffebee";
+            feedback.style.borderColor = "#f44336";
+            feedback.style.color = "#c62828";
+            
+            targetFilterTag = "Calf_Growth"; // Or Weight_BypassFat
+            defaultAdHtml = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>⚡ ऊर्जा आणि वजन वाढवा</h4>
+                <p>वाढ खुंटू नये म्हणून <b>Virbac Energy Booster</b> किंवा उत्तम दर्जाचे <b>काफ स्टार्टर (Calf Starter)</b> आजच सुरू करा.</p>
+                <span class="sponsor-tag">Sponsored by Virbac</span>
+            </div>`;
+        } else {
+            feedback.innerHTML = `🤖 <b>AI विश्लेषण:</b> जनावराची वाढ (वजन ${weight}kg आणि BCS ${bcs}) अतिशय उत्तम गतीने होत आहे.`;
+            feedback.style.background = "#e8f5e9";
+            feedback.style.borderColor = "#4CAF50";
+            feedback.style.color = "#2e7d32";
+            
+            targetFilterTag = "Daily_Ration_Mineral"; 
+            defaultAdHtml = `
+            <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
+                <h4>⭐ उत्तम वाढ टिकवून ठेवा</h4>
+                <p>हाडांची बळकटी आणि वाढ अशीच टिकवून ठेवण्यासाठी आहारात <b>गोदरेज मिनरल मिक्सचर</b> नियमितपणे द्या.</p>
+                <span class="sponsor-tag">Sponsored by Godrej Agrovet</span>
+            </div>`;
+        }
+
+        // Show Dynamic Ad
+        adContainer.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "📈 जलद वाढीसाठी सुचवलेले");
+
+        // 🔥 FIREBASE: Save Record 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+
+        db.collection("growth_records").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            animal: animalText,
+            weight: weight,
+            bcs: bcs || "N/A",
+            date: new Date().toLocaleDateString('mr-IN'),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            let chart = document.getElementById("growthChart");
+            chart.style.display = "block";
+            chart.scrollIntoView({behavior: "smooth"});
+        })
+        .catch(err => {
+            console.error("Firebase save error: ", err);
+            let chart = document.getElementById("growthChart");
+            chart.style.display = "block";
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+</script>
+
+    <script src="fcm_setup.js"></script>
+</body>
+</html>
