@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 85px !important;}
         .app-container { max-width: 600px; margin: 0 auto; background: #f4f7f6; min-height: 100vh; padding-bottom: 30px;}
@@ -68,11 +71,11 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
         .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; }
         .qr-placeholder { background: #f0f4f8; border: 2px dashed #b0bec5; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; }
-        .field { text-align: left; margin-bottom: 15px; }
+        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; cursor: pointer; border: none;}
+        .field { text-align: left; margin-bottom: 15px; display: none; /* Hidden by default now */ }
         .field label { display: block; font-size: 11px; font-weight: bold; color: #444; margin-bottom: 5px; }
         .field input { width: 100%; padding: 10px; border: 2px solid #ff9800; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        .btn-confirm { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+        .btn-confirm { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; display: none; /* Hidden by default now */ }
 
         /* 🔥 BOTTOM NAVIGATION BAR STYLES 🔥 */
         .bottom-nav-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #ffffff; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); display: flex; justify-content: space-around; align-items: center; padding: 8px 0; z-index: 1000; border-radius: 15px 15px 0 0; }
@@ -212,34 +215,26 @@
 <!-- 🔥 SECURE PAYMENT MODAL 🔥 -->
 <div class="modal-overlay" id="payment_modal">
     <div class="modal-box">
-        <h3 style="margin-top:0; color:#d32f2f; border-bottom:2px solid #eee; padding-bottom:10px;">सुरक्षित पेमेंट (UPI)</h3>
+        <h3 style="margin-top:0; color:#d32f2f; border-bottom:2px solid #eee; padding-bottom:10px;">सुरक्षित पेमेंट (Razorpay)</h3>
         
-        <div class="qr-placeholder">
+        <div class="qr-placeholder" style="background: #e8f5e9; border-color: #a5d6a7;">
             <div style="font-size: 30px; color: #1b5e20;">₹<span id="pay_amt_display">0</span></div>
             <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाम: दुग्ध दिशा AI</div>
-            <div style="font-size:11px; color:#666;" id="payment_upi_id_display">UPI ID: 9579535290@kotak</div>
             <div style="font-size:11px; color:#e65100; margin-top:5px; font-weight:bold;" id="pay_plan_name">Plan Name</div>
         </div>
 
         <div style="margin-bottom: 15px;">
-            <a href="#" id="direct_pay_btn" class="btn-upi-direct" onclick="triggerFarmerUPI()">📲 ॲपमधून थेट पे करा (GPay/PhonePe)</a>
+            <button id="direct_pay_btn" class="btn-upi-direct" style="background: #0d47a1;" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे सुरक्षित पेमेंट करा</button>
         </div>
 
-        <div class="field">
-            <label>पेमेंट झाल्यानंतर 12 अंकी UTR / Reference Number टाका *</label>
-            <input type="number" id="pay_utr" placeholder="येथे नंबर टाईप करा..." readonly>
-        </div>
-
-        <button class="btn-confirm" id="manual_confirm_btn" style="opacity: 0.5; pointer-events: none;" onclick="confirmFarmerPayment()">✅ पेमेंट कन्फर्म करा</button>
         <button onclick="closePayment()" style="background: none; border: none; color: #555; margin-top: 10px; font-size: 12px; font-weight: bold; cursor: pointer;">✕ रद्द करा</button>
     </div>
 </div>
 
-<!-- Loader Overlay for Auto-Paytm -->
+<!-- Loader Overlay -->
 <div class="loader-overlay" id="loader">
     <div class="spinner"></div>
     <h3 style="margin:0;">कृपया थांबा...</h3>
-    <p style="font-size:12px; color:#aaa; text-align:center; padding:0 20px;">पेमेंट प्रोसेस होत आहे. ॲप बंद करू नका.</p>
 </div>
 
 <!-- 🔥 BOTTOM NAVIGATION BAR 🔥 -->
@@ -316,19 +311,18 @@
         document.getElementById('disp_doc').innerText = p_doc;
 
         // Bind updated prices to buttons
-        document.getElementById('btn_plat6').setAttribute('onclick', `openPayment('प्लॅटिनम (६ महिने)', ${p_plat6}, '6Months')`);
-        document.getElementById('btn_plat1').setAttribute('onclick', `openPayment('प्लॅटिनम (१ महिना)', ${p_plat1}, 'Monthly')`);
-        document.getElementById('btn_gold').setAttribute('onclick', `openPayment('दिशा प्राईम (Gold)', ${p_gold}, 'Monthly')`);
-        document.getElementById('btn_silver').setAttribute('onclick', `openPayment('सिल्व्हर पॅक', ${p_silver}, 'Monthly')`);
-        document.getElementById('btn_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स बॅलन्सर (24h)', ${p_adv}, '24h')`);
-        document.getElementById('btn_pro').setAttribute('onclick', `openPayment('प्रो रेशन बॅलन्सर (24h)', ${p_pro}, '24h')`);
-        document.getElementById('btn_doc').setAttribute('onclick', `openPayment('डॉक्टर कॉल (1 Day)', ${p_doc}, '1Day')`);
+        document.getElementById('btn_plat6').setAttribute('onclick', `openPayment('प्लॅटिनम (६ महिने)', document.getElementById('disp_plat6').innerText, '6Months')`);
+        document.getElementById('btn_plat1').setAttribute('onclick', `openPayment('प्लॅटिनम (१ महिना)', document.getElementById('disp_plat1').innerText, 'Monthly')`);
+        document.getElementById('btn_gold').setAttribute('onclick', `openPayment('दिशा प्राईम (Gold)', document.getElementById('disp_gold').innerText, 'Monthly')`);
+        document.getElementById('btn_silver').setAttribute('onclick', `openPayment('सिल्व्हर पॅक', document.getElementById('disp_silver').innerText, 'Monthly')`);
+        document.getElementById('btn_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स बॅलन्सर (24h)', document.getElementById('disp_adv').innerText, '24h')`);
+        document.getElementById('btn_pro').setAttribute('onclick', `openPayment('प्रो रेशन बॅलन्सर (24h)', document.getElementById('disp_pro').innerText, '24h')`);
+        document.getElementById('btn_doc').setAttribute('onclick', `openPayment('डॉक्टर कॉल (1 Day)', document.getElementById('disp_doc').innerText, '1Day')`);
     }
 
     // --- 🔥 STRICT EXPIRY LOGIC CHECK 🔥 ---
     function checkActivePlan() {
         let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
-        let pendingPlan = JSON.parse(localStorage.getItem('farmer_pending_plan'));
         
         let container = document.getElementById('active_plan_container');
         let title = document.getElementById('status_title');
@@ -355,186 +349,128 @@
                 container.className = "active-plan-banner plan-active";
                 icon.innerText = "✅";
             }
-        } else if(pendingPlan) {
-            // PENDING ADMIN APPROVAL
-            title.innerText = "प्लॅन मंजुरीच्या प्रतीक्षेत आहे";
-            desc.innerText = `तुमची '${pendingPlan.name}' ची रिक्वेस्ट ॲडमिनकडे पेंडिंग आहे.`;
-            container.className = "active-plan-banner plan-pending";
-            icon.innerText = "⏳";
+        } else {
+            title.innerText = "सध्याचा प्लॅन: फ्री (Basic)";
+            desc.innerText = "तुमचा कोणताही प्रीमियम प्लॅन ॲक्टिव्ह नाही.";
+            container.className = "active-plan-banner plan-none";
+            icon.innerText = "⚠️";
         }
     }
 
-    // --- 🔥 UPDATED: PAYTM AUTO ACTIVATION LOGIC 🔥 ---
     function openPayment(planName, amount, type) {
         let numAmount = parseFloat(amount);
 
         // --- FREE PLAN (₹0) AUTO-ACTIVATION LOGIC ---
         if(numAmount === 0) {
-            let now = new Date();
-            let expiryDate = new Date();
-            
-            if(type === '24h' || type === '1Day') {
-                expiryDate.setHours(expiryDate.getHours() + 24);
-            } else if(type === 'Monthly') {
-                expiryDate.setMonth(expiryDate.getMonth() + 1);
-            } else if(type === '6Months') {
-                expiryDate.setMonth(expiryDate.getMonth() + 6);
-            }
-
-            let activePlan = {
-                name: planName,
-                activatedOn: now.toISOString(),
-                expiryDate: expiryDate.toISOString()
-            };
-            
-            // Save instantly, skip Admin approval
-            localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
-            localStorage.removeItem('farmer_pending_plan'); 
-            
-            alert(`🎉 अभिनंदन! '${planName}' सध्या मोफत (₹0) असल्याने तो त्वरित सुरू करण्यात आला आहे!`);
-            checkActivePlan();
+            activatePlanAutomatically(type, planName);
             return;
         }
 
-        // --- AUTOMATIC UPI INTENT LOGIC FOR PAID PLANS ---
-        let userMobile = localStorage.getItem('current_user_mobile') || 'Guest';
-        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
-        let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
-        let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+        // --- PREPARE FOR RAZORPAY ---
+        pendingPurchase = { name: planName, amount: amount, type: type };
+        document.getElementById('pay_amt_display').innerText = amount;
+        document.getElementById('pay_plan_name').innerText = "प्लॅन: " + planName;
+        document.getElementById('payment_modal').style.display = 'flex';
+    }
 
-        if(confirm(`तुम्ही '${planName}' हा प्लॅन निवडला आहे.\nएकूण रक्कम: ₹${numAmount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर प्लॅन आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
-            
-            let transactionNote = encodeURIComponent(`DD_${userMobile}_${planName}`);
-            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${numAmount}&cu=INR&tn=${transactionNote}`;
+    // --- 🔥 RAZORPAY INTEGRATION LOGIC 🔥 ---
+    function triggerRazorpayPayment() {
+        let amt = parseFloat(pendingPurchase.amount);
+        let planName = pendingPurchase.name;
+        let type = pendingPurchase.type;
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
 
-            document.getElementById('loader').style.display = 'flex';
-            window.location.href = upiLink;
+        let amountInPaise = amt * 100; // Razorpay requires paise
 
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
+            "amount": amountInPaise, 
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": planName + " खरेदी",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", // Cow icon
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
                 
-                if(confirmation) {
-                    let now = new Date();
-                    let expiryDate = new Date();
-                    let is8pmPassed = now.getHours() >= 20; 
+                // Save payment log in Firebase
+                let paymentRecord = {
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: planName,
+                    amount: amt,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString()
+                };
+                
+                db.collection("successful_payments").add({
+                    ...paymentRecord,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
 
-                    if(type === '24h' || type === '1Day') {
-                        if(is8pmPassed) {
-                            expiryDate.setDate(expiryDate.getDate() + 1); 
-                            expiryDate.setHours(8, 0, 0, 0); 
-                            expiryDate.setHours(expiryDate.getHours() + 24); 
-                            alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, तुमचा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
-                        } else {
-                            expiryDate.setHours(expiryDate.getHours() + 24);
-                        }
-                    } 
-                    else if(type === 'Monthly') {
-                        expiryDate.setMonth(expiryDate.getMonth() + 1);
-                    }
-                    else if(type === '6Months') {
-                        expiryDate.setMonth(expiryDate.getMonth() + 6);
-                    }
-
-                    let activePlan = {
-                        name: planName,
-                        activatedOn: now.toISOString(),
-                        expiryDate: expiryDate.toISOString(),
-                        status: "Active",
-                        paymentMethod: "Paytm Auto UPI"
-                    };
-
-                    localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
-                    localStorage.removeItem('farmer_pending_plan');
-                    
-                    alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच चालू करण्यात आला आहे!`);
-                    
-                    checkActivePlan();
-                    window.scrollTo(0, 0);
-                } else {
-                    alert("पेमेंट कॅन्सल झाले किंवा पूर्ण होऊ शकले नाही.");
-                }
-            }, 8000);
-        }
-    }
-
-    // These functions are kept for structural integrity but are no longer the primary flow
-    function triggerFarmerUPI() {
-        let amt = pendingPurchase.amount;
-        let upiLink = `upi://pay?pa=9579535290@kotak&pn=Dugdha%20Disha%20AI&am=${amt}&cu=INR`;
-        window.location.href = upiLink;
-
-        let btn = document.getElementById('direct_pay_btn');
-        btn.innerHTML = "⏳ पेमेंट झाल्यानंतर खाली UTR टाका";
-        btn.style.background = "#f57c00";
-        btn.style.pointerEvents = "none";
-
-        let utrBox = document.getElementById('pay_utr');
-        utrBox.readOnly = false;
-        utrBox.style.background = "#fff3e0";
-        
-        let confirmBtn = document.getElementById('manual_confirm_btn');
-        confirmBtn.style.opacity = "1";
-        confirmBtn.style.pointerEvents = "auto";
-    }
-
-    function confirmFarmerPayment() {
-        let utr = document.getElementById('pay_utr').value.trim();
-        if(utr.length < 10) {
-            alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर मिळालेला वैध 12 अंकी UTR नंबर टाका!");
-            return;
-        }
-
-        let pendingReq = {
-            farmerName: localStorage.getItem("current_user_name") || "शेतकरी",
-            mobile: localStorage.getItem("current_user_mobile") || "Unknown",
-            name: pendingPurchase.name,
-            amount: pendingPurchase.amount,
-            type: pendingPurchase.type,
-            utr: utr,
-            requestTime: new Date().toLocaleString(),
-            status: "Pending"
+                // Auto activate the plan
+                activatePlanAutomatically(type, planName);
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": {
+                "color": "#1565c0"
+            }
         };
-        
-        // 1. Save locally for UI update
-        localStorage.setItem('farmer_pending_plan', JSON.stringify(pendingReq));
-        
-        // 2. Also add to Admin's Master List locally
-        let adminList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-        adminList.push(pendingReq);
-        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(adminList));
 
-        // 3. 🔥 FIREBASE: Send Payment Request to Admin 🔥
-        db.collection("admin_pending_farmer_payments").add({
-            ...pendingReq,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-            alert(`🎉 रिक्वेस्ट सबमिट झाली!\nतुमचा UTR: ${utr} ॲडमिनला पाठवला आहे.\n\nॲडमिनने मंजुरी (Approve) दिल्यावर तुमचा प्लॅन सुरू होईल.`);
-        })
-        .catch(err => {
-            console.error("Firebase Payment Logging Error: ", err);
-            alert(`🎉 रिक्वेस्ट सबमिट झाली!\nतुमचा UTR: ${utr} ॲडमिनला पाठवला आहे.\n\nॲडमिनने मंजुरी (Approve) दिल्यावर तुमचा प्लॅन सुरू होईल.`);
-        })
-        .finally(() => {
-            closePayment();
-            checkActivePlan();
+        var rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
         });
+        
+        rzp1.open();
+    }
+
+    function activatePlanAutomatically(type, planName) {
+        let now = new Date();
+        let expiryDate = new Date();
+        let is8pmPassed = now.getHours() >= 20; 
+
+        if(type === '24h' || type === '1Day') {
+            if(is8pmPassed) {
+                expiryDate.setDate(expiryDate.getDate() + 1); 
+                expiryDate.setHours(8, 0, 0, 0); 
+                expiryDate.setHours(expiryDate.getHours() + 24); 
+                alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, तुमचा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
+            } else {
+                expiryDate.setHours(expiryDate.getHours() + 24);
+            }
+        } 
+        else if(type === 'Monthly') {
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+        }
+        else if(type === '6Months') {
+            expiryDate.setMonth(expiryDate.getMonth() + 6);
+        }
+
+        let activePlan = {
+            name: planName,
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active",
+            paymentMethod: "Razorpay"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        localStorage.removeItem('farmer_pending_plan');
+        
+        alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच चालू करण्यात आला आहे!`);
+        
+        closePayment();
+        checkActivePlan();
+        window.scrollTo(0, 0);
     }
 
     function closePayment() {
         document.getElementById('payment_modal').style.display = 'none';
-        document.getElementById('pay_utr').value = '';
-        document.getElementById('pay_utr').readOnly = true;
-        
-        let btn = document.getElementById('direct_pay_btn');
-        btn.innerHTML = "📲 ॲपमधून थेट पे करा (GPay/PhonePe)";
-        btn.style.background = "#1b5e20";
-        btn.style.pointerEvents = "auto";
-        
-        let confirmBtn = document.getElementById('manual_confirm_btn');
-        confirmBtn.style.opacity = "0.5";
-        confirmBtn.style.pointerEvents = "none";
     }
 </script>
 
