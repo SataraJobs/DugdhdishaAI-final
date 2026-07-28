@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>दुग्ध दिशा AI - खरेदी विक्री</title>
+    
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         :root{ --green:#2e7d32; --blue:#1976d2; --orange:#e65100; --bg:#f4f7f6; --card:#fff; --text:#222; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 85px !important;}
@@ -90,6 +94,11 @@
         .btn-pay-now { background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(230,81,0,0.4); text-decoration: none; display: block; box-sizing: border-box; text-align: center;}
         .btn-submit-utr { background: #2e7d32; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; width: 100%; display: none;}
         .btn-close-modal { background: #e0e0e0; color: #333; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
+        
+        /* Loader Overlay for Payments */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body onload="initializeMarketPage()">
@@ -155,25 +164,18 @@
             <li><span>🎁</span> <b>मोफत:</b> 'प्रो-रेशन बॅलन्सर' मिळवा!</li>
         </ul>
         
-        <!-- INITIAL PAY BUTTON -->
-        <button class="btn-pay-now" id="btn_init_pay" onclick="showPaymentForm()">💳 पे करा आणि जाहिरात द्या</button>
+        <!-- INITIAL PAY BUTTON (Razorpay) -->
+        <button class="btn-pay-now" id="btn_init_pay" style="background:#1976d2; margin-bottom:15px;" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे पे करा आणि जाहिरात द्या</button>
         
-        <!-- HIDDEN PAYMENT FORM -->
-        <div class="payment-form" id="payment_form_section">
-            <div style="text-align: center; margin-bottom: 15px;">
-                <div style="font-weight:900; color:#1b5e20; font-size:16px;">दुग्ध दिशा AI</div>
-                <div style="font-size:12px; color:#e65100; font-weight:bold;">UPI ID: <span id="payment_upi_text">9579535290@kotak</span></div>
-            </div>
-            
-            <a href="#" class="btn-pay-now" style="background:#1976d2; margin-bottom:15px;" onclick="triggerUPI()">📲 ॲपमधून थेट पे करा (GPay/PhonePe)</a>
-            
-            <label style="font-size: 11px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">पेमेंट झाल्यानंतर 12 अंकी UTR नंबर टाका:</label>
-            <input type="number" class="input-field" id="payment_utr" placeholder="उदा. 312345678901">
-        </div>
-
-        <button class="btn-submit-utr" id="btn_submit_utr" onclick="submitAdRequest()">✅ पेमेंट कन्फर्म करा</button>
         <button class="btn-close-modal" onclick="closeAddAnimalModal()">✕ रद्द करा</button>
     </div>
+</div>
+
+<!-- Loader Overlay for Payments -->
+<div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <h3 style="margin:0;">कृपया थांबा...</h3>
+    <p style="font-size:12px; color:#aaa; text-align:center; padding:0 20px;">पेमेंट प्रोसेस होत आहे. ॲप बंद करू नका.</p>
 </div>
 
 <!-- BOTTOM NAVIGATION BAR -->
@@ -208,6 +210,9 @@
     const db = firebase.firestore();
 
     let currentTab = 'buy';
+    let pendingPlanAmount = 0;
+    let pendingPlanName = "Silver Pack (Market) - 1 Month";
+    let pendingPlanType = "Monthly";
 
     function initializeMarketPage() {
         checkActivePlanOnLoad();
@@ -370,7 +375,7 @@
         }
     }
 
-    // --- Banner & Plan Logic ---
+    // --- Banner & Plan Logic (UNIVERSAL ACCESS IMPLEMENTED) ---
     function getSilverPlanPrice() {
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         let val = adminPrices.m25_f_silver;
@@ -380,94 +385,164 @@
         return parsedPrice;
     }
 
+    // 🔥 UNIVERSAL ACCESS CHECK FUNCTION 🔥
+    function isPlanActive() {
+        let currentPrice = getSilverPlanPrice();
+        if (currentPrice === 0) return true; // It's free
+
+        // १. Check Farmer Active Plan
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        if(activePlan) {
+            let now = new Date(); 
+            let expiry = new Date(activePlan.expiryDate);
+            if(now > expiry) { 
+                localStorage.removeItem('farmer_active_plan'); 
+            } else {
+                let planName = activePlan.name.toLowerCase();
+                // Check if they have a plan that covers this (Silver, Prime, Platinum, etc.)
+                if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('market') || planName.includes('silver') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('platinum')) return true; 
+            }
+        }
+
+        // २. Check Business/Vendor Active Plan
+        let vendorPlan = JSON.parse(localStorage.getItem('current_business_plan_details'));
+        if(vendorPlan) {
+            let now = new Date();
+            let expiry = new Date(vendorPlan.expiryDate);
+            if(now > expiry) {
+                localStorage.removeItem('current_business_plan_details');
+            } else {
+                let planName = vendorPlan.name.toLowerCase();
+                if(planName.includes('starter') || planName.includes('silver') || planName.includes('corporate') || planName.includes('gold') || planName.includes('platinum')) return true;
+            }
+        }
+
+        return false; // User does not have any active qualifying plan
+    }
+
     function checkActivePlanOnLoad() {
         let currentPrice = getSilverPlanPrice();
         document.getElementById('banner_price_text').innerText = currentPrice === 0 ? "मोफत (Free)" : `₹${currentPrice}`;
         document.getElementById('modal_price_text').innerText = currentPrice === 0 ? "मोफत (Free)" : `₹${currentPrice}`;
         
-        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
         let topBanner = document.getElementById('top_upgrade_banner');
         
-        if (currentPrice === 0) { topBanner.style.display = 'none'; }
-        else if (activePlan && new Date() <= new Date(activePlan.expiryDate)) { topBanner.style.display = 'none'; }
-        else { topBanner.style.display = 'flex'; }
+        if (isPlanActive()) { 
+            topBanner.style.display = 'none'; 
+        } else { 
+            topBanner.style.display = 'flex'; 
+        }
     }
 
     function handleAdCreation() {
-        let currentPrice = getSilverPlanPrice();
-        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
-        
-        if (currentPrice === 0) {
-            sessionStorage.setItem('market_plan_free', 'true');
+        if (isPlanActive()) {
             window.location.href = "add_animal_form.html"; 
             return;
         }
 
-        if (activePlan) {
-            let now = new Date();
-            let expiryDate = new Date(activePlan.expiryDate);
-            if (now <= expiryDate && (activePlan.name.includes("दिशा प्राईम") || activePlan.name.includes("Market") || activePlan.name.includes("Silver"))) {
-                window.location.href = "add_animal_form.html"; 
-                return;
-            }
-        }
-
+        // If not active, show the paywall modal
         openAddAnimalModal();
     }
 
     // --- Payment Modal Logic ---
     function openAddAnimalModal() {
-        document.getElementById('btn_init_pay').style.display = 'block';
-        document.getElementById('payment_form_section').style.display = 'none';
-        document.getElementById('btn_submit_utr').style.display = 'none';
-        document.getElementById('payment_utr').value = '';
         document.getElementById('add_animal_modal').style.display = 'flex';
     }
 
     function closeAddAnimalModal() {
         document.getElementById('add_animal_modal').style.display = 'none';
     }
-
-    function showPaymentForm() {
-        document.getElementById('btn_init_pay').style.display = 'none';
-        document.getElementById('payment_form_section').style.display = 'block';
-        document.getElementById('btn_submit_utr').style.display = 'block';
-    }
-
-    function triggerUPI() {
-        let amt = getSilverPlanPrice();
-        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { payee_name: "दुग्ध दिशा AI", upi_id: "9579535290@kotak" };
+    
+    // --- 🔥 RAZORPAY PAYMENT LOGIC 🔥 ---
+    function triggerRazorpayPayment() {
+        let numAmount = parseFloat(getSilverPlanPrice());
         
-        let upiId = paymentSettings.upi_id;
-        let payeeName = encodeURIComponent(paymentSettings.payee_name);
-        
-        let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amt}&cu=INR`;
-        window.location.href = upiLink;
-    }
-
-    function submitAdRequest() {
-        let utr = document.getElementById('payment_utr').value.trim();
-        let amtPaid = getSilverPlanPrice();
-        
-        if(!utr || utr.length < 10) {
-            alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर नक्की टाका.");
+        // Free logic just in case
+        if(numAmount === 0) {
+            activatePlanAutomatically(pendingPlanType, pendingPlanName);
             return;
         }
 
-        let pendingPayments = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-        pendingPayments.push({
-            farmerName: localStorage.getItem("current_user_name") || "शेतकरी (Market User)",
-            mobile: localStorage.getItem("current_user_mobile") || "Unknown",
-            name: "Silver Pack (Market) - 1 Month",
-            type: "Monthly",
-            amount: amtPaid,
-            utr: utr,
-            requestTime: new Date().toLocaleString()
-        });
-        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingPayments));
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
 
+        let amountInPaise = numAmount * 100;
+
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
+            "amount": amountInPaise, 
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": "खरेदी विक्री Premium Ad",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", 
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
+                
+                // Save payment log in Firebase
+                let paymentRecord = {
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: pendingPlanName,
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString()
+                };
+                
+                db.collection("successful_payments").add({
+                    ...paymentRecord,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                activatePlanAutomatically(pendingPlanType, pendingPlanName);
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": {
+                "color": "#e65100"
+            }
+        };
+
+        var rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        
+        rzp1.open();
+    }
+
+    function activatePlanAutomatically(type, planName) {
+        let now = new Date();
+        let expiryDate = new Date();
+
+        if(type === '24h' || type === '1Day') {
+            expiryDate.setHours(expiryDate.getHours() + 24);
+        } 
+        else if(type === 'Monthly') {
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+        }
+        else if(type === '6Months') {
+            expiryDate.setMonth(expiryDate.getMonth() + 6);
+        }
+
+        let activePlan = {
+            name: planName,
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active",
+            paymentMethod: "Razorpay"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        localStorage.removeItem('farmer_pending_plan');
+        
         closeAddAnimalModal();
-        alert(`🎉 तुमचे पेमेंट (UTR: ${utr}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरी मिळताच तुम्हाला जनावराचा फोटो आणि माहिती ॲड करण्याचा फॉर्म उपलब्ध उपलब्ध होईल.`);
+        alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच अनलॉक करण्यात आला आहे!`);
+        
+        // Redirect directly to the add animal form
+        window.location.href = "add_animal_form.html"; 
     }
 </script>
 
