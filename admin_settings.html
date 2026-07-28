@@ -587,7 +587,7 @@
                         <!-- Dynamic Ads will be injected here by JS -->
                     </div>
 
-                    <button class="btn-prime" style="background:#2e7d32; margin-bottom:15px; width:auto; padding:8px 15px; font-size:13px;" onclick="addNewAdBlock()">➕ नवीन जाहिरात جوडा</button>
+                    <button class="btn-prime" style="background:#2e7d32; margin-bottom:15px; width:auto; padding:8px 15px; font-size:13px;" onclick="addNewAdBlock()">➕ नवीन जाहिरात जोडा</button>
 
                     <div class="grid-2">
                         <button class="btn-prime" style="background: #ff9800;" onclick="publishAdImages()">🚀 सर्व जाहिराती लाईव्ह करा</button>
@@ -836,15 +836,15 @@
             <div id="m26" class="tab-content">
                 <div class="admin-card">
                     <h4>💰 पेमेंट गेटवे (Payment Config)</h4>
-                    <div class="field"><label>Active Gateway</label><select id="m26_gw"><option>Razorpay</option><option>PhonePe</option><option>SidhaPay</option><option selected>Paytm</option></select></div>
+                    <div class="field"><label>Active Gateway</label><select id="m26_gw"><option selected>Razorpay</option><option>Paytm</option><option>PhonePe</option><option>SidhaPay</option></select></div>
                     <div class="grid-2">
-                        <div class="field"><label>API Key (Live)</label><input type="password" id="m26_key" value="NA" placeholder="Not required for Paytm UPI"></div>
-                        <div class="field"><label>Merchant ID (If SidhaPay/PhonePe)</label><input type="text" id="m26_merchant_id" placeholder="Merchant ID"></div>
+                        <div class="field"><label>API Key (Live)</label><input type="text" id="m26_key" value="rzp_live_TIkGEzUM5ygyd6" placeholder="Razorpay Key ID"></div>
+                        <div class="field"><label>Merchant ID / Key Secret</label><input type="password" id="m26_merchant_id" placeholder="Merchant ID or Secret"></div>
                     </div>
                     <div class="field"><label>GST % Applicable</label><input type="number" id="m26_gst" value="0"></div>
                     <div class="field"><label>Company Invoice Address</label><textarea id="m26_addr" rows="2">Dugdha Disha Pvt Ltd, Satara.</textarea></div>
-                    <div class="field"><label>Payee Name (UPI)</label><input type="text" id="upi_payee_name" value="दुग्ध दिशा AI"></div>
-                    <div class="field"><label>Merchant UPI ID (For Paytm/UPI)</label><input type="text" id="upi_id_value" value="paytm.s33ivru@pty"></div>
+                    <div class="field"><label>Payee Name (Company Name)</label><input type="text" id="upi_payee_name" value="दुग्ध दिशा AI"></div>
+                    <div class="field"><label>Support Email / Contact</label><input type="text" id="upi_id_value" value="support@dugdhadisha.com"></div>
                     <button class="btn-prime" onclick="saveModule('M26')">💾 Save Payment Settings</button>
                 </div>
 
@@ -1175,10 +1175,10 @@
         }
 
         // --- 🖼️ M13: DYNAMIC MULTIPLE ADS LOGIC ---
-        function addNewAdBlock(text = '', url = '', img1 = '', img2 = '', img3 = '') {
+        function addNewAdBlock(text = '', url = '', img1 = '', img2 = '', img3 = '', uniqueId = null) {
             let container = document.getElementById('dynamic_ads_container');
             let div = document.createElement('div');
-            let uniqueId = Math.floor(Math.random() * 10000);
+            uniqueId = uniqueId !== null ? uniqueId : Math.floor(Math.random() * 10000);
             div.className = 'ad-block';
             div.style.cssText = 'background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd; position:relative;';
             
