@@ -10,6 +10,9 @@
     <!-- Load Cropper.js Script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
     <style>
         :root { --b-primary: #0d47a1; --b-secondary: #1565c0; --b-accent: #ff9800; --bg-color: #f5f7fa; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; position: relative; }
@@ -145,7 +148,7 @@
         .buy-btn-new.btn-filled { background: #e65100; color: white; box-shadow: 0 4px 10px rgba(230,81,0,0.3);}
         .buy-btn-new:active { transform: scale(0.98);}
 
-        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; text-align: center; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; transition: 0.3s; }
+        .btn-upi-direct { display: block; width: 100%; background: #1b5e20; color: white; text-align: center; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3); margin-bottom: 15px; transition: 0.3s; cursor: pointer; border: none; }
         .btn-upi-direct:active { transform: scale(0.98); background: #2e7d32; }
 
         .ad-scroll-wrapper { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
@@ -197,9 +200,9 @@
         /* Shop iframe container */
         .shop-iframe-container { width: 100%; height: calc(100vh - 150px); border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
 
-        /* Loader Overlay (Paytm Auto Intent) */
+        /* Loader Overlay (Razorpay) */
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--b-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
@@ -1032,37 +1035,6 @@
         </div>
     </div>
 
-    <!-- 🔥 SECURE PAYMENT MODAL (KEPT HIDDEN FOR CODE INTEGRITY) 🔥 -->
-    <div class="modal-overlay" id="payment_modal">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:#d32f2f; border-bottom:2px solid #eee; padding-bottom:10px;">सुरक्षित पेमेंट गेटवे (Secure Pay)</h3>
-            
-            <div style="text-align: center; margin: 15px 0;">
-                <div style="font-size: 35px; color: #1b5e20;">₹<span id="pay_amt_display">0</span></div>
-                <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाम: दुग्ध दिशा AI</div>
-                <div style="font-size:11px; color:#666;" id="payment_upi_id_display">UPI ID: paytm.s33ivru@pty</div>
-            </div>
-
-            <div id="upi_intent_section" style="text-align: center; margin-bottom: 15px;">
-                <a href="#" id="direct_pay_btn" class="btn-upi-direct" onclick="triggerUPIPayment()">📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)</a>
-                <p style="font-size:11px; color:#888; margin-top: 5px;">(क्लिक केल्यावर तुमच्या मोबाईलमधील पेमेंट ॲप उघडेल)</p>
-            </div>
-
-            <div class="field" style="margin-top: 20px;">
-                <label>पेमेंट झाल्यानंतर 12 अंकी UTR / Reference Number टाका (किंवा खाली स्क्रीनशॉट द्या) *</label>
-                <input type="number" id="pay_utr" placeholder="उदा. 312345678901 येथे टाईप करा..." style="border-color:#ff9800; border-width:2px; background: #fff;">
-            </div>
-
-            <div class="field">
-                <label>पेमेंटचा स्क्रीनशॉट अपलोड करा (Payment Proof)</label>
-                <input type="file" id="pay_screenshot" accept="image/*" style="background:#f8fafc; padding:5px;">
-            </div>
-
-            <button class="btn-action btn-premium" id="manual_confirm_btn" style="margin-top:10px;" onclick="confirmOfflinePayment()">✅ पेमेंट कन्फर्म करा</button>
-            <button class="btn-action" style="background:#e0e0e0; color:#333; margin-top:10px; box-shadow:none;" onclick="closePaymentModal()">✕ रद्द करा</button>
-        </div>
-    </div>
-
     <!-- 🔥 STRICT LOCK NOTIFICATION MODAL 🔥 -->
     <div class="modal-overlay" id="strict_lock_modal" style="z-index: 3000;">
         <div class="modal-box" style="border: 3px solid #c62828;">
@@ -1264,16 +1236,26 @@
         let currentIntendedTab = null;
         let ledgerTotalDues = 0;
         let isAccountLocked = false;
-        
-        window.pendingPackageBuy = null; 
-        window.pendingOrderCommission = null;
-        window.pendingLeadUnlock = null;
-        window.pendingLedgerClearance = false;
 
         // CROPPER GLOBALS
         let cropper = null;
         let currentTargetContainerId = '';
         let uploadedImagesCount = 0;
+
+        // --- 🔥 FIREBASE INITIALIZATION 🔥 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
 
         function initializeDashboard() {
             loadAdminAdPrices(); 
@@ -1300,28 +1282,68 @@
             loadSupportTickets();
         }
 
-        // 🔥 NEW: Auto-Payment Logic (Paytm UPI Intent) 🔥
-        function processAutoPayment(amount, transactionNote, successCallback) {
-            let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
-            let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
-            let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+        function loadAdminAdPrices() {
+            // Placeholder function internally to not break the load flow
+        }
+
+        // 🔥 NEW: Razorpay Auto-Payment Logic 🔥
+        function processRazorpayPayment(amount, planName, transactionNote, successCallback) {
+            let numAmount = parseFloat(amount);
             
-            if(confirm(`एकूण रक्कम: ₹${amount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर प्लॅन/सुविधा आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
-                let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-                
-                document.getElementById('loader').style.display = 'flex';
-                window.location.href = upiLink;
-                
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
-                    if(confirmation) {
-                        successCallback();
-                    } else {
-                        alert("पेमेंट कॅन्सल झाले किंवा पूर्ण होऊ शकले नाही.");
-                    }
-                }, 8000);
+            if(numAmount <= 0) {
+                successCallback();
+                return;
             }
+
+            let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+            let userName = localStorage.getItem('current_user_name') || "व्यापारी मित्र";
+
+            let amountInPaise = numAmount * 100;
+
+            var options = {
+                "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
+                "amount": amountInPaise, 
+                "currency": "INR",
+                "name": "दुग्ध दिशा AI",
+                "description": transactionNote,
+                "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", 
+                "handler": function (response) {
+                    let paymentId = response.razorpay_payment_id;
+                    
+                    // Save payment log in Firebase
+                    let paymentRecord = {
+                        farmerName: userName,
+                        mobile: userMobile,
+                        planName: planName,
+                        amount: numAmount,
+                        paymentId: paymentId,
+                        note: transactionNote,
+                        date: new Date().toLocaleString()
+                    };
+                    
+                    db.collection("successful_payments").add({
+                        ...paymentRecord,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.log("Firebase log error", e));
+
+                    successCallback();
+                },
+                "prefill": {
+                    "name": userName,
+                    "contact": userMobile
+                },
+                "theme": {
+                    "color": "#0d47a1"
+                }
+            };
+
+            var rzp1 = new Razorpay(options);
+            
+            rzp1.on('payment.failed', function (response){
+                alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+            });
+            
+            rzp1.open();
         }
 
         // ✅ NEW: AD MODE TOGGLE
@@ -1735,7 +1757,6 @@
         function saveCroppedImage() {
             if(!cropper) return;
 
-            // युजरला प्रोसेसिंग समजावे म्हणून बटण अपडेट करणे
             let saveBtn = document.querySelector('.crop-btn.save');
             let originalText = saveBtn.innerHTML;
             saveBtn.innerHTML = "⏳ Uploading...";
@@ -1747,13 +1768,12 @@
                 imageSmoothingQuality: 'high'
             });
 
-            // Canvas चे Blob मध्ये रूपांतर करून Cloudinary वर पाठवणे
             canvas.toBlob(function(blob) {
                 const formData = new FormData();
                 formData.append("file", blob);
-                formData.append("upload_preset", "DugdhdishaAI"); // तुमचा Preset Name
+                formData.append("upload_preset", "DugdhdishaAI"); 
                 
-                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; // तुमचे Cloud Name
+                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; 
 
                 fetch(cloudinaryUrl, {
                     method: "POST",
@@ -1762,7 +1782,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.secure_url) {
-                        let finalImageSrc = data.secure_url; // Cloudinary ची खरी लिंक
+                        let finalImageSrc = data.secure_url; 
 
                         let container = document.getElementById(currentTargetContainerId);
                         let imgWrapper = document.createElement('div');
@@ -2238,7 +2258,7 @@
         }
 
         function payCommissionForOrder(orderId, amount) {
-            processAutoPayment(Math.ceil(amount), "Comm_" + orderId, () => {
+            processRazorpayPayment(amount, "COD Commission", "Comm_" + orderId, () => {
                 let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
                 let orderIndex = orders.findIndex(o => o.id === orderId);
                 
@@ -2253,7 +2273,7 @@
         }
 
         function unlockLead(btn, mobile, name) {
-            processAutoPayment(99, "Lead_Unlock", () => {
+            processRazorpayPayment(99, "Lead Unlock", "Lead_" + mobile, () => {
                 alert(`🎉 पेमेंट यशस्वी!\n\nया लीडचा मोबाईल नंबर अनलॉक झाला आहे: ${mobile}`);
             });
         }
@@ -2263,7 +2283,7 @@
                 alert("तुमची कोणतीही थकबाकी नाही. धन्यवाद!");
                 return;
             }
-            processAutoPayment(Math.ceil(ledgerTotalDues), "All_Dues_Clearance", () => {
+            processRazorpayPayment(ledgerTotalDues, "Clear Ledger Dues", "All_Dues_Clearance", () => {
                 let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
                 let myName = localStorage.getItem("current_user_name");
                 let myMobile = localStorage.getItem("current_user_mobile");
@@ -2374,7 +2394,7 @@
                 if(order.paymentMethod === 'COD' && !isCommissionPaid) {
                     actionButtons = `<div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
                         <p style="font-size: 11px; color: #d32f2f; margin: 0 0 5px 0;">⚠️ ही COD ऑर्डर आहे. ग्राहकाचा संपर्क क्रमांक पाहण्यासाठी आणि ऑर्डर पूर्ण करण्यासाठी आधी प्लॅटफॉर्म फी (₹${Math.ceil(totalCommission)}) भरा.</p>
-                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.id}', ${Math.ceil(totalCommission)})">🔒 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
+                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.id}', ${Math.ceil(totalCommission)})">💳 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
                     </div>`;
                     
                     ledgerTotalDues += totalCommission;
@@ -2449,15 +2469,35 @@
             });
         }
 
+        // 🔥 FIXED: Robust Price Calculation function 🔥
         function buyPlan(businessPlanName, farmerBonusId) {
-            let priceVal = "0";
-            if(businessPlanName === 'Starter') priceVal = document.querySelectorAll('.price-val')[0].innerText.replace(/,/g, '');
-            if(businessPlanName === 'Silver Seller') priceVal = document.querySelectorAll('.price-val')[1].innerText.replace(/,/g, '');
-            if(businessPlanName === 'Corporate Partner') priceVal = document.querySelectorAll('.price-val')[2].innerText.replace(/,/g, '');
+            // १. मूळ किमती मिळवणे
+            let adminPrices = JSON.parse(localStorage.getItem('admin_business_prices')) || { starter: 499, smart: 999, brand: 1999 };
+            let basePrice = 0;
+            
+            if(businessPlanName === 'Starter') basePrice = adminPrices.starter;
+            else if(businessPlanName === 'Silver Seller') basePrice = adminPrices.smart;
+            else if(businessPlanName === 'Corporate Partner') basePrice = adminPrices.brand;
 
-            processAutoPayment(priceVal, "Plan_" + businessPlanName, () => {
+            // २. कोणता प्लॅन (महिना/६ महिने/१ वर्ष) सिलेक्ट आहे ते तपासणे
+            let activeToggle = document.querySelector('.toggle-btn-bill.active-toggle').innerText;
+            let multiplier = 1; 
+            let discount = 0; 
+            let daysToAdd = 30;
+            
+            if(activeToggle.includes('६ महिने')) { 
+                multiplier = 6; discount = 0.10; daysToAdd = 180;
+            } else if (activeToggle.includes('वार्षिक')) { 
+                multiplier = 12; discount = 0.20; daysToAdd = 365;
+            }
+
+            // ३. अचूक किमतीचे कॅल्क्युलेशन (मराठी अक्षरांचा प्रॉब्लेम टाळण्यासाठी)
+            let finalPriceVal = Math.round((basePrice * multiplier) * (1 - discount));
+
+            // ४. Razorpay ला अचूक किंमत पाठवणे
+            processRazorpayPayment(finalPriceVal, "Business Plan", "Plan_" + businessPlanName, () => {
                 let expiryDate = new Date();
-                expiryDate.setDate(expiryDate.getDate() + 30); 
+                expiryDate.setDate(expiryDate.getDate() + daysToAdd); 
                 
                 let bPlanObj = {
                     name: businessPlanName,
@@ -2469,7 +2509,7 @@
                 localStorage.setItem("current_business_plan_details", JSON.stringify(bPlanObj));
                 localStorage.setItem("current_farmer_plan", farmerBonusId);
                 
-                alert(`🎉 पेमेंट यशस्वी!\nतुमचा '${businessPlanName}' प्लॅन स्वयंचलितपणे (Automatically) ३० दिवसांसाठी ऍक्टिव्हेट झाला आहे.`);
+                alert(`🎉 पेमेंट यशस्वी!\nतुमचा '${businessPlanName}' प्लॅन स्वयंचलितपणे (Automatically) ऍक्टिव्हेट झाला आहे.`);
                 initializeDashboard();
             });
         }
@@ -2592,7 +2632,61 @@
             document.getElementById('training_event_date').value = '';
         }
 
-        // 🔥 NEW: initiatePayment updated to support Automatic Ad Activation
+        function calculateAdEstimation() {
+            let modelSelect = document.getElementById('campaign_model');
+            let adTypeSelect = document.getElementById('campaign_type');
+            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
+            let budgetInput = document.getElementById('campaign_budget').value;
+            let estText = document.getElementById('ad_estimation_text');
+            
+            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
+
+            let adminPrices = JSON.parse(localStorage.getItem('admin_business_prices')) || {};
+            
+            let fixedRate = 499; 
+            
+            if(adTypeSelect.value === 'Target_Ration') fixedRate = adminPrices.ad_ration || 499;
+            else if(adTypeSelect.value === 'Target_Disease') fixedRate = adminPrices.ad_disease || 299;
+            else if(adTypeSelect.value === 'Target_Calf') fixedRate = adminPrices.ad_calf || 399;
+            else if(adTypeSelect.value === 'Target_Reproduction') fixedRate = adminPrices.ad_repro || 499;
+            else if(adTypeSelect.value === 'Target_Weather') fixedRate = adminPrices.ad_weather || 299;
+            else if(adTypeSelect.value === 'Target_BCS') fixedRate = adminPrices.ad_bcs || 399;
+            else if(adTypeSelect.value === 'Target_Vaccine') fixedRate = adminPrices.ad_vaccine || 299;
+            else if(adTypeSelect.value === 'Target_PoisonDiet') fixedRate = adminPrices.ad_poison || 299;
+            else if(adTypeSelect.value === 'Target_Milking') fixedRate = adminPrices.ad_milk || 499;
+            
+            else if(adTypeSelect.value === 'Home Banner') fixedRate = adminPrices.ad_banner || 2000;
+            else if(adTypeSelect.value === 'Sponsored Product') fixedRate = adminPrices.ad_sponsored || 500;
+            else if(adTypeSelect.value === 'Push Notification') fixedRate = adminPrices.ad_push || 300;
+            else if(adTypeSelect.value === 'District Targeted') fixedRate = adminPrices.ad_district || 1000;
+            else if(adTypeSelect.value === 'Generic_Promotion') fixedRate = 999; 
+
+            modelSelect.innerHTML = `<option value="Fixed">Fixed Rate (₹${fixedRate})</option>`;
+            
+            if(budgetInput && budgetInput > 0) {
+                estText.style.display = 'block';
+                if(budgetInput < fixedRate) {
+                    estText.innerHTML = `⚠️ <b>चेतावणी:</b> या जाहिरातीसाठी किमान बजेट <b>₹${fixedRate}</b> असणे आवश्यक आहे.`;
+                    estText.style.color = '#c62828';
+                    estText.style.background = '#ffebee';
+                    estText.style.borderColor = '#ffcdd2';
+                } else {
+                    let duration = "१ महिना";
+                    if(adTypeSelect.value === 'Target_Ration') duration = "१५ दिवस";
+                    else if(adTypeSelect.value === 'Sponsored Product') duration = "१ आठवडा";
+                    else if(adTypeSelect.value === 'Push Notification') duration = "१ कॅम्पिंग (एकदा)";
+                    
+                    estText.innerHTML = `✅ <b>उत्तम!</b> तुमचे बजेट योग्य आहे. तुमची <b>'${isGenericAd ? 'Generic Branding' : adType}'</b> जाहिरात <b>${duration}</b> ॲपमध्ये सक्रिय राहील.`;
+                    estText.style.color = '#1b5e20';
+                    estText.style.background = '#e8f5e9';
+                    estText.style.borderColor = '#c8e6c9';
+                }
+            } else {
+                estText.style.display = 'none';
+            }
+        }
+
+        // 🔥 NEW: initiatePayment updated to support Razorpay Automatic Ad Activation
         function initiatePayment() {
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
@@ -2634,7 +2728,7 @@
                 return; 
             }
 
-            processAutoPayment(budget, "Ad_" + campaignType, () => {
+            processRazorpayPayment(budget, "Ad Campaign", "Ad_" + campaignType, () => {
                 // 1. Add to live ads directly
                 let liveAds = JSON.parse(localStorage.getItem('live_admin_ad_images')) || { ads: [], active: false, place: 'Home Slider' };
                 liveAds.ads.push({
@@ -2657,7 +2751,7 @@
                     url: url,
                     budget: budget,
                     images: images, 
-                    utr: "Auto_UPI",
+                    utr: "Razorpay_Auto",
                     hasScreenshot: false,
                     status: "Approved & Live", // Auto approved
                     date: new Date().toLocaleDateString(),
@@ -2677,181 +2771,6 @@
                 refreshMyAds();
             });
         }
-
-        // Keep old function structures unmodified to prevent code cuts
-        function triggerUPIPayment() {
-            let amt = document.getElementById('pay_amt_display').innerText;
-            let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty" };
-            let payeeName = paymentSettings.payee_name ? encodeURIComponent(paymentSettings.payee_name) : "Dugdha%20Disha%20AI";
-            let upiId = paymentSettings.upi_id;
-
-            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amt}&cu=INR`;
-            window.location.href = upiLink;
-
-            let btn = document.getElementById('direct_pay_btn');
-            btn.innerHTML = "⏳ पेमेंट झाल्यानंतर खाली UTR नंबर टाका";
-            btn.style.background = "#f57c00";
-            btn.style.pointerEvents = "none";
-        }
-
-        function confirmOfflinePayment() {
-            let utr = document.getElementById('pay_utr').value.trim();
-            let screenshotUploaded = document.getElementById('pay_screenshot').files.length > 0;
-
-            if(utr.length < 10 && !screenshotUploaded) { 
-                alert("⚠️ कृपया ॲपमध्ये पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर टाका किंवा पेमेंटचा स्क्रीनशॉट अपलोड करा!"); 
-                return; 
-            }
-
-            if(window.pendingOrderCommission) {
-                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
-                pendingCommissions.push({
-                    id: "COM" + Math.floor(Math.random() * 90000),
-                    orderId: window.pendingOrderCommission,
-                    amount: document.getElementById('pay_amt_display').innerText,
-                    utr: utr,
-                    hasScreenshot: screenshotUploaded,
-                    status: "Pending Approval",
-                    date: new Date().toLocaleDateString()
-                });
-                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
-
-                alert(`🎉 पेमेंट रिक्वेस्ट (UTR: ${utr || 'Screenshot'}) ॲडमिनकडे गेली आहे!\n\nॲडमिनने पेमेंट कन्फर्म केल्यानंतर या ऑर्डरचा मोबाईल नंबर दिसेल आणि तुम्ही माल पाठवू शकाल.`);
-                closePaymentModal();
-                window.pendingOrderCommission = null;
-                return;
-            }
-
-            if(window.pendingLeadUnlock) {
-                alert(`🎉 पेमेंट रिक्वेस्ट ॲडमिनकडे गेली आहे!\n\nमंजुरीनंतर या लीडचा मोबाईल अनलॉक होईल.`);
-                closePaymentModal();
-                window.pendingLeadUnlock = null;
-                return;
-            }
-
-            if(window.pendingLedgerClearance) {
-                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
-                pendingCommissions.push({
-                    id: "COM" + Math.floor(Math.random() * 90000),
-                    orderId: "ALL_DUES",
-                    amount: document.getElementById('pay_amt_display').innerText,
-                    utr: utr,
-                    hasScreenshot: screenshotUploaded,
-                    status: "Pending Approval",
-                    date: new Date().toLocaleDateString()
-                });
-                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
-
-                alert(`🎉 तुमचे संपूर्ण बाकीचे पेमेंट (UTR: ${utr || 'Screenshot'}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरीनंतर तुमचे खाते निरंक होईल.`);
-                closePaymentModal();
-                window.pendingLedgerClearance = false;
-                
-                isAccountLocked = false; 
-                document.getElementById('strict_lock_modal').style.display = 'none';
-                return;
-            }
-
-            if(window.pendingPackageBuy) {
-                let expiryDate = new Date();
-                expiryDate.setDate(expiryDate.getDate() + 30); 
-                
-                let bPlanObj = {
-                    name: window.pendingPackageBuy.bPlan,
-                    expiryDate: expiryDate.toISOString(),
-                    activatedOn: new Date().toISOString()
-                };
-
-                localStorage.setItem("current_business_plan", window.pendingPackageBuy.bPlan);
-                localStorage.setItem("current_business_plan_details", JSON.stringify(bPlanObj));
-                localStorage.setItem("current_farmer_plan", window.pendingPackageBuy.fPlan);
-                
-                alert(`🎉 पेमेंट यशस्वी! (UTR: ${utr || 'Screenshot'})\nतुमचा '${window.pendingPackageBuy.bPlan}' प्लॅन स्वयंचलितपणे (Automatically) ३० दिवसांसाठी ऍक्टिव्हेट झाला आहे.`);
-                
-                document.getElementById('payment_modal').style.display = 'none';
-                window.pendingPackageBuy = null;
-                document.getElementById('pay_utr').value = '';
-                
-                let btn = document.getElementById('direct_pay_btn');
-                btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
-                btn.style.background = "#1b5e20";
-                btn.style.pointerEvents = "auto";
-                
-                initializeDashboard();
-                return;
-            }
-
-            let adTypeSelect = document.getElementById('campaign_type');
-            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
-            let location = document.getElementById('campaign_location').value;
-            let audience = document.getElementById('campaign_audience').value;
-            let title = document.getElementById('campaign_title').value;
-            let budget = document.getElementById('campaign_budget').value;
-            let campaignType = document.getElementById('campaign_type').value;
-            
-            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
-            if(isGenericAd) {
-                campaignType = 'Generic_Promotion';
-            }
-            let url = campaignType === 'Generic_Promotion' ? '#' : (document.getElementById('campaign_product_select').value || '#');
-            
-            let imageContainer = document.getElementById('ad_image_preview_container');
-            let images = [];
-            let imageCards = imageContainer.querySelectorAll('img');
-            imageCards.forEach(img => images.push(img.src));
-            
-            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            let newAdId = "AD" + Math.floor(Math.random() * 90000);
-            pendingAds.push({
-                id: newAdId,
-                type: adType,
-                location: location,
-                audience: audience,
-                title: title,
-                url: url,
-                budget: budget,
-                images: images, 
-                utr: utr,
-                hasScreenshot: screenshotUploaded,
-                status: "Pending Approval",
-                date: new Date().toLocaleDateString(),
-                vendorName: localStorage.getItem("current_user_name") || "",
-                isGeneric: isGenericAd
-            });
-            localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
-
-            document.getElementById('payment_modal').style.display = 'none';
-            alert(`🎉 तुमचे पेमेंट (UTR: ${utr || 'Screenshot'}) सिस्टीममध्ये सबमिट झाले आहे!\n\nॲडमिन पेमेंट तपासून लवकरच तुमची जाहिरात लाईव्ह करतील.`);
-            
-            document.getElementById('campaign_title').value = '';
-            if (campaignType !== 'Generic_Promotion') document.getElementById('campaign_product_select').value = '';
-            document.getElementById('campaign_budget').value = '';
-            document.getElementById('pay_utr').value = '';
-            document.getElementById('ad_image_preview_container').innerHTML = '';
-            document.getElementById('ad_estimation_text').style.display = 'none';
-
-            let btn = document.getElementById('direct_pay_btn');
-            btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
-            btn.style.background = "#1b5e20";
-            btn.style.pointerEvents = "auto";
-            
-            checkVendorNotifications(); 
-            refreshMyAds();
-        }
-
-        function closePaymentModal() {
-            document.getElementById('payment_modal').style.display = 'none';
-            window.pendingPackageBuy = null;
-            window.pendingOrderCommission = null;
-            window.pendingLeadUnlock = null;
-            window.pendingLedgerClearance = false;
-            
-            let btn = document.getElementById('direct_pay_btn');
-            btn.innerHTML = "📲 मोबाईल ॲपमधून थेट पे करा (GPay/PhonePe)";
-            btn.style.background = "#1b5e20";
-            btn.style.pointerEvents = "auto";
-            document.getElementById('pay_utr').value = '';
-        }
     </script>
-    <script src="fcm_setup.js"></script>
 </body>
 </html>
