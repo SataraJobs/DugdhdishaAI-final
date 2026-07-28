@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         .form-section { background: #eef2f5; padding: 20px; margin: 15px 20px; border-radius: 16px; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); }
         .form-section label { display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
@@ -28,6 +31,14 @@
         .advice-box { padding: 15px; border-radius: 10px; text-align: left; font-size: 13.5px; line-height: 1.6; }
         .advice-box h4 { margin: 0 0 10px; font-size: 15px; }
 
+        /* 🔥 AI Gemini Recommendation Section 🔥 */
+        .gemini-advice-box { background: #fffde7; border: 2px dashed #fbc02d; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: left; display: none; }
+        .gemini-advice-box h4 { margin: 0 0 10px; color: #f57f17; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .gemini-content { font-size: 13.5px; color: #3e2723; line-height: 1.6; }
+        
+        .btn-gemini { background: linear-gradient(145deg, #fbc02d, #f57f17); color: #3e2723; width: 100%; padding: 12px; border: 2px solid #f9a825; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 10px rgba(251, 192, 45, 0.3); animation: pulse-glow 2s infinite; }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); } }
+
         /* 🔥 AI Recommendation Ad Section (Fallback) */
         .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 12px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; text-align: left; }
         .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
@@ -43,9 +54,21 @@
         .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
         .vendor-product-flex { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
         .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #64b5f6; background: #fff;}
+
+        /* 🔥 STRICT PAYWALL OVERLAY MODAL 🔥 */
+        .paywall-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);}
+        .paywall-box { background: #fff; padding: 25px 20px; border-radius: 16px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; animation: popUp 0.3s ease-out;}
+        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .paywall-icon { font-size: 50px; margin-bottom: 10px; line-height: 1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2)); }
+        .paywall-title { color: #d32f2f; font-size: 20px; font-weight: 900; margin: 0 0 5px; }
+        .paywall-desc { font-size: 13px; color: #555; margin: 0 0 15px; line-height: 1.5; font-weight: 600;}
+        .paywall-price-tag { background: #fff3e0; color: #e65100; border: 2px dashed #ffb300; padding: 10px; border-radius: 8px; font-size: 18px; font-weight: 900; margin-bottom: 20px;}
+        .btn-pay-now { background: linear-gradient(145deg, #0d47a1, #1976d2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3); text-decoration: none; display: block; box-sizing: border-box;}
+        .btn-pay-close { background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
     </style>
 </head>
-<body onload="syncProducts()">
+<body onload="initTHIPage()">
 
 <div class="app-container">
     <div class="top-dashboard" style="background: #1976d2; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
@@ -56,7 +79,7 @@
         </div>
     </div>
 
-    <div class="category-title" style="margin-top: 20px;">आजचे हवामान तपासा</div>
+    <div class="category-title" style="margin-top: 20px; font-weight:bold; padding: 0 20px; font-size:16px; color:#1565c0;">आजचे हवामान तपासा</div>
 
     <div class="form-section">
         
@@ -90,6 +113,16 @@
             <div id="advice_text">--</div>
         </div>
 
+        <!-- 🔥 GEMINI AI BUTTON 🔥 -->
+        <button id="btn_gemini_trigger" class="btn-gemini" style="display:none;" onclick="checkPremiumAndFetchGemini()">✨ AI कडून गाईंसाठी खास उपाय विचारा (Gemini 1.5)</button>
+        
+        <div id="gemini_loader" style="font-size: 13px; color: #f57f17; font-weight: bold; font-style: italic; display: none; text-align: center; padding: 10px;">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
+
+        <div class="gemini-advice-box" id="gemini_response_box">
+            <h4>✨ दुग्ध दिशा AI विशेष सल्ला:</h4>
+            <div class="gemini-content" id="gemini_content_text"></div>
+        </div>
+
         <!-- 🔥 CONTAINER FOR DYNAMIC PHARMA ADS -->
         <div id="thi_pharma_ad"></div>
 
@@ -97,6 +130,20 @@
         <div style="font-size: 10.5px; color: #666; line-height: 1.3; border-top: 1px dashed #ddd; padding-top: 8px; margin-top: 15px; text-align: justify;">
             * ⚠️ <b>कायदेशीर सूचना:</b> येथे दिलेली माहिती केवळ प्राथमिक माहितीसाठी आहे. जनावराला उष्माघात झाल्यास किंवा प्रकृती गंभीर असल्यास <b>पशुवैद्यकाचा (Veterinary Doctor) त्वरित सल्ला घ्यावा</b>. 
         </div>
+    </div>
+</div>
+
+<!-- 🔥 PAYWALL OVERLAY MODAL 🔥 -->
+<div class="paywall-overlay" id="thi_paywall_overlay">
+    <div class="paywall-box">
+        <div class="paywall-icon">🔒</div>
+        <h3 class="paywall-title">प्रीमियम AI मार्गदर्शन</h3>
+        <p class="paywall-desc">तुमच्या गाईला उष्माघातापासून (Heat Stress) वाचवण्यासाठी आणि दूध टिकवण्यासाठी AI कडून अचूक वैयक्तिक सल्ला मिळवा.</p>
+        
+        <div class="paywall-price-tag">₹ २९ / २४ तास</div>
+        
+        <button class="btn-pay-now" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे सुरक्षित पेमेंट करा</button>
+        <button class="btn-pay-close" onclick="document.getElementById('thi_paywall_overlay').style.display='none'">✕ रद्द करा</button>
     </div>
 </div>
 
@@ -115,6 +162,14 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    let globalTHIData = {};
+    let CURRENT_MODEL = "";
+
+    function initTHIPage() {
+        syncProducts();
+        document.getElementById('thi_paywall_overlay').style.display = 'none';
+    }
 
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
@@ -155,7 +210,7 @@
                     </div>
                 </div>`;
         }
-        return fallbackHtml; // Return static HTML if no match is found
+        return fallbackHtml; 
     }
 
     // 1. Hybrid Weather Fetcher (GPS -> Fallback to IP Network Location)
@@ -165,7 +220,6 @@
         btn.style.background = "#9e9e9e";
         btn.style.boxShadow = "0 4px 0 #616161";
 
-        // प्रयत्न 1: GPS द्वारे लोकेशन घेणे (यामुळे पॉप-अप येऊ शकतो)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -174,17 +228,16 @@
                     getWeatherFromCoords(lat, lon, btn, "तुमच्या");
                 },
                 (error) => {
-                    // प्रयत्न 2: जर पॉप-अप ब्लॉक झाला किंवा GPS बंद असेल, तर 'IP' द्वारे लोकेशन घ्या (No Permission Needed!)
                     getWeatherFromIP(btn);
                 },
-                { timeout: 3000 } // फक्त 3 सेकंद वाट पाहेल, नाहीतर IP वर जाईल
+                { timeout: 3000 } 
             );
         } else {
             getWeatherFromIP(btn);
         }
     }
 
-    // IP द्वारे लोकेशन शोधणे (Zero Permission)
+    // IP द्वारे लोकेशन शोधणे
     function getWeatherFromIP(btn) {
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
@@ -216,7 +269,6 @@
                 
                 setTimeout(() => { resetBtn(btn); }, 3000);
                 
-                // लगेच THI कॅल्क्युलेट करा
                 calculateTHI();
             })
             .catch(err => {
@@ -238,9 +290,10 @@
 
         if (!tempC || !rh) { alert("कृपया तापमान आणि आर्द्रता (Humidity) टाका."); return; }
 
-        // Standard THI Formula
         let thi = (1.8 * tempC + 32) - ((0.55 - 0.0055 * rh) * (1.8 * tempC - 26));
         thi = Math.round(thi);
+
+        globalTHIData = { temp: tempC, humidity: rh, score: thi };
 
         // 🔥 FIREBASE: LOG THI CALCULATION 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
@@ -264,7 +317,10 @@
 
         scoreDisplay.innerText = thi;
         resultBox.style.display = "block";
-        adBox.innerHTML = ""; // Clear old ad
+        document.getElementById('btn_gemini_trigger').style.display = "block";
+        document.getElementById('gemini_response_box').style.display = "none";
+        
+        adBox.innerHTML = ""; 
         let htmlAd = "";
 
         if (thi < 72) {
@@ -277,13 +333,10 @@
             adviceText.innerHTML = "हवामान गाईंसाठी अत्यंत अनुकूल आहे. दूध उत्पादनात कोणताही परिणाम होणार नाही. नेहमीप्रमाणे आहार चालू ठेवा.";
             resultBox.style.borderTopColor = "#2e7d32";
             
-            // Ad for regular milk production
             let fallbackAd1 = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🥛 दूध उत्पादन वाढवण्यासाठी</h4>
-                    <p>सध्या हवामान उत्तम आहे. दुधातील फॅट टिकवण्यासाठी <b>गोदरेज ॲग्रोव्हेट - मिल्क पेलेट</b> चा वापर करा.</p>
-                    <span class="sponsor-tag">Sponsored by गोदरेज ॲग्रोव्हेट</span>
-                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                    <p>सध्या हवामान उत्तम आहे. दुधातील फॅट टिकवण्यासाठी <b>मिल्क पेलेट</b> चा वापर करा.</p>
                 </div>`;
             htmlAd = generateDynamicAd('Milk_Increase', fallbackAd1, "🥛 दूध उत्पादन वाढवण्यासाठी:");
                 
@@ -297,13 +350,10 @@
             adviceText.innerHTML = "• गाईचा श्वासोच्छ्वास थोडा वाढेल.<br>• <b>उपाय:</b> गोठ्यात हवा खेळती राहू द्या. पंखे चालू करा आणि पिण्यासाठी २४ तास थंड पाणी उपलब्ध ठेवा.";
             resultBox.style.borderTopColor = "#f57c00";
             
-            // Ad for Mild Stress Relief
             let fallbackAd2 = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🌬️ उष्णतेचा ताण कमी करण्यासाठी</h4>
-                    <p>गाईंचा ताण कमी करण्यासाठी आणि दूध टिकवण्यासाठी त्यांना <b>Intas Electrolyte Power</b> पाण्यातून द्या.</p>
-                    <span class="sponsor-tag">Sponsored by Intas</span>
-                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                    <p>गाईंचा ताण कमी करण्यासाठी आणि दूध टिकवण्यासाठी त्यांना <b>Electrolyte Power</b> पाण्यातून द्या.</p>
                 </div>`;
             htmlAd = generateDynamicAd('Heat_Stress', fallbackAd2, "🌬️ उष्णतेचा ताण कमी करण्यासाठी:");
 
@@ -317,13 +367,10 @@
             adviceText.innerHTML = "• गाई चारा खाणे कमी करतील.<br>• <b>उपाय:</b> गोठ्यात <b>फॉगर्स (पाण्याचे तुषार)</b> सुरू करा. आहारात 'इलेक्ट्रोलाईट्स' (Electrolytes) पावडर आणि बायपास फॅटचा वापर सुरू करा. दिवसाऐवजी रात्री थंड वातावरणात चारा द्या.";
             resultBox.style.borderTopColor = "#d32f2f";
             
-            // Ad for Heat Stress / Immunity
             let fallbackAd3 = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🥵 दुधातील तूट भरून काढण्यासाठी</h4>
-                    <p>तीव्र उष्णतेमुळे गाईंची भूक कमी होते. ऊर्जेसाठी <b>Virbac Energy Booster</b> किंवा <b>Himalaya Liv.52</b> त्वरित सुरू करा.</p>
-                    <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
-                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                    <p>तीव्र उष्णतेमुळे गाईंची भूक कमी होते. ऊर्जेसाठी <b>Energy Booster</b> त्वरित सुरू करा.</p>
                 </div>`;
             htmlAd = generateDynamicAd('Weight_BypassFat', fallbackAd3, "🥵 ऊर्जेची तूट भरून काढण्यासाठी:");
                 
@@ -337,13 +384,10 @@
             adviceText.innerHTML = "• गाईंना उष्माघात (Heat Stroke) होऊ शकतो आणि दूध २५% पेक्षा जास्त घटेल.<br>• <b>उपाय:</b> जनावरांच्या अंगावर थेट पाणी मारा (अंघोळ घाला). फॉगर्स पूर्ण क्षमतेने चालवा. गोठ्याच्या छतावर पाचट टाकून सावली दाट करा.";
             resultBox.style.borderTopColor = "#b71c1c";
             
-            // Ad for Cooling System
             let fallbackAd4 = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🚨 उष्माघात संरक्षण (Cooling Systems)</h4>
                     <p>अति उष्णतेपासून गोठ्याचे संरक्षण करण्यासाठी 'कृषी मॉल' मधून <b>फॉगर्स (Foggers) आणि फॅन सिस्टीम</b> आजच खरेदी करा.</p>
-                    <span class="sponsor-tag">Sponsored by Agri-Tech Partners</span>
-                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
                 </div>`;
             htmlAd = generateDynamicAd('Heat_Stress_Equipment', fallbackAd4, "🚨 उष्माघात संरक्षण:");
         }
@@ -351,8 +395,180 @@
         adBox.innerHTML = htmlAd;
         resultBox.scrollIntoView({behavior: "smooth"});
     }
+
+    // --- 🔥 CHECK PREMIUM & FETCH GEMINI AI ---
+    function checkPremiumAndFetchGemini() {
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let thiProPrice = adminPrices.m25_f_pro || 29; 
+
+        let isPremiumUser = false;
+        
+        // जर किंमत 0 असेल किंवा प्लॅन ॲक्टिव्ह असेल तर
+        if (thiProPrice == 0) {
+            isPremiumUser = true;
+        } else if (activePlan) {
+            let now = new Date();
+            let expiry = new Date(activePlan.expiryDate);
+            if(now <= expiry && (activePlan.name.includes('प्रो') || activePlan.name.includes('ॲडव्हान्स') || activePlan.name.includes('सिल्व्हर') || activePlan.name.includes('दिशा प्राईम') || activePlan.name.includes('प्लॅटिनम'))) {
+                isPremiumUser = true;
+            } else if (now > expiry) {
+                localStorage.removeItem('farmer_active_plan');
+            }
+        }
+
+        if(isPremiumUser) {
+            fetchGeminiAdvice();
+        } else {
+            document.getElementById('thi_paywall_overlay').style.display = 'flex';
+        }
+    }
+
+    // --- 🔥 RAZORPAY PAYMENT LOGIC 🔥 ---
+    function triggerRazorpayPayment() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let numAmount = adminPrices.m25_f_pro || 29;
+        
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
+
+        let amountInPaise = numAmount * 100; 
+
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6", 
+            "amount": amountInPaise, 
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": "प्रीमियम AI मार्गदर्शन (THI)",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", 
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
+                
+                db.collection("successful_payments").add({
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: "THI Premium AI (24h)",
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                activatePlanAutomatically("24h", "THI Premium AI");
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": {
+                "color": "#0d47a1"
+            }
+        };
+
+        var rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        
+        rzp1.open();
+    }
+
+    function activatePlanAutomatically(type, planName) {
+        let now = new Date();
+        let expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 24); // Give 24 hours access
+
+        let activePlan = {
+            name: planName,
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active",
+            paymentMethod: "Razorpay"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        document.getElementById('thi_paywall_overlay').style.display = 'none';
+        
+        alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले. आता AI विश्लेषण सुरू करत आहे.`);
+        fetchGeminiAdvice();
+    }
+
+    // --- 🔥 GEMINI AI FETCH LOGIC 🔥 ---
+    async function fetchGeminiAdvice() {
+        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+        let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
+
+        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+            alert("⚠️ ॲडमिन पॅनेलमध्ये Google Gemini ची योग्य API Key जोडलेली नाही. कृपया आधी ती सेट करा.");
+            return;
+        }
+
+        document.getElementById('btn_gemini_trigger').style.display = "none";
+        document.getElementById('gemini_loader').style.display = "block";
+        document.getElementById('gemini_response_box').style.display = "none";
+
+        let gData = globalTHIData;
+        let promptText = `
+        तू दुग्ध दिशा ॲपचा एक तज्ज्ञ पशुवैद्यक आहेस. 
+        मी आजच्या हवामानाचे विश्लेषण केले आहे:
+        - तापमान: ${gData.temp}°C
+        - आर्द्रता: ${gData.humidity}%
+        - THI (उष्णता निर्देशांक): ${gData.score}
+        
+        शेतकऱ्याला मराठीत अत्यंत सोप्या ५-६ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
+        १. या हवामानात गाईला काय त्रास होऊ शकतो?
+        २. दुधात किती टक्के घट होऊ शकते?
+        ३. यावर २ सर्वात प्रभावी घरगुती किंवा तांत्रिक उपाय कोणते आहेत?
+        कोणताही तांत्रिक इंग्रजी शब्द वापरू नकोस. शेतकऱ्याला समजेल अशी साधी भाषा वापर.
+        `;
+
+        try {
+            if(!CURRENT_MODEL) {
+                let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                let mData = await mRes.json();
+                
+                if(mData.models) {
+                    let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                    if(validModel) { CURRENT_MODEL = validModel.name; }
+                }
+                if(!CURRENT_MODEL) CURRENT_MODEL = "models/gemini-1.5-flash"; 
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
+            const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                alert("AI Server Error: " + (data.error ? data.error.message : "Unknown error"));
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+                return;
+            }
+
+            if (data.candidates && data.candidates.length > 0) {
+                let aiResponse = data.candidates[0].content.parts[0].text;
+                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                
+                document.getElementById('gemini_content_text').innerHTML = aiResponse;
+                document.getElementById('gemini_loader').style.display = "none";
+                document.getElementById('gemini_response_box').style.display = "block";
+            }
+        } catch (error) {
+            alert("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये समस्या आहे.");
+            document.getElementById('btn_gemini_trigger').style.display = "block";
+            document.getElementById('gemini_loader').style.display = "none";
+        }
+    }
 </script>
 
-<script src="fcm_setup.js"></script>
 </body>
 </html>
