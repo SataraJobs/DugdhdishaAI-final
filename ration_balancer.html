@@ -602,7 +602,7 @@
             <!-- 🔥 NEW: GEMINI AI INTEGRATION BUTTON & BOX 🔥 -->
             <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)</button>
             
-            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत ভাগে... कृपया थांबा ⏳</div>
+            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
             
             <div class="gemini-response-box pdf-page-break" id="gemini_response_box">
                 <h4>✨ दुग्ध दिशा AI विशेष सल्ला:</h4>
@@ -846,21 +846,49 @@
         }
     }
 
+    // 🔥 NEW: Universal Access System Logic 🔥
     function isPlanActive(featureType) {
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         if(featureType === 'pro' && (adminPrices.m25_f_pro == 0 || !adminPrices.m25_f_pro)) return true;
         if(featureType === 'adv' && (adminPrices.m25_f_adv == 0 || !adminPrices.m25_f_adv)) return true;
 
+        // १. Check Farmer Active Plan
         let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
-        if(!activePlan) return false;
+        if(activePlan) {
+            let now = new Date(); 
+            let expiry = new Date(activePlan.expiryDate);
+            if(now > expiry) { 
+                localStorage.removeItem('farmer_active_plan'); 
+            } else {
+                let planName = activePlan.name.toLowerCase();
+                if(featureType === 'pro') { 
+                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('प्रो रेशन') || planName.includes('pro') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver')) return true; 
+                } 
+                else if(featureType === 'adv') { 
+                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('advance') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver')) return true; 
+                }
+            }
+        }
 
-        let now = new Date(); let expiry = new Date(activePlan.expiryDate);
-        if(now > expiry) { localStorage.removeItem('farmer_active_plan'); return false; }
+        // २. Check Business/Vendor Active Plan
+        let vendorPlan = JSON.parse(localStorage.getItem('current_business_plan_details'));
+        if(vendorPlan) {
+            let now = new Date();
+            let expiry = new Date(vendorPlan.expiryDate);
+            if(now > expiry) {
+                localStorage.removeItem('current_business_plan_details');
+            } else {
+                let planName = vendorPlan.name.toLowerCase();
+                if(featureType === 'pro') {
+                    if(planName.includes('starter') || planName.includes('silver') || planName.includes('corporate') || planName.includes('gold') || planName.includes('platinum')) return true;
+                }
+                else if(featureType === 'adv') {
+                    if(planName.includes('silver') || planName.includes('corporate') || planName.includes('gold') || planName.includes('platinum')) return true;
+                }
+            }
+        }
 
-        let planName = activePlan.name;
-        if(featureType === 'pro') { if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('प्रो रेशन') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम')) return true; } 
-        else if(featureType === 'adv') { if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम')) return true; }
-        return false;
+        return false; // Not Active
     }
 
     function setLevel(mode) {
@@ -1272,7 +1300,7 @@
         // 1. DRY MATTER
         reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#795548;">🌾 ${mNum[sNum++]}. ड्राय मॅटर (DM)</h4>`;
         if (totalDM > reqDM * 1.1) {
-            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत आहे आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत মাঠে आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
             else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>गाय पुरे आहार खात आहे, परंतु जास्त DM मुळे तुमचा खाद्य खर्च वाढत आहे. <br><br><b>✅ हमखास उपाय:</b> संतुलित आहारासाठी १-२ किलो सुका चारा कमी करा.</p>`;
             else reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>अतिरिक्त DM मुळे पोट जास्त भरते व पचनाचा वेग मंदावतो, तसेच तुमचा चारा खर्च विनाकारण वाढतो. <br><br><b>✅ ॲडव्हान्स उपाय:</b> रवंथ प्रक्रियेवर लक्ष ठेवा. कमी दर्जाचा सुका चारा (उदा. गव्हाचे काड किंवा वाढे) १-२ किलोने कमी करा आणि पाण्याचे प्रमाण तपासा.</p>`;
         } else if (totalDM < reqDM * 0.9) {
