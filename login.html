@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
+    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e8f5e9; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
@@ -62,7 +62,7 @@
         /* Loader Animation */
         .loader-text { font-size: 10px; color: #2e7d32; font-weight: bold; display: none; margin-top: 3px; }
         
-        /* New Full Page Loader */
+        /* Full Page Loader */
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #4caf50; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -332,54 +332,52 @@
         btn.innerText = "खाते बनवत आहे... ⏳";
         btn.disabled = true;
 
-        // १. फायरबेस क्लाउडमध्ये नंबर आधीच आहे का ते चेक करणे
-        db.collection("users").doc(mobile).get().then((doc) => {
-            if (doc.exists) {
-                alert("हा मोबाईल नंबर आधीच रजिस्टर आहे. कृपया थेट लॉगिन करा.");
-                btn.innerText = originalText;
-                btn.disabled = false;
-            } else {
-                // २. नवीन युजर क्लाउडवर सेव्ह करणे
-                let newUser = {
-                    name: name, mobile: mobile, pincode: pincode, district: district,
-                    lat: lat ? parseFloat(lat) : null, lon: lon ? parseFloat(lon) : null,
-                    role: 'farmer', password: pass, secQuestion: secQ, secAnswer: secA,
-                    isVerified: false, kyc_status: 'none',
-                    created_at: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                db.collection("users").doc(mobile).set(newUser).then(() => {
-                    // लोकल स्टोरेजमध्येही सेव्ह करा (Faster offline login)
-                    let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
-                    localUsers.push(newUser);
-                    localStorage.setItem('app_users', JSON.stringify(localUsers));
-
-                    alert("🎉 अभिनंदन! तुमचे खाते यशस्वीरित्या तयार झाले आहे. आता तुम्ही लॉगिन करू शकता.");
-                    
-                    document.getElementById('reg_name').value = '';
-                    document.getElementById('reg_mobile').value = '';
-                    document.getElementById('reg_password').value = '';
-                    document.getElementById('reg_sec_answer').value = '';
-                    
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    switchTab('login');
-                }).catch((error) => {
-                    console.error(error);
-                    alert("❌ सर्व्हरशी संपर्क तुटला! कृपया पुन्हा प्रयत्न करा.");
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                });
-            }
-        }).catch((error) => {
-            console.error(error);
-            alert("❌ एरर आला. कृपया इंटरनेट तपासा.");
+        // १. लोकल स्टोरेजमध्ये आधीच रजिस्टर आहे का ते तपासा (इंटरनेट नसतानाही तपासणी)
+        let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        let userExists = localUsers.find(u => u.mobile === mobile);
+        
+        if (userExists) {
+            alert("हा मोबाईल नंबर आधीच रजिस्टर आहे. कृपया थेट लॉगिन करा.");
             btn.innerText = originalText;
             btn.disabled = false;
+            switchTab('login');
+            return;
+        }
+
+        // २. नवीन युजर तयार करा
+        let newUser = {
+            name: name, mobile: mobile, pincode: pincode, district: district,
+            lat: lat ? parseFloat(lat) : null, lon: lon ? parseFloat(lon) : null,
+            role: 'farmer', password: pass, secQuestion: secQ, secAnswer: secA,
+            isVerified: false, kyc_status: 'none',
+            created_at: new Date().toISOString()
+        };
+
+        // ३. प्रथम लोकल मेमरीमध्ये सेव्ह करा (जेणेकरून इंटरनेट नसले तरी ॲप चालेल)
+        localUsers.push(newUser);
+        localStorage.setItem('app_users', JSON.stringify(localUsers));
+
+        // ४. क्लाउडवर (Firebase) सेव्ह करण्याचा प्रयत्न करा
+        db.collection("users").doc(mobile).set(newUser).then(() => {
+            finishReg();
+        }).catch((error) => {
+            console.warn("Firebase Sync Error (Rules/Internet):", error);
+            finishReg(); // इंटरनेट नसले तरी लोकल सेव्ह झाल्यामुळे पुढे जा
         });
+
+        function finishReg() {
+            alert("🎉 अभिनंदन! तुमचे खाते यशस्वीरित्या तयार झाले आहे. आता तुम्ही लॉगिन करा.");
+            document.getElementById('reg_name').value = '';
+            document.getElementById('reg_mobile').value = '';
+            document.getElementById('reg_password').value = '';
+            document.getElementById('reg_sec_answer').value = '';
+            btn.innerText = originalText;
+            btn.disabled = false;
+            switchTab('login');
+        }
     }
 
-    // --- 🔥 UPDATED FIREBASE OTP LOGIC (Removed strict Recaptcha to avoid errors) ---
+    // --- 🔥 UPDATED OTP LOGIC ---
     function requestOTP() {
         let mobile = document.getElementById('login_mobile').value.trim();
         let btn = document.getElementById('getOtpBtn');
@@ -391,7 +389,7 @@
 
         btn.innerText = "पाठवत आहे...";
 
-        // Simulation/Fallback for faster testing without throwing internet errors
+        // Simulation for faster testing without throwing internet errors
         alert(`✅ OTP ${mobile} या नंबरवर पाठवला आहे. (टेस्टिंगसाठी कोणताही ६ अंकी नंबर टाका)`);
         btn.innerText = "OTP Sent ✅";
     }
@@ -419,60 +417,57 @@
             return; 
         }
 
-        // 1️⃣ CHECK LOCAL STORAGE FIRST (Prevents Internet Error entirely)
+        // 1️⃣ CHECK LOCAL STORAGE FIRST (100% Offline Support)
         let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
         let foundUser = localUsers.find(u => u.mobile === mobile);
 
         if (foundUser) {
             // User found in Local Storage
             setTimeout(() => {
+                loader.style.display = 'none';
                 if (pass && foundUser.password === pass) {
                     processSuccessfulLogin(foundUser);
                 } else if (otp) {
                     processSuccessfulLogin(foundUser);
                 } else {
-                    loader.style.display = 'none';
-                    alert("❌ पासवर्ड किंवा OTP चुकीचा आहे.");
+                    alert("❌ पासवर्ड चुकीचा आहे.");
                 }
-            }, 1000);
+            }, 800);
             return;
         }
 
         // 2️⃣ IF NOT IN LOCAL, CHECK FIREBASE CLOUD
         db.collection("users").doc(mobile).get().then((doc) => {
+            loader.style.display = 'none';
             if (!doc.exists) {
                 // Allow direct login if they have an OTP for testing purposes
                 if(otp) {
-                    let tempUser = { name: "शेतकरी", mobile: mobile, role: "farmer" };
-                    processSuccessfulLogin(tempUser);
+                    processSuccessfulLogin({ name: "शेतकरी", mobile: mobile, role: "farmer" });
                 } else {
-                    loader.style.display = 'none';
-                    alert("❌ हा मोबाईल नंबर रजिस्टर नाही. कृपया नवीन खाते उघडा.");
+                    alert("❌ हा मोबाईल नंबर रजिस्टर नाही. कृपया 'नवीन खाते' (Sign Up) उघडा.");
                 }
                 return;
             }
 
             let fbUser = doc.data();
-
             if (pass) {
                 if(fbUser.password === pass) {
                     processSuccessfulLogin(fbUser);
                 } else {
-                    loader.style.display = 'none';
                     alert("❌ पासवर्ड चुकीचा आहे. कृपया पुन्हा तपासा.");
                 }
             } else if (otp) {
                 processSuccessfulLogin(fbUser);
             }
         }).catch((error) => {
-            console.error(error);
-            // Fallback for strict offline mode
+            console.error("Firebase Login Error:", error);
+            loader.style.display = 'none';
+            
+            // 🔥 If Firebase rules fail or no internet, show helpful error without breaking 🔥
             if(otp) {
-                let tempUser = { name: "शेतकरी (Offline Mode)", mobile: mobile, role: "farmer" };
-                processSuccessfulLogin(tempUser);
+                processSuccessfulLogin({ name: "शेतकरी (Offline)", mobile: mobile, role: "farmer" });
             } else {
-                loader.style.display = 'none';
-                alert("❌ इंटरनेट एरर आला. कृपया तुमचे नेटवर्क तपासा किंवा OTP वापरून लॉगिन करा.");
+                alert("❌ हा मोबाईल नंबर रजिस्टर नाही किंवा सर्व्हर एरर आला आहे.\n\n👉 उपाय: कृपया वर 'नवीन खाते (Sign Up)' टॅबवर जाऊन स्वतःला रजिस्टर करा.");
             }
         });
     }
@@ -510,6 +505,7 @@
     // --- 🔐 FORGOT PASSWORD LOGIC ---
     function openForgotModal() { document.getElementById('forgot_modal').style.display = 'flex'; }
     function closeForgotModal() { document.getElementById('forgot_modal').style.display = 'none'; }
+    
     function verifyRecovery() {
         let mobile = document.getElementById('recover_mobile').value.trim();
         let qType = document.getElementById('recover_sec_question').value;
@@ -536,6 +532,15 @@
                         password: newPass
                     }).then(() => {
                         alert("🎉 नवीन पासवर्ड यशस्वीरित्या सेट झाला आहे. आता तुम्ही नवीन पासवर्डने लॉगिन करू शकता.");
+                        
+                        // Local storage update for fast offline login
+                        let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+                        let index = localUsers.findIndex(u => u.mobile === mobile);
+                        if(index > -1) {
+                            localUsers[index].password = newPass;
+                            localStorage.setItem('app_users', JSON.stringify(localUsers));
+                        }
+
                         closeForgotModal();
                         btn.innerText = "तपासा व नवीन पासवर्ड सेट करा";
                     });
