@@ -12,6 +12,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         :root{
             --green:#2e7d32;
@@ -166,7 +169,7 @@
         
         .paywall-price-tag { background: #fff3e0; color: #e65100; border: 2px dashed #ffb300; padding: 10px; border-radius: 8px; font-size: 18px; font-weight: 900; margin-bottom: 20px;}
         
-        .btn-pay-now { background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(230,81,0,0.4); text-decoration: none; display: block; box-sizing: border-box;}
+        .btn-pay-now { background: linear-gradient(145deg, #0d47a1, #1976d2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3); text-decoration: none; display: block; box-sizing: border-box;}
         .btn-pay-close { background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
 
         /* Payment Form Inside Modal */
@@ -255,7 +258,7 @@
         .nutrient-table .diff-negative { color: #c62828; }
         .nutrient-table .impact-cell { font-size: 11.5px; color: #d32f2f; text-align: left; }
         
-        /* Loader Overlay for Auto-Paytm */
+        /* Loader Overlay for Payments */
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -370,6 +373,27 @@
         </div>
         <div class="feed-qty-col"><input type="number" id="qty_green_2" placeholder="किलो" min="0"></div>
     </div>
+
+    <!-- 🔥 NEWLY ADDED: हिरवा चारा ३ 🔥 -->
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="green_3" onchange="handleSelect(this, 'dm_green_3', 'custom_green_3', 'green')">
+                <option value="">-- हिरवा चारा ३ --</option>
+                <option value="25" data-cp="3.6" data-me="2.1" data-ndf="62.2" data-adf="37.4" data-ca="0.6" data-p="0.3">हिरवी मका (CP:3.6%, ME:2.1)</option>
+                <option value="20" data-cp="7" data-me="1.8" data-ndf="65" data-adf="40" data-ca="0.4" data-p="0.2">हत्ती गवत / नेपियर (CP:7%, ME:1.8)</option>
+                <option value="35" data-cp="8" data-me="2.4" data-ndf="45" data-adf="25" data-ca="0.5" data-p="0.3">मका मुरघास (CP:8%, ME:2.4)</option>
+                <option value="30" data-cp="5" data-me="1.9" data-ndf="70" data-adf="45" data-ca="0.3" data-p="0.1">उसाचे वाढे (CP:5%, ME:1.9)</option>
+                <option value="30" data-cp="7.5" data-me="2.0" data-ndf="60" data-adf="40" data-ca="0.4" data-p="0.2">पूर्ण ऊस कुट्टी (Whole Sugarcane) (CP:7.5%, ME:2.0)</option>
+                <option value="20" data-cp="16" data-me="2.0" data-ndf="43.6" data-adf="35.8" data-ca="1.5" data-p="0.2">लुसर्न / लसूणघास (Alfalfa) (CP:16%, ME:2.0)</option>
+                <option value="15" data-cp="15" data-me="2.4" data-ndf="49.6" data-adf="50.4" data-ca="1.4" data-p="0.2">बरसीम / मेथी घास (CP:15%, ME:2.4)</option>
+                <option value="20" data-cp="5.6" data-me="2.0" data-ndf="58.0" data-adf="36.4" data-ca="0.6" data-p="0.3">ओट्स हिरवा चारा (CP:5.6%, ME:2.0)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_green_3" class="custom-input" placeholder="चाऱ्याचे नाव...">
+            <div id="dm_green_3" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_green_3" placeholder="किलो" min="0"></div>
+    </div>
     
     <div class="category-header">🌾 सुका चारा (Dry Fodder)</div>
     <div class="feed-input-group">
@@ -456,6 +480,7 @@
     
     <button class="btn-primary" id="btn_calculate_ration" onclick="calculateRation()">📊 रेशन तपासा आणि विश्लेषण करा</button>
 </div>
+
 <!-- 🔥 REPORT CONTAINER FOR PDF GENERATION 🔥 -->
     <div id="pdf_content_wrapper">
         
@@ -577,7 +602,7 @@
             <!-- 🔥 NEW: GEMINI AI INTEGRATION BUTTON & BOX 🔥 -->
             <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)</button>
             
-            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
+            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत ভাগে... कृपया थांबा ⏳</div>
             
             <div class="gemini-response-box pdf-page-break" id="gemini_response_box">
                 <h4>✨ दुग्ध दिशा AI विशेष सल्ला:</h4>
@@ -607,21 +632,13 @@
         
         <div class="paywall-price-tag" id="paywall_price">₹ २९ / २४ तास</div>
         
-        <a href="#" class="btn-pay-now" id="btn_init_pay" onclick="triggerUPI()">💳 पे करा आणि अनलॉक करा</a>
-        <p style="font-size:11px; color:#888; margin-top:5px; margin-bottom:15px;">(क्लिक केल्यावर थेट PhonePe/GPay उघडेल)</p>
+        <button class="btn-pay-now" id="btn_init_pay" style="background: #0d47a1; color: white;" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे सुरक्षित पेमेंट करा</button>
         
-        <!-- HIDDEN PAYMENT FORM -->
-        <div class="payment-form" id="payment_form_section">
-            <label style="font-size: 11px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">पेमेंट झाल्यानंतर 12 अंकी UTR नंबर टाका:</label>
-            <input type="number" class="input-field" id="payment_utr" placeholder="उदा. 312345678901">
-        </div>
-
-        <button class="btn-submit-utr" id="btn_submit_utr" onclick="submitPlanRequest()">✅ पेमेंट कन्फर्म करा</button>
         <button class="btn-pay-close" onclick="closePaywall()">✕ रद्द करा (फ्री बेसिक वापरा)</button>
     </div>
 </div>
 
-<!-- Loader Overlay for Auto-Paytm -->
+<!-- Loader Overlay for Payments -->
 <div id="loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white;">
     <div style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
     <h3 style="margin:0;">कृपया थांबा...</h3>
@@ -874,10 +891,6 @@
         let price = document.getElementById('paywall_price');
         
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
-        document.getElementById('btn_init_pay').style.display = 'block';
-        document.getElementById('payment_form_section').style.display = 'none';
-        document.getElementById('btn_submit_utr').style.display = 'none';
-        document.getElementById('payment_utr').value = '';
 
         if(type === 'pro') {
             pendingPlanName = 'प्रो रेशन बॅलन्सर (Pro Ration)'; pendingPlanType = '24h';
@@ -893,8 +906,8 @@
 
     function closePaywall() { document.getElementById('ration_paywall_overlay').style.display = 'none'; }
     
-    // --- 🔥 UPDATED: PAYTM AUTO ACTIVATION LOGIC 🔥 ---
-    function triggerUPI() {
+    // --- 🔥 RAZORPAY PAYMENT LOGIC 🔥 ---
+    function triggerRazorpayPayment() {
         let numAmount = parseFloat(pendingPlanAmount);
         
         // Free logic just in case
@@ -903,34 +916,54 @@
             return;
         }
 
-        let userMobile = localStorage.getItem('current_user_mobile') || 'Guest';
-        let paymentSettings = JSON.parse(localStorage.getItem("admin_payment_settings")) || { upi_id: "paytm.s33ivru@pty", payee_name: "Dugdha Disha AI" };
-        let upiId = paymentSettings.upi_id || "paytm.s33ivru@pty";
-        let payeeName = encodeURIComponent(paymentSettings.payee_name || "Dugdha Disha AI");
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
 
-        if(confirm(`तुम्ही '${pendingPlanName}' हा प्लॅन निवडला आहे.\nएकूण रक्कम: ₹${numAmount}\n\nपुढील पानावर थेट PhonePe/GPay उघडेल. पेमेंट झाल्यावर फीचर आपोआप चालू होईल. सुरू ठेवायचे का?`)) {
-            
-            let transactionNote = encodeURIComponent(`DD_${userMobile}_${pendingPlanName}`);
-            let upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${numAmount}&cu=INR&tn=${transactionNote}`;
+        let amountInPaise = numAmount * 100;
 
-            document.getElementById('loader').style.display = 'flex';
-            window.location.href = upiLink;
-
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                let confirmation = confirm("तुमचे Paytm/UPI पेमेंट यशस्वी झाले आहे का? (Yes दाबा जर बँकेतून पैसे कट झाले असतील)");
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
+            "amount": amountInPaise, 
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": pendingPlanName + " ॲक्सेस",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", 
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
                 
-                if(confirmation) {
-                    activatePlanAutomatically(pendingPlanType, pendingPlanName);
-                } else {
-                    alert("पेमेंट पूर्ण झाले नाही. जर पैसे कट झाले असतील तर खाली UTR नंबर टाका.");
-                    // Fallback to manual entry if they claim it failed but want to enter UTR
-                    document.getElementById('btn_init_pay').style.display = 'none'; 
-                    document.getElementById('payment_form_section').style.display = 'block'; 
-                    document.getElementById('btn_submit_utr').style.display = 'block';
-                }
-            }, 8000);
-        }
+                // Save payment log in Firebase
+                let paymentRecord = {
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: pendingPlanName,
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString()
+                };
+                
+                db.collection("successful_payments").add({
+                    ...paymentRecord,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                activatePlanAutomatically(pendingPlanType, pendingPlanName);
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": {
+                "color": "#0d47a1"
+            }
+        };
+
+        var rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        
+        rzp1.open();
     }
 
     function activatePlanAutomatically(type, planName) {
@@ -960,7 +993,7 @@
             activatedOn: now.toISOString(),
             expiryDate: expiryDate.toISOString(),
             status: "Active",
-            paymentMethod: "Paytm Auto UPI"
+            paymentMethod: "Razorpay"
         };
 
         localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
@@ -976,35 +1009,6 @@
         } else if (planName.includes('ॲडव्हान्स') || planName.includes('Advance')) {
             setLevel('adv');
         }
-    }
-
-    // Fallback Manual Submission
-    function submitPlanRequest() {
-        let utr = document.getElementById('payment_utr').value.trim();
-        if(!utr || utr.length < 10) { alert("⚠️ कृपया पेमेंट पूर्ण केल्यानंतर वैध (Valid) 12 अंकी UTR नंबर नक्की टाका."); return; }
-        
-        let reqData = { 
-            farmerName: localStorage.getItem("current_user_name") || "शेतकरी", 
-            mobile: localStorage.getItem("current_user_mobile") || "Unknown", 
-            name: pendingPlanName, 
-            type: pendingPlanType, 
-            amount: pendingPlanAmount, 
-            utr: utr, 
-            requestTime: new Date().toLocaleString(),
-            status: "Pending"
-        };
-
-        let pendingPayments = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-        pendingPayments.push(reqData);
-        localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingPayments));
-
-        db.collection("admin_pending_farmer_payments").add({
-            ...reqData,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.error("Firebase Logging Error: ", err));
-
-        closePaywall();
-        alert(`🎉 तुमचे पेमेंट (UTR: ${utr}) ॲडमिनकडे पडताळणीसाठी गेले आहे.\n\nमंजुरी मिळताच तुम्हाला '${pendingPlanName}' चे सर्व प्रीमियम फीचर्स वापरता येतील.`);
     }
 
     // --- 🧮 CALCULATION LOGICS ---
@@ -1109,9 +1113,13 @@
         let reqP = reqDM * 4;
 
         let feeds = [
-            getSelectedProfile('green_1', 'qty_green_1', 'green'), getSelectedProfile('green_2', 'qty_green_2', 'green'),
-            getSelectedProfile('dry_1', 'qty_dry_1', 'dry'), getSelectedProfile('conc_1', 'qty_conc_1', 'conc'),
-            getSelectedProfile('conc_2', 'qty_conc_2', 'conc'), getSelectedProfile('conc_3', 'qty_conc_3', 'conc')
+            getSelectedProfile('green_1', 'qty_green_1', 'green'), 
+            getSelectedProfile('green_2', 'qty_green_2', 'green'),
+            getSelectedProfile('green_3', 'qty_green_3', 'green'), // NEW GREEN FODDER ADDED HERE
+            getSelectedProfile('dry_1', 'qty_dry_1', 'dry'), 
+            getSelectedProfile('conc_1', 'qty_conc_1', 'conc'),
+            getSelectedProfile('conc_2', 'qty_conc_2', 'conc'), 
+            getSelectedProfile('conc_3', 'qty_conc_3', 'conc')
         ];
 
         let totalDM = feeds.reduce((s, x) => s + x.dm, 0);
@@ -1123,8 +1131,9 @@
         let totalCa = feeds.reduce((s, x) => s + x.ca_g, 0);
         let totalP = feeds.reduce((s, x) => s + x.p_g, 0);
 
-        let roughageDM = feeds[0].dm + feeds[1].dm + feeds[2].dm;
-        let concDM = feeds[3].dm + feeds[4].dm + feeds[5].dm;
+        // Updated for 3 Green Fodders
+        let roughageDM = feeds[0].dm + feeds[1].dm + feeds[2].dm + feeds[3].dm;
+        let concDM = feeds[4].dm + feeds[5].dm + feeds[6].dm;
         let ratioR = totalDM > 0 ? Math.round((roughageDM / totalDM) * 100) : 0;
         let ratioC = totalDM > 0 ? Math.round((concDM / totalDM) * 100) : 0;
         let costPerLtr = milk > 0 ? (feedCost / milk) : 0;
@@ -1231,6 +1240,7 @@
         let allFeeds = [
             { cat: 'हिरवा चारा', name: getFeedName('green_1', 'custom_green_1'), qty: document.getElementById('qty_green_1').value },
             { cat: 'हिरवा चारा', name: getFeedName('green_2', 'custom_green_2'), qty: document.getElementById('qty_green_2').value },
+            { cat: 'हिरवा चारा', name: getFeedName('green_3', 'custom_green_3'), qty: document.getElementById('qty_green_3').value }, // NEW ADDED
             { cat: 'सुका चारा', name: getFeedName('dry_1', 'custom_dry_1'), qty: document.getElementById('qty_dry_1').value },
             { cat: 'पशुखाद्य', name: getFeedName('conc_1', 'custom_conc_1'), qty: document.getElementById('qty_conc_1').value },
             { cat: 'पशुखाद्य', name: getFeedName('conc_2', 'custom_conc_2'), qty: document.getElementById('qty_conc_2').value },
@@ -1263,14 +1273,14 @@
         reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#795548;">🌾 ${mNum[sNum++]}. ड्राय मॅटर (DM)</h4>`;
         if (totalDM > reqDM * 1.1) {
             if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत आहे आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
-            else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>गाय पुरेसा आहार खात आहे, परंतु जास्त DM मुळे तुमचा खाद्य खर्च वाढत आहे. <br><br><b>✅ हमखास उपाय:</b> संतुलित आहारासाठी १-२ किलो सुका चारा कमी करा.</p>`;
+            else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>गाय पुरे आहार खात आहे, परंतु जास्त DM मुळे तुमचा खाद्य खर्च वाढत आहे. <br><br><b>✅ हमखास उपाय:</b> संतुलित आहारासाठी १-२ किलो सुका चारा कमी करा.</p>`;
             else reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>अतिरिक्त DM मुळे पोट जास्त भरते व पचनाचा वेग मंदावतो, तसेच तुमचा चारा खर्च विनाकारण वाढतो. <br><br><b>✅ ॲडव्हान्स उपाय:</b> रवंथ प्रक्रियेवर लक्ष ठेवा. कमी दर्जाचा सुका चारा (उदा. गव्हाचे काड किंवा वाढे) १-२ किलोने कमी करा आणि पाण्याचे प्रमाण तपासा.</p>`;
         } else if (totalDM < reqDM * 0.9) {
             if(currentMode === 'basic') reportHtml += `<p><span class="status-danger">❌ गाईचे पोट पूर्ण भरत नाहीये.</span></p><p>पोट न भरल्यामुळे दूध उत्पादनात अचानक घट होऊ शकते आणि वजन कमी होईल. अचूक चारा नियोजन पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
             else if(currentMode === 'pro') reportHtml += `<p><span class="status-danger">❌ ड्राय मॅटर गरजेपेक्षा कमी आहे.</span></p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> गाईचे पोट भरत नाहीये. दूध टिकवण्यासाठी सुका किंवा हिरवा चारा योग्य प्रमाणात वाढवा.</div>`;
             else reportHtml += `<p><span class="status-danger">❌ ड्राय मॅटर गरजेपेक्षा अत्यंत कमी आहे.</span></p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> गाईचे पोट (Rumen Fill) अपूर्ण आहे. दूध टिकवण्यासाठी आहार वाढवा. सुका चारा किंवा हिरवा चारा वाढवा (विशेषतः NDF मेंटेन करण्यासाठी). खाद्याची चव वाढवण्यासाठी गुळवणी किंवा मीठ वापरा.</div>`;
         } else {
-            reportHtml += `<p><span class="status-ok">✅ ड्राय मॅटर योग्य आहे.</span> गाईचे पोट व्यवस्थित भरत0  भरत आहे.</p>`;
+            reportHtml += `<p><span class="status-ok">✅ ड्राय मॅटर योग्य आहे.</span> गाईचे पोट व्यवस्थित भरत आहे.</p>`;
         }
         reportHtml += `<ul><li>गरज: ${fmt1(reqDM)} Kg | उपलब्ध: ${fmt1(totalDM)} Kg</li></ul></div>`;
 
@@ -1303,7 +1313,7 @@
                 reportHtml += `<p><span class="status-danger">❌ प्रोटीन कमी आहे.</span></p><p>दुधातील वाढ, फॅट आणि प्रजननावर वाईट परिणाम होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ हमखास उपाय:</b> सुमारे ${soyaNeeded} किलो चांगल्या दर्जाची पेंड (उदा. सरकी, भुईमूग किंवा सोयाबीन) वाढवा.</div>`;
                 reportHtml += cpAdHTML;
             } else {
-                reportHtml += `<p><span class="status-danger">❌ प्रोटीन कमी आहे (Protein Deficit).</span></p><p>दुधातील SNF आणि प्रजननावर (Fertility) थेट नकारात्मक परिणाम होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> सुमारे ${soyaNeeded} किलो चांगल्या दर्जाची पेंड (उदा. सोयाबीन DOC, शेंगदाणा, मोहरी किंवा सरकी पेंड) वाढवा. तसेच नैसर्गिक प्रथिनांसाठी कडधान्यांचा हिरवा चारा (लुसर्न, बरसीम, चवळी, स्टायलो) किंवा <b>'अझोला' (Azolla)</b> prompt पूरक आहार समाविष्ट करा. उच्च दूध देणाऱ्या गाईंसाठी 'बायपास प्रोटीन' (Bypass Protein) चा वापर केल्यास जलद फायदा दिसेल.</div>`;
+                reportHtml += `<p><span class="status-danger">❌ प्रोटीन कमी आहे (Protein Deficit).</span></p><p>दुधातील SNF आणि प्रजननावर (Fertility) थेट नकारात्मक परिणाम होईल.</p><div style="background:#e8f5e9; border:1px dashed #4caf50; padding:10px; border-radius:6px; margin-top:8px;"><b>✅ ॲडव्हान्स उपाय:</b> सुमारे ${soyaNeeded} किलो चांगल्या दर्जाची पेंड (उदा. सोयाबीन DOC, शेंगदाणा, मोहरी किंवा सरकी पेंड) वाढवा. तसेच नैसर्गिक प्रथिनांसाठी कडधान्यांचा हिरवा चारा (लुसर्न, बरसीम, चवळी, स्टायलो) किंवा <b>'अझोला' (Azolla)</b> पूरक आहार समाविष्ट करा. उच्च दूध देणाऱ्या गाईंसाठी 'बायपास प्रोटीन' (Bypass Protein) चा वापर केल्यास जलद फायदा दिसेल.</div>`;
                 reportHtml += cpAdHTML;
             }
         } else if (totalCP > reqCP * 1.15) {
