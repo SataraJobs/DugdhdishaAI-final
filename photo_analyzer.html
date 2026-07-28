@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         .camera-container {
             background: #eef2f5;
@@ -118,9 +121,21 @@
         
         .vendor-product-flex { display: flex; gap: 12px; align-items: center; margin-bottom: 5px; }
         .vendor-product-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+
+        /* 🔥 STRICT PAYWALL OVERLAY MODAL 🔥 */
+        .paywall-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);}
+        .paywall-box { background: #fff; padding: 25px 20px; border-radius: 16px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; animation: popUp 0.3s ease-out;}
+        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .paywall-icon { font-size: 50px; margin-bottom: 10px; line-height: 1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2)); }
+        .paywall-title { color: #d32f2f; font-size: 20px; font-weight: 900; margin: 0 0 5px; }
+        .paywall-desc { font-size: 13px; color: #555; margin: 0 0 15px; line-height: 1.5; font-weight: 600;}
+        .paywall-price-tag { background: #fff3e0; color: #e65100; border: 2px dashed #ffb300; padding: 10px; border-radius: 8px; font-size: 18px; font-weight: 900; margin-bottom: 20px;}
+        .btn-pay-now { background: linear-gradient(145deg, #0d47a1, #1976d2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3); text-decoration: none; display: block; box-sizing: border-box;}
+        .btn-pay-close { background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
     </style>
 </head>
-<body>
+<body onload="initPhotoAnalyzer()">
 
 <div class="app-container">
     <div class="top-dashboard" style="background: #1b5e20; padding: 20px; color: white; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
@@ -144,8 +159,8 @@
         <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
 
         <div class="action-btns">
-            <button class="btn-camera" onclick="document.getElementById('imageInput').setAttribute('capture', 'environment'); document.getElementById('imageInput').click();">📸 फोटो काढा</button>
-            <button class="btn-camera" style="background: linear-gradient(145deg, #7b1fa2, #6a1b9a); box-shadow: 0 6px 0 #4a148c;" onclick="document.getElementById('imageInput').removeAttribute('capture'); document.getElementById('imageInput').click();">🖼️ गॅलरी</button>
+            <button class="btn-camera" onclick="checkPremiumAccess('camera')">📸 फोटो काढा</button>
+            <button class="btn-camera" style="background: linear-gradient(145deg, #7b1fa2, #6a1b9a); box-shadow: 0 6px 0 #4a148c;" onclick="checkPremiumAccess('gallery')">🖼️ गॅलरी</button>
         </div>
     </div>
 
@@ -157,6 +172,20 @@
         
         <!-- 🔥 Dynamic Pharma Ad Container -->
         <div id="ai_pharma_ad"></div>
+    </div>
+</div>
+
+<!-- 🔥 PAYWALL OVERLAY MODAL 🔥 -->
+<div class="paywall-overlay" id="photo_paywall_overlay">
+    <div class="paywall-box">
+        <div class="paywall-icon">🔒</div>
+        <h3 class="paywall-title">AI फोटो ॲनालायझर</h3>
+        <p class="paywall-desc">हे प्रीमियम फीचर लॉक आहे. याचा वापर करून तुम्ही फोटोवरून चारा आणि आजार ओळखू शकता.</p>
+        
+        <div class="paywall-price-tag">₹ २९ / २४ तास</div>
+        
+        <button class="btn-pay-now" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे सुरक्षित पेमेंट करा</button>
+        <button class="btn-pay-close" onclick="document.getElementById('photo_paywall_overlay').style.display='none'">✕ रद्द करा</button>
     </div>
 </div>
 
@@ -179,13 +208,128 @@
     // 🔴 Default Fallback Key
     let GEMINI_API_KEY = "AQ.Ab8RN6JERIjbm4s9Pb0ajCloS90Ow01aC4_Cq3CiNiVa03aCtg"; 
 
-    // 🔥 ADMIN SYNC: Load API Key from Admin Panel (M16 Tab) if available
-    let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
-    if(adminAiData && adminAiData.m16_1 && adminAiData.m16_1 !== "sk-xxxxxxxxxxxxx") {
-        GEMINI_API_KEY = adminAiData.m16_1;
+    function initPhotoAnalyzer() {
+        // Load API Key from Admin Panel (M16 Tab) if available
+        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+        if(adminAiData && adminAiData.m16_1 && adminAiData.m16_1 !== "sk-xxxxxxxxxxxxx") {
+            GEMINI_API_KEY = adminAiData.m16_1;
+        }
+
+        // Load Products for Ads
+        db.collection("vendor_products").get().then((querySnapshot) => {
+            let products = [];
+            querySnapshot.forEach((doc) => {
+                let p = doc.data();
+                p.id = doc.id;
+                products.push(p);
+            });
+            localStorage.setItem('vendor_products', JSON.stringify(products));
+        }).catch(e => console.error("Error fetching live products:", e));
     }
 
-    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
+    // --- 🔥 CHECK PREMIUM ACCESS BEFORE UPLOAD 🔥 ---
+    function checkPremiumAccess(actionType) {
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let proPrice = adminPrices.m25_f_pro || 29; 
+
+        let isPremiumUser = false;
+        
+        // जर किंमत 0 असेल किंवा प्लॅन ॲक्टिव्ह असेल तर
+        if (proPrice == 0) {
+            isPremiumUser = true;
+        } else if (activePlan) {
+            let now = new Date();
+            let expiry = new Date(activePlan.expiryDate);
+            if(now <= expiry && (activePlan.name.includes('प्रो') || activePlan.name.includes('ॲडव्हान्स') || activePlan.name.includes('सिल्व्हर') || activePlan.name.includes('दिशा प्राईम') || activePlan.name.includes('प्लॅटिनम'))) {
+                isPremiumUser = true;
+            } else if (now > expiry) {
+                localStorage.removeItem('farmer_active_plan');
+            }
+        }
+
+        if(isPremiumUser) {
+            if(actionType === 'camera') {
+                document.getElementById('imageInput').setAttribute('capture', 'environment'); 
+            } else {
+                document.getElementById('imageInput').removeAttribute('capture'); 
+            }
+            document.getElementById('imageInput').click();
+        } else {
+            document.getElementById('photo_paywall_overlay').style.display = 'flex';
+        }
+    }
+
+    // --- 🔥 RAZORPAY PAYMENT LOGIC 🔥 ---
+    function triggerRazorpayPayment() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let numAmount = adminPrices.m25_f_pro || 29;
+        
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
+
+        let amountInPaise = numAmount * 100; 
+
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6", 
+            "amount": amountInPaise, 
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": "AI फोटो ॲनालायझर ॲक्सेस",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png", 
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
+                
+                db.collection("successful_payments").add({
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: "Photo Analyzer (24h)",
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                activatePlanAutomatically("24h", "Photo Analyzer Pass");
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": {
+                "color": "#1565c0"
+            }
+        };
+
+        var rzp1 = new Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        
+        rzp1.open();
+    }
+
+    function activatePlanAutomatically(type, planName) {
+        let now = new Date();
+        let expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 24); // Give 24 hours access
+
+        let activePlan = {
+            name: planName,
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active",
+            paymentMethod: "Razorpay"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        document.getElementById('photo_paywall_overlay').style.display = 'none';
+        
+        alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले. आता तुम्ही कॅमेरा वापरू शकता.`);
+    }
+
+    // --- 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
     function generateDynamicAd(targetTag, defaultHtml, customTitle = "✨ तुमच्यासाठी सुचवलेले") {
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
         
@@ -275,31 +419,39 @@
         तू एक अत्यंत तज्ज्ञ आणि अचूक पशुवैद्यक (Veterinarian) आणि दुग्ध व्यवसाय (Dairy Farming) मार्गदर्शक आहेस. 
         तुला दिलेल्या फोटोचे अतिशय बारकाईने विश्लेषण करायचे आहे. तुझे उत्तर 'फक्त आणि फक्त मराठीत' असले पाहिजे.
         
+        महत्त्वाचा नियम: तू अंधारात तीर मारायचा नाही. फोटोत जे स्पष्ट दिसत आहे तेच सांगायचे. जर फोटो पूर्णपणे अंधुक असेल किंवा ओळखू येत नसेल, तर तसे स्पष्ट सांग.
+
         नियम:
-        १. जर फोटोत चारा (हिरवा, सुका, पेंड किंवा मुरघास) असेल:
-           - चाऱ्याचे अचूक नाव सांग.
-           - चाऱ्याची गुणवत्ता (उत्तम/मध्यम/वाईट) सांग.
+        १. जर फोटोत जनावरांचा चारा (हिरवा चारा, सुका कडबा, पेंड किंवा मुरघास) असेल:
+           - चाऱ्याचे अचूक नाव सांग. (उदा. मका, हत्ती गवत, ज्वारी कडबा, सरकी पेंड इ.)
+           - चाऱ्याची गुणवत्ता (उत्तम/मध्यम/निकृष्ट) सांग.
            - अंदाजित प्रथिने (CP - Crude Protein) किती टक्के असतील ते सांग.
            - अंदाजित ड्राय मॅटर (DM - Dry Matter) किती टक्के असेल ते सांग.
            - आणि शेतकऱ्याला तो चारा कसा खायला द्यावा याबद्दल एक व्यावसायिक सल्ला दे.
            - उत्तराच्या शेवटी "TAG:FODDER" असा टॅग नक्की लाव.
 
-        २. जर फोटोत आजारी जनावर किंवा जनावराची एखादी जखम/त्रास (उदा. कासदाह, गोचीड, खूर) असेल:
+        २. जर फोटोत आजारी जनावर किंवा जनावराची एखादी जखम/त्रास (उदा. कासदाह, गोचीड, खूर, लाळ्या खुरकूत, डोळ्यांचा आजार) असेल:
            - आजाराचे किंवा जखमेचे नाव अचूक ओळख.
            - त्याच्यावरील प्राथमिक उपचार आणि सल्ला सांग.
+           - डॉक्टरला केव्हा बोलावावे याची सूचना दे.
            - उत्तराच्या शेवटी "TAG:DISEASE" असा टॅग नक्की लाव.
 
-        ३. जर फोटोत 'चारा' किंवा 'आजार/जनावर' यापैकी काहीही नसेल (उदा. गाडी, माणूस, रिकामा रस्ता इ.):
-           - स्पष्टपणे सांग की "हा फोटो चारा किंवा जनावराच्या आजाराचा नाही. कृपया योग्य फोटो अपलोड करा." आणि कोणतेही टॅग लावू नकोस.
+        ३. जर फोटोत गाईचे शेण (Dung) असेल:
+           - शेणाच्या स्थितीवरून पचनक्रियेचा (Digestion) अंदाज सांग (पचन चांगले आहे, अपचन आहे, फायबरची कमतरता आहे इ.).
+           - त्यावर काय उपाय करावा ते सांग.
+           - उत्तराच्या शेवटी "TAG:DIGESTION" असा टॅग नक्की लाव.
+
+        ४. जर फोटोत 'चारा' किंवा 'आजार/जनावर' यापैकी काहीही नसेल (उदा. गाडी, माणूस, रिकामा रस्ता, घर, झाड इ.):
+           - स्पष्टपणे सांग की "हा फोटो चारा किंवा जनावराच्या आजाराशी संबंधित नाही. कृपया योग्य फोटो अपलोड करा." आणि कोणतेही टॅग लावू नकोस.
 
         तुझे उत्तर फक्त खालील HTML फॉरमॅटमध्येच दे (कोणतेही markdown जसे की \`\`\`html देऊ नकोस आणि इतर कोणतीही अतिरिक्त माहिती देऊ नकोस):
         
         <p><b>ओळखलेला प्रकार:</b> [येथे नाव]</p>
         <p><b>अंदाजित गुणवत्ता:</b> <span class="quality-badge">[येथे गुणवत्ता]</span></p>
-        <p><b>अंदाजित प्रथिने (CP):</b> [येथे टक्केवारी]</p>
-        <p><b>अंदाजित ड्राय मॅटर:</b> [येथे टक्केवारी]</p>
+        <p><b>अंदाजित प्रथिने (CP):</b> [येथे टक्केवारी / लागू नसल्यास 'लागू नाही']</p>
+        <p><b>अंदाजित ड्राय मॅटर:</b> [येथे टक्केवारी / लागू नसल्यास 'लागू नाही']</p>
         <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
-        <p style="font-size: 13px; color: #e65100;"><b>तज्ज्ञांचा सल्ला:</b> [येथे तुझा सविस्तर सल्ला]</p>
+        <p style="font-size: 13px; color: #e65100;"><b>तज्ज्ञांचा सल्ला:</b> [येथे तुझा सविस्तर आणि अचूक सल्ला]</p>
         `;
 
         const requestBody = {
@@ -350,15 +502,26 @@
                                 <div class="buy-now-btn" style="background:#d32f2f; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);">मॉलमध्ये पहा ➔</div>
                             </div>
                         </div>`;
+                } else if(aiResponseHTML.includes("TAG:DIGESTION")) {
+                    targetFilterTag = "Digestion"; 
+                    defaultAdHtml = `
+                        <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html'">
+                            <h4>🦠 पचनक्रिया सुधारण्यासाठी</h4>
+                            <p>गाईचे पचन सुधारण्यासाठी आणि रवंथ व्यवस्थित करण्यासाठी <b>Rumen Yeast / Digestive Powder</b> चा वापर करा.</p>
+                            <div class="sponsor-bottom-row">
+                                <span class="sponsor-tag">Sponsored by Intas</span>
+                                <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
+                            </div>
+                        </div>`;
                 }
 
                 // Clean up any accidental markdown code blocks and the hidden tags generated by AI
-                aiResponseHTML = aiResponseHTML.replace(/```html/g, "").replace(/```/g, "").replace(/TAG:FODDER/g, "").replace(/TAG:DISEASE/g, "").trim();
+                aiResponseHTML = aiResponseHTML.replace(/```html/g, "").replace(/```/g, "").replace(/TAG:FODDER/g, "").replace(/TAG:DISEASE/g, "").replace(/TAG:DIGESTION/g, "").trim();
                 
                 outputContent.innerHTML = aiResponseHTML;
                 
-                // Inject Ad
-                if(targetFilterTag !== "Daily_Ration_Mineral") { // Only show ad if it found fodder or disease
+                // Inject Ad if a relevant tag was found
+                if(targetFilterTag !== "Daily_Ration_Mineral" && !aiResponseHTML.includes("संबंधित नाही")) { 
                      adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "💡 AI शिफारस (सुचवलेले प्रॉडक्ट)");
                 }
                 
