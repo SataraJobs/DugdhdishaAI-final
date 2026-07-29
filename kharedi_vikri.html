@@ -381,9 +381,10 @@
     function getSilverPlanPrice() {
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         let val = adminPrices.m25_f_silver;
-        if (val === undefined || val === null || val === '') return 0;
+        // 🔥 FIX: ॲडमिन डेटा नसेल तर बाय डीफॉल्ट ₹९९ किंमत घ्या (0 ठेवू नका)
+        if (val === undefined || val === null || val === '') return 99; 
         let parsedPrice = parseInt(val);
-        if (isNaN(parsedPrice) || parsedPrice <= 0) return 0;
+        if (isNaN(parsedPrice) || parsedPrice <= 0) return 99;
         return parsedPrice;
     }
 
