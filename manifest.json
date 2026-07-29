@@ -1,0 +1,23 @@
+{
+  "name": "दुग्ध दिशा AI",
+  "short_name": "दुग्ध दिशा",
+  "description": "प्रगत डेअरी इकोसिस्टम - शेतकरी आणि व्यापाऱ्यांसाठी",
+  "start_url": "/login.html",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#1b5e20",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "gcm_sender_id": "1059551640041"
+}

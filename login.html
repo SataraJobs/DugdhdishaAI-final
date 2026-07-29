@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>दुग्ध दिशा AI - लॉगिन</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1b5e20">
     
     <!-- 🔥 Firebase SDK (लाईव्ह सर्व्हरशी जोडण्यासाठी) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -37,6 +39,7 @@
 
         .btn-otp { background: #fff; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; float: right; margin-top: -30px; position: relative; z-index: 2; transition: 0.2s;}
         .btn-otp:active { transform: scale(0.95); }
+        .btn-otp:disabled { background: #e0e0e0; color: #888; border-color: #ccc; cursor: not-allowed; }
 
         .btn-primary { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #1b5e20; margin-top: 10px; transition: 0.3s; }
         .btn-primary:active { top: 4px; box-shadow: 0 0 0 #1b5e20; position: relative; }
@@ -72,7 +75,6 @@
 
 <div class="login-container">
     <div class="logo-area">
-        <!-- 🖼️ इथे तुमचा लोगो सेट केला आहे -->
         <img src="logo.png" alt="दुग्ध दिशा लोगो" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3050/3050212.png'">
         <h1>दुग्ध दिशा AI</h1>
         <p>प्रगत डेअरी इकोसिस्टम ☁️</p>
@@ -222,6 +224,16 @@
     const auth = firebase.auth();
     const db = firebase.firestore(); 
 
+    // --- 🔥 INVISIBLE RECAPTCHA SETUP ---
+    window.onload = function() {
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {
+                // reCAPTCHA solved automatically
+            }
+        });
+    };
+
     // --- 🔄 Tab Switching Logic ---
     function switchTab(tab) {
         if(tab === 'login') {
@@ -332,7 +344,6 @@
         btn.innerText = "खाते बनवत आहे... ⏳";
         btn.disabled = true;
 
-        // १. लोकल स्टोरेजमध्ये आधीच रजिस्टर आहे का ते तपासा (इंटरनेट नसतानाही तपासणी)
         let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
         let userExists = localUsers.find(u => u.mobile === mobile);
         
@@ -344,7 +355,6 @@
             return;
         }
 
-        // २. नवीन युजर तयार करा
         let newUser = {
             name: name, mobile: mobile, pincode: pincode, district: district,
             lat: lat ? parseFloat(lat) : null, lon: lon ? parseFloat(lon) : null,
@@ -353,16 +363,14 @@
             created_at: new Date().toISOString()
         };
 
-        // ३. प्रथम लोकल मेमरीमध्ये सेव्ह करा (जेणेकरून इंटरनेट नसले तरी ॲप चालेल)
         localUsers.push(newUser);
         localStorage.setItem('app_users', JSON.stringify(localUsers));
 
-        // ४. क्लाउडवर (Firebase) सेव्ह करण्याचा प्रयत्न करा
         db.collection("users").doc(mobile).set(newUser).then(() => {
             finishReg();
         }).catch((error) => {
             console.warn("Firebase Sync Error (Rules/Internet):", error);
-            finishReg(); // इंटरनेट नसले तरी लोकल सेव्ह झाल्यामुळे पुढे जा
+            finishReg(); 
         });
 
         function finishReg() {
@@ -377,7 +385,7 @@
         }
     }
 
-    // --- 🔥 UPDATED OTP LOGIC ---
+    // --- 🔥 REAL FIREBASE OTP LOGIC ---
     function requestOTP() {
         let mobile = document.getElementById('login_mobile').value.trim();
         let btn = document.getElementById('getOtpBtn');
@@ -388,13 +396,32 @@
         }
 
         btn.innerText = "पाठवत आहे...";
+        btn.disabled = true;
 
-        // Simulation for faster testing without throwing internet errors
-        alert(`✅ OTP ${mobile} या नंबरवर पाठवला आहे. (टेस्टिंगसाठी कोणताही ६ अंकी नंबर टाका)`);
-        btn.innerText = "OTP Sent ✅";
+        // भारताचा कोड +91 जोडा
+        let phoneNumber = "+91" + mobile; 
+        let appVerifier = window.recaptchaVerifier;
+
+        // फायरबेसद्वारे खरा SMS पाठवणे
+        auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+            .then((confirmationResult) => {
+                window.confirmationResult = confirmationResult;
+                alert("✅ OTP " + mobile + " या नंबरवर पाठवला आहे.");
+                btn.innerText = "OTP Sent ✅";
+            }).catch((error) => {
+                console.error("SMS Error:", error);
+                alert("OTP पाठवताना अडचण आली: " + error.message);
+                btn.innerText = "Get OTP";
+                btn.disabled = false;
+                
+                // एरर आल्यास reCAPTCHA रिसेट करा
+                window.recaptchaVerifier.render().then(function(widgetId) {
+                    grecaptcha.reset(widgetId);
+                });
+            });
     }
 
-    // --- 🚀 UPDATED LOGIN LOGIC (Fixed Internet Error) ---
+    // --- 🚀 UPDATED LOGIN LOGIC (With Real OTP Check) ---
     function loginUser() {
         let mobile = document.getElementById('login_mobile').value.trim();
         let pass = document.getElementById('login_password').value;
@@ -417,12 +444,35 @@
             return; 
         }
 
-        // 1️⃣ CHECK LOCAL STORAGE FIRST (100% Offline Support)
+        // जर युजरने OTP टाकला असेल, तर फायरबेसवर तो OTP तपासा (Verify OTP)
+        if (otp) {
+            if (!window.confirmationResult) {
+                alert("कृपया आधी 'Get OTP' बटणावर क्लिक करून मोबाईलवर OTP मागवा.");
+                loader.style.display = 'none';
+                return;
+            }
+
+            window.confirmationResult.confirm(otp).then((result) => {
+                // OTP बरोबर आहे! आता फायरबेस डेटाबेसमधून युजरची माहिती शोधा
+                fetchUserFromFirestore(mobile, pass, otp, loader);
+            }).catch((error) => {
+                alert("❌ तुम्ही टाकलेला OTP चुकीचा आहे. कृपया पुन्हा तपासा.");
+                loader.style.display = 'none';
+            });
+        } else {
+            // जर युजरने पासवर्ड टाकला असेल (ऑफलाइन किंवा थेट लॉगिन)
+            fetchUserFromFirestore(mobile, pass, null, loader);
+        }
+    }
+
+    // 🔍 फायरबेस डेटाबेस आणि लोकल स्टोरेजमधून युजर शोधणारे फंक्शन
+    function fetchUserFromFirestore(mobile, pass, otp, loader) {
+        
+        // 1️⃣ आधी लोकल स्टोरेजमध्ये शोधा (Offline Support)
         let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
         let foundUser = localUsers.find(u => u.mobile === mobile);
 
         if (foundUser) {
-            // User found in Local Storage
             setTimeout(() => {
                 loader.style.display = 'none';
                 if (pass && foundUser.password === pass) {
@@ -436,11 +486,10 @@
             return;
         }
 
-        // 2️⃣ IF NOT IN LOCAL, CHECK FIREBASE CLOUD
+        // 2️⃣ लोकल स्टोरेजमध्ये नसल्यास, क्लाउडवर शोधा
         db.collection("users").doc(mobile).get().then((doc) => {
             loader.style.display = 'none';
             if (!doc.exists) {
-                // Allow direct login if they have an OTP for testing purposes
                 if(otp) {
                     processSuccessfulLogin({ name: "शेतकरी", mobile: mobile, role: "farmer" });
                 } else {
@@ -463,7 +512,6 @@
             console.error("Firebase Login Error:", error);
             loader.style.display = 'none';
             
-            // 🔥 If Firebase rules fail or no internet, show helpful error without breaking 🔥
             if(otp) {
                 processSuccessfulLogin({ name: "शेतकरी (Offline)", mobile: mobile, role: "farmer" });
             } else {
@@ -474,7 +522,6 @@
 
     // --- 📍 ROUTING FUNCTION ---
     function processSuccessfulLogin(foundUser) {
-        // लोकल स्टोरेजमध्ये फक्त सेशन्स सेव्ह करतोय जेणेकरून ॲप फास्ट चालेल
         localStorage.setItem("current_logged_in_role", foundUser.role);
         localStorage.setItem("current_user_name", foundUser.name);
         localStorage.setItem("current_user_mobile", foundUser.mobile); 
@@ -527,13 +574,11 @@
             if(userData.secQuestion === qType && userData.secAnswer === ans) {
                 let newPass = prompt("✅ तुमची ओळख पटली आहे! कृपया तुमचा नवीन पासवर्ड सेट करा:");
                 if(newPass && newPass.trim() !== "") {
-                    // फायरबेसमध्ये नवीन पासवर्ड सेव्ह करणे
                     db.collection("users").doc(mobile).update({
                         password: newPass
                     }).then(() => {
                         alert("🎉 नवीन पासवर्ड यशस्वीरित्या सेट झाला आहे. आता तुम्ही नवीन पासवर्डने लॉगिन करू शकता.");
                         
-                        // Local storage update for fast offline login
                         let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
                         let index = localUsers.findIndex(u => u.mobile === mobile);
                         if(index > -1) {
