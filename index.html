@@ -19,7 +19,7 @@
             let role = localStorage.getItem("current_logged_in_role");
             let isVerified = localStorage.getItem("vendor_verified") === 'true' || localStorage.getItem("vendor_verified") === true;
             
-            // चेक करा तो स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
+            // चेक करा తో स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
             let fromSpecialPage = sessionStorage.getItem("visited_user_page") === 'true';
 
             // 🚀 नियम १: जर युजर प्रमाणित "डीलर" असेल आणि ॲप नव्याने उघडले असेल...
@@ -311,7 +311,7 @@
         </a>
 
         <!-- 🔥 ABOUT US MENU ITEM 🔥 -->
-        <a onclick="openAboutUsModal(); closeMenu();" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
+        <a href="about_us.html" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
             <span class="m-icon">ℹ️</span> आमच्याबद्दल (About Us)
         </a>
 
