@@ -208,6 +208,40 @@
         </div>
     </div>
 
+    <!-- 🔥 HIGHLIGHTED KHILLAR & RACING BULL SPECIAL PACKAGES (MOVED TO BOTTOM) 🔥 -->
+    <div class="section-title" style="border-left-color: #ff6f00; background: #fff3e0; padding: 10px 12px; border-radius: 0 8px 8px 0; color:#d84315; margin-top: 25px;">🐂 खिलार खोंड व शर्यत बैल विशेष पॅकेज (Khillar & Racing Bull)</div>
+    <div class="pricing-grid">
+        <!-- Advance Racing Ration Pack -->
+        <div class="price-card premium" style="border-color: #ff6f00; background: linear-gradient(145deg, #ffffff, #fff3e0);">
+            <div style="position: absolute; top:0; left:0; background:#ff6f00; color:white; font-size:9px; padding:3px 10px; border-radius: 0 0 10px 0; font-weight:bold;">शर्यत स्पेशल</div>
+            <div class="plan-details" style="margin-top: 15px;">
+                <h3 class="plan-name" style="color: #e65100;">ॲडव्हान्स शर्यत रेशन पॅकेज</h3>
+                <p class="plan-desc">✔️ खोंड व वळूचा अचूक खुराक चार्ट<br>✔️ छाती व मान रुंद करण्याचे उपाय<br>✔️ सविस्तर PDF रिपोर्ट व AI सल्ला</p>
+                <div class="plan-benefit" style="background:#ffe0b2; color:#d84315;">फायदा: अस्सल देशी खुराक पद्धत!</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price" style="color: #e65100;"><span class="plan-price-symbol">₹</span><span id="disp_khond_adv">४९</span></div>
+                <span class="plan-duration">/ १ महिना</span>
+                <button id="btn_khond_adv" class="buy-btn" style="background: #ff6f00;" onclick="openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, 'Monthly')">खरेदी करा</button>
+            </div>
+        </div>
+
+        <!-- Racing Bull Bazar Ad + Free Ration Pack -->
+        <div class="price-card premium" style="border-color: #d32f2f; background: linear-gradient(145deg, #ffffff, #ffebee);">
+            <div style="position: absolute; top:0; left:0; background:#d32f2f; color:white; font-size:9px; padding:3px 10px; border-radius: 0 0 10px 0; font-weight:bold;">महा-ऑफर 🔥</div>
+            <div class="plan-details" style="margin-top: 15px;">
+                <h3 class="plan-name" style="color: #c62828;">शर्यत बैल बाजार जाहिरात</h3>
+                <p class="plan-desc">✔️ संपूर्ण महाराष्ट्रात VIP जाहिरात<br>✔️ थेट खरेदीदारांशी संपर्क<br>✔️ <b>१ महिना ॲडव्हान्स रेशन फ्री!</b></p>
+                <div class="plan-benefit" style="background:#ffcdd2; color:#b71c1c;">बैल विक्री + फ्री रेशन पॅकेज</div>
+            </div>
+            <div class="plan-price-action">
+                <div class="plan-price" style="color: #d32f2f;"><span class="plan-price-symbol">₹</span><span id="disp_bazar_ad">९९</span></div>
+                <span class="plan-duration">/ १ महिना जाहिरात (01 Month)</span>
+                <button id="btn_bazar_ad" class="buy-btn" style="background: #d32f2f;" onclick="openPayment('शर्यत बैल बाजार जाहिरात + 1 महिना फ्री रेशन', document.getElementById('disp_bazar_ad').innerText, 'Monthly')">खरेदी करा</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- 🔥 SECURE PAYMENT MODAL 🔥 -->
@@ -217,7 +251,7 @@
         
         <div class="qr-placeholder" style="background: #e8f5e9; border-color: #a5d6a7;">
             <div style="font-size: 30px; color: #1b5e20;">₹<span id="pay_amt_display">0</span></div>
-            <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाम: दुग्ध दिशा AI</div>
+            <div style="font-weight:900; color:#1b5e20; font-size:16px;">नाव: दुग्ध दिशा AI</div>
             <div style="font-size:11px; color:#e65100; margin-top:5px; font-weight:bold;" id="pay_plan_name">Plan Name</div>
         </div>
 
@@ -283,8 +317,35 @@
         document.getElementById('profile_name').innerText = uName;
         document.getElementById('profile_mobile').innerText = uMob;
 
-        loadDynamicPrices(); // Load Prices from Admin Dashboard
-        checkActivePlan(); // Strict Expiry Check
+        loadDynamicPrices(); // Load Prices from local memory first
+        checkActivePlan(); // Strict Expiry Check from local memory first
+        
+        // 🔥 FIREBASE CLOUD SYNC: क्लाऊडवरून ताजे दर (Pricing) आणि युजरचा ॲक्टिव्ह प्लॅन आणा 🔥
+        syncFromFirebaseCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES 🔥 ---
+    function syncFromFirebaseCloud() {
+        // १. ॲडमिनचे ताजे दर (M25) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                let cloudData = doc.data();
+                localStorage.setItem('admin_data_M25', JSON.stringify(cloudData));
+                loadDynamicPrices(); // दर पुन्हा अपडेट करा
+            }
+        }).catch(e => console.log("Cloud price sync error:", e));
+
+        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा (डिव्हाईस बदलले तरी प्लॅन चालू राहील)
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if(doc.exists && doc.data() && doc.data().activePlan) {
+                    let cloudPlan = doc.data().activePlan;
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(cloudPlan));
+                    checkActivePlan();
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+        }
     }
 
     // --- 🔥 FETCH ADMIN PRICES 🔥 ---
@@ -295,6 +356,8 @@
         let p_plat1 = adminPrices.m25_f_plat1 !== undefined ? adminPrices.m25_f_plat1 : 199;
         let p_gold = adminPrices.m25_f_gold !== undefined ? adminPrices.m25_f_gold : 149;
         let p_silver = adminPrices.m25_f_silver !== undefined ? adminPrices.m25_f_silver : 99;
+        let p_khond_adv = 49;
+        let p_bazar_ad = 99;
         let p_adv = adminPrices.m25_f_adv !== undefined ? adminPrices.m25_f_adv : 49;
         let p_pro = adminPrices.m25_f_pro !== undefined ? adminPrices.m25_f_pro : 29;
         let p_doc = adminPrices.m25_f_doctor !== undefined ? adminPrices.m25_f_doctor : 25;
@@ -304,15 +367,19 @@
         document.getElementById('disp_plat1').innerText = p_plat1;
         document.getElementById('disp_gold').innerText = p_gold;
         document.getElementById('disp_silver').innerText = p_silver;
+        document.getElementById('disp_khond_adv').innerText = p_khond_adv;
+        document.getElementById('disp_bazar_ad').innerText = p_bazar_ad;
         document.getElementById('disp_adv').innerText = p_adv;
         document.getElementById('disp_pro').innerText = p_pro;
         document.getElementById('disp_doc').innerText = p_doc;
 
-        // Bind updated prices to buttons
+        // Bind updated prices to buttons (Monthly = 1 Month Validity)
         document.getElementById('btn_plat6').setAttribute('onclick', `openPayment('प्लॅटिनम (६ महिने)', document.getElementById('disp_plat6').innerText, '6Months')`);
         document.getElementById('btn_plat1').setAttribute('onclick', `openPayment('प्लॅटिनम (१ महिना)', document.getElementById('disp_plat1').innerText, 'Monthly')`);
         document.getElementById('btn_gold').setAttribute('onclick', `openPayment('दिशा प्राईम (Gold)', document.getElementById('disp_gold').innerText, 'Monthly')`);
         document.getElementById('btn_silver').setAttribute('onclick', `openPayment('सिल्व्हर पॅक', document.getElementById('disp_silver').innerText, 'Monthly')`);
+        document.getElementById('btn_khond_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, 'Monthly')`);
+        document.getElementById('btn_bazar_ad').setAttribute('onclick', `openPayment('शर्यत बैल बाजार जाहिरात + 1 महिना फ्री रेशन', document.getElementById('disp_bazar_ad').innerText, 'Monthly')`);
         document.getElementById('btn_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स बॅलन्सर (24h)', document.getElementById('disp_adv').innerText, '24h')`);
         document.getElementById('btn_pro').setAttribute('onclick', `openPayment('प्रो रेशन बॅलन्सर (24h)', document.getElementById('disp_pro').innerText, '24h')`);
         document.getElementById('btn_doc').setAttribute('onclick', `openPayment('डॉक्टर कॉल (1 Day)', document.getElementById('disp_doc').innerText, '1Day')`);
@@ -443,7 +510,7 @@
             }
         } 
         else if(type === 'Monthly') {
-            expiryDate.setMonth(expiryDate.getMonth() + 1);
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // Exact 1 Month Validity
         }
         else if(type === '6Months') {
             expiryDate.setMonth(expiryDate.getMonth() + 6);
@@ -460,6 +527,14 @@
         localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
         localStorage.removeItem('farmer_pending_plan');
         
+        // 🔥 FIREBASE CLOUD SAVE: प्लॅन खरेदी झाल्यावर तो थेट क्लाऊड प्रोफाईलला जोडा 🔥
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob) {
+            db.collection("users").doc(uMob).set({
+                activePlan: activePlan
+            }, { merge: true }).catch(e => console.log("Error saving active plan to cloud:", e));
+        }
+
         alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच चालू करण्यात आला आहे!`);
         
         closePayment();

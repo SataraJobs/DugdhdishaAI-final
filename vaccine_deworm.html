@@ -63,15 +63,15 @@
         .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #64b5f6; background: #fff;}
     </style>
 </head>
-<body onload="syncProducts()">
+<body onload="initPage()">
 
 <div class="app-container">
     
-    <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+    <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px; background: #1b5e20; padding: 20px; color: white;">
         <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
         <div class="header-titles" style="margin-top: 15px;">
-            <h1>लसीकरण ट्रॅकर 💉</h1>
-            <p>वयानुसार स्मार्ट लसीकरण वेळापत्रक</p>
+            <h1 style="margin: 0;">लसीकरण ट्रॅकर 💉</h1>
+            <p style="margin: 5px 0 0; color: #c8e6c9;">वयानुसार स्मार्ट लसीकरण वेळापत्रक</p>
         </div>
     </div>
 
@@ -148,6 +148,22 @@
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
+    }
+
+    // 🔥 NEW: CLOUD SYNC FOR ADMIN VACCINE RULES (M8) 🔥
+    function syncVaccineRulesFromCloud() {
+        db.collection("admin_settings").doc("M8").get()
+        .then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M8', JSON.stringify(doc.data()));
+            }
+        })
+        .catch(e => console.log("Error syncing M8 vaccine rules from cloud: ", e));
+    }
+
+    function initPage() {
+        syncProducts();
+        syncVaccineRulesFromCloud();
     }
 
     // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---

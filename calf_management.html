@@ -208,6 +208,29 @@
     }
     syncProducts();
 
+    // 🔥 NEW: CLOUD SYNC FOR CALF PLANS ACROSS DEVICES 🔥
+    function syncCalvesFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("calf_plans").where("farmerMobile", "==", userMobile).get()
+            .then((querySnapshot) => {
+                let cloudPlans = [];
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    if (data && data.calfData) {
+                        data.calfData.firebaseDocId = doc.id;
+                        cloudPlans.push(data.calfData);
+                    }
+                });
+                if (cloudPlans.length > 0) {
+                    localStorage.setItem('calf_ai_plans', JSON.stringify(cloudPlans));
+                    loadSavedCalves();
+                }
+            })
+            .catch(e => console.log("Error syncing calf plans from cloud: ", e));
+        }
+    }
+
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
     function generateDynamicAd(targetTag, defaultHtml) {
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
@@ -261,6 +284,9 @@
     function initPage() {
         document.getElementById('calf_dob').valueAsDate = new Date();
         loadSavedCalves();
+        
+        // 🔥 TRIGGER FIREBASE CLOUD SYNC ON LOAD 🔥
+        syncCalvesFromCloud();
     }
 
     // --- 2. Smart Calf Planner Logic (Auto Save & Notifications) ---
@@ -326,6 +352,9 @@
             farmerMobile: fMob,
             calfData: planData,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(docRef => {
+            planData.firebaseDocId = docRef.id;
+            localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
         }).catch(err => console.error("Error saving calf to Firebase: ", err));
 
         alert(`✅ ${displayName} ची नोंदणी यशस्वी झाली आहे!\nहे वासरू 'माझी जनावरे' मध्येही ॲड झाले आहे व याचे सर्व ॲलर्ट्स डॅशबोर्डवर येतील.`);
@@ -339,7 +368,7 @@
         loadSavedCalves();
     }
 
-    // --- Edit Calf Tag Later ---
+    // --- Edit Calf Tag Later (Updated with Firebase Cloud Sync) ---
     function updateCalfTag(id) {
         let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
         let index = savedCalves.findIndex(p => p.id === id);
@@ -358,6 +387,16 @@
                 });
 
                 localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
+                
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
+                let docId = savedCalves[index].firebaseDocId;
+                if(docId) {
+                    db.collection("calf_plans").doc(docId).update({
+                        "calfData.calfTag": newTag.trim(),
+                        "calfData.displayName": newTag.trim(),
+                        "calfData.alerts": savedCalves[index].alerts
+                    }).catch(e => console.error("Error updating calf tag on cloud: ", e));
+                }
                 
                 // Update in Global Animal List too
                 let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
@@ -442,12 +481,34 @@
         }
     }
 
+    // --- Delete Calf Plan (Updated with Firebase Cloud Sync) ---
     function deleteCalfPlan(id) {
         if(confirm("खरोखर हे रेकॉर्ड डिलीट करायचे आहे का?")) {
             // Delete from Calf Plans
             let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
+            let targetPlan = savedCalves.find(p => p.id === id);
+            
             savedCalves = savedCalves.filter(p => p.id !== id);
             localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
+            
+            // 🔥 FIREBASE CLOUD DELETE 🔥
+            if(targetPlan && targetPlan.firebaseDocId) {
+                db.collection("calf_plans").doc(targetPlan.firebaseDocId).delete()
+                .catch(e => console.error("Error deleting calf from cloud: ", e));
+            } else {
+                // Search by query if docId missing
+                let fMob = localStorage.getItem("current_user_mobile");
+                if(fMob) {
+                    db.collection("calf_plans").where("farmerMobile", "==", fMob).get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => {
+                            if(doc.data().calfData && doc.data().calfData.id === id) {
+                                doc.ref.delete();
+                            }
+                        });
+                    }).catch(e => console.log("Cloud search delete error:", e));
+                }
+            }
             
             // Delete from Global Cattle List
             let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
@@ -529,7 +590,7 @@
             resultBox.style.borderLeftColor = "#d32f2f";
             title.style.color = "#c62828";
             title.innerHTML = "🚨 इमर्जन्सी: जुलाब/हगवण (Calf Scours)";
-            advice.innerHTML = "<b>AI विश्लेषण:</b> वासरांमध्ये मृत्यूचे सर्वात मोठे कारण म्हणजे जुलाब (Scours). यामुळे वासराच्या शरीरातील पाणी कमी (Dehydration) होते.<br><br><b>तातडीचे उपाय:</b><br>• दूध पाजणे तात्पुरते अर्धे करा.<br>• वासराला शरीरात पाणी कमी पडू नये म्हणून स्वच्छ पाण्यात <b>ORS (इलेक्ट्रोलाईट)</b> मिसळून पाजा.<br>• ताबडतोब पशुवैद्यकाला बोलावून योग्य उपचार सुरू करा.";
+            advice.innerHTML = "<b>AI विश्लेषण:</b> वासरांमध्ये मृत्यूचे सर्वात मोठे कारण म्हणजे जुलाब (Scours). यामुळे वासराच्या शरीरातील पाणी कमी (Dehydration) होते.<br><br><b>तातडीचे उपाय:</b><br>• दूध पाजणे तात्पुरते अर्धे करा.<br>• वासराला शरीरात पाणी कमी पडू नये म्हणून स्वच्छ पाण्यात <b>ORS (इलेक्ट्रोलाईट)</b> मिसळून पाजा.<br>• ताबडतोब पशुवैद्यкала बोलावून योग्य उपचार सुरू करा.";
             
             targetFilterTag = "Digestion";
             defaultAdHtml = `

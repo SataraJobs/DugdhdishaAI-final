@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - शर्यत खोंड व वळू ३D रेशन बॅलन्सर</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d3b12">
+    
+    <!-- 🔥 html2pdf.js for Multi-Page Reliable PDF Generation 🔥 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-dark: #0d3b12;
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --bhagwa-main: #ff6f00;
+            --bhagwa-light: #ff9800;
+            --gold: #ffd700;
+            --accent-red: #d32f2f;
+            --bg: #eef2f0;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #555555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding-bottom: 95px !important;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 1. 3D Royal Energetic Header */
+        .top-header {
+            background: linear-gradient(135deg, #0d3b12 0%, #1b5e20 50%, #2e7d32 100%);
+            color: white;
+            padding: 18px 20px 26px 20px;
+            border-radius: 0 0 28px 28px;
+            box-shadow: 0 10px 30px rgba(13, 59, 18, 0.45);
+            position: relative;
+            z-index: 100;
+            border-bottom: 3.5px solid var(--gold);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-title p {
+            font-size: 11.5px;
+            color: #ffd54f;
+            font-weight: bold;
+            margin: 4px 0 0 0;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: 0.2s;
+        }
+
+        .back-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 2. Positive Motivational 3D Racing Tagline */
+        .racing-tagline-bar {
+            background: linear-gradient(135deg, #fff3e0, #ffecb3);
+            border: 2px solid #ffca28;
+            border-left: 7px solid var(--bhagwa-main);
+            margin: 16px;
+            padding: 14px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(255, 111, 0, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .racing-tagline-bar .emoji {
+            font-size: 32px;
+            line-height: 1;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.2));
+        }
+
+        .racing-tagline-bar h4 {
+            font-size: 14px;
+            font-weight: 900;
+            color: #d84315;
+            margin: 0 0 3px 0;
+        }
+
+        .racing-tagline-bar p {
+            font-size: 11.5px;
+            color: #333;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* 3. 2-Tier 3D Freemium Tabs */
+        .level-tabs {
+            display: flex;
+            margin: 16px;
+            background: #dfe7e2;
+            border-radius: 16px;
+            padding: 6px;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.12);
+            gap: 8px;
+        }
+
+        .level-tab {
+            flex: 1;
+            text-align: center;
+            padding: 13px 8px;
+            font-size: 13.5px;
+            font-weight: 900;
+            color: #555;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            line-height: 1.3;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        .level-tab.active {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.18);
+            z-index: 2;
+        }
+
+        .level-tab.active.basic {
+            background: linear-gradient(145deg, #ffffff, #f1f8f3);
+            color: var(--primary);
+            border-bottom: 3.5px solid var(--primary);
+        }
+
+        .level-tab.adv {
+            color: #d84315;
+        }
+
+        .level-tab.active.adv {
+            background: linear-gradient(145deg, #fff3e0, #ffe0b2);
+            color: #d84315;
+            border-bottom: 3.5px solid var(--bhagwa-main);
+            box-shadow: 0 8px 18px rgba(255, 111, 0, 0.28);
+        }
+
+        /* 4. Section Titles & 3D Cards */
+        .section-heading {
+            margin: 20px 16px 12px 16px;
+            font-size: 15.5px;
+            font-weight: 900;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--bhagwa-main);
+            padding-left: 10px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 0 16px 18px 16px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0,0,0,0.04);
+            border: 1.5px solid #dbe4de;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #eef4f0;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Perfect Grid Layouts & 3D Input Fields */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            align-items: start;
+            margin-bottom: 6px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .field label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #222;
+            margin-bottom: 6px;
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            height: 44px;
+            padding: 9px 12px;
+            border: 1.5px solid #c8d4ce;
+            border-radius: 11px;
+            font-size: 13.5px;
+            background: #f8fbf9;
+            font-weight: 700;
+            color: #111;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .field input:focus, .field select:focus {
+            border-color: var(--bhagwa-main);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3.5px rgba(255, 111, 0, 0.18);
+            transform: translateY(-1px);
+        }
+
+        /* SIDE-BY-SIDE PERFECT FEED INPUT ALIGNMENT */
+        .feed-input-group {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .feed-input-group select, .feed-input-group input {
+            height: 44px;
+            width: 100%;
+            border: 1.5px solid #c8d4ce;
+            border-radius: 11px;
+            background: #f8fbf9;
+            font-weight: 700;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .feed-input-group select:focus, .feed-input-group input:focus {
+            border-color: var(--bhagwa-main);
+            background: #fff;
+            box-shadow: 0 0 0 3.5px rgba(255, 111, 0, 0.18);
+        }
+
+        .category-header {
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 900;
+            margin: 18px 0 12px;
+            border-bottom: 1.5px dashed #c8d4ce;
+            padding-bottom: 6px;
+        }
+
+        /* 3D Energetic Analyze Button */
+        .btn-calc {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(230, 81, 0, 0.38), 0 3px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-calc:hover {
+            box-shadow: 0 10px 24px rgba(230, 81, 0, 0.48);
+            transform: translateY(-2px);
+        }
+
+        .btn-calc:active {
+            transform: scale(0.98);
+        }
+
+        /* 5. Freemium Status Bar */
+        .freemium-badge-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e8f5e9;
+            border: 1.5px solid #a5d6a7;
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #1b5e20;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+        }
+
+        /* 6. 3D Meters / Gauges */
+        .meter-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .meter-card {
+            background: #f8faf9;
+            padding: 14px 6px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1.5px solid #dbe4de;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .meter-card h4 {
+            font-size: 19px;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .meter-card p {
+            font-size: 10.5px;
+            color: #444;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        /* 🔥 NEW: BASIC 2-ITEM EXPLICIT CHECK BOX (DM & CP Target vs Supplied) 🔥 */
+        .basic-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .basic-check-card {
+            background: linear-gradient(145deg, #ffffff, #f4f8f5);
+            border: 1.5px solid #c8e6c9;
+            border-left: 6px solid var(--primary);
+            border-radius: 14px;
+            padding: 14px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .basic-check-card.protein {
+            border-left-color: #d32f2f;
+            border-color: #ffcdd2;
+            background: linear-gradient(145deg, #ffffff, #fff5f5);
+        }
+
+        .basic-check-card h5 {
+            font-size: 13.5px;
+            font-weight: 900;
+            color: #1a1a1a;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .basic-check-card .status-pill {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 900;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .basic-check-card.protein .status-pill {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .basic-check-card .data-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #444;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .basic-check-card .data-row b {
+            color: #111;
+            font-weight: 900;
+        }
+
+        /* 7. Basic (Free) Problems Output */
+        .problem-box {
+            background: #ffebee;
+            border-left: 6px solid #d32f2f;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.08);
+        }
+
+        .problem-box h4 {
+            color: #c62828;
+            font-size: 14.5px;
+            margin-bottom: 10px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .problem-box ul {
+            padding-left: 20px;
+            font-size: 13px;
+            color: #222;
+            line-height: 1.6;
+            font-weight: 700;
+        }
+
+        /* 8. Locked Premium Box (Advance Mode Promo) */
+        .locked-premium-box {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 2px dashed #e65100;
+            border-radius: 18px;
+            padding: 24px 18px;
+            text-align: center;
+            margin-top: 16px;
+            box-shadow: 0 8px 24px rgba(230, 81, 0, 0.12);
+        }
+
+        .locked-premium-box h3 {
+            color: #d84315;
+            font-size: 17px;
+            margin: 8px 0;
+            font-weight: 900;
+        }
+
+        .locked-premium-box p {
+            font-size: 12.5px;
+            color: #333;
+            margin-bottom: 18px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .btn-upgrade {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            color: white;
+            border: none;
+            padding: 14px 26px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(27, 94, 32, 0.38);
+            transition: 0.2s;
+        }
+
+        .btn-upgrade:active {
+            transform: scale(0.96);
+        }
+
+        /* 9. Advance (Paid) Solution & Traditional Diet Table */
+        .advance-solution-box {
+            background: #e8f5e9;
+            border-left: 6px solid #2e7d32;
+            padding: 18px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            display: none;
+            box-shadow: 0 4px 14px rgba(46, 125, 50, 0.08);
+        }
+
+        .advance-solution-box h4 {
+            color: #1b5e20;
+            font-size: 15px;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        /* 🔥 ADVANCE 14-POINT DASHBOARD & RISK MATRIX STYLES 🔥 */
+        .adv-score-badge {
+            background: linear-gradient(135deg, #0d3b12, #1b5e20);
+            color: #ffd700;
+            padding: 16px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            border: 2px solid #ffd700;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        .adv-score-badge h3 { font-size: 32px; font-weight: 900; margin: 4px 0 0; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .nutrition-14-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .nut-item {
+            background: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #dbe4de;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+        }
+        .nut-item span { font-weight: 900; color: #1b5e20; }
+        
+        .risk-matrix-box {
+            background: #fff3e0;
+            border: 1.5px solid #ffca28;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+        .risk-matrix-box h5 { color: #d84315; font-size: 13.5px; font-weight: 900; margin: 0 0 10px; }
+        .risk-item { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 6px; font-weight: 800; color: #333; }
+
+        .diet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 12.5px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        }
+
+        .diet-table th, .diet-table td {
+            padding: 10px 12px;
+            border: 1px solid #e0e6e2;
+            text-align: left;
+        }
+
+        .diet-table th {
+            background: #c8e6c9;
+            color: #0f3d14;
+            font-weight: 900;
+        }
+
+        /* 10. Mandatory Medical Disclaimer Note */
+        .disclaimer-note {
+            background: #fff8e1;
+            border: 1.5px solid #ffe0b2;
+            border-left: 5px solid #f57f17;
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin: 0 16px 20px 16px;
+            font-size: 11.5px;
+            color: #444;
+            line-height: 1.5;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        .disclaimer-note b {
+            color: #d84315;
+        }
+
+        /* PDF & AI Buttons */
+        .btn-pdf {
+            background: linear-gradient(135deg, #d32f2f, #c62828);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 14.5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 14px;
+            display: none;
+            box-shadow: 0 6px 16px rgba(198, 40, 40, 0.35);
+        }
+
+        .btn-gemini-ai {
+            background: linear-gradient(135deg, #fbc02d, #f57f17);
+            color: #3e2723;
+            border: 2px solid #f9a825;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 14.5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 14px;
+            display: none;
+            box-shadow: 0 6px 16px rgba(251, 192, 45, 0.35);
+        }
+
+        .gemini-response-box {
+            background: #fffde7;
+            border: 2px dashed #fbc02d;
+            padding: 16px;
+            border-radius: 14px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .gemini-response-box h4 {
+            color: #f57f17;
+            margin: 0 0 10px;
+            font-size: 15.5px;
+            font-weight: 900;
+        }
+
+        .gemini-content {
+            font-size: 13.5px;
+            color: #3e2723;
+            line-height: 1.6;
+            font-weight: 700;
+        }
+
+        .gemini-loader {
+            font-size: 13px;
+            color: #f57f17;
+            font-weight: bold;
+            font-style: italic;
+            display: none;
+            text-align: center;
+            padding: 12px;
+        }
+
+        /* Paywall Modal */
+        .paywall-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .paywall-box {
+            background: #fff;
+            padding: 26px 20px;
+            border-radius: 20px;
+            width: 88%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .paywall-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .paywall-title {
+            color: #d32f2f;
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0 0 6px;
+        }
+
+        .paywall-desc {
+            font-size: 13px;
+            color: #444;
+            margin: 0 0 16px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .paywall-price-tag {
+            background: #fff3e0;
+            color: #e65100;
+            border: 2px dashed #ffb300;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 19px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .btn-pay-now {
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 15px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 6px 14px rgba(27, 94, 32, 0.38);
+            display: block;
+        }
+
+        .btn-pay-close {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 11px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* 11. Bottom Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+            border-radius: 20px 20px 0 0;
+            border-top: 1px solid #eaeef0;
+        }
+
+        .b-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #757575;
+            transition: 0.3s ease;
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        .b-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+        }
+
+        .b-nav-text {
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .b-nav-item.active {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .b-nav-item.active .b-nav-icon {
+            filter: grayscale(0%);
+            transform: scale(1.15);
+        }
+
+        @media (max-width: 480px) {
+            .form-grid-2, .basic-summary-grid, .nutrition-14-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .feed-input-group {
+                grid-template-columns: 1.8fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body onload="initRationBalancer()">
+
+<div class="app-container">
+
+    <!-- 1. 3D Royal Header -->
+    <header class="top-header">
+        <div class="header-top-row">
+            <div class="header-title">
+                <a href="khond_care_dashboard.html" class="back-btn">⬅</a>
+                <div>
+                    <h1>🔥 खिलार खोंड व वळू रेशन बॅलन्सर 🏆</h1>
+                    <p>शास्त्रीय पोषण + पारंपारिक देशी खुराक विश्लेषण</p>
+                </div>
+            </div>
+            <div style="font-size: 28px;">🐂</div>
+        </div>
+    </header>
+
+    <!-- 2. Positive Motivational Racing Tagline -->
+    <div class="racing-tagline-bar">
+        <div class="emoji">🔥</div>
+        <div>
+            <h4>शर्यतीच्या मैदानाचा भावी बादशाह घडवा!</h4>
+            <p>अरे, आपण आपल्या बैलाला हा खुराक दिलाच पाहिजे, तरच आपला बैल शर्यतीत मैदान मारेल - ताकद, स्टॅमिना आणि स्नायू वाढवणारा अस्सल खुराक!</p>
+        </div>
+    </div>
+
+    <!-- 3. 2-Tier 3D Freemium Tabs -->
+    <div class="level-tabs">
+        <div class="level-tab active basic" id="tab_basic" onclick="setLevel('basic')">
+            🟢 बेसिक तपासणी<br><span style="font-size:10px; font-weight:bold; color:#555;">(फ्री - कमतरता अहवाल)</span>
+        </div>
+        <div class="level-tab adv" id="tab_adv" onclick="setLevel('adv')">
+            👑 ॲडव्हान्स खुराक चार्ट<br><span id="tab_price_adv" style="font-size:10px; font-weight:bold; color:#d32f2f;">🔒 ₹४९ (संपूर्ण उपाय)</span>
+        </div>
+    </div>
+
+    <!-- 4. Diet Input Section (Clean & Perfect Grid Alignment) -->
+    <div class="section-heading">
+        <span>📝 बैलाचा सध्याचा आहार व देशी खुराक (Daily Feed)</span>
+        <span style="font-size: 11px; color: #ff6f00; font-weight: 900; background: #fff3e0; padding: 4px 10px; border-radius: 20px; border: 1px solid #ffe0b2;">ICAR + देशी मानक 🧪</span>
+    </div>
+
+    <div class="card-box">
+        <div class="card-title">🐮 १. जनावराची मूळ माहिती (Basic Info)</div>
+        <div class="form-grid-2">
+            <div class="field">
+                <label>वजन (Weight in Kg) *</label>
+                <input type="number" id="rb_weight" placeholder="उदा. 450" value="400">
+            </div>
+            <div class="field">
+                <label>वय (Age in Months) *</label>
+                <input type="number" id="rb_age" placeholder="उदा. 36" value="36">
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>शर्यत व सरावाचा टप्पा (Stage) *</label>
+                <select id="rb_racing_stage">
+                    <option value="heavy">शर्यतीचा काळ (Heavy Racing Season)</option>
+                    <option value="moderate">नियमित सराव (Moderate Training)</option>
+                    <option value="rest">विश्रांती काळ (Off-Season Rest)</option>
+                    <option value="growing">वाढता खोंड (Growing Bull Calf)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>पशुखाद्य / एनर्जी फीड (Grams/Day) *</label>
+                <input type="number" id="rb_starter" placeholder="उदा. 1000" value="1000" step="100">
+            </div>
+        </div>
+
+        <!-- हिरव्या चाऱ्याचे ३ ऑप्शन (3 Green Fodder Slots with ALL scientific options) -->
+        <div class="category-header" style="color:#1b5e20;">
+            🌿 २. हिरव्या चाऱ्याचे ३ पर्याय (3 Green Fodders - Kg/Day)
+        </div>
+        <div class="feed-input-group">
+            <select id="rb_green1_type">
+                <option value="हिरवी मका / कडवळ">१. हिरवी मका / कडवळ (CP: 3.6%, ME: 2.1)</option>
+                <option value="हत्ती गवत / नेपियर">हत्ती गवत / नेपियर (CP: 7%, ME: 1.8)</option>
+                <option value="मका मुरघास (Silage)">मका मुरघास (Silage) (CP: 8%, ME: 2.4)</option>
+                <option value="उसाचे वाढे">उसाचे वाढे (CP: 5%, ME: 1.9)</option>
+                <option value="पूर्ण ऊस कुट्टी (Whole Sugarcane)">पूर्ण ऊस कुट्टी (CP: 7.5%, ME: 2.0)</option>
+                <option value="लुसर्न / लसूणघास (Alfalfa)">लुसर्न / लसूणघास (Alfalfa) (CP: 16%, ME: 2.0)</option>
+                <option value="बरसीम / मेथी घास">बरसीम / मेथी घास (CP: 15%, ME: 2.4)</option>
+                <option value="ओट्स हिरवा चारा">ओट्स हिरवा चारा (CP: 5.6%, ME: 2.0)</option>
+                <option value="इतर हिरवा चारा">इतर (Custom Fodder)</option>
+            </select>
+            <input type="number" step="0.5" id="rb_green1" placeholder="Kg" value="5.0">
+        </div>
+        <div class="feed-input-group">
+            <select id="rb_green2_type">
+                <option value="लुसर्न / लसूणघास (Alfalfa)">२. लुसर्न / लसूणघास (Alfalfa) (CP: 16%, ME: 2.0)</option>
+                <option value="हिरवी मका / कडवळ">हिरवी मका / कडवळ (CP: 3.6%, ME: 2.1)</option>
+                <option value="हत्ती गवत / नेपियर">हत्ती गवत / नेपियर (CP: 7%, ME: 1.8)</option>
+                <option value="मका मुरघास (Silage)">मका मुरघास (Silage) (CP: 8%, ME: 2.4)</option>
+                <option value="उसाचे वाढे">उसाचे वाढे (CP: 5%, ME: 1.9)</option>
+                <option value="पूर्ण ऊस कुट्टी (Whole Sugarcane)">पूर्ण ऊस कुट्टी (CP: 7.5%, ME: 2.0)</option>
+                <option value="बरसीम / मेथी घास">बरसीम / मेथी घास (CP: 15%, ME: 2.4)</option>
+                <option value="ओट्स हिरवा चारा">ओट्स हिरवा चारा (CP: 5.6%, ME: 2.0)</option>
+                <option value="काहीच नाही">काहीच नाही</option>
+            </select>
+            <input type="number" step="0.5" id="rb_green2" placeholder="Kg" value="2.0">
+        </div>
+        <div class="feed-input-group">
+            <select id="rb_green3_type">
+                <option value="ऊस वाडे">३. उसाचे वाढे (CP: 5%, ME: 1.9)</option>
+                <option value="हिरवी मका / कडवळ">हिरवी मका / कडवळ (CP: 3.6%, ME: 2.1)</option>
+                <option value="हत्ती गवत / नेपियर">हत्ती गवत / नेपियर (CP: 7%, ME: 1.8)</option>
+                <option value="मका मुरघास (Silage)">मका मुरघास (Silage) (CP: 8%, ME: 2.4)</option>
+                <option value="पूर्ण ऊस कुट्टी (Whole Sugarcane)">पूर्ण ऊस कुट्टी (CP: 7.5%, ME: 2.0)</option>
+                <option value="लुसर्न / लसूणघास (Alfalfa)">लुसर्न / लसूणघास (Alfalfa) (CP: 16%, ME: 2.0)</option>
+                <option value="बरसीम / मेथी घास">बरसीम / मेथी घास (CP: 15%, ME: 2.4)</option>
+                <option value="ओट्स हिरवा चारा">ओट्स हिरवा चारा (CP: 5.6%, ME: 2.0)</option>
+                <option value="काहीच नाही">काहीच नाही</option>
+            </select>
+            <input type="number" step="0.5" id="rb_green3" placeholder="Kg" value="2.0">
+        </div>
+
+        <!-- सुक्या चाऱ्याचे २ ऑप्शन (2 Dry Fodder Slots with ALL scientific options) -->
+        <div class="category-header" style="color:#5d4037;">
+            🌾 ३. सुक्या चाऱ्याचे २ पर्याय (2 Dry Fodders - Kg/Day)
+        </div>
+        <div class="feed-input-group">
+            <select id="rb_dry1_type">
+                <option value="ज्वारीचा कडबा कुट्टी">१. ज्वारीचा कडबा कुट्टी (CP: 7.0%, ME: 1.9)</option>
+                <option value="गव्हाचे काड / भुसा">गव्हाचे काड / भुसा (CP: 3.5%, ME: 1.9)</option>
+                <option value="सोयाबीन कुट्टी">सोयाबीन कुट्टी (CP: 15.0%, ME: 1.9)</option>
+                <option value="बाजरीचा कडबा कुट्टी">बाजरीचा कडबा कुट्टी (CP: 4%, ME: 1.4)</option>
+                <option value="लसूण घास हे (Hay)">लसूण घास हे (Dry Hay) (CP: 10%, ME: 1.8)</option>
+                <option value="इतर सुका चारा">इतर (Custom Dry Fodder)</option>
+            </select>
+            <input type="number" step="0.5" id="rb_dry1" placeholder="Kg" value="4.0">
+        </div>
+        <div class="feed-input-group">
+            <select id="rb_dry2_type">
+                <option value="लसूण घास हे (Hay)">२. लसूण घास हे (Dry Hay) (CP: 10%, ME: 1.8)</option>
+                <option value="ज्वारीचा कडबा कुट्टी">ज्वारीचा कडबा कुट्टी (CP: 7.0%, ME: 1.9)</option>
+                <option value="गव्हाचे काड / भुसा">गव्हाचे काड / भुसा (CP: 3.5%, ME: 1.9)</option>
+                <option value="सोयाबीन कुट्टी">सोयाबीन कुट्टी (CP: 15.0%, ME: 1.9)</option>
+                <option value="बाजरीचा कडबा कुट्टी">बाजरीचा कडबा कुट्टी (CP: 4%, ME: 1.4)</option>
+                <option value="काहीच नाही">काहीच नाही</option>
+            </select>
+            <input type="number" step="0.5" id="rb_dry2" placeholder="Kg" value="2.0">
+        </div>
+
+        <!-- पारंपारिक देशी खुराकाचे ३ ऑप्शन (3 Traditional Racing Feed Slots) -->
+        <div class="category-header" style="color:#ff6f00;">
+            🏆 ४. अस्सल देशी पारंपारिक खुराक (3 Traditional Racing Feeds)
+        </div>
+        
+        <!-- Slot 1 -->
+        <div class="feed-input-group">
+            <select id="rb_trad1_type">
+                <option value="उडदाची डाळ / भरडा (Urad Dal)">१. उडदाची डाळ / भरडा (Urad Dal)</option>
+                <option value="हरभरा चुणी / डाळ (Chana Chuni)">हरभरा चुणी / डाळ (Chana Chuni)</option>
+                <option value="उकडलेली मटकी / मोड आलेली">उकडलेली मटकी / मोड आलेली</option>
+                <option value="तूर चुणी">तूर चुणी</option>
+                <option value="शेंगदाणा पेंड (Groundnut Cake)">शेंगदाणा पेंड (Groundnut Cake)</option>
+                <option value="सरकी पेंड (Cottonseed Cake)">सरकी पेंड (Cottonseed Cake)</option>
+                <option value="सोयाबीन पेंड / भरडा">सोयाबीन पेंड / भरडा</option>
+                <option value="गूळ-खोपरे / देशी तूप खुराक">गूळ-खोपरे / देशी तूप खुराक</option>
+                <option value="अश्वगंधा / शतावरी स्टॅमिना पावडर">अश्वगंधा / शतावरी स्टॅमिना पावडर</option>
+                <option value="काहीच नाही">काहीच देत नाही</option>
+            </select>
+            <input type="number" id="rb_trad1_qty" placeholder="Grams" value="500" step="50">
+        </div>
+
+        <!-- Slot 2 -->
+        <div class="feed-input-group">
+            <select id="rb_trad2_type">
+                <option value="हरभरा चुणी / डाळ (Chana Chuni)">२. हरभरा चुणी / डाळ (Chana Chuni)</option>
+                <option value="उडदाची डाळ / भरडा (Urad Dal)">उडदाची डाळ / भरडा (Urad Dal)</option>
+                <option value="उकडलेली मटकी / मोड आलेली">उकडलेली मटकी / मोड आलेली</option>
+                <option value="तूर चुणी">तूर चुणी</option>
+                <option value="शेंगदाणा पेंड (Groundnut Cake)">शेंगदाणा पेंड (Groundnut Cake)</option>
+                <option value="सरकी पेंड (Cottonseed Cake)">सरकी पेंड (Cottonseed Cake)</option>
+                <option value="सोयाबीन पेंड / भरडा">सोयाबीन पेंड / भरडा</option>
+                <option value="गूळ-खोपरे / देशी तूप खुराक">गूळ-खोपरे / देशी तूप खुराक</option>
+                <option value="अश्वगंधा / शतावरी स्टॅमिना पावडर">अश्वगंधा / शतावरी स्टॅमिना पावडर</option>
+                <option value="काहीच नाही">काहीच देत नाही</option>
+            </select>
+            <input type="number" id="rb_trad2_qty" placeholder="Grams" value="300" step="50">
+        </div>
+
+        <!-- Slot 3 -->
+        <div class="feed-input-group">
+            <select id="rb_trad3_type">
+                <option value="शेंगदाणा पेंड (Groundnut Cake)">३. शेंगदाणा पेंड (Groundnut Cake)</option>
+                <option value="उडदाची डाळ / भरडा (Urad Dal)">उडदाची डाळ / भरडा (Urad Dal)</option>
+                <option value="हरभरा चुणी / डाळ (Chana Chuni)">हरभरा चुणी / डाळ (Chana Chuni)</option>
+                <option value="उकडलेली मटकी / मोड आलेली">उकडलेली मटकी / मोड आलेली</option>
+                <option value="तूर चुणी">तूर चुणी</option>
+                <option value="सरकी पेंड (Cottonseed Cake)">सरकी पेंड (Cottonseed Cake)</option>
+                <option value="सोयाबीन पेंड / भरडा">सोयाबीन पेंड / भरडा</option>
+                <option value="गूळ-खोपरे / देशी तूप खुराक">गूळ-खोपरे / देशी तूप खुराक</option>
+                <option value="अश्वगंधा / शतावरी स्टॅमिना पावडर">अश्वगंधा / शतावरी स्टॅमिना पावडर</option>
+                <option value="काहीच नाही">काहीच देत नाही</option>
+            </select>
+            <input type="number" id="rb_trad3_qty" placeholder="Grams" value="200" step="50">
+        </div>
+
+        <button class="btn-calc" onclick="calculateKhondRation()">
+            <span>⚡</span> शर्यत व पोषण विश्लेषण करा (AI Analysis)
+        </button>
+    </div>
+
+    <!-- 5. Analysis Result Section (Basic vs Advance Mode) -->
+    <div class="section-heading" id="result_heading" style="display: none;">
+        <span>📊 आहार विश्लेषण अहवाल</span>
+        <span id="plan_mode_tag" style="background:#ff6f00; color:white; font-size:11px; font-weight:900; padding:3px 10px; border-radius:12px;">BASIC (FREE)</span>
+    </div>
+
+    <div class="card-box" id="result_container" style="display: none;">
+        
+        <!-- Freemium Status Bar -->
+        <div class="freemium-badge-bar">
+            <span id="status_message_top">⚡ बेसिक आहारातील कमतरता तपासणी</span>
+            <span id="lock_icon_status" style="color:#d32f2f;">🔒 Advance Locked</span>
+        </div>
+
+        <!-- 3 Meters / Gauges (DM, Protein, Bone/Calcium) -->
+        <div class="meter-row">
+            <div class="meter-card">
+                <h4 id="meter_dm" style="color:#2e7d32;">०%</h4>
+                <p>पोट भरले का? (DM)</p>
+            </div>
+            <div class="meter-card">
+                <h4 id="meter_cp" style="color:#d32f2f;">०%</h4>
+                <p>स्नायू प्रथिने (CP)</p>
+            </div>
+            <div class="meter-card">
+                <h4 id="meter_cal" style="color:#ff9800;">०%</h4>
+                <p>हाडे व खूर ताकद</p>
+            </div>
+        </div>
+
+        <!-- 🔥 NEW: EXPLICIT BASIC 2-BOX CHECK (DRY MATTER & PROTEIN STATUS) 🔥 -->
+        <div class="basic-summary-grid">
+            <div class="basic-check-card">
+                <h5>
+                    <span>🌾 ड्राय मॅटर (DM)</span>
+                    <span class="status-pill" id="dm_status_pill">पुरेसे</span>
+                </h5>
+                <div class="data-row"><span>एकूण आवश्यक:</span> <b id="dm_req_val">0 Kg</b></div>
+                <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="dm_supp_val">0 Kg</b></div>
+                <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
+                    <span>स्थिती (फरक):</span> <b id="dm_diff_val" style="color:#2e7d32;">0 Kg</b>
+                </div>
+            </div>
+
+            <div class="basic-check-card protein">
+                <h5>
+                    <span>💪 प्रथिने (Protein - CP)</span>
+                    <span class="status-pill" id="cp_status_pill">कमतरता</span>
+                </h5>
+                <div class="data-row"><span>एकूण आवश्यक:</span> <b id="cp_req_val">0 g</b></div>
+                <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="cp_supp_val">0 g</b></div>
+                <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
+                    <span>स्थिती (फरक):</span> <b id="cp_diff_val" style="color:#c62828;">0 g</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- BASIC MODE OUTPUT (Always Visible): Problems Identified -->
+        <div class="problem-box">
+            <h4>⚠️ आहारातील कमतरता व समस्या (Basic Problem ID):</h4>
+            <ul id="problem_list_ui">
+                <!-- JS will inject problem bullets here -->
+            </ul>
+        </div>
+
+        <!-- ADVANCE MODE OUTPUT (Visible ONLY if user has Premium Plan) -->
+        <div class="advance-solution-box" id="advance_solution_container">
+            <h4>👑 वैज्ञानिक उपाय व देशी शर्यत डाएट चार्ट (Advance Solution):</h4>
+            
+            <!-- 🔥 NEW: ADVANCE AI PERFORMANCE SCORE BADGE 🔥 -->
+            <div class="adv-score-badge">
+                <span style="font-size:11px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">AI Race Bull Performance Score</span>
+                <h3 id="adv_perf_score">८८ / १००</h3>
+                <p style="font-size:11.5px; color:#c8e6c9; margin-top:4px; font-weight:700;">तुमच्या बैलाचा स्टॅमिना व स्नायू विकास उत्तम पातळीवर आहे!</p>
+            </div>
+
+            <!-- 🔥 NEW: 14-PARAMETER NUTRITION & STATUS DASHBOARD 🔥 -->
+            <h5 style="color:#1b5e20; font-size:13.5px; font-weight:900; margin:10px 0 8px;">🧪 १४-पॅरामीटर पोषण व आरोग्य विश्लेषण (14-Point Nutrition Status):</h5>
+            <div class="nutrition-14-grid">
+                <div class="nut-item">1. Dry Matter Intake <span id="n14_dm">18.6 kg (96%)</span></div>
+                <div class="nut-item">2. Protein (CP) <span id="n14_cp">2.4 kg (86%)</span></div>
+                <div class="nut-item">3. Energy (ME) <span id="n14_me">29 Mcal (91%)</span></div>
+                <div class="nut-item">4. Fibre (NDF) <span style="color:#2e7d32;">Normal (54%)</span></div>
+                <div class="nut-item">5. Calcium (Haade) <span>88% (Moderate)</span></div>
+                <div class="nut-item">6. Phosphorus <span>96% (Optimal)</span></div>
+                <div class="nut-item">7. Copper (Cu) <span style="color:#d32f2f;">Low (Deficient)</span></div>
+                <div class="nut-item">8. Zinc (Zn) <span>Medium (OK)</span></div>
+                <div class="nut-item">9. Vitamin A <span style="color:#2e7d32;">Optimal</span></div>
+                <div class="nut-item">10. Vitamin E <span style="color:#d32f2f;">Deficient</span></div>
+                <div class="nut-item">11. Water Intake <span id="n14_water">45 L / 60 L Needed</span></div>
+                <div class="nut-item">12. Electrolytes <span style="color:#e65100;">Need Improvement</span></div>
+                <div class="nut-item">13. BCS Score <span style="color:#2e7d32;">Ideal (6.5/9)</span></div>
+                <div class="nut-item">14. Recovery Index <span style="color:#1b5e20;">High Stamina</span></div>
+            </div>
+
+            <!-- 🔥 NEW: RISK SCORE MATRIX FOR RACING BULLS 🔥 -->
+            <div class="risk-matrix-box">
+                <h5>⚠️ शर्यत धोका व ताण मूल्यांकन (Risk Score Matrix):</h5>
+                <div class="risk-item"><span>1. Acidosis (पोटफुगी/ऍसिड):</span> <span style="color:#ff8f00;">⭐⭐ (Medium Risk)</span></div>
+                <div class="risk-item"><span>2. Laminitis (खूर आजार/लचक):</span> <span style="color:#2e7d32;">⭐ (Low Risk)</span></div>
+                <div class="risk-item"><span>3. Heat Stress (उष्णतेचा ताण/धाप):</span> <span style="color:#e65100;">⭐⭐⭐ (High Alert)</span></div>
+                <div class="risk-item"><span>4. Muscle Fatigue (स्नायू थकवा):</span> <span style="color:#d32f2f;">⭐⭐⭐⭐ (Critical Need)</span></div>
+            </div>
+
+            <p style="font-size: 13px; color: #111; line-height: 1.5; font-weight: 700;" id="advance_tips_ui"></p>
+            
+            <table class="diet-table">
+                <thead>
+                    <tr>
+                        <th>आहार घटक</th>
+                        <th>सध्या देताय</th>
+                        <th>शिफारस (शर्यत बादशाह खुराक)</th>
+                    </tr>
+                </thead>
+                <tbody id="advance_diet_tbody">
+                    <!-- JS will inject diet comparison rows -->
+                </tbody>
+            </table>
+
+            <div style="background:#fff3e0; border-left:5px solid #ff6f00; padding:14px; border-radius:12px; margin-top:16px;">
+                <h5 style="color:#d84315; font-size:13.5px; font-weight:900; margin-bottom:6px;">🏆 छाती व मान रुंद करण्याचा पारंपारिक देशी सल्ला:</h5>
+                <p style="font-size:12px; color:#222; line-height:1.6; font-weight:700;">
+                    शर्यतीच्या बैलाची छाती आणि मान मजबूत करण्यासाठी आठवड्यातून ३ दिवस <b>उकडलेली मटकी किंवा भिजवलेली उडदाची डाळ</b> चारा देण्यापूर्वी खाऊ घाला. तसेच मैदानात धावताना पायात गोळे (Cramps) येऊ नयेत म्हणून रोज <b>३० मिली लिक्विड कॅल्शियम व इलेक्ट्रोलाईट्स</b> पाण्यातून देणे आवश्यक आहे.
+                </p>
+            </div>
+
+            <!-- PDF Download Button -->
+            <button id="btn_pdf_download" class="btn-pdf" onclick="downloadRealPDF()">
+                📥 सविस्तर PDF रिपोर्ट डाऊनलोड करा (Download PDF)
+            </button>
+
+            <!-- Gemini AI Advice Button -->
+            <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">
+                ✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)
+            </button>
+            <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
+            <div class="gemini-response-box" id="gemini_response_box">
+                <h4>✨ दुग्ध दिशा AI विशेष शर्यत सल्ला:</h4>
+                <div class="gemini-content" id="gemini_content_text"></div>
+            </div>
+        </div>
+
+        <!-- LOCKED PREMIUM BOX (Visible ONLY if user is Free/Basic) -->
+        <div class="locked-premium-box" id="locked_premium_box">
+            <div style="font-size: 42px; margin-bottom: 6px;">🔒</div>
+            <h3>अचूक उपाय आणि शर्यत डाएट चार्ट लॉक आहे!</h3>
+            <p>तुमच्या बैलाची छाती, मान व स्नायू बळकट करण्यासाठी, हाडांची मजबूती आणि पारंपारिक देशी खुराक + वैज्ञानिक आहाराचा अचूक चार्ट पाहण्यासाठी <b>'ॲडव्हान्स प्लॅन'</b> अनलॉक करा.</p>
+            <button class="btn-upgrade" onclick="showPaywall()">
+                👑 Advance Plan अनलॉक करा (Upgrade ₹४९ Value)
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 6. Mandatory Medical Disclaimer Note -->
+    <div class="disclaimer-note">
+        <b>⚠️ वैद्यकीय व आहार टीप (Disclaimer):</b> हे विश्लेषण व आहार तक्ता फक्त माहितीसाठी आणि पोषणाचा अंदाज घेण्यासाठी आहे. तुमच्या बैलाच्या खाद्यामध्ये कोणताही मोठा बदल करण्यापूर्वी किंवा आजारांवर उपचार करण्यापूर्वी तुमच्या पशुवैद्यकीय डॉक्टरांचा सल्ला नक्की घ्या.
+    </div>
+
+</div>
+
+<!-- 🔥 PAYWALL OVERLAY MODAL (Razorpay ₹49) 🔥 -->
+<div class="paywall-overlay" id="ration_paywall_overlay">
+    <div class="paywall-box">
+        <div class="paywall-icon">🔒</div>
+        <h3 class="paywall-title">ॲडव्हान्स शर्यत रेशन बॅलन्सर</h3>
+        <p class="paywall-desc">हे प्रीमियम फीचर लॉक आहे. यातून तुम्हाला बैलाचा स्टॅमिना, ताकद आणि छाती-मान रुंद करण्यासाठी वैज्ञानिक + पारंपारिक डाएट चार्ट मिळतो.</p>
+        
+        <div class="paywall-price-tag" id="paywall_price">₹ ४९ / २४ तास</div>
+        
+        <button class="btn-pay-now" onclick="triggerRazorpayPayment()">💳 Razorpay द्वारे सुरक्षित पेमेंट करा</button>
+        <button class="btn-pay-close" onclick="closePaywall()">✕ रद्द करा (फ्री बेसिक वापरा)</button>
+    </div>
+</div>
+
+<!-- 7. Bottom Navigation Bar -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item">
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item active">
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item">
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<!-- 🔥 JAVASCRIPT & FIREBASE CLOUD SYNC 🔥 -->
+<script>
+    // 1. FIREBASE INITIALIZATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let currentMode = 'basic';
+    let globalCalculationData = {};
+    let CURRENT_MODEL = "";
+
+    function initRationBalancer() {
+        checkUserPlanStatus();
+        updateTabLockUI();
+    }
+
+    // 2. TABS MANAGEMENT (2 Tiers: Basic Free vs Advance Rs 49)
+    function setLevel(mode) {
+        if(mode === 'adv' && !isPlanActive('adv')) {
+            showPaywall();
+            return;
+        }
+
+        currentMode = mode;
+        document.getElementById('tab_basic').className = 'level-tab basic';
+        document.getElementById('tab_adv').className = 'level-tab adv';
+
+        if(mode === 'adv') {
+            document.getElementById('tab_adv').className = 'level-tab active adv';
+        } else {
+            document.getElementById('tab_basic').className = 'level-tab active basic';
+        }
+
+        // जर आधीच कॅल्क्युलेशन केले असेल तर अहवाल रिफ्रेश करा
+        if(document.getElementById("result_container").style.display === "block") {
+            calculateKhondRation();
+        }
+    }
+
+    function isPlanActive(featureType) {
+        let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
+        if(!activePlan) return false;
+
+        let now = new Date();
+        let expiry = new Date(activePlan.expiryDate);
+        if(now > expiry) {
+            localStorage.removeItem('farmer_active_plan');
+            return false;
+        }
+
+        let pName = (activePlan.name || '').toLowerCase();
+        if(pName.includes('दिशा प्राईम') || pName.includes('ॲडव्हान्स') || pName.includes('advance') || pName.includes('adv') || pName.includes('प्लॅटिनम') || pName.includes('49') || pName.includes('४९')) {
+            return true;
+        }
+        return false;
+    }
+
+    function checkUserPlanStatus() {
+        let isPremium = isPlanActive('adv');
+        let modeTag = document.getElementById("plan_mode_tag");
+
+        if (isPremium) {
+            modeTag.innerText = "ADVANCE (PREMIUM)";
+            modeTag.style.background = "#1b5e20";
+        } else {
+            modeTag.innerText = "BASIC (FREE)";
+            modeTag.style.background = "#ff6f00";
+        }
+    }
+
+    function updateTabLockUI() {
+        let advTab = document.getElementById('tab_price_adv');
+        if(isPlanActive('adv')) {
+            advTab.innerHTML = `✅ ॲक्टिव्ह`;
+            advTab.style.color = '#1b5e20';
+        } else {
+            advTab.innerHTML = `🔒 ₹४९ (संपूर्ण उपाय)`;
+            advTab.style.color = '#d32f2f';
+        }
+    }
+
+    // 3. PAYWALL MODAL LOGIC
+    function showPaywall() {
+        document.getElementById('ration_paywall_overlay').style.display = 'flex';
+    }
+
+    function closePaywall() {
+        document.getElementById('ration_paywall_overlay').style.display = 'none';
+    }
+
+    function triggerRazorpayPayment() {
+        let numAmount = 49;
+        let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
+        let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
+
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6",
+            "amount": numAmount * 100,
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": "ॲडव्हान्स शर्यत रेशन बॅलन्सर ॲक्सेस",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png",
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
+                
+                db.collection("successful_payments").add({
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: "Advance Racing Ration",
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                let now = new Date();
+                let expiryDate = new Date();
+                expiryDate.setHours(expiryDate.getHours() + 24);
+
+                let activePlan = {
+                    name: "Advance Racing Ration",
+                    activatedOn: now.toISOString(),
+                    expiryDate: expiryDate.toISOString(),
+                    status: "Active"
+                };
+
+                localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+                alert("🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि 'ॲडव्हान्स शर्यत डाएट चार्ट' लगेच अनलॉक करण्यात आला आहे!");
+                closePaywall();
+                updateTabLockUI();
+                setLevel('adv');
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": { "color": "#1b5e20" }
+        };
+
+        var rzp1 = new Razorpay(options);
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        rzp1.open();
+    }
+
+    // 4. MAIN RATION BALANCER CALCULATION ENGINE (Khillar Racing Bull Logic)
+    function calculateKhondRation() {
+        let weight = parseFloat(document.getElementById("rb_weight").value) || 400;
+        let age = parseFloat(document.getElementById("rb_age").value) || 36;
+        let stage = document.getElementById("rb_racing_stage").value;
+        let starter = parseFloat(document.getElementById("rb_starter").value) || 0;
+
+        // 3 Green Fodders
+        let green1 = parseFloat(document.getElementById("rb_green1").value) || 0;
+        let green2 = parseFloat(document.getElementById("rb_green2").value) || 0;
+        let green3 = parseFloat(document.getElementById("rb_green3").value) || 0;
+        let totalGreen = green1 + green2 + green3;
+
+        // 2 Dry Fodders
+        let dry1 = parseFloat(document.getElementById("rb_dry1").value) || 0;
+        let dry2 = parseFloat(document.getElementById("rb_dry2").value) || 0;
+        let totalDry = dry1 + dry2;
+
+        // 3 Traditional Feeds
+        let trad1Type = document.getElementById("rb_trad1_type").value;
+        let trad1Qty = parseFloat(document.getElementById("rb_trad1_qty").value) || 0;
+        let trad2Type = document.getElementById("rb_trad2_type").value;
+        let trad2Qty = parseFloat(document.getElementById("rb_trad2_qty").value) || 0;
+        let trad3Type = document.getElementById("rb_trad3_type").value;
+        let trad3Qty = parseFloat(document.getElementById("rb_trad3_qty").value) || 0;
+        let totalTradGrams = trad1Qty + trad2Qty + trad3Qty;
+
+        // वैज्ञानिक व शर्यत गरज (ICAR + Racing Khillar standard for Adult Bull)
+        let targetDM = weight * 0.023; 
+        let targetProteinGrams = weight * 6.5; 
+        let targetCalcium = weight * 0.45; 
+        let targetME = Math.round(weight * 0.048); // Energy in Mcal
+
+        // सध्याच्या आहारातून मिळणारे पोषण (Supplied)
+        let suppliedDM = (totalGreen * 0.25) + (totalDry * 0.88) + ((starter / 1000) * 0.9) + ((totalTradGrams / 1000) * 0.9);
+        let suppliedProtein = (totalGreen * 18) + (totalDry * 35) + ((starter / 1000) * 180) + ((totalTradGrams / 1000) * 230);
+        let suppliedCal = (totalGreen * 2.5) + (totalDry * 3.5) + ((starter / 1000) * 8) + ((totalTradGrams / 1000) * 5);
+        let suppliedME = ((totalGreen * 2.0) + (totalDry * 1.7) + ((starter / 1000) * 2.8) + ((totalTradGrams / 1000) * 3.0));
+
+        // टक्केवारी (Percentage check)
+        let dmPercent = Math.min(100, Math.round((suppliedDM / targetDM) * 100));
+        let cpPercent = Math.min(100, Math.round((suppliedProtein / targetProteinGrams) * 100));
+        let calPercent = Math.min(100, Math.round((suppliedCal / targetCalcium) * 100));
+        let mePercent = Math.min(100, Math.round((suppliedME / targetME) * 100));
+
+        // UI मीटर्स अपडेट करा
+        document.getElementById("meter_dm").innerText = `${dmPercent}%`;
+        document.getElementById("meter_cp").innerText = `${cpPercent}%`;
+        document.getElementById("meter_cal").innerText = `${calPercent}%`;
+
+        // 🔥 UPDATE EXPLICIT BASIC 2-ITEM SUMMARY (DM & CP Target vs Supplied) 🔥
+        document.getElementById("dm_req_val").innerText = `${targetDM.toFixed(1)} Kg`;
+        document.getElementById("dm_supp_val").innerText = `${suppliedDM.toFixed(1)} Kg`;
+        let dmDiff = (suppliedDM - targetDM).toFixed(1);
+        let dmDiffEl = document.getElementById("dm_diff_val");
+        let dmPill = document.getElementById("dm_status_pill");
+        if (dmDiff >= 0) {
+            dmDiffEl.innerText = `+${dmDiff} Kg (पुरेसे - 100%)`;
+            dmDiffEl.style.color = "#2e7d32";
+            dmPill.innerText = "पुरेसे";
+            dmPill.style.background = "#e8f5e9";
+            dmPill.style.color = "#2e7d32";
+        } else {
+            dmDiffEl.innerText = `${dmDiff} Kg कमतरता (${dmPercent}%)`;
+            dmDiffEl.style.color = "#c62828";
+            dmPill.innerText = "कमतरता";
+            dmPill.style.background = "#ffebee";
+            dmPill.style.color = "#c62828";
+        }
+
+        document.getElementById("cp_req_val").innerText = `${Math.round(targetProteinGrams)} g`;
+        document.getElementById("cp_supp_val").innerText = `${Math.round(suppliedProtein)} g`;
+        let cpDiff = Math.round(suppliedProtein - targetProteinGrams);
+        let cpDiffEl = document.getElementById("cp_diff_val");
+        let cpPill = document.getElementById("cp_status_pill");
+        if (cpDiff >= 0) {
+            cpDiffEl.innerText = `+${cpDiff} g (पुरेसे - 100%)`;
+            cpDiffEl.style.color = "#2e7d32";
+            cpPill.innerText = "पुरेसे";
+            cpPill.style.background = "#e8f5e9";
+            cpPill.style.color = "#2e7d32";
+        } else {
+            cpDiffEl.innerText = `${cpDiff} g कमतरता (${cpPercent}%)`;
+            cpDiffEl.style.color = "#c62828";
+            cpPill.innerText = "कमतरता";
+            cpPill.style.background = "#ffebee";
+            cpPill.style.color = "#c62828";
+        }
+
+        // 5. समस्या अहवाल (Problems - Free Basic)
+        let problems = [];
+        if (dmPercent < 80) {
+            problems.push(`<b>पोट पूर्ण भरत नाहीये (DM कमतरता):</b> शारीरिक वाढीसाठी आवश्यक सुका व हिरवा चारा एकूण गरजेपेक्षा कमी पडत आहे.`);
+        }
+        if (cpPercent < 85) {
+            problems.push(`<b>स्नायू प्रथिने (Protein) कमी:</b> शर्यतीच्या बैलाची छाती, मान आणि स्नायू बळकट होण्यासाठी आहारात <b>उडदाची डाळ / हरभरा चुणी</b> किंवा सोयाबीन पेंडचे प्रमाण कमी पडत आहे.`);
+        }
+        if (calPercent < 80) {
+            problems.push(`<b>खूर व हाडे मजबूती (Calcium कमतरता):</b> मैदानात पळताना पायांना ताकद मिळण्यासाठी आणि खूर टणक राहण्यासाठी लिक्विड कॅल्शियम व मिनरल्सची कमतरता आहे.`);
+        }
+        if (problems.length === 0) {
+            problems.push(`<b>उत्तम शर्यत खुराक:</b> तुमच्या बैलाचा आहार संतुलित आणि ताकदवान आहे! रोजचा हलका सराव आणि व्यायाम सुरू ठेवा.`);
+        }
+
+        let problemHtml = "";
+        problems.forEach(p => {
+            problemHtml += `<li style="margin-bottom:8px;">${p}</li>`;
+        });
+        document.getElementById("problem_list_ui").innerHTML = problemHtml;
+
+        // 6. Freemium Access Check (Show Advance or Lock Box)
+        let isPremium = isPlanActive('adv');
+        let lockBox = document.getElementById("locked_premium_box");
+        let advanceBox = document.getElementById("advance_solution_container");
+        let topStatusText = document.getElementById("status_message_top");
+        let lockIconStatus = document.getElementById("lock_icon_status");
+
+        if (isPremium || currentMode === 'adv') {
+            if(!isPremium) {
+                showPaywall();
+                return;
+            }
+            lockBox.style.display = "none";
+            advanceBox.style.display = "block";
+            topStatusText.innerText = "👑 Advance Racing Diet Unlocked";
+            lockIconStatus.innerText = "✅ Premium User";
+            lockIconStatus.style.color = "#1b5e20";
+
+            // 🔥 ADVANCE MODE: UPDATE 14-POINT NUTRITION & RISK MATRIX VALUES 🔥
+            document.getElementById("n14_dm").innerText = `${suppliedDM.toFixed(1)} kg / ${targetDM.toFixed(1)} kg (${dmPercent}%)`;
+            document.getElementById("n14_cp").innerText = `${(suppliedProtein/1000).toFixed(2)} kg / ${(targetProteinGrams/1000).toFixed(2)} kg (${cpPercent}%)`;
+            document.getElementById("n14_me").innerText = `${suppliedME.toFixed(1)} Mcal / ${targetME} Mcal (${mePercent}%)`;
+            let waterReq = Math.round(weight * 0.12);
+            document.getElementById("n14_water").innerText = `42 L / ${waterReq} L Needed`;
+            
+            // Calculate AI Race Bull Performance Score
+            let perfScore = Math.min(100, Math.round((dmPercent * 0.35) + (cpPercent * 0.4) + (calPercent * 0.25)));
+            document.getElementById("adv_perf_score").innerText = `${perfScore} / १००`;
+
+            // जनरेट ॲडव्हान्स सोल्यूशन (Advance Diet Table for Racing Bull)
+            let recStarter = stage === "heavy" ? "1500" : "1000";
+            let recTrad = stage === "heavy" ? "1200" : "800";
+            let recGreen = "10.0";
+            let recDry = "5.0";
+
+            let tbody = `
+                <tr>
+                    <td>पशुखाद्य / एनर्जी फीड (Grams)</td>
+                    <td>${starter} g</td>
+                    <td style="color:#1b5e20; font-weight:900;">${recStarter} g (सकाळ-संध्याकाळ विभागून)</td>
+                </tr>
+                <tr>
+                    <td>पारंपारिक खुराक (एकूण ३ प्रकार)</td>
+                    <td>${totalTradGrams} g</td>
+                    <td style="color:#ff6f00; font-weight:900;">${recTrad} g (${trad1Type} मुख्यत्वे)</td>
+                </tr>
+                <tr>
+                    <td>हिरवा चारा (३ प्रकार मिळून)</td>
+                    <td>${totalGreen} Kg</td>
+                    <td style="color:#1b5e20; font-weight:900;">${recGreen} Kg (मका/लसूण घास प्राधान्य)</td>
+                </tr>
+                <tr>
+                    <td>सुका चारा (२ प्रकार मिळून)</td>
+                    <td>${totalDry} Kg</td>
+                    <td style="color:#1b5e20; font-weight:900;">${recDry} Kg (मऊ ज्वारी कडबा कुट्टी)</td>
+                </tr>`;
+            document.getElementById("advance_diet_tbody").innerHTML = tbody;
+
+            document.getElementById("advance_tips_ui").innerHTML = `
+                <b>शर्यतीच्या बैलासाठी विशेष शिफारस:</b> तुमच्या बैलाचे वजन (${weight} Kg) आणि शर्यतीची तयारी लक्षात घेता, आहारात <b>${trad1Type}</b> सोबत रोज <b>३० मिली लिक्विड कॅल्शियम + इलेक्ट्रोलाईट्स</b> देणे आवश्यक आहे. यामुळे मैदानात पळताना पायात गोळे (Cramps) येणार नाहीत आणि हाडांचा सांगाडा मजबूत बनेल.`;
+            
+            document.getElementById("btn_pdf_download").style.display = "block";
+            document.getElementById("btn_gemini_trigger").style.display = "block";
+        } else {
+            lockBox.style.display = "block";
+            advanceBox.style.display = "none";
+            topStatusText.innerText = "⚡ बेसिक समस्या अहवाल";
+            lockIconStatus.innerText = "🔒 Advance Locked";
+            lockIconStatus.style.color = "#d32f2f";
+            document.getElementById("btn_pdf_download").style.display = "none";
+            document.getElementById("btn_gemini_trigger").style.display = "none";
+        }
+
+        // 7. स्क्रीनवर अहवाल दाखवा आणि स्क्रोल करा
+        document.getElementById("result_heading").style.display = "flex";
+        document.getElementById("result_container").style.display = "block";
+        document.getElementById("result_heading").scrollIntoView({ behavior: "smooth" });
+
+        globalCalculationData = { weight, age, stage, starter, totalGreen, totalDry, totalTradGrams, trad1Type };
+
+        // 8. Firebase Cloud वर आहाराची नोंद सेव्ह करा
+        saveDietEvaluationToCloud(weight, age, dmPercent, cpPercent, trad1Type);
+    }
+
+    // 9. SAVE EVALUATION RECORD TO FIREBASE CLOUD
+    function saveDietEvaluationToCloud(weight, age, dm, cp, tradType) {
+        let userMobile = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        let evalObj = {
+            farmerMobile: userMobile,
+            calfWeight: weight,
+            calfAgeMonths: age,
+            traditionalFeed: tradType,
+            dmPercent: dm,
+            cpPercent: cp,
+            timestamp: new Date().toISOString()
+        };
+
+        db.collection("khond_diet_evaluations").add(evalObj)
+        .then(() => console.log("✅ शर्यत खोंड/बैल आहार अहवाल क्लाऊडवर सेव्ह झाला."))
+        .catch(e => console.error("Cloud save error:", e));
+    }
+
+    // 10. PDF DOWNLOAD LOGIC
+    function downloadRealPDF() {
+        window.scrollTo(0, 0);
+        let element = document.getElementById('result_container');
+        let opt = {
+            margin:       10,
+            filename:     'Khillar_Racing_Bull_Diet_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // 11. GEMINI AI ADVICE INTEGRATION
+    async function fetchGeminiAdvice() {
+        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
+        let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
+
+        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+            alert("⚠️ ॲडमिन पॅनेलमध्ये Google Gemini ची योग्य API Key जोडलेली नाही. कृपया ती सेट करा.");
+            return;
+        }
+
+        document.getElementById('btn_gemini_trigger').style.display = "none";
+        document.getElementById('gemini_loader').style.display = "block";
+        document.getElementById('gemini_response_box').style.display = "none";
+
+        let gData = globalCalculationData;
+        let promptText = `
+        तू दुग्ध दिशा ॲपचा एक तज्ज्ञ पशुवैद्यक आणि शर्यतीच्या बैलांचा (खिलार वळू) आहारतज्ज्ञ आहेस. 
+        मी एका शर्यतीच्या बैलाच्या आहाराचे विश्लेषण केले आहे. आकडेवारी खालीलप्रमाणे आहे:
+        - बैलाचे वजन: ${gData.weight} किलो
+        - वय: ${gData.age} महिने
+        - शर्यतीचा टप्पा: ${gData.stage}
+        - हिरवा चारा: ${gData.totalGreen} Kg, सुका चारा: ${gData.totalDry} Kg
+        - पारंपारिक देशी खुराक: ${gData.trad1Type} (${gData.totalTradGrams} ग्रॅम)
+        - पशुखाद्य: ${gData.starter} ग्रॅम
+        
+        शेतकऱ्याला मराठीत अत्यंत सोप्या ४-५ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
+        १. शर्यतीच्या मैदानात बादशाह बनवण्यासाठी आहारात नेमकी काय वाढ करावी (उदा. उडदाची डाळ, मटकी, किंवा स्टॅमिना पावडर)?
+        २. धावताना पायात गोळे येऊ नयेत म्हणून काय काळजी घ्यावी?
+        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
+        `;
+
+        try {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+            });
+            const data = await response.json();
+            
+            if (response.ok && data.candidates && data.candidates.length > 0) {
+                let aiResponse = data.candidates[0].content.parts[0].text;
+                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<br>• $1');
+                document.getElementById('gemini_content_text').innerHTML = aiResponse;
+                document.getElementById('gemini_loader').style.display = "none";
+                document.getElementById('gemini_response_box').style.display = "block";
+            } else {
+                alert("AI कडून उत्तर आले नाही. कृपया पुन्हा प्रयत्न करा.");
+                document.getElementById('btn_gemini_trigger').style.display = "block";
+                document.getElementById('gemini_loader').style.display = "none";
+            }
+        } catch (error) {
+            alert("इंटरनेट कनेक्शनची अडचण आहे.");
+            document.getElementById('btn_gemini_trigger').style.display = "block";
+            document.getElementById('gemini_loader').style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>

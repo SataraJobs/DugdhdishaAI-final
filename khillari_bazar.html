@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - शर्यत बैल बाजार व वंशावळ</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f3d14">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- 🔥 RAZORPAY SDK 🔥 -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-dark: #0f3d14;
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --bhagwa-main: #ff6f00;
+            --bhagwa-light: #ff9800;
+            --gold: #ffd700;
+            --accent-red: #d32f2f;
+            --bg: #eff3f1;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #555555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding-bottom: 95px !important;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 1. 3D Royal Header */
+        .top-header {
+            background: linear-gradient(135deg, #0f3d14 0%, #1b5e20 60%, #2e7d32 100%);
+            color: white;
+            padding: 18px 20px 24px 20px;
+            border-radius: 0 0 26px 26px;
+            box-shadow: 0 8px 25px rgba(15, 61, 20, 0.4);
+            position: relative;
+            z-index: 100;
+            border-bottom: 3.5px solid var(--gold);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-title p {
+            font-size: 11.5px;
+            color: #ffd54f;
+            font-weight: bold;
+            margin: 4px 0 0 0;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        .back-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 2. Motivational Tagline Banner */
+        .racing-tagline-bar {
+            background: linear-gradient(135deg, #fff3e0, #ffecb3);
+            border: 1.5px solid #ffca28;
+            border-left: 6px solid var(--bhagwa-main);
+            margin: 16px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            box-shadow: 0 6px 15px rgba(255, 111, 0, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .racing-tagline-bar .emoji {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .racing-tagline-bar h4 {
+            font-size: 13.5px;
+            font-weight: 900;
+            color: #d84315;
+            margin: 0 0 2px 0;
+        }
+
+        .racing-tagline-bar p {
+            font-size: 11px;
+            color: #444;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* 3. Section Titles & Cards */
+        .section-heading {
+            margin: 18px 16px 10px 16px;
+            font-size: 15.5px;
+            font-weight: 900;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--bhagwa-main);
+            padding-left: 10px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin: 0 16px 16px 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            border: 1.5px solid #dbe4de;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #f0f4f1;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .field input, .field select, .field textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1.5px solid #d0d7d3;
+            border-radius: 10px;
+            font-size: 13px;
+            background: #f8faf9;
+            font-weight: 700;
+            color: #111;
+            transition: 0.2s;
+        }
+
+        .field input:focus, .field select:focus, .field textarea:focus {
+            border-color: var(--bhagwa-main);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.15);
+        }
+
+        .btn-submit-ad {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(230, 81, 0, 0.35);
+            transition: all 0.2s ease;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit-ad:active {
+            transform: scale(0.98);
+        }
+
+        /* 4. Filter Action Bar */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 0 16px 16px 16px;
+        }
+
+        .filter-grid select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1.5px solid #c8d4ce;
+            border-radius: 12px;
+            font-size: 13px;
+            background: #fff;
+            font-weight: 800;
+            color: var(--primary-dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        }
+
+        /* 5. 3D Khillar Bazar Listing Cards */
+        .bazar-card {
+            background: white;
+            border-radius: 18px;
+            padding: 16px;
+            margin: 0 16px 16px 16px;
+            border: 1px solid #e0e6e2;
+            border-left: 6px solid var(--bhagwa-main);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .bazar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .bazar-img-placeholder {
+            width: 100%;
+            height: 180px;
+            background: #f0f4f1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            color: #aaa;
+            margin-bottom: 12px;
+            border: 1px solid #e0e6e2;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 900;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            border: 1.5px solid var(--gold);
+        }
+
+        .bazar-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .bazar-bull-name {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin-bottom: 2px;
+        }
+
+        .bazar-pedigree-tag {
+            display: inline-block;
+            background: #fff3e0;
+            color: #d84315;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 14px;
+            border: 1px solid #ffe0b2;
+            margin-bottom: 10px;
+        }
+
+        .bazar-specs-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .spec-pill {
+            background: #f4f8f5;
+            padding: 8px 4px;
+            border-radius: 10px;
+            border: 1px solid #e1e8e4;
+        }
+
+        .spec-pill .val {
+            font-size: 13.5px;
+            font-weight: 900;
+            color: #111;
+        }
+
+        .spec-pill .lbl {
+            font-size: 10px;
+            color: #555;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .bazar-desc {
+            font-size: 12.5px;
+            color: #444;
+            line-height: 1.5;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f9fbf9;
+            border-radius: 8px;
+            border: 1px solid #eef2ef;
+        }
+
+        .bazar-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            border-top: 1px solid #f0f4f1;
+            padding-top: 12px;
+        }
+
+        .btn-call {
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: white;
+            text-decoration: none;
+            padding: 11px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(27, 94, 32, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-wp {
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+            text-decoration: none;
+            padding: 11px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* 6. Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 35px 20px;
+            color: #777;
+            background: white;
+            border-radius: 18px;
+            margin: 0 16px;
+            border: 2px dashed #cfd8d3;
+        }
+
+        /* 7. Bottom Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+            border-radius: 20px 20px 0 0;
+            border-top: 1px solid #eaeef0;
+        }
+
+        .b-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #757575;
+            transition: 0.3s ease;
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        .b-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+        }
+
+        .b-nav-text {
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .b-nav-item.active {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .b-nav-item.active .b-nav-icon {
+            filter: grayscale(0%);
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body onload="initKhillarBazar()">
+
+<div class="app-container">
+
+    <!-- 1. 3D Royal Header -->
+    <header class="top-header">
+        <div class="header-top-row">
+            <div class="header-title">
+                <a href="khond_care_dashboard.html" class="back-btn">⬅</a>
+                <div>
+                    <h1>🐂 शर्यत बैल बाजार व वंशावळ</h1>
+                    <p>महाराष्ट्रातील अस्सल शर्यतीचे बैल व खोंड खरेदी-विक्री</p>
+                </div>
+            </div>
+            <div style="font-size: 26px;">🏆</div>
+        </div>
+    </header>
+
+    <!-- 2. Positive Tagline Banner -->
+    <div class="racing-tagline-bar">
+        <div class="emoji">🔥</div>
+        <div>
+            <h4>शर्यतीच्या चॅम्पियन बैलांची बाजारपेठ!</h4>
+            <p>कोणत्याही दलालाशिवाय महाराष्ट्रातील अस्सल पैदास, खिलार खोंड व शर्यतीचे बैल थेट मालकाकडून खरेदी व विक्री करा.</p>
+        </div>
+    </div>
+
+    <!-- 3. Smart District & Category Filters -->
+    <div class="filter-grid">
+        <select id="bazar_district_filter" onchange="filterBazarListings()">
+            <option value="all">📍 सर्व जिल्हे (All Maharashtra)</option>
+            <option value="सातारा">सातारा (Satara)</option>
+            <option value="सांगली">सांगली (Sangli)</option>
+            <option value="पुणे">पुणे (Pune)</option>
+            <option value="सोलापूर">सोलापूर (Solapur)</option>
+            <option value="कोल्हापूर">कोल्हापूर (Kolhapur)</option>
+            <option value="अहिल्यानगर">अहिल्यानगर (Ahilyanagar)</option>
+        </select>
+
+        <select id="bazar_category_filter" onchange="filterBazarListings()">
+            <option value="all">🐂 सर्व प्रकार (All Categories)</option>
+            <option value="शर्यतीचा बैल">शर्यतीचा बैल (Racing Bull - ₹99)</option>
+            <option value="लहान खोंड">लहान खोंड (Bull Calf - Free)</option>
+            <option value="पैदास वळू">पैदास वळू (Breeding Bull - Free)</option>
+            <option value="गावरान कालवड">गावरान कालवड (Native Heifer - Free)</option>
+        </select>
+    </div>
+
+    <!-- 4. Post New Advertisement Button / Section -->
+    <div class="section-heading">
+        <span>📢 उपलब्ध बैल व खोंड (Sharyat Bull Bazar)</span>
+        <button onclick="toggleNewAdForm()" style="background:#1b5e20; color:white; border:none; padding:8px 14px; border-radius:12px; font-weight:900; font-size:12px; cursor:pointer; box-shadow:0 3px 8px rgba(27,94,32,0.3);">➕ जाहिरात द्या (Post Ad)</button>
+    </div>
+
+    <!-- 5. New Advertisement Posting Form (Hidden by default) -->
+    <div id="new_ad_form_box" class="card-box" style="display: none; border: 2px solid #ff6f00; background: #fffcf8;">
+        <div class="card-title" style="color: #ff6f00;">➕ विक्रीसाठी जाहिरात द्या (Post Bull Ad)</div>
+        
+        <div class="form-grid-2">
+            <div class="field">
+                <label>बैलाचे / खोंडाचे नाव *</label>
+                <input type="text" id="ad_name" placeholder="उदा. सर्जा / बहाद्दूर">
+            </div>
+            <div class="field">
+                <label>प्रकार (Category) *</label>
+                <select id="ad_category" onchange="checkAdPricingRule()">
+                    <option value="शर्यतीचा बैल">शर्यतीचा बैल (Racing Bull - ₹99)</option>
+                    <option value="लहान खोंड">लहान खोंड (Bull Calf - Free)</option>
+                    <option value="पैदास वळू">पैदास वळू (Breeding Bull - Free)</option>
+                    <option value="गावरान कालवड">गावरान कालवड (Native Heifer - Free)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dynamic Pricing & Offer Notice -->
+        <div id="ad_pricing_notice" style="background:#fff3e0; border:1px dashed #ff9800; padding:10px 12px; border-radius:10px; margin-bottom:14px; font-size:12px; color:#d84315; font-weight:700;">
+            🔥 <b>शर्यतीच्या बैलासाठी विशेष ऑफर:</b> फक्त <b>₹९९</b> मध्ये संपूर्ण महाराष्ट्रात जाहिरात प्रसिद्ध करा आणि <b>'ॲडव्हान्स शर्यत रेशन बॅलन्सर'</b> पूर्ण <b>१ महिना (01 Month)</b> मोफत (FREE) अनलॉक करा!
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>वय (महिने / वर्षे) *</label>
+                <input type="text" id="ad_age" placeholder="उदा. 4 वर्षे / 18 महिने">
+            </div>
+            <div class="field">
+                <label>किंमत (₹ रुपये) *</label>
+                <input type="number" id="ad_price" placeholder="उदा. 150000">
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>वंशावळ / बापाचे नाव (Bloodline) *</label>
+                <input type="text" id="ad_bloodline" placeholder="उदा. माणदेशी खिलार / सोन्या">
+            </div>
+            <div class="field">
+                <label>जिल्हा (District) *</label>
+                <select id="ad_district">
+                    <option value="सातारा">सातारा</option>
+                    <option value="सांगली">सांगली</option>
+                    <option value="पुणे">पुणे</option>
+                    <option value="सोलापूर">सोलापूर</option>
+                    <option value="कोल्हापूर">कोल्हापूर</option>
+                    <option value="अहिल्यानगर">अहिल्यानगर</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>मालकाचे नाव *</label>
+                <input type="text" id="ad_owner" placeholder="उदा. तानाजी पाटील">
+            </div>
+            <div class="field">
+                <label>मोबाईल नंबर *</label>
+                <input type="tel" id="ad_phone" placeholder="10 अंकी नंबर">
+            </div>
+        </div>
+
+        <div class="field">
+            <label>वैशिष्ट्ये / शर्यत कामगिरी (Description)</label>
+            <textarea id="ad_desc" rows="2" placeholder="उदा. दावणीला शांत, २ वेळा फायनल मारलेला बैल, खूर व दात उत्तम..."></textarea>
+        </div>
+
+        <button class="btn-submit-ad" id="btn_submit_ad_action" onclick="handleAdSubmission()">
+            <span>🚀</span> <span id="btn_submit_text">₹९९ भरून जाहिरात प्रसिद्ध करा</span>
+        </button>
+    </div>
+
+    <!-- 6. Bazar Listings Container -->
+    <div id="bazar_listings_container">
+        <!-- JS will populate cards here -->
+    </div>
+
+</div>
+
+<!-- 7. Bottom Navigation Bar -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item active">
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item">
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item">
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<!-- 🔥 JAVASCRIPT & FIREBASE CLOUD SYNC 🔥 -->
+<script>
+    // 1. FIREBASE INITIALIZATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 2. REAL USER LISTINGS ONLY (NO DEMO ADS)
+    let allBazarListings = [];
+
+    function initKhillarBazar() {
+        checkAdPricingRule();
+        loadBazarAdsFromCloud();
+    }
+
+    // 3. RENDER CARDS ON SCREEN
+    function renderBazarListings(list) {
+        let container = document.getElementById("bazar_listings_container");
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 52px; margin-bottom: 12px;">🐂</div>
+                    <h4 style="color:#111; margin-bottom:6px; font-size:16px;">सध्या शर्यत बैल बाजारात जाहिराती उपलब्ध नाहीत!</h4>
+                    <p style="font-size:13px; line-height:1.5;">तुमच्या शर्यतीच्या बैलाची किंवा खोंडाची वरील '➕ जाहिरात द्या' बटणावर क्लिक करून पहिली खरी जाहिरात प्रसिद्ध करा.</p>
+                </div>`;
+            return;
+        }
+
+        let html = "";
+        list.forEach(item => {
+            let formattedPrice = new Intl.NumberFormat('en-IN').format(item.price);
+            let wpMsg = `नमस्कार ${item.owner}, मी 'दुग्ध दिशा AI' ॲपवर तुमच्या '${item.name}' (किंमत: ₹${formattedPrice}) ची जाहिरात पाहिली. मला खरेदी करायचा आहे.`;
+            let wpUrl = `https://wa.me/${item.phone.replace("+", "")}?text=${encodeURIComponent(wpMsg)}`;
+
+            html += `
+            <div class="bazar-card">
+                <div class="bazar-img-placeholder">
+                    <span>🐂</span>
+                    <div class="price-badge">₹ ${formattedPrice} /-</div>
+                </div>
+
+                <div class="bazar-card-header">
+                    <div>
+                        <div class="bazar-bull-name">${item.name}</div>
+                        <span style="font-size:11px; color:#666; font-weight:700;">प्रकार: ${item.category} • जिल्हा: ${item.district}</span>
+                    </div>
+                </div>
+
+                <div class="bazar-pedigree-tag">🏆 वंशावळ: ${item.bloodline}</div>
+
+                <div class="bazar-specs-row">
+                    <div class="spec-pill">
+                        <div class="val" style="color:#2e7d32;">${item.age}</div>
+                        <div class="lbl">वय (Age)</div>
+                    </div>
+                    <div class="spec-pill">
+                        <div class="val" style="color:#e65100;">${item.district}</div>
+                        <div class="lbl">जिल्हा</div>
+                    </div>
+                    <div class="spec-pill">
+                        <div class="val" style="color:#1565c0;">${item.owner}</div>
+                        <div class="lbl">मालक</div>
+                    </div>
+                </div>
+
+                <div class="bazar-desc">${item.desc}</div>
+
+                <div class="bazar-actions">
+                    <a href="tel:${item.phone}" class="btn-call">📞 कॉल करा</a>
+                    <a href="${wpUrl}" target="_blank" class="btn-wp">💬 WhatsApp</a>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // 4. FILTER LISTINGS
+    function filterBazarListings() {
+        let selectedDist = document.getElementById("bazar_district_filter").value;
+        let selectedCat = document.getElementById("bazar_category_filter").value;
+
+        let filtered = allBazarListings.filter(item => {
+            let matchDist = (selectedDist === "all") || (item.district === selectedDist);
+            let matchCat = (selectedCat === "all") || (item.category === selectedCat);
+            return matchDist && matchCat;
+        });
+
+        renderBazarListings(filtered);
+    }
+
+    // 5. TOGGLE NEW AD FORM
+    function toggleNewAdForm() {
+        let box = document.getElementById("new_ad_form_box");
+        if (box.style.display === "none") {
+            box.style.display = "block";
+            box.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            box.style.display = "none";
+        }
+    }
+
+    // 6. DYNAMIC PRICING RULE (Rs 99 for Racing Bull + Free 1 Month Advance Ration Access)
+    function checkAdPricingRule() {
+        let cat = document.getElementById("ad_category").value;
+        let notice = document.getElementById("ad_pricing_notice");
+        let btnText = document.getElementById("btn_submit_text");
+
+        if (cat === "शर्यतीचा बैल") {
+            notice.style.display = "block";
+            notice.innerHTML = `🔥 <b>शर्यतीच्या बैलासाठी विशेष ऑफर:</b> फक्त <b>₹९९</b> मध्ये संपूर्ण महाराष्ट्रात जाहिरात प्रसिद्ध करा आणि <b>'ॲडव्हान्स शर्यत रेशन बॅलन्सर'</b> पूर्ण <b>१ महिना (01 Month)</b> मोफत (FREE) अनलॉक करा!`;
+            btnText.innerText = "₹९९ भरून जाहिरात प्रसिद्ध करा";
+        } else {
+            notice.style.display = "block";
+            notice.innerHTML = `🎉 <b>मोफत जाहिरात:</b> '${cat}' या वर्गासाठी जाहिरात प्रसिद्ध करणे पूर्णपणे <b>मोफत (FREE)</b> आहे.`;
+            btnText.innerText = "मोफत जाहिरात प्रसिद्ध करा (Free Ad)";
+        }
+    }
+
+    // 7. HANDLE AD SUBMISSION AND PAYMENT (Razorpay Rs 99)
+    function handleAdSubmission() {
+        let name = document.getElementById("ad_name").value.trim();
+        let category = document.getElementById("ad_category").value;
+        let age = document.getElementById("ad_age").value.trim();
+        let price = parseFloat(document.getElementById("ad_price").value);
+        let bloodline = document.getElementById("ad_bloodline").value.trim();
+        let district = document.getElementById("ad_district").value;
+        let owner = document.getElementById("ad_owner").value.trim();
+        let phone = document.getElementById("ad_phone").value.trim();
+        let desc = document.getElementById("ad_desc").value.trim() || "उत्तम आणि निरोगी शर्यत बैल / खोंड.";
+
+        if (!name || !age || isNaN(price) || price <= 0 || !bloodline || !owner || !phone || phone.length < 10) {
+            alert("⚠️ कृपया नाव, वय, किंमत, वंशावळ आणि मोबाईल नंबर अचूक भरा!");
+            return;
+        }
+
+        let formattedPhone = phone.startsWith("+91") ? phone : "+91" + phone;
+
+        let newAdObj = {
+            id: "AD_" + Date.now(),
+            name: name,
+            category: category,
+            age: age,
+            price: price,
+            bloodline: bloodline,
+            district: district,
+            owner: owner,
+            phone: formattedPhone,
+            desc: desc,
+            createdAt: new Date().toISOString()
+        };
+
+        // जर शर्यतीचा बैल असेल तर ₹९९ चे पेमेंट घ्या
+        if (category === "शर्यतीचा बैल") {
+            triggerRacingBullPayment(newAdObj);
+        } else {
+            // इतर प्रकारांसाठी मोफत जाहिरात पोस्ट करा
+            publishAdToDatabase(newAdObj, false);
+        }
+    }
+
+    function triggerRacingBullPayment(adObj) {
+        let numAmount = 99;
+        let userName = adObj.owner || "शेतकरी मित्र";
+        let userMobile = adObj.phone || "9999999999";
+
+        var options = {
+            "key": "rzp_live_TIkGEzUM5ygyd6",
+            "amount": numAmount * 100,
+            "currency": "INR",
+            "name": "दुग्ध दिशा AI",
+            "description": "शर्यत बैल जाहिरात + 1 महिना फ्री ॲडव्हान्स रेशन",
+            "image": "https://cdn-icons-png.flaticon.com/512/3050/3050212.png",
+            "handler": function (response) {
+                let paymentId = response.razorpay_payment_id;
+                
+                db.collection("successful_payments").add({
+                    farmerName: userName,
+                    mobile: userMobile,
+                    planName: "Racing Bull Bazar Ad (Rs 99 - 1 Month Free Ration)",
+                    amount: numAmount,
+                    paymentId: paymentId,
+                    date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Firebase log error", e));
+
+                // जाहिरात पब्लिश करा आणि ॲडव्हान्स रेशन १ महिन्यासाठी मोफत अनलॉक करा
+                publishAdToDatabase(adObj, true);
+            },
+            "prefill": {
+                "name": userName,
+                "contact": userMobile
+            },
+            "theme": { "color": "#1b5e20" }
+        };
+
+        var rzp1 = new Razorpay(options);
+        rzp1.on('payment.failed', function (response){
+            alert("⚠️ पेमेंट पूर्ण होऊ शकले नाही. कारण: " + response.error.description);
+        });
+        rzp1.open();
+    }
+
+    // 8. PUBLISH AD & UNLOCK 1 MONTH FREE ADVANCE RATION
+    function publishAdToDatabase(newAd, isPaidRacingBull) {
+        allBazarListings.unshift(newAd);
+        localStorage.setItem("khillar_bazar_ads", JSON.stringify(allBazarListings));
+
+        // Save to Firebase Cloud
+        db.collection("khillar_bazar_ads").doc(newAd.id).set(newAd)
+        .then(() => {
+            console.log("✅ जाहिरात क्लाऊडवर सेव्ह झाली.");
+        })
+        .catch(e => console.error("Cloud ad save error:", e));
+
+        // जर ₹९९ भरले असतील तर 'ॲडव्हान्स रेशन बॅलन्सर' पूर्ण १ महिन्यासाठी मोफत अनलॉक करा
+        if (isPaidRacingBull) {
+            let now = new Date();
+            let expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // Exact 1 Month Validity
+
+            let freeAdvancePlan = {
+                name: "Advance Racing Ration (1 Month Free with Bull Ad)",
+                activatedOn: now.toISOString(),
+                expiryDate: expiryDate.toISOString(),
+                status: "Active"
+            };
+            localStorage.setItem('farmer_active_plan', JSON.stringify(freeAdvancePlan));
+
+            alert(`🎉 अभिनंदन! तुमच्या शर्यतीच्या बैलाची जाहिरात यशस्वीरीत्या प्रसिद्ध झाली आहे!\n\n🎁 विशेष ऑफर: तुम्हाला 'ॲडव्हान्स शर्यत रेशन बॅलन्सर' पूर्ण १ महिना (01 Month) मोफत (FREE) अनलॉक करण्यात आला आहे!`);
+        } else {
+            alert(`🎉 अभिनंदन! '${newAd.name}' ची मोफत जाहिरात यशस्वीरीत्या प्रसिद्ध झाली आहे!`);
+        }
+
+        // Reset form & hide
+        document.getElementById("ad_name").value = "";
+        document.getElementById("ad_price").value = "";
+        document.getElementById("ad_bloodline").value = "";
+        document.getElementById("ad_desc").value = "";
+        document.getElementById("new_ad_form_box").style.display = "none";
+
+        renderBazarListings(allBazarListings);
+    }
+
+    // 9. LOAD FROM FIREBASE CLOUD (NO DEMOS)
+    function loadBazarAdsFromCloud() {
+        let localAds = JSON.parse(localStorage.getItem("khillar_bazar_ads")) || [];
+        allBazarListings = localAds;
+        renderBazarListings(allBazarListings);
+
+        // Fetch latest real ads from Cloud
+        db.collection("khillar_bazar_ads").orderBy("createdAt", "desc").get()
+        .then(querySnapshot => {
+            let cloudAds = [];
+            querySnapshot.forEach(doc => {
+                cloudAds.push(doc.data());
+            });
+
+            if (cloudAds.length > 0) {
+                allBazarListings = cloudAds;
+                localStorage.setItem("khillar_bazar_ads", JSON.stringify(cloudAds));
+                renderBazarListings(allBazarListings);
+            }
+        })
+        .catch(e => console.log("Cloud Bazar fetch error:", e));
+    }
+</script>
+
+</body>
+</html>

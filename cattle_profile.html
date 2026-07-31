@@ -16,7 +16,8 @@
         .search-box { background: #fff; padding: 15px; margin: -20px 20px 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; }
         .search-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .animal-list { padding: 0 20px; }
-        .animal-card { background: #eef2f5; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); cursor: pointer; }
+        .animal-card { background: #eef2f5; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1); cursor: pointer; transition: transform 0.2s; }
+        .animal-card:hover { transform: translateY(-2px); }
         .animal-info h3 { margin: 0 0 5px; color: #1b5e20; font-size: 16px; display: flex; align-items: center; }
         .animal-info p { margin: 0; font-size: 12px; color: #555; }
         .tag-badge { background: #1976d2; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
@@ -32,7 +33,8 @@
         .record-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; border-left: 4px solid #1976d2; }
         .record-card h4 { margin: 0 0 5px; font-size: 14px; }
         .record-card p { margin: 0; font-size: 12px; color: #666; }
-        .btn-add { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; margin-bottom: 15px; font-weight: bold; cursor: pointer; }
+        .btn-add { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 8px; width: 100%; margin-bottom: 0; font-weight: bold; cursor: pointer; font-size: 13.5px; box-shadow: 0 3px 6px rgba(46, 125, 50, 0.25); transition: 0.2s; }
+        .btn-add:active { transform: scale(0.97); }
         .btn-delete { background: #d32f2f; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; box-shadow: 0 4px 0 #b71c1c; }
         .btn-delete:active { top: 2px; box-shadow: 0 2px 0 #b71c1c; position: relative; }
         
@@ -41,9 +43,52 @@
         .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
         .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
         .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* 🔥 NEW: 1-Click Action Buttons Styles 🔥 */
+        .btn-khillar-add {
+            background: linear-gradient(135deg, #ff6f00, #e65100);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13.5px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(230, 81, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-khillar-add:active { transform: scale(0.97); }
+        .khond-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-top: 2px dashed #ffe0b2;
+            padding-top: 15px;
+        }
+        .btn-khillar-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1.5px solid;
+        }
+        .btn-khillar-action:active { transform: scale(0.97); }
     </style>
 </head>
-<body>
+<body onload="initCattleProfile()">
 
 <div class="app-container">
     <div class="top-dashboard" style="padding-bottom: 40px; border-radius: 0 0 20px 20px; background:#1b5e20;">
@@ -77,8 +122,10 @@
         <input type="text" id="searchInput" placeholder="🔍 जनावराचे नाव किंवा टॅग नंबर शोधा..." onkeyup="filterCows()">
     </div>
 
-    <div style="padding: 0 20px; margin-bottom: 15px;">
-        <button class="btn-add" onclick="window.location.href='add_animal.html'">+ नवीन जनावर जोडा</button>
+    <!-- 🔥 UPDATED: 2-Column Action Buttons for Normal Cattle + Racing Bulls/Khonds 🔥 -->
+    <div style="padding: 0 20px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="btn-add" onclick="window.location.href='add_animal.html'">+ नवीन गाय/म्हैस जोडा</button>
+        <button class="btn-khillar-add" onclick="window.location.href='khond_care_dashboard.html'">🐂 शर्यत खोंड / वळू जोडा</button>
     </div>
 
     <div class="animal-list" id="animalList"></div>
@@ -105,6 +152,9 @@
     <div id="tab_info" class="tab-content active">
         <!-- 🔥 Dynamic Targeted Ad Container -->
         <div id="cattle_profile_ad"></div>
+
+        <!-- 🔥 NEW: Dynamic 1-Click Action Links for Khillar Khonds / Bulls -->
+        <div id="khond_quick_actions"></div>
 
         <div class="record-card">
             <h4>जात (Breed):</h4><p id="prof_breed">--</p>
@@ -160,6 +210,45 @@
     }
     const db = firebase.firestore();
 
+    let cows = [];
+    let currentOpenTagKey = "";
+    let currentFirebaseId = ""; // Track Firebase ID for deletion
+    let currentCowTag = "";
+
+    function initCattleProfile() {
+        loadCowsFromStorage();
+        syncProducts();
+        
+        // 🔥 FIREBASE CLOUD SYNC: शेतकऱ्याची सर्व जनावरे क्लाऊडवरून आणा 🔥
+        syncCattleFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE CATTLE SYNC ACROSS ALL DEVICES 🔥 ---
+    function syncCattleFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("farmer_animals").where("farmerMobile", "==", userMobile).get()
+            .then((querySnapshot) => {
+                let hasCloudData = false;
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    data.firebaseId = doc.id;
+                    data.id = doc.id;
+                    
+                    let keyPrefix = (data.type === 'calf' || data.isCalf) ? "calf_" : "cow_";
+                    let key = keyPrefix + (data.tag || doc.id);
+                    
+                    localStorage.setItem(key, JSON.stringify(data));
+                    hasCloudData = true;
+                });
+                if(hasCloudData) {
+                    loadCowsFromStorage(); // क्लाऊडवरून डेटा आल्यावर लिस्ट लगेच अपडेट करा
+                }
+            })
+            .catch(e => console.log("Error syncing cattle from cloud: ", e));
+        }
+    }
+
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -172,11 +261,6 @@
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
     }
-    syncProducts();
-
-    let cows = [];
-    let currentOpenTagKey = "";
-    let currentFirebaseId = ""; // Track Firebase ID for deletion
 
     function loadCowsFromStorage() {
         cows = [];
@@ -207,17 +291,27 @@
             }
         }
 
-        // Apply background auto-upgrades smoothly
+        // Apply background auto-upgrades smoothly & update in Firebase Cloud
         keysToUpgrade.forEach(item => {
             let animalData = item.data;
             let breedText = (animalData.breed || "").toLowerCase();
             let isBuffalo = animalData.type === 'buffalo' || breedText.includes("म्ह") || breedText.includes("मुर") || breedText.includes("पंढ");
             
             animalData.type = isBuffalo ? "buffalo" : "cow";
+            animalData.isCalf = false;
             let newKey = "cow_" + (animalData.tag || Math.floor(Math.random() * 100000));
             
             localStorage.setItem(newKey, JSON.stringify(animalData));
             localStorage.removeItem(item.key); // remove old calf record
+            
+            // 🔥 UPDATE AUTO-UPGRADE IN FIREBASE CLOUD 🔥
+            let fId = animalData.firebaseId || animalData.id;
+            if(fId) {
+                db.collection("farmer_animals").doc(fId).update({
+                    type: animalData.type,
+                    isCalf: false
+                }).catch(e => console.log("Cloud calf upgrade error:", e));
+            }
         });
 
         // 📊 PHASE 2: Aggregate counters and load everything into UI list
@@ -236,22 +330,41 @@
 
                     cows.push({
                         key: key,
-                        id: animalData.id || "",
+                        id: animalData.firebaseId || animalData.id || "",
                         tag: animalData.tag || "N/A",
                         name: animalData.breed || "जनावर",
                         breed: animalData.breed || "--",
                         semen: animalData.semen || "--",
                         isCalf: isCalf,
-                        isBuffalo: isBuffalo
+                        isBuffalo: isBuffalo,
+                        isKhond: false,
+                        weight: animalData.weight || ""
                     });
                 } catch (e) { console.error("Error reading data", e); }
             }
         }
 
+        // 🔥 PHASE 3: Seamlessly Include All Khillar Khonds / Bulls from khond_care_dashboard.html 🔥
+        let khondsList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        khondsList.forEach(khond => {
+            cows.push({
+                key: "khond_" + khond.id,
+                id: khond.id,
+                tag: khond.name, // Khond's name/tag
+                name: khond.breed || "खिलार खोंड",
+                breed: khond.breed || "खिलार (Khillar)",
+                semen: "वंशावळ: " + (khond.bloodline || "सामान्य"),
+                isCalf: false,
+                isBuffalo: false,
+                isKhond: true,
+                weight: khond.weight || ""
+            });
+        });
+
         document.getElementById("count_cows").innerText = cowCount;
         document.getElementById("count_buffaloes").innerText = buffaloCount;
         document.getElementById("count_calves").innerText = calfCount;
-        document.getElementById("count_total").innerText = (cowCount + buffaloCount + calfCount);
+        document.getElementById("count_total").innerText = (cowCount + buffaloCount + calfCount + khondsList.length);
 
         renderCows(cows);
     }
@@ -261,17 +374,18 @@
         list.innerHTML = "";
         
         if (data.length === 0) {
-            list.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">कोणतेही जनावर नोंदवलेले नाही. कृपया 'नवीन जनावर जोडा' वर क्लिक करा.</p>`;
+            list.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">कोणतेही जनावर नोंदवलेले नाही. कृपया 'नवीन गाय/म्हैस जोडा' किंवा 'शर्यत खोंड जोडा' वर क्लिक करा.</p>`;
             return;
         }
 
         data.forEach(cow => {
             let typeLabel = "🐄 गाय";
-            if (cow.isCalf) typeLabel = "🍼 वासरू";
+            if (cow.isKhond) typeLabel = "🐂 शर्यत खोंड/वळू";
+            else if (cow.isCalf) typeLabel = "🍼 वासरू";
             else if (cow.isBuffalo) typeLabel = "🐃 म्हैस";
 
             list.innerHTML += `
-                <div class="animal-card" onclick="openProfile('${cow.key}', '${cow.tag}', '${cow.name}', '${cow.breed}', '${cow.semen}', ${cow.isCalf}, ${cow.isBuffalo}, '${cow.id}')">
+                <div class="animal-card" onclick="openProfile('${cow.key}', '${cow.tag}', '${cow.name}', '${cow.breed}', '${cow.semen}', ${cow.isCalf}, ${cow.isBuffalo}, '${cow.id}', ${cow.isKhond}, '${cow.weight || ''}')">
                     <div class="animal-info">
                         <h3>टॅग: ${cow.tag} <span style="font-size:10px; font-weight:normal; background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:4px; margin-left:8px;">${typeLabel}</span></h3>
                         <p>जात: ${cow.breed}</p>
@@ -283,13 +397,14 @@
 
     function filterCows() {
         let search = document.getElementById("searchInput").value.toLowerCase();
-        let filtered = cows.filter(c => c.tag.includes(search) || c.name.toLowerCase().includes(search));
+        let filtered = cows.filter(c => c.tag.toLowerCase().includes(search) || c.name.toLowerCase().includes(search) || c.breed.toLowerCase().includes(search));
         renderCows(filtered);
     }
 
-    function openProfile(key, tag, name, breed, semen, isCalf, isBuffalo, firebaseId) {
+    function openProfile(key, tag, name, breed, semen, isCalf, isBuffalo, firebaseId, isKhond, weight) {
         currentOpenTagKey = key;
         currentFirebaseId = firebaseId; // Set firebase ID
+        currentCowTag = tag;
         
         document.getElementById("profileModal").style.display = "block";
         document.getElementById("modal_cow_name").innerText = "टॅग नंबर: " + tag;
@@ -307,7 +422,26 @@
         
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
 
-        if (isCalf) {
+        if (isKhond || breed.toLowerCase().includes("खिलार") || breed.toLowerCase().includes("khillar")) {
+            let pMatch = products.find(p => p.aiFilters && (p.aiFilters.includes("Khillar_Racing_Stamina") || p.aiFilters.includes("Khillar_Hoof_Neck")));
+            if(pMatch) {
+                htmlAd = `
+                <div class="ai-recommendation-box" style="background:linear-gradient(145deg, #fff3e0, #ffe0b2); border-color:#ffb74d;" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(pMatch.name)}'">
+                    <h4 style="color:#d84315;">🏆 शर्यत बैल स्टॅमिना व ताकद टीप</h4>
+                    <p>${pMatch.name} वापरल्यास बैलाचा स्टॅमिना व स्नायू वाढतात. ${pMatch.benefits.substring(0, 45)}...</p>
+                    <span class="sponsor-tag">Sponsored by ${pMatch.brand}</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            } else {
+                htmlAd = `
+                <div class="ai-recommendation-box" style="background:linear-gradient(145deg, #fff3e0, #ffe0b2); border-color:#ffb74d;" onclick="window.location.href='krushi_mall.html'">
+                    <h4 style="color:#d84315;">🏆 शर्यत बैल स्टॅमिना व ताकद टीप</h4>
+                    <p>अश्वगंधा स्टॅमिना बूस्टर व लिक्विड कॅल्शियम वापरल्यास बैलाची छाती व मान रुंद होते.</p>
+                    <span class="sponsor-tag">Sponsored by दुग्ध दिशा ॲग्रो</span>
+                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                </div>`;
+            }
+        } else if (isCalf) {
             let pMatch = products.find(p => p.aiFilters && p.aiFilters.includes("Calf_Growth"));
             if(pMatch) {
                 htmlAd = `
@@ -386,12 +520,36 @@
         }
 
         adBox.innerHTML = htmlAd;
+
+        // --- 🔥 NEW: DYNAMIC 3 ROYAL QUICK LINKS FOR KHILLAR KHONDS / BULLS IN MODAL 🔥 ---
+        let khondActionsDiv = document.getElementById("khond_quick_actions");
+        if (isKhond || breed.toLowerCase().includes("खिलार") || breed.toLowerCase().includes("khillar")) {
+            let sellLink = `khillari_bazar.html?sell_name=${encodeURIComponent(tag)}&breed=${encodeURIComponent(breed)}&weight=${weight || ''}`;
+            khondActionsDiv.innerHTML = `
+                <div class="khond-modal-actions">
+                    <a href="khond_ration_balancer.html" class="btn-khillar-action" style="background:#e8f5e9; color:#1b5e20; border-color:#a5d6a7;">
+                        <span>⚡ शर्यत खुराक व स्टॅमिना तपासा</span>
+                        <span>➔</span>
+                    </a>
+                    <a href="khond_health_care.html" class="btn-khillar-action" style="background:#ffebee; color:#c62828; border-color:#ef9a9a;">
+                        <span>🏥 खूर निगा, नालबंद व आजार उपचार</span>
+                        <span>➔</span>
+                    </a>
+                    <a href="${sellLink}" class="btn-khillar-action" style="background:linear-gradient(135deg, #fff8e1, #ffecb3); color:#d84315; border-color:#ffca28; box-shadow:0 3px 8px rgba(255,143,0,0.2);">
+                        <span>🏆 शर्यत बैल बाजारात विक्रीला टाका (₹९९ प्लॅन + फ्री रेशन)</span>
+                        <span>➔</span>
+                    </a>
+                </div>`;
+        } else {
+            khondActionsDiv.innerHTML = "";
+        }
     }
 
     function closeProfile() {
         document.getElementById("profileModal").style.display = "none";
         currentOpenTagKey = "";
         currentFirebaseId = "";
+        currentCowTag = "";
     }
 
     function deleteCurrentAnimal() {
@@ -399,21 +557,37 @@
         let confirmDelete = confirm("⚠️ चेतावणी: तुम्हाला खात्री आहे का की हे जनावर सिस्टीममधून कायमचे काढून टाकायचे आहे (विक्री किंवा मृत्यू)? हा डेटा परत मिळणार नाही.");
         
         if (confirmDelete) {
-            // १. Remove from Local Storage
-            localStorage.removeItem(currentOpenTagKey);
-            
-            // २. Remove from Firebase if ID exists
-            if(currentFirebaseId) {
-                db.collection("farmer_animals").where("id", "==", currentFirebaseId).get()
-                .then(querySnapshot => {
-                    querySnapshot.forEach(doc => {
-                        doc.ref.delete();
-                    });
-                })
-                .catch(err => console.error("Error deleting from Firebase: ", err));
+            if (currentOpenTagKey.startsWith("khond_")) {
+                let khondId = currentOpenTagKey.replace("khond_", "");
+                let khondsList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+                khondsList = khondsList.filter(item => item.id !== khondId);
+                localStorage.setItem("my_khond_profiles", JSON.stringify(khondsList));
+                db.collection("khond_profiles").doc(khondId).delete()
+                .catch(e => console.log("Cloud delete error:", e));
+            } else {
+                // १. Remove from Local Storage
+                localStorage.removeItem(currentOpenTagKey);
+                
+                // २. Remove from Firebase Cloud if ID exists or match by tag & mobile
+                let userMobile = localStorage.getItem("current_user_mobile");
+                if(currentFirebaseId) {
+                    db.collection("farmer_animals").doc(currentFirebaseId).delete()
+                    .catch(err => console.error("Error deleting from Firebase by ID: ", err));
+                } else if(currentCowTag && userMobile) {
+                    db.collection("farmer_animals")
+                    .where("farmerMobile", "==", userMobile)
+                    .where("tag", "==", currentCowTag)
+                    .get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => {
+                            doc.ref.delete();
+                        });
+                    })
+                    .catch(err => console.error("Error deleting from Firebase by Tag: ", err));
+                }
             }
 
-            alert("✅ जनावर सिस्टीममधून यशस्वीरित्या काढून टाकले.");
+            alert("✅ जनावर सिस्टीम आणि क्लाऊडवरून यशस्वीरित्या काढून टाकले.");
             closeProfile();
             loadCowsFromStorage();
         }
@@ -427,8 +601,6 @@
         document.getElementById("tab_" + tabId).classList.add("active");
         event.currentTarget.classList.add("active");
     }
-
-    loadCowsFromStorage();
 </script>
     <script src="fcm_setup.js"></script>
 </body>

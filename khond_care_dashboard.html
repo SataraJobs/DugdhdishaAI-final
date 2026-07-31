@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - खिलार खोंड व वासरू संगोपन</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d3b12">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-dark: #0f3d14;
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --bhagwa-main: #ff6f00;
+            --bhagwa-light: #ff9800;
+            --gold: #ffd700;
+            --accent-red: #d32f2f;
+            --bg: #eff3f1;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #555555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding-bottom: 95px !important;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 1. 3D Royal Header */
+        .top-header {
+            background: linear-gradient(135deg, #0f3d14 0%, #1b5e20 60%, #2e7d32 100%);
+            color: white;
+            padding: 18px 20px 28px 20px;
+            border-radius: 0 0 26px 26px;
+            box-shadow: 0 8px 25px rgba(15, 61, 20, 0.4);
+            position: relative;
+            z-index: 100;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-title p {
+            font-size: 11.5px;
+            color: #ffd54f;
+            font-weight: bold;
+            margin: 4px 0 0 0;
+            letter-spacing: 0.3px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        .back-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 2. 3D Smart Navigation Action Strip */
+        .action-strip-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: -18px 16px 22px 16px;
+            position: relative;
+            z-index: 110;
+        }
+
+        .nav-action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 14px 8px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0,0,0,0.06);
+            border: 1.5px solid #eaeef0;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--bhagwa-light);
+        }
+
+        .nav-action-card:active {
+            transform: scale(0.96);
+        }
+
+        .nav-action-card .icon {
+            font-size: 28px;
+            margin-bottom: 5px;
+            display: block;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.15));
+        }
+
+        .nav-action-card h4 {
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .nav-action-card p {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        .nav-action-card.orange {
+            border-bottom: 4px solid var(--bhagwa-main);
+        }
+        .nav-action-card.orange h4 { color: var(--bhagwa-main); }
+
+        .nav-action-card.red {
+            border-bottom: 4px solid var(--accent-red);
+        }
+        .nav-action-card.red h4 { color: var(--accent-red); }
+
+        .nav-action-card.green {
+            border-bottom: 4px solid var(--primary-light);
+        }
+        .nav-action-card.green h4 { color: var(--primary-light); }
+
+        .nav-action-card.gold {
+            border-bottom: 4px solid #ffca28;
+            background: linear-gradient(145deg, #ffffff, #fffdf5);
+        }
+        .nav-action-card.gold h4 { color: #d84315; }
+
+        /* 3. Section Titles & Cards */
+        .section-heading {
+            margin: 20px 16px 12px 16px;
+            font-size: 16px;
+            font-weight: 900;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--bhagwa-main);
+            padding-left: 12px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin: 0 16px 18px 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e2e8e5;
+            position: relative;
+        }
+
+        /* 4. Registration Form - Bold & Clean */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1.5px solid #d0d7d3;
+            border-radius: 10px;
+            font-size: 13.5px;
+            background: #f8faf9;
+            font-weight: 700;
+            color: #111;
+            transition: 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            border-color: var(--bhagwa-main);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(230, 81, 0, 0.35);
+            transition: all 0.2s ease;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 8px 20px rgba(230, 81, 0, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* 5. 3D Calf Profile List Cards (Racing Pride Look) */
+        .khond-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 0 16px 14px 16px;
+            border: 1px solid #e0e6e2;
+            border-left: 6px solid var(--bhagwa-main);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .khond-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .khond-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px dashed #cfd8d3;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .khond-name {
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bloodline-badge {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #d84315;
+            font-size: 10.5px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #ffcc80;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .khond-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-pill {
+            background: #f4f8f5;
+            padding: 10px 6px;
+            border-radius: 10px;
+            border: 1px solid #e1e8e4;
+        }
+
+        .stat-pill .val {
+            font-size: 14px;
+            font-weight: 900;
+            color: #111;
+        }
+
+        .stat-pill .lbl {
+            font-size: 10.5px;
+            color: #555;
+            font-weight: 800;
+            margin-top: 3px;
+        }
+
+        .khond-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            border-top: 1px solid #f0f4f1;
+            padding-top: 12px;
+        }
+
+        .btn-card-action {
+            flex: 1 1 45%;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 900;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-card-action:active {
+            transform: scale(0.96);
+        }
+
+        .btn-diet {
+            background: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #a5d6a7;
+        }
+
+        .btn-health {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .btn-plan {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #d84315;
+            border: 1px solid #ffb74d;
+            flex: 1 1 100% !important;
+            box-shadow: 0 2px 6px rgba(255, 143, 0, 0.15);
+        }
+
+        .btn-bazar {
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+            color: #d84315;
+            border: 1px solid #ffca28;
+            flex: 1 1 75% !important;
+            box-shadow: 0 2px 6px rgba(255, 143, 0, 0.18);
+        }
+
+        .btn-delete {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+            flex: 0 1 18% !important;
+        }
+
+        /* 6. Empty State - Motivational */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            background: white;
+            border-radius: 18px;
+            margin: 0 16px;
+            border: 2px dashed #cfd8d3;
+        }
+
+        /* 7. Bottom Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+            border-radius: 18px 18px 0 0;
+            border-top: 1px solid #eaeef0;
+        }
+
+        .b-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #757575;
+            transition: 0.3s ease;
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        .b-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+        }
+
+        .b-nav-text {
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .b-nav-item.active {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .b-nav-item.active .b-nav-icon {
+            filter: grayscale(0%);
+            transform: scale(1.15);
+        }
+
+        /* 🔥 NEW: LIFECYCLE SCHEDULE MODAL STYLES 🔥 */
+        .lifecycle-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(4px);
+        }
+
+        .lifecycle-modal-content {
+            background: #f8faf9;
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            border-radius: 22px 22px 0 0;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            animation: slideUpModal 0.3s ease-out;
+        }
+
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .lifecycle-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 18px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            background: #eaeef0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e0e6e2;
+        }
+
+        .schedule-table th {
+            background: #1b5e20;
+            color: white;
+            font-size: 12px;
+            padding: 10px 8px;
+            text-align: left;
+        }
+
+        .schedule-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            color: #222;
+        }
+
+        .schedule-table tr:hover {
+            background: #f4f8f5;
+        }
+
+        .badge-status {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            display: inline-block;
+        }
+
+        .status-done { background: #e8f5e9; color: #2e7d32; }
+        .status-today { background: #fff3e0; color: #e65100; border: 1px solid #ff9800; }
+        .status-upcoming { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body onload="initKhondDashboard()">
+
+<div class="app-container">
+
+    <!-- 1. 3D Royal Header -->
+    <header class="top-header">
+        <div class="header-top-row">
+            <div class="header-title">
+                <a href="index.html" class="back-btn">⬅</a>
+                <div>
+                    <h1>🔥 खिलार खोंड व वासरू संगोपन 🏆</h1>
+                    <p>शर्यतीच्या मैदानाचा भावी बादशाह घडवा - शास्त्रशुद्ध संगोपन!</p>
+                </div>
+            </div>
+            <div style="font-size: 26px;">🐂</div>
+        </div>
+    </header>
+
+    <!-- 2. 3D Smart Navigation Action Strip -->
+    <div class="action-strip-grid">
+        <a href="khond_ration_balancer.html" class="nav-action-card orange">
+            <span class="icon">⚡</span>
+            <h4>आहार व खुराक</h4>
+            <p>स्टॅमिना व ताकद</p>
+        </a>
+        <a href="khond_health_care.html" class="nav-action-card red">
+            <span class="icon">🏥</span>
+            <h4>आजार उपचार</h4>
+            <p>५ मुख्य आजार</p>
+        </a>
+        <a href="krushi_mall.html" class="nav-action-card green">
+            <span class="icon">🛒</span>
+            <h4>स्पेशल सप्लिमेंट</h4>
+            <p>काफ स्टार्टर व टॉनिक</p>
+        </a>
+        <a href="khillari_bazar.html" class="nav-action-card gold">
+            <span class="icon">🏆</span>
+            <h4>शर्यत बैल बाजार</h4>
+            <p>थेट खरेदी-विक्री</p>
+        </a>
+    </div>
+
+    <!-- 3. New Calf / Khond Registration Card -->
+    <div class="section-heading">
+        <span>➕ नवीन खोंड / वासरू नोंदणी करा</span>
+        <span style="font-size: 11px; color: #ff6f00; font-weight: 900; background: #fff3e0; padding: 4px 10px; border-radius: 20px; border: 1px solid #ffe0b2;">Cloud Synced ☁️</span>
+    </div>
+
+    <div class="card-box">
+        <div class="form-grid-2">
+            <div class="field">
+                <label>खोंडाचे / वासराचे नाव *</label>
+                <input type="text" id="k_name" placeholder="उदा. राजा / बहाद्दूर / सर्जा">
+            </div>
+            <div class="field">
+                <label>जात (Breed) *</label>
+                <select id="k_breed">
+                    <option value="खिलार (Khillar)">खिलार (Khillar - शर्यत)</option>
+                    <option value="गावरान / देशी">गावरान / देशी वळू</option>
+                    <option value="HF क्रॉस">HF क्रॉस</option>
+                    <option value="जर्सी">जर्सी</option>
+                    <option value="मुऱ्हा (म्हैस वासरू)">मुऱ्हा (म्हैस वासरू)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>जन्म तारीख (Birth Date) *</label>
+                <input type="date" id="k_birth_date">
+            </div>
+            <div class="field">
+                <label>जन्मावेळचे वजन (किंवा सध्याचे Kg) *</label>
+                <input type="number" id="k_weight" placeholder="उदा. 25">
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <div class="field">
+                <label>वंशावळ / बापाचे नाव (Bloodline)</label>
+                <input type="text" id="k_bloodline" placeholder="उदा. माणदेशी खिलार / बंड्या">
+            </div>
+            <div class="field">
+                <label>चीक पाजला का? (Colostrum) *</label>
+                <select id="k_colostrum">
+                    <option value="होय (२ तासांत पाजला)">होय (२ तासांत पाजला)</option>
+                    <option value="होय (उशिरा पाजला)">होय (उशिरा पाजला)</option>
+                    <option value="नाही">नाही</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="saveKhondProfile()">
+            <span>💾</span> खोंड प्रोफाईल सेव्ह करा (Save Profile)
+        </button>
+    </div>
+
+    <!-- 4. Registered Calves List -->
+    <div class="section-heading">
+        <span>🏆 माझे शर्यतीचे खोंड व वासरे (My Calves)</span>
+        <span id="khond_count_badge" style="background:var(--bhagwa-main); color:white; font-size:12px; font-weight:900; padding:3px 10px; border-radius:14px;">०</span>
+    </div>
+
+    <div id="khond_list_container">
+        <!-- JS will populate cards here -->
+        <div class="empty-state">
+            <div style="font-size: 52px; margin-bottom: 12px;">🐂</div>
+            <h4 style="color:#111; margin-bottom:6px; font-size:16px;">अद्याप नोंदणी केलेली नाही!</h4>
+            <p style="font-size:13px; line-height:1.5;">तुमच्या भावी चॅम्पियन खोंडाची वरील फॉर्ममध्ये नोंदणी करा आणि त्याच्या आहाराचे व आरोग्याचे डिजिटल रेकॉर्ड ठेवा.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🔥 NEW: DATE-WISE LIFECYCLE SCHEDULE & PLANNER MODAL 🔥 -->
+<div class="lifecycle-modal-overlay" id="lifecycleModal">
+    <div class="lifecycle-modal-content">
+        <button class="lifecycle-close-btn" onclick="closeLifecycleModal()">✕</button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span style="font-size:24px;">📅</span>
+            <h3 id="modal_calf_title" style="margin:0; font-size:18px; color:#1b5e20;">संगोपन वेळापत्रक</h3>
+        </div>
+        <p id="modal_calf_subtitle" style="margin:0 0 10px 0; font-size:12px; color:#666;">जन्मापासून ते १ वर्षाचे शास्त्रशुद्ध व शर्यत नियोजन</p>
+        
+        <div id="lifecycle_table_container">
+            <!-- Table generated dynamically via JS -->
+        </div>
+
+        <button onclick="closeLifecycleModal()" style="margin-top:15px; width:100%; padding:12px; background:#1b5e20; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
+            ✅ समजले (बंद करा)
+        </button>
+    </div>
+</div>
+
+<!-- 5. Bottom Navigation Bar -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item">
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item">
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item">
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<!-- 🔥 JAVASCRIPT & FIREBASE CLOUD SYNC 🔥 -->
+<script>
+    // 1. FIREBASE INITIALIZATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 🔥 SCIENTIFIC & RACING KHILLAR LIFECYCLE MILESTONES (Days from Birth) 🔥
+    const KHOND_LIFECYCLE_MILESTONES = [
+        { days: 0, title: "चीक पाजणे (Colostrum) व नाळ काळजी", desc: "जन्मानंतर २ तासांत चीक पाजा. नाळेवर टिंचर आयोडीन लावा.", cat: "आरोग्य" },
+        { days: 7, title: "पहिली जंतनिर्मूलन (First Deworming)", desc: "खोंडाला पहिले जंतनाशक औषध (उदा. अलबेंडाझोल) डॉक्टरांच्या सल्ल्याने द्या.", cat: "आरोग्य" },
+        { days: 14, title: "काफ स्टार्टर व हिरवा चारा ओळख", desc: "खोंडासमोर कोवळा हिरवा चारा व ५०-१०० ग्रॅम काफ स्टार्टर ठेवा.", cat: "आहार" },
+        { days: 21, title: "दुसरे जंतनिर्मूलन (2nd Deworming)", desc: "जंतनिर्मूलनाचा दुसरा डोस (Deworming Repeat) द्या.", cat: "आरोग्य" },
+        { days: 30, title: "मिनरल मिक्सचर सुरू करणे", desc: "आहारात रोज १०-१५ ग्रॅम खनिज मिश्रण (Mineral Mixture) सुरू करा.", cat: "आहार" },
+        { days: 60, title: "खुराक वाढ व दूध कमी करणे", desc: "काफ स्टार्टर २५०-५०० ग्रॅम करा आणि दूध पाजणे टप्प्याटप्प्याने कमी करा.", cat: "आहार" },
+        { days: 90, title: "दूध तोडणे (Weaning) व लसीकरण", desc: "दूध पूर्ण बंद करा. लाळ्या-खुरकूत (FMD) व घटसर्प (HS) लस डॉक्टरांकडून द्या.", cat: "लसीकरण" },
+        { days: 180, title: "शर्यत खोंड खुराक व चारा नियोजन", desc: "हिरवा व सुका चारा ६०:४० प्रमाणात द्या. सरकी/शेंगदाणा पेंड सुरू करा.", cat: "आहार" },
+        { days: 270, title: "खूर निगा व तिसरे जंतनिर्मूलन", desc: "खुरांची स्वच्छता व आकार तपासा. जंतनिर्मूलनाची तिसरी मात्रा द्या.", cat: "आरोग्य" },
+        { days: 365, title: "शर्यत वळू विशेष खुराक सुरू", desc: "उडदाची डाळ, मटकी व स्टॅमिना पावडर (अश्वगंधा) आहारात सुरू करा.", cat: "आहार" }
+    ];
+
+    function initKhondDashboard() {
+        // आजची तारीख डीफॉल्ट सेट करा
+        let today = new Date().toISOString().split("T")[0];
+        document.getElementById("k_birth_date").value = today;
+
+        loadLocalKhonds();
+        syncKhondProfilesFromCloud();
+        
+        // 🔥 दैनिक नोटिफिकेशन इंजिन तपासा (Check & Trigger Lifecycle Alerts) 🔥
+        checkAndTriggerLifecycleNotifications();
+    }
+
+    // 2. SAVE KHOND PROFILE TO LOCAL & CLOUD
+    function saveKhondProfile() {
+        let name = document.getElementById("k_name").value.trim();
+        let breed = document.getElementById("k_breed").value;
+        let birthDate = document.getElementById("k_birth_date").value;
+        let weight = parseFloat(document.getElementById("k_weight").value);
+        let bloodline = document.getElementById("k_bloodline").value.trim() || "सामान्य";
+        let colostrum = document.getElementById("k_colostrum").value;
+
+        if (!name || !birthDate || isNaN(weight) || weight <= 0) {
+            alert("⚠️ कृपया नाव, जन्म तारीख आणि योग्य वजन भरा!");
+            return;
+        }
+
+        let userMobile = localStorage.getItem("current_user_mobile") || "अज्ञात";
+
+        let khondObj = {
+            id: "KHOND_" + Date.now(),
+            farmerMobile: userMobile,
+            name: name,
+            breed: breed,
+            birthDate: birthDate,
+            weight: weight,
+            bloodline: bloodline,
+            colostrum: colostrum,
+            createdAt: new Date().toISOString()
+        };
+
+        // अ. लोकल स्टोरेजमध्ये सेव्ह करा
+        let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        localList.unshift(khondObj);
+        localStorage.setItem("my_khond_profiles", JSON.stringify(localList));
+
+        // ब. Firebase Cloud वर सेव्ह करा
+        db.collection("khond_profiles").doc(khondObj.id).set(khondObj)
+        .then(() => {
+            console.log("✅ खोंड प्रोफाईल क्लाऊडवर सेव्ह झाले.");
+        })
+        .catch(e => console.error("Cloud save error:", e));
+
+        alert(`🎉 '${name}' ची नोंदणी यशस्वीरीत्या पूर्ण झाली!`);
+
+        // फॉर्म रिसेट करा
+        document.getElementById("k_name").value = "";
+        document.getElementById("k_weight").value = "";
+        document.getElementById("k_bloodline").value = "";
+        
+        renderKhondList(localList);
+        checkAndTriggerLifecycleNotifications();
+    }
+
+    // 3. CALCULATE EXACT AGE (DAYS & MONTHS)
+    function calculateAge(birthDateStr) {
+        let birth = new Date(birthDateStr);
+        let today = new Date();
+        let diffTime = Math.abs(today - birth);
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 30) {
+            return `${diffDays} दिवस`;
+        } else {
+            let months = Math.floor(diffDays / 30);
+            let remainingDays = diffDays % 30;
+            return `${months} महिने ${remainingDays > 0 ? remainingDays + ' दिवस' : ''}`;
+        }
+    }
+
+    // 4. RENDER CARDS ON SCREEN (With Direct Sell & Lifecycle Plan Buttons)
+    function renderKhondList(list) {
+        let container = document.getElementById("khond_list_container");
+        let badge = document.getElementById("khond_count_badge");
+
+        badge.innerText = list.length;
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 52px; margin-bottom: 12px;">🐂</div>
+                    <h4 style="color:#111; margin-bottom:6px; font-size:16px;">अद्याप नोंदणी केलेली नाही!</h4>
+                    <p style="font-size:13px; line-height:1.5;">तुमच्या भावी चॅम्पियन खोंडाची वरील फॉर्ममध्ये नोंदणी करा आणि त्याच्या आहाराचे व आरोग्याचे डिजिटल रेकॉर्ड ठेवा.</p>
+                </div>`;
+            return;
+        }
+
+        let html = "";
+        list.forEach(item => {
+            let ageText = calculateAge(item.birthDate);
+            let isKhillar = item.breed.includes("खिलार");
+            let iconSymbol = isKhillar ? "🐂" : "🍼";
+            let bazarLink = `khillari_bazar.html?sell_name=${encodeURIComponent(item.name)}&breed=${encodeURIComponent(item.breed)}&weight=${item.weight}&bloodline=${encodeURIComponent(item.bloodline)}`;
+
+            html += `
+            <div class="khond-card">
+                <div class="khond-header">
+                    <div>
+                        <div class="khond-name">${iconSymbol} ${item.name}</div>
+                        <div style="font-size:11.5px; color:#555; margin-top:3px; font-weight:700;">जात: ${item.breed}</div>
+                    </div>
+                    <div class="bloodline-badge">🏆 औलाद: ${item.bloodline}</div>
+                </div>
+
+                <div class="khond-stats-row">
+                    <div class="stat-pill">
+                        <div class="val" style="color:#2e7d32;">${ageText}</div>
+                        <div class="lbl">सध्याचे वय</div>
+                    </div>
+                    <div class="stat-pill">
+                        <div class="val" style="color:#e65100;">${item.weight} Kg</div>
+                        <div class="lbl">नोंदवलेले वजन</div>
+                    </div>
+                    <div class="stat-pill">
+                        <div class="val" style="color:#1565c0;">${item.colostrum.includes('होय') ? '✔ पाजला' : '✖ नाही'}</div>
+                        <div class="lbl">चीक (Colostrum)</div>
+                    </div>
+                </div>
+
+                <div class="khond-actions">
+                    <button class="btn-card-action btn-plan" onclick="openLifecycleModal('${item.id}')">📅 संगोपन वेळापत्रक (Lifecycle Plan)</button>
+                    <a href="khond_ration_balancer.html?id=${item.id}" class="btn-card-action btn-diet">⚡ आहार व खुराक</a>
+                    <a href="khond_health_care.html?id=${item.id}" class="btn-card-action btn-health">🏥 आजार व उपचार</a>
+                    <a href="${bazarLink}" class="btn-card-action btn-bazar">🏆 बाजारात विक्रीला टाका (₹९९ प्लॅन + फ्री रेशन)</a>
+                    <button class="btn-card-action btn-delete" onclick="deleteKhond('${item.id}')">🗑️</button>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // --- 🔥 DATE-WISE LIFECYCLE MODAL LOGIC 🔥 ---
+    function openLifecycleModal(khondId) {
+        let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        let khond = localList.find(item => item.id === khondId);
+        if (!khond) return;
+
+        let birthDate = new Date(khond.birthDate);
+        let today = new Date();
+
+        document.getElementById("modal_calf_title").innerText = `📅 '${khond.name}' चे संगोपन वेळापत्रक`;
+        document.getElementById("modal_calf_subtitle").innerText = `जन्म: ${khond.birthDate} | वय: ${calculateAge(khond.birthDate)}`;
+
+        let rowsHtml = "";
+        KHOND_LIFECYCLE_MILESTONES.forEach(ms => {
+            let targetDate = new Date(birthDate);
+            targetDate.setDate(birthDate.getDate() + ms.days);
+            let dateStr = targetDate.toISOString().split("T")[0];
+
+            let diffTime = targetDate - today;
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let statusBadge = "";
+            if (diffDays < -1) {
+                statusBadge = `<span class="badge-status status-done">✔ पूर्ण झाले</span>`;
+            } else if (diffDays >= -1 && diffDays <= 1) {
+                statusBadge = `<span class="badge-status status-today">⏳ आजची वेळ!</span>`;
+            } else {
+                statusBadge = `<span class="badge-status status-upcoming">📅 ${diffDays} दिवसांत</span>`;
+            }
+
+            rowsHtml += `
+            <tr>
+                <td><b>${dateStr}</b></td>
+                <td>
+                    <b style="color:#1b5e20;">${ms.title}</b><br>
+                    <span style="font-size:11px; color:#555;">${ms.desc}</span>
+                </td>
+                <td><span style="background:#e8f5e9; color:#1b5e20; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">${ms.cat}</span></td>
+                <td>${statusBadge}</td>
+            </tr>`;
+        });
+
+        document.getElementById("lifecycle_table_container").innerHTML = `
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>तारीख</th>
+                    <th>नियोजन व काम</th>
+                    <th>प्रकार</th>
+                    <th>स्थिती</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>`;
+
+        document.getElementById("lifecycleModal").style.display = "flex";
+    }
+
+    function closeLifecycleModal() {
+        document.getElementById("lifecycleModal").style.display = "none";
+    }
+
+    // --- 🔥 AUTOMATIC DATE-WISE NOTIFICATION TRIGGER ENGINE 🔥 ---
+    function checkAndTriggerLifecycleNotifications() {
+        let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        if (localList.length === 0) return;
+
+        let todayStr = new Date().toISOString().split("T")[0];
+        let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+        let changed = false;
+
+        localList.forEach(khond => {
+            let birthDate = new Date(khond.birthDate);
+
+            KHOND_LIFECYCLE_MILESTONES.forEach(ms => {
+                let targetDate = new Date(birthDate);
+                targetDate.setDate(birthDate.getDate() + ms.days);
+                let msDateStr = targetDate.toISOString().split("T")[0];
+
+                // जर नियोजन आजच्या तारखेशी जुळत असेल (किंवा १ दिवस आधी असेल)
+                if (msDateStr === todayStr) {
+                    let notifTitle = `🔔 आजचे नियोजन: '${khond.name}' साठी ${ms.title}`;
+                    let notifMsg = `आज (${todayStr}): ${ms.desc}`;
+
+                    // डुप्लिकेट सूचना टाळण्यासाठी तपासा
+                    let alreadyExists = notifications.some(n => n.title === notifTitle && n.dateStr === todayStr);
+                    if (!alreadyExists) {
+                        let newNotif = {
+                            id: Date.now() + Math.floor(Math.random() * 100),
+                            title: notifTitle,
+                            message: notifMsg,
+                            target: "all",
+                            dateStr: todayStr,
+                            timestamp: new Date().toISOString(),
+                            time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+                        };
+                        notifications.unshift(newNotif);
+                        changed = true;
+                    }
+                }
+            });
+        });
+
+        if (changed) {
+            localStorage.setItem('system_notifications', JSON.stringify(notifications));
+            console.log("🔔 आजच्या संगोपन नियोजनाची सूचना नोटिफिकेशन सेंटरमध्ये पाठवली गेली आहे!");
+        }
+    }
+
+    // 5. LOAD LOCAL DATA
+    function loadLocalKhonds() {
+        let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        renderKhondList(localList);
+    }
+
+    // 6. SYNC FROM FIREBASE CLOUD
+    function syncKhondProfilesFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
+
+        db.collection("khond_profiles").where("farmerMobile", "==", userMobile).get()
+        .then(querySnapshot => {
+            let cloudList = [];
+            querySnapshot.forEach(doc => {
+                cloudList.push(doc.data());
+            });
+
+            if (cloudList.length > 0) {
+                localStorage.setItem("my_khond_profiles", JSON.stringify(cloudList));
+                renderKhondList(cloudList);
+                checkAndTriggerLifecycleNotifications();
+            }
+        })
+        .catch(e => console.log("Cloud sync error:", e));
+    }
+
+    // 7. DELETE KHOND PROFILE
+    function deleteKhond(id) {
+        if (confirm("तुम्हाला नक्की हा रेकॉर्ड डिलीट करायचा आहे का?")) {
+            let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+            localList = localList.filter(item => item.id !== id);
+            localStorage.setItem("my_khond_profiles", JSON.stringify(localList));
+
+            db.collection("khond_profiles").doc(id).delete()
+            .catch(e => console.log("Cloud delete error:", e));
+
+            renderKhondList(localList);
+        }
+    }
+</script>
+
+</body>
+</html>

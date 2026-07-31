@@ -7,6 +7,17 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
     
+    <!-- 🔥 WhatsApp & Social Media Rich Preview (OG Tags - मोठा लोगो दिसण्यासाठी) 🔥 -->
+    <meta property="og:title" content="🏆 चॅम्पियन खिल्लार AI - शर्यतीच्या बैलांसाठी पहिला AI Performance Platform">
+    <meta property="og:description" content="तुमच्या शर्यतीच्या बैलाचा स्टॅमिना, ताकद, खुराक नियोजन आणि अस्सल बैल बाजार आता AI सोबत करा! आत्ताच जॉईन व्हा.">
+    <meta property="og:image" content="https://dugdhadisha.com/Khillar.png">
+    <meta property="og:image:secure_url" content="https://dugdhadisha.com/Khillar.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://dugdhadisha.com/login.html?ref=champion_khillar">
+    <meta property="og:type" content="website">
+    
     <!-- 🔥 ऑटो-रीडायरेक्ट सिस्टीम आणि सिक्युरिटी लॉक 🔥 -->
     <script>
         // 🔒 सिक्युरिटी चेक: जर युजरने लॉगिन केले नसेल, तर थेट लॉगिन पेजवर पाठवा
@@ -19,7 +30,7 @@
             let role = localStorage.getItem("current_logged_in_role");
             let isVerified = localStorage.getItem("vendor_verified") === 'true' || localStorage.getItem("vendor_verified") === true;
             
-            // चेक करा తో स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
+            // चेक करा तो स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
             let fromSpecialPage = sessionStorage.getItem("visited_user_page") === 'true';
 
             // 🚀 नियम १: जर युजर प्रमाणित "डीलर" असेल आणि ॲप नव्याने उघडले असेल...
@@ -122,20 +133,130 @@
         .stat-box .bg-icon { position: absolute; right: -5px; bottom: -8px; font-size: 28px; opacity: 0.15; z-index: 1; transform: rotate(-15deg); }
         
         .box-animals { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #a5d6a7; color: #1b5e20; }
-        .box-milk { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #90caf9; color: #0d47a1; }
+        .box-milk { background: linear-gradient(145deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #90caf9; color: #0d47a1; }
         .box-add-animals { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border: 1px solid #ffcc80; color: #e65100; }
         
         .stat-label-bg { font-size: 7.5px; font-weight: bold; margin-top: 3px; padding: 2px 3px; border-radius: 4px; display: inline-block; position: relative; z-index: 2; background: rgba(0,0,0,0.05); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%;}
 
-        /* RATION BALANCER HIGHLIGHT BANNER */
-        .ration-highlight-banner { display:block; margin: 10px 15px 20px; background: linear-gradient(135deg, #4caf50 0%, #1b5e20 100%); border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 6px 15px rgba(27, 94, 32, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1); position: relative; overflow: hidden; text-decoration: none; transition: transform 0.2s;}
+        /* 🔥 UPDATED: COMPACT CHAMPION KHILLAR AI BANNER (साईज लहान व सुटसुटीत केली - 2nd Position साठी) 🔥 */
+        .khillar-highlight-banner {
+            display: flex;
+            margin: 8px 15px 12px;
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 60%, #bf360c 100%);
+            border-radius: 12px;
+            padding: 10px 14px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 15px rgba(230, 81, 0, 0.3), inset 0 -1px 0 rgba(0,0,0,0.15);
+            border: 1.5px solid #ffd700;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .khillar-highlight-banner:active { transform: scale(0.98); }
+        .khillar-highlight-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+        .khillar-content { position: relative; z-index: 2; color: white; flex: 1; padding-right: 8px; }
+        .khillar-content h3 {
+            margin: 0 0 3px 0;
+            font-size: 15px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .khillar-content p {
+            margin: 0;
+            font-size: 10.5px;
+            font-weight: 700;
+            opacity: 0.98;
+            line-height: 1.3;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.25);
+        }
+        /* 🔥 COMPACT LOGO: 54px साईज, सोनेरी बॉर्डर व शॅडो 🔥 */
+        .khillar-logo-img {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2.5px solid #ffd700;
+            box-shadow: 0 3px 10px rgba(255, 215, 0, 0.5), 0 2px 6px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            background: #fff;
+            transition: transform 0.3s ease;
+        }
+        .khillar-highlight-banner:hover .khillar-logo-img {
+            transform: scale(1.05) rotate(3deg);
+        }
+        .khillar-pulse-tag {
+            background: #ffd700;
+            color: #b71c1c;
+            font-size: 8.5px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            border: 1px solid #ff8f00;
+            margin-bottom: 4px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        /* WhatsApp Share Button Style */
+        .wa-share-btn {
+            background: #25d366;
+            color: white;
+            border: 1px solid #1ebc57;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 6px;
+            transition: 0.2s;
+        }
+        .wa-share-btn:active { transform: scale(0.94); }
+
+        /* 🔥 UPDATED: PROMINENT RATION BALANCER HIGHLIGHT BANNER (1st Position साठी साईज थोडी मोठी आणि ठळक केली) 🔥 */
+        .ration-highlight-banner {
+            display: flex;
+            margin: 14px 15px 12px;
+            background: linear-gradient(135deg, #4caf50 0%, #1b5e20 100%);
+            border-radius: 14px;
+            padding: 16px 18px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.35), inset 0 -2px 0 rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            transition: transform 0.2s;
+            border: 1.5px solid #a5d6a7;
+        }
         .ration-highlight-banner:active { transform: scale(0.98); }
         .ration-highlight-banner::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); transform: rotate(45deg); pointer-events: none; }
         .ration-content { position: relative; z-index: 2; color: white; }
-        .ration-content h3 { margin: 0 0 3px 0; font-size: 16px; font-weight: 900; display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-        .ration-content p { margin: 0; font-size: 10px; font-weight: 600; opacity: 0.95; line-height: 1.3; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
-        .ration-icon-large { font-size: 28px; position: relative; z-index: 2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: floatIcon 3s ease-in-out infinite;}
-        .pulse-tag { background: #ffeb3b; color: #b71c1c; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 10px; animation: pulseTag 1.5s infinite; text-transform: uppercase; border: 1px solid #f57f17; margin-bottom: 4px; display: inline-block;}
+        .ration-content h3 { margin: 0 0 4px 0; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .ration-content p { margin: 0; font-size: 11.5px; font-weight: 600; opacity: 0.98; line-height: 1.35; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .ration-icon-large { font-size: 34px; position: relative; z-index: 2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: floatIcon 3s ease-in-out infinite;}
+        .pulse-tag { background: #ffeb3b; color: #b71c1c; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 10px; animation: pulseTag 1.5s infinite; text-transform: uppercase; border: 1px solid #f57f17; margin-bottom: 5px; display: inline-block;}
         
         @keyframes floatIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes pulseTag { 0% { box-shadow: 0 0 0 0 rgba(255, 235, 59, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 235, 59, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 235, 59, 0); } }
@@ -311,9 +432,14 @@
         </a>
 
         <!-- 🔥 ABOUT US MENU ITEM 🔥 -->
-        <a href="about_us.html" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
+        <a onclick="openAboutUsModal(); closeMenu();" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
             <span class="m-icon">ℹ️</span> आमच्याबद्दल (About Us)
         </a>
+
+        <!-- 🔥 NEW: KHILLAR BULL & RACING SECTION IN HAMBURGER MENU 🔥 -->
+        <div class="menu-category">शर्यत आणि वंशावळ</div>
+        <a href="khond_care_dashboard.html" class="menu-item" style="background:#fff8e1; color:#d84315; font-weight:900;"><span class="m-icon">🐂</span> चॅम्पियन खिल्लार AI</a>
+        <a href="khillari_bazar.html" class="menu-item"><span class="m-icon">🏆</span> शर्यत बैल बाजार</a>
 
         <div class="menu-category">व्यापार आणि खरेदी</div>
         <a href="krushi_mall.html" class="menu-item"><span class="m-icon">🛒</span> कृषी मॉल (Store)</a>
@@ -516,7 +642,7 @@
                 <span style="font-size: 20px;">🔔</span>
                 <span id="notif_badge" style="position: absolute; top: -5px; right: -5px; background: #e65100; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;">०</span>
                 
-                <div id="notificationDropdown" style="display: none; position: absolute; top: 35px; right: 0; background: white; width: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e0e0; z-index: 1000; padding: 12px; text-align: left;">
+                <div id="notificationDropdown" style="display: none; position: absolute; top: 35px; right: -40px; background: white; width: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e0e0; z-index: 1000; padding: 12px; text-align: left;">
                     <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #1b5e20; border-bottom: 1px solid #eee; padding-bottom: 8px;">तुमचे ॲलर्ट्स (Alerts)</h4>
                     <div id="notif_list_container" style="font-size: 12px; color: #444; max-height: 200px; overflow-y: auto;"></div>
                 </div>
@@ -561,7 +687,7 @@
         </a>
     </div>
 
-    <!-- 🔥 CORE FEATURE RATION BALANCER (Basic is Free - Moved UP & Redesigned) 🔥 -->
+    <!-- 🔥 १ नंबरला: PROMINENT RATION BALANCER HIGHLIGHT BANNER (ठळक व मोठा) 🔥 -->
     <a onclick="checkAccessAndRedirect('ration_balancer.html', 'ration')" class="ration-highlight-banner" style="cursor: pointer;">
         <div class="ration-content">
             <span class="pulse-tag">✨ खास तुमच्यासाठी (Basic Free)</span>
@@ -569,6 +695,21 @@
             <p>तुमच्या गाईचा आहार योग्य आहे का तपासा आणि <b>दुधात वाढ करा!</b> 📈</p>
         </div>
         <div class="ration-icon-large">⚖️</div>
+    </a>
+
+    <!-- 🔥 २ नंबरला: COMPACT CHAMPION KHILLAR AI BANNER (सुटसुटीत साईज + लोगो + WhatsApp शेअर बटण) 🔥 -->
+    <a href="khond_care_dashboard.html" class="khillar-highlight-banner">
+        <div class="khillar-content">
+            <span class="khillar-pulse-tag">🏆 शर्यत व पैदास स्पेशल</span>
+            <h3>चॅम्पियन खिल्लार AI</h3>
+            <p>"शर्यतीच्या बैलांसाठी बनवलेला पहिला AI आधारित Performance Platform."</p>
+            
+            <!-- WhatsApp Share Button -->
+            <div class="wa-share-btn" onclick="shareChampionKhillar(event)">
+                <span>📲 शेअर करा (WhatsApp)</span>
+            </div>
+        </div>
+        <img src="Khillar.png" alt="चॅम्पियन खिल्लार AI" class="khillar-logo-img" onerror="this.src='https://via.placeholder.com/60?text=Khillar'">
     </a>
 
     <!-- 🔥 MAIN INCOME SOURCES (MOVED UP & 3D HIGHLIGHTED) 🔥 -->
@@ -820,7 +961,7 @@
                             <b style="color:#0d47a1;">${n.title}</b><br>
                             ${n.message}
                             <div style="font-size:9px; color:#999; margin-top:3px;">⏰ ${n.time || new Date(n.timestamp).toLocaleTimeString('mr-IN')}</div>
-                        </div>`;
+                         </div>`;
             });
             html += `<a href="notifications.html" style="display:block; text-align:center; padding:8px 0; margin-top:5px; background:#e8f5e9; color:#1b5e20; font-weight:bold; text-decoration:none; border-radius:6px;">सर्व सूचना पहा →</a>`;
         }
@@ -1054,6 +1195,34 @@
         localStorage.setItem('last_doctor_call_date', now.toISOString());
     }
 
+    // --- 🔥 NEW: WHATSAPP SHARE CHAMPION KHILLAR AI LOGIC (RICH PREVIEW CARD + WEB SHARE API) 🔥 ---
+    function shareChampionKhillar(event) {
+        if(event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        let shareTitle = "🏆 चॅम्पियन खिल्लार AI - शर्यतीच्या बैलांसाठी पहिला AI Performance Platform";
+        let shareText = `🏆 *चॅम्पियन खिल्लार AI*\n"शर्यतीच्या बैलांसाठी बनवलेला पहिला AI आधारित Performance Platform."\n\n🐂 तुमच्या शर्यतीच्या बैलाचा स्टॅमिना, ताकद, खुराक नियोजन आणि अस्सल बैल बाजार आता AI सोबत करा!\n\n👉 *आत्ताच खालील लिंकवर क्लिक करा आणि लॉगिन/नोंदणी करा:*`;
+        let shareUrl = `https://dugdhadisha.com/login.html?ref=champion_khillar`;
+
+        // Modern Mobile Web Share API (Android/iOS वर उत्तम Rich Preview साठी)
+        if (navigator.share) {
+            navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
+            }).catch((error) => {
+                // जर युजरने कॅन्सल केले किंवा एरर आला तर WhatsApp डायरेक्ट लिंक उघडा
+                let waUrl = `https://wa.me/?text=` + encodeURIComponent(shareText + "\n\n" + shareUrl);
+                window.open(waUrl, '_blank');
+            });
+        } else {
+            // Desktop किंवा जुन्या ब्राऊझरसाठी डायरेक्ट WhatsApp लिंक (URL शेवटी ठेवल्याने WhatsApp आपोआप og:image लोगो फेच करतो)
+            let waUrl = `https://wa.me/?text=` + encodeURIComponent(shareText + "\n\n" + shareUrl);
+            window.open(waUrl, '_blank');
+        }
+    }
+
     function initDashboard() {
         // नोटिफिकेशन ऑटो-क्लिअर आणि लोड
         autoClearOldNotifications();
@@ -1218,6 +1387,50 @@
             }
         });
         document.getElementById("total_milk").innerText = todayMilk.toFixed(1) + " L";
+
+        // 🔥 FIREBASE CLOUD SYNC: रिअल-टाईम क्लाऊड डेटा आणा 🔥
+        syncDashboardFromCloud();
+    }
+
+    // --- 🔥 NEW: FIREBASE CLOUD REAL-TIME SYNC ACROSS ALL DEVICES 🔥 ---
+    function syncDashboardFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
+
+        // १. क्लाऊडवरून जनावरांची संख्या आणा (`farmer_animals`)
+        db.collection("farmer_animals").where("farmerMobile", "==", userMobile).get()
+        .then(querySnapshot => {
+            let cloudCattleCount = querySnapshot.size;
+            if (cloudCattleCount > 0) {
+                document.getElementById("total_animals_display").innerText = cloudCattleCount;
+            }
+        }).catch(e => console.log("Cloud cattle count sync error: ", e));
+
+        // २. क्लाऊडवरून आजचे दूध संकलन आणा (`milk_records`)
+        let todayStr = new Date().toISOString().split("T")[0];
+        db.collection("milk_records")
+        .where("farmerMobile", "==", userMobile)
+        .where("date", "==", todayStr)
+        .get()
+        .then(querySnapshot => {
+            let cloudMilkToday = 0;
+            querySnapshot.forEach(doc => {
+                let data = doc.data();
+                cloudMilkToday += parseFloat(data.liters || 0);
+            });
+            if(cloudMilkToday > 0) {
+                document.getElementById("total_milk").innerText = `${cloudMilkToday.toFixed(1)} L`;
+            }
+        }).catch(e => console.log("Cloud milk today sync error: ", e));
+
+        // ३. क्लाऊडवरून युजरचा ॲक्टिव्ह प्लॅन तपासा (`users/activePlan`)
+        db.collection("users").doc(userMobile).get()
+        .then(doc => {
+            if (doc.exists && doc.data() && doc.data().activePlan) {
+                let cloudPlan = doc.data().activePlan;
+                localStorage.setItem("farmer_active_plan", JSON.stringify(cloudPlan));
+            }
+        }).catch(e => console.log("Cloud plan status sync error: ", e));
     }
 
     function logoutUser() {
@@ -1232,16 +1445,5 @@
 </script>
 
 <script src="fcm_setup.js"></script>
-
-<!-- 🔥 SERVICE WORKER REGISTRATION (PWA) 🔥 -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then((reg) => console.log('Service Worker Registered 🚀'))
-                .catch((err) => console.log('Service Worker Error', err));
-        });
-    }
-</script>
 </body>
 </html>

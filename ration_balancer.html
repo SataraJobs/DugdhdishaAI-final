@@ -397,7 +397,7 @@
         <div class="feed-qty-col"><input type="number" id="qty_green_3" placeholder="किलो" min="0"></div>
     </div>
     
-    <div class="category-header">🌾 सुका चारा (Dry Fodder)</div>
+    <div class="category-header">🌾 सुका चारा (Dry Fodder - २ पर्याय)</div>
     <div class="feed-input-group">
         <div class="feed-select-col">
             <select id="dry_1" onchange="handleSelect(this, 'dm_dry_1', 'custom_dry_1', 'dry')">
@@ -413,6 +413,24 @@
             <div id="dm_dry_1" class="dm-info"></div>
         </div>
         <div class="feed-qty-col"><input type="number" id="qty_dry_1" placeholder="किलो" min="0"></div>
+    </div>
+    
+    <!-- 🔥 NEWLY ADDED: सुका चारा २ (2nd Dry Fodder Slot) 🔥 -->
+    <div class="feed-input-group">
+        <div class="feed-select-col">
+            <select id="dry_2" onchange="handleSelect(this, 'dm_dry_2', 'custom_dry_2', 'dry')">
+                <option value="">-- सुका चारा २ --</option>
+                <option value="90" data-cp="7.0" data-me="1.9" data-ndf="56.5" data-adf="40.3" data-ca="0.4" data-p="0.2">ज्वारीचा कडबा (CP:7.0%, ME:1.9)</option>
+                <option value="90" data-cp="3.5" data-me="1.9" data-ndf="72.3" data-adf="43.5" data-ca="0.3" data-p="0.1">गव्हाचे काड / भुसा (CP:3.5%, ME:1.9)</option>
+                <option value="85" data-cp="15.0" data-me="1.9" data-ndf="59.0" data-adf="42.8" data-ca="0.5" data-p="0.2">सोयाबीन कुट्टी (CP:15.0%, ME:1.9)</option>
+                <option value="90" data-cp="4" data-me="1.4" data-ndf="76" data-adf="46" data-ca="0.4" data-p="0.2">बाजरीचा कडबा (CP:4%, ME:1.4)</option>
+                <option value="90" data-cp="10" data-me="1.8" data-ndf="65" data-adf="40" data-ca="0.6" data-p="0.3">हाय (Hay) (CP:10%, ME:1.8)</option>
+                <option value="other">इतर (नाव टाईप करा) ✍️</option>
+            </select>
+            <input type="text" id="custom_dry_2" class="custom-input" placeholder="चाऱ्याचे नाव...">
+            <div id="dm_dry_2" class="dm-info"></div>
+        </div>
+        <div class="feed-qty-col"><input type="number" id="qty_dry_2" placeholder="किलो" min="0"></div>
     </div>
     
     <div class="category-header">🪣 पशुखाद्य व पारंपारिक खाद्य</div>
@@ -698,6 +716,22 @@
     }
     const db = firebase.firestore();
 
+    // --- 🔥 STRICT PRICING HELPER FUNCTIONS (NO FREE DEFAULT) 🔥 ---
+    function getProPrice() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let val = adminPrices.m25_f_pro;
+        if (val === undefined || val === null || val === '') return 29;
+        let p = parseInt(val);
+        return isNaN(p) ? 29 : p;
+    }
+    function getAdvPrice() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let val = adminPrices.m25_f_adv;
+        if (val === undefined || val === null || val === '') return 49;
+        let p = parseInt(val);
+        return isNaN(p) ? 49 : p;
+    }
+
     // --- 🔥 DYNAMIC AD GENERATION LOGIC 🔥 ---
     function generateDynamicAd(targetTag) {
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
@@ -834,63 +868,86 @@
         document.getElementById('pro_inputs').style.display = 'none';
         document.getElementById('adv_inputs').style.display = 'none';
         applyTheme();
+        updateTabLockUI();
         
-        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25'));
-        if(adminPrices) {
-            let proPrice = adminPrices.m25_f_pro || 0;
-            let advPrice = adminPrices.m25_f_adv || 0;
-            
-            if(proPrice > 0) { document.getElementById('tab_price_pro').innerHTML = `🔒 ₹${proPrice}`; } 
-            else { document.getElementById('tab_price_pro').innerHTML = `✅ ॲक्टिव्ह`; document.getElementById('tab_price_pro').style.color = '#1565c0'; }
+        // 🔥 FIREBASE CLOUD SYNC: सर्व डिव्हाईसवर किमती एकसारख्या राहण्यासाठी क्लाऊडवरून दर आणा 🔥
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                let cloudData = doc.data();
+                localStorage.setItem('admin_data_M25', JSON.stringify(cloudData));
+                updateTabLockUI();
+            }
+        }).catch(e => console.log("Cloud sync error:", e));
+    }
 
-            if(advPrice > 0) { document.getElementById('tab_price_adv').innerHTML = `🔒 ₹${advPrice}`; } 
-            else { document.getElementById('tab_price_adv').innerHTML = `✅ ॲक्टिव्ह`; document.getElementById('tab_price_adv').style.color = '#8e24aa'; }
+    function updateTabLockUI() {
+        let proPrice = getProPrice();
+        let advPrice = getAdvPrice();
+        
+        let proTab = document.getElementById('tab_price_pro');
+        let advTab = document.getElementById('tab_price_adv');
+
+        if(isPlanActive('pro')) {
+            proTab.innerHTML = `✅ ॲक्टिव्ह`;
+            proTab.style.color = '#1565c0';
+        } else {
+            proTab.innerHTML = `🔒 ₹${proPrice}`;
+            proTab.style.color = '#d32f2f';
+        }
+
+        if(isPlanActive('adv')) {
+            advTab.innerHTML = `✅ ॲक्टिव्ह`;
+            advTab.style.color = '#8e24aa';
+        } else {
+            advTab.innerHTML = `🔒 ₹${advPrice}`;
+            advTab.style.color = '#d32f2f';
         }
     }
 
-    // 🔥 NEW: Universal Access System Logic 🔥
+    // 🔥 NEW: STRICT Universal Access System Logic (No free fallback) 🔥
     function isPlanActive(featureType) {
-        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
-        if(featureType === 'pro' && (adminPrices.m25_f_pro == 0 || !adminPrices.m25_f_pro)) return true;
-        if(featureType === 'adv' && (adminPrices.m25_f_adv == 0 || !adminPrices.m25_f_adv)) return true;
+        let proPrice = getProPrice();
+        let advPrice = getAdvPrice();
+        if(featureType === 'pro' && proPrice === 0) return true;
+        if(featureType === 'adv' && advPrice === 0) return true;
 
         // १. Check Farmer Active Plan
         let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
-        if(activePlan) {
+        if(activePlan && activePlan.expiryDate) {
             let now = new Date(); 
             let expiry = new Date(activePlan.expiryDate);
-            if(now > expiry) { 
-                localStorage.removeItem('farmer_active_plan'); 
-            } else {
-                let planName = activePlan.name.toLowerCase();
+            if(now <= expiry) {
+                let planName = (activePlan.name || '').toLowerCase();
                 if(featureType === 'pro') { 
-                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('प्रो रेशन') || planName.includes('pro') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver')) return true; 
+                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('प्रो रेशन') || planName.includes('pro') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver') || planName.includes('29') || planName.includes('२९')) return true; 
                 } 
                 else if(featureType === 'adv') { 
-                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('advance') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver')) return true; 
+                    if(planName.includes('दिशा प्राईम') || planName.includes('सिल्व्हर') || planName.includes('ॲडव्हान्स रेशन') || planName.includes('advance') || planName.includes('adv') || planName.includes('प्लॅटिनम') || planName.includes('gold') || planName.includes('silver') || planName.includes('49') || planName.includes('४९')) return true; 
                 }
+            } else {
+                localStorage.removeItem('farmer_active_plan');
             }
         }
 
         // २. Check Business/Vendor Active Plan
         let vendorPlan = JSON.parse(localStorage.getItem('current_business_plan_details'));
-        if(vendorPlan) {
+        if(vendorPlan && vendorPlan.expiryDate) {
             let now = new Date();
             let expiry = new Date(vendorPlan.expiryDate);
-            if(now > expiry) {
-                localStorage.removeItem('current_business_plan_details');
-            } else {
-                let planName = vendorPlan.name.toLowerCase();
+            if(now <= expiry) {
+                let planName = (vendorPlan.name || '').toLowerCase();
                 if(featureType === 'pro') {
                     if(planName.includes('starter') || planName.includes('silver') || planName.includes('corporate') || planName.includes('gold') || planName.includes('platinum')) return true;
                 }
                 else if(featureType === 'adv') {
                     if(planName.includes('silver') || planName.includes('corporate') || planName.includes('gold') || planName.includes('platinum')) return true;
                 }
+            } else {
+                localStorage.removeItem('current_business_plan_details');
             }
         }
 
-        return false; // Not Active
+        return false; // Not Active -> Show Paywall!
     }
 
     function setLevel(mode) {
@@ -920,15 +977,13 @@
         let title = document.getElementById('paywall_title');
         let price = document.getElementById('paywall_price');
         
-        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
-
         if(type === 'pro') {
             pendingPlanName = 'प्रो रेशन बॅलन्सर (Pro Ration)'; pendingPlanType = '24h';
-            pendingPlanAmount = adminPrices.m25_f_pro || 29;
+            pendingPlanAmount = getProPrice();
             title.innerText = 'प्रो ॲक्टिव्ह रेशन बॅलन्सर'; price.innerText = `₹ ${pendingPlanAmount} / २४ तास`;
         } else if(type === 'adv') {
             pendingPlanName = 'ॲडव्हान्स रेशन बॅलन्सर (Advance Ration)'; pendingPlanType = '24h';
-            pendingPlanAmount = adminPrices.m25_f_adv || 49;
+            pendingPlanAmount = getAdvPrice();
             title.innerText = 'ॲडव्हान्स रेशन बॅलन्सर'; price.innerText = `₹ ${pendingPlanAmount} / २४ तास`;
         }
         overlay.style.display = 'flex';
@@ -940,7 +995,6 @@
     function triggerRazorpayPayment() {
         let numAmount = parseFloat(pendingPlanAmount);
         
-        // Free logic just in case
         if(numAmount === 0) {
             activatePlanAutomatically(pendingPlanType, pendingPlanName);
             return;
@@ -1032,6 +1086,7 @@
         alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच अनलॉक करण्यात आला आहे!`);
         
         closePaywall();
+        updateTabLockUI();
         
         // Auto select the requested tab
         if(planName.includes('प्रो') || planName.includes('Pro')) {
@@ -1145,8 +1200,9 @@
         let feeds = [
             getSelectedProfile('green_1', 'qty_green_1', 'green'), 
             getSelectedProfile('green_2', 'qty_green_2', 'green'),
-            getSelectedProfile('green_3', 'qty_green_3', 'green'), // NEW GREEN FODDER ADDED HERE
+            getSelectedProfile('green_3', 'qty_green_3', 'green'),
             getSelectedProfile('dry_1', 'qty_dry_1', 'dry'), 
+            getSelectedProfile('dry_2', 'qty_dry_2', 'dry'), // 🔥 NEW DRY FODDER 2 ADDED HERE
             getSelectedProfile('conc_1', 'qty_conc_1', 'conc'),
             getSelectedProfile('conc_2', 'qty_conc_2', 'conc'), 
             getSelectedProfile('conc_3', 'qty_conc_3', 'conc')
@@ -1161,9 +1217,9 @@
         let totalCa = feeds.reduce((s, x) => s + x.ca_g, 0);
         let totalP = feeds.reduce((s, x) => s + x.p_g, 0);
 
-        // Updated for 3 Green Fodders
-        let roughageDM = feeds[0].dm + feeds[1].dm + feeds[2].dm + feeds[3].dm;
-        let concDM = feeds[4].dm + feeds[5].dm + feeds[6].dm;
+        // Updated for 3 Green Fodders + 2 Dry Fodders
+        let roughageDM = feeds[0].dm + feeds[1].dm + feeds[2].dm + feeds[3].dm + feeds[4].dm;
+        let concDM = feeds[5].dm + feeds[6].dm + feeds[7].dm;
         let ratioR = totalDM > 0 ? Math.round((roughageDM / totalDM) * 100) : 0;
         let ratioC = totalDM > 0 ? Math.round((concDM / totalDM) * 100) : 0;
         let costPerLtr = milk > 0 ? (feedCost / milk) : 0;
@@ -1270,8 +1326,9 @@
         let allFeeds = [
             { cat: 'हिरवा चारा', name: getFeedName('green_1', 'custom_green_1'), qty: document.getElementById('qty_green_1').value },
             { cat: 'हिरवा चारा', name: getFeedName('green_2', 'custom_green_2'), qty: document.getElementById('qty_green_2').value },
-            { cat: 'हिरवा चारा', name: getFeedName('green_3', 'custom_green_3'), qty: document.getElementById('qty_green_3').value }, // NEW ADDED
+            { cat: 'हिरवा चारा', name: getFeedName('green_3', 'custom_green_3'), qty: document.getElementById('qty_green_3').value },
             { cat: 'सुका चारा', name: getFeedName('dry_1', 'custom_dry_1'), qty: document.getElementById('qty_dry_1').value },
+            { cat: 'सुका चारा', name: getFeedName('dry_2', 'custom_dry_2'), qty: document.getElementById('qty_dry_2').value }, // 🔥 NEW DRY FODDER 2 ADDED HERE
             { cat: 'पशुखाद्य', name: getFeedName('conc_1', 'custom_conc_1'), qty: document.getElementById('qty_conc_1').value },
             { cat: 'पशुखाद्य', name: getFeedName('conc_2', 'custom_conc_2'), qty: document.getElementById('qty_conc_2').value },
             { cat: 'पशुखाद्य', name: getFeedName('conc_3', 'custom_conc_3'), qty: document.getElementById('qty_conc_3').value },
@@ -1302,7 +1359,7 @@
         // 1. DRY MATTER
         reportHtml += `<div class="report-section pdf-page-break"><h4 style="color:#795548;">🌾 ${mNum[sNum++]}. ड्राय मॅटर (DM)</h4>`;
         if (totalDM > reqDM * 1.1) {
-            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत মাঠে आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
+            if(currentMode === 'basic') reportHtml += `<p><span class="status-warn">⚠️ गाईला गरजेपेक्षा जास्त चारा जात आहे.</span></p><p>यामुळे तुमचा दैनंदिन चारा खर्च विनाकारण वाढत आहे आणि चारा वाया जाण्याची शक्यता आहे. हा खर्च कसा वाचवायचा हे पाहण्यासाठी <b>🔒 प्रो प्लॅन</b> घ्या.</p>`;
             else if(currentMode === 'pro') reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>गाय पुरे आहार खात आहे, परंतु जास्त DM मुळे तुमचा खाद्य खर्च वाढत आहे. <br><br><b>✅ हमखास उपाय:</b> संतुलित आहारासाठी १-२ किलो सुका चारा कमी करा.</p>`;
             else reportHtml += `<p><span class="status-warn">⚠️ ड्राय मॅटर गरजेपेक्षा जास्त आहे.</span></p><p>अतिरिक्त DM मुळे पोट जास्त भरते व पचनाचा वेग मंदावतो, तसेच तुमचा चारा खर्च विनाकारण वाढतो. <br><br><b>✅ ॲडव्हान्स उपाय:</b> रवंथ प्रक्रियेवर लक्ष ठेवा. कमी दर्जाचा सुका चारा (उदा. गव्हाचे काड किंवा वाढे) १-२ किलोने कमी करा आणि पाण्याचे प्रमाण तपासा.</p>`;
         } else if (totalDM < reqDM * 0.9) {
@@ -1521,11 +1578,9 @@
             rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध आणि SNF कमी होईल, माजावर येण्यास उशीर.');
             rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन कमी होईल, दूध उत्पादन घटेल, अशक्तपणा.');
             rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या, दूध फॅट कमी.');
-            // Also show Ca and P as extra info
             rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
             rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
         } else if (mode === 'adv') {
-            // Full detailed table
             rows += addRow('ड्राय मॅटर (DM)', 'Kg', data.reqDM, data.totalDM, 'पोट न भरल्याने दूध उत्पादन घटेल, वजन कमी होईल.');
             rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध SNF कमी, माजावर उशीर.');
             rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन घटेल, दूध कमी, अशक्तपणा.');
@@ -1535,8 +1590,7 @@
             rows += addRow('CF (फॅट)', 'ग्रॅम', data.reqCF, data.totalCF, 'दुधातील फॅट कमी, ऊर्जा अपुरी.');
             rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
             rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
-            rows += addRow('पाणी', 'लिटर', data.reqWater, data.reqWater, 'दूध कमी, शरीर तापमान वाढेल.'); // water actual is requirement (we assume same)
-            // Ratio row not nutrient, but can show as note
+            rows += addRow('पाणी', 'लिटर', data.reqWater, data.reqWater, 'दूध कमी, शरीर तापमान वाढेल.'); 
         }
 
         return `
@@ -1662,6 +1716,5 @@
     }
 </script>
 
-<script src="fcm_setup.js"></script>
 </body>
 </html>

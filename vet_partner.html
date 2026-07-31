@@ -232,6 +232,10 @@
         };
         notifications.unshift(newNotif);
         localStorage.setItem('system_notifications', JSON.stringify(notifications));
+
+        // 🔥 FIREBASE CLOUD SAVE FOR BROADCAST/SYSTEM NOTIFICATIONS 🔥
+        db.collection("broadcast_notifications").add(newNotif)
+        .catch(e => console.error("Error saving notification to cloud:", e));
     }
 
     function autoClearOldNotifications() {
@@ -289,24 +293,47 @@
         }
     }
 
-    // Call auto clear on load
     autoClearOldNotifications();
+    
     // ---------------------------------------------------------
     // 1. TABS & AUTO-DASHBOARD LOGIC
     // ---------------------------------------------------------
     function checkVetStatus() {
-        loadVetNotifications(); // Update badge on load
-        let loggedInDoc = localStorage.getItem("current_logged_in_doc");
+        loadVetNotifications(); 
+        let loggedInDoc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
         if (loggedInDoc) {
-            // जर डॉक्टरने आधीच फॉर्म भरला असेल, तर थेट डॅशबोर्ड उघडा
             document.getElementById("btn_tab_register").style.display = "none";
             document.getElementById("btn_tab_dashboard").style.display = "block";
             switchTab('tab_dashboard', document.getElementById("btn_tab_dashboard"));
+            
+            // 🔥 FIREBASE CLOUD SYNC: डॉक्टरचे प्रोफाईल आणि KYC स्टेट्स क्लाऊडवरून तपासा 🔥
+            syncVetProfileFromCloud(loggedInDoc);
         } else {
-            // नवीन असेल तर नोंदणी फॉर्म दाखवा
             document.getElementById("btn_tab_dashboard").style.display = "none";
             document.getElementById("btn_tab_register").style.display = "block";
             switchTab('tab_register', document.getElementById("btn_tab_register"));
+        }
+    }
+
+    // --- 🔥 NEW: SYNC VET PROFILE FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+    function syncVetProfileFromCloud(doc) {
+        if(doc && doc.mobile) {
+            db.collection("vet_partners").doc(doc.mobile).get()
+            .then(cloudDoc => {
+                if(cloudDoc.exists && cloudDoc.data()) {
+                    let updatedDoc = cloudDoc.data();
+                    localStorage.setItem("current_logged_in_doc", JSON.stringify(updatedDoc));
+                    
+                    let allDoctors = JSON.parse(localStorage.getItem("live_vet_partners")) || [];
+                    let idx = allDoctors.findIndex(d => d.mobile === updatedDoc.mobile);
+                    if(idx !== -1) allDoctors[idx] = updatedDoc;
+                    else allDoctors.push(updatedDoc);
+                    localStorage.setItem("live_vet_partners", JSON.stringify(allDoctors));
+                    
+                    loadDashboardAppointments();
+                }
+            })
+            .catch(e => console.log("Cloud vet profile sync error: ", e));
         }
     }
 
@@ -320,13 +347,11 @@
     }
 
     function goToUserPage() {
-        // हे तुम्हाला तुमच्या मुख्य युजर ॲपच्या पानावर घेऊन जाईल
         window.location.href = "index.html"; 
     }
 
     function logoutVet() {
         if(confirm("तुम्हाला नक्की लॉग आऊट करायचे आहे का?")) {
-            // डॉक्टर सेशन क्लिअर करा आणि पेज रिफ्रेश करा (जेणेकरून फॉर्म पुन्हा दिसेल)
             localStorage.removeItem("current_logged_in_doc");
             window.location.reload(); 
         }
@@ -371,7 +396,6 @@
             return; 
         }
 
-        // Create Profile Object
         let docProfile = {
             id: "DOC_" + new Date().getTime(), 
             name: name, 
@@ -379,7 +403,7 @@
             email: document.getElementById('v_email').value,
             qual: document.getElementById('v_qual').value,
             regNo: document.getElementById('v_reg_no').value,
-            kycSubmitted: true, // Photo attachments check can be added later
+            kycSubmitted: true, 
             lat: parseFloat(lat), 
             lon: parseFloat(document.getElementById('v_lon').value),
             radius: parseInt(document.getElementById('v_radius').value) || 10,
@@ -390,15 +414,16 @@
             reviewsCount: 0
         };
 
-        // Save Doctor Profile to Database
         let allDoctors = JSON.parse(localStorage.getItem("live_vet_partners")) || [];
         allDoctors.push(docProfile);
         localStorage.setItem("live_vet_partners", JSON.stringify(allDoctors));
         
-        // Set as Active Vet User
         localStorage.setItem("current_logged_in_doc", JSON.stringify(docProfile));
 
-        // 🔥 Send Notification to Super Admin Panel using system_notifications
+        // 🔥 FIREBASE CLOUD SAVE: डॉक्टर प्रोफाईल डेटाबेसवर सेव्ह करा 🔥
+        db.collection("vet_partners").doc(docProfile.mobile).set(docProfile)
+        .catch(e => console.error("Error saving vet partner to cloud:", e));
+
         sendNotification(
             "👨‍⚕️ नवीन व्हेटर्नरी डॉक्टर नोंदणी (KYC Pending)",
             `${name} (${mobile}) यांनी व्हेटर्नरी डॉक्टर/मित्र बनण्यासाठी नोंदणी केली आहे. त्यांचे KYC तपासा.`,
@@ -406,7 +431,7 @@
         );
 
         alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत!");
-        window.location.reload(); // Reload to activate auto-dashboard
+        window.location.reload(); 
     }
 
     // ---------------------------------------------------------
@@ -431,7 +456,9 @@
             badge.innerText = "⏳ KYC Pending";
         }
 
-        // Fetch Live Appointments
+        // 🔥 FIREBASE CLOUD SYNC: डॉक्टरांच्या सर्व अपॉइंटमेंट्स क्लाऊडवरून आणा 🔥
+        syncAppointmentsFromCloud(doc.id);
+
         let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
         let myApts = allApts.filter(a => a.docId === doc.id);
         
@@ -473,12 +500,41 @@
         listContainer.innerHTML = html;
     }
 
+    // --- 🔥 NEW: SYNC APPOINTMENTS FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+    function syncAppointmentsFromCloud(docId) {
+        db.collection("vet_appointments").where("docId", "==", docId).get()
+        .then(querySnapshot => {
+            let cloudApts = [];
+            querySnapshot.forEach(doc => {
+                let d = doc.data();
+                if(!d.id) d.id = doc.id;
+                cloudApts.push(d);
+            });
+            if(cloudApts.length > 0) {
+                let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
+                // Merge cloud appointments
+                cloudApts.forEach(cApt => {
+                    let idx = allApts.findIndex(a => a.id === cApt.id);
+                    if(idx !== -1) allApts[idx] = cApt;
+                    else allApts.push(cApt);
+                });
+                localStorage.setItem("live_appointments", JSON.stringify(allApts));
+            }
+        })
+        .catch(e => console.log("Cloud appointments sync error: ", e));
+    }
+
     function updateAppointmentStatus(aptId, newStatus) {
         let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
         let index = allApts.findIndex(a => a.id === aptId);
         if(index !== -1) {
             allApts[index].status = newStatus;
             localStorage.setItem("live_appointments", JSON.stringify(allApts));
+            
+            // 🔥 FIREBASE CLOUD UPDATE FOR APPOINTMENT STATUS 🔥
+            db.collection("vet_appointments").doc(aptId).update({ status: newStatus })
+            .catch(e => console.log("Cloud apt update error:", e));
+
             loadDashboardAppointments(); 
         }
     }
@@ -495,6 +551,10 @@
                 allDocs[index].status = doc.status; 
                 localStorage.setItem("live_vet_partners", JSON.stringify(allDocs)); 
             }
+
+            // 🔥 FIREBASE CLOUD UPDATE FOR DOCTOR ONLINE/OFFLINE STATUS 🔥
+            db.collection("vet_partners").doc(doc.mobile).update({ status: doc.status })
+            .catch(e => console.log("Cloud status update error:", e));
         }
     }
 </script>

@@ -520,7 +520,7 @@
         });
     }
 
-    // --- 📍 ROUTING FUNCTION ---
+    // --- 📍 ROUTING FUNCTION (UPDATED WITH CLOUD PLAN SYNC) ---
     function processSuccessfulLogin(foundUser) {
         localStorage.setItem("current_logged_in_role", foundUser.role);
         localStorage.setItem("current_user_name", foundUser.name);
@@ -533,6 +533,16 @@
         if(foundUser.lat && foundUser.lon) {
             localStorage.setItem("farmer_lat", foundUser.lat);
             localStorage.setItem("farmer_lon", foundUser.lon);
+        }
+
+        // 🔥 FIREBASE CLOUD PLAN SYNC: लॉगिन होताच युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून लोकल मेमरीमध्ये सिंक करा 🔥
+        if(foundUser.activePlan) {
+            localStorage.setItem("farmer_active_plan", JSON.stringify(foundUser.activePlan));
+        } else {
+            localStorage.removeItem("farmer_active_plan");
+        }
+        if(foundUser.businessPlan) {
+            localStorage.setItem("current_business_plan_details", JSON.stringify(foundUser.businessPlan));
         }
 
         alert(`डॅशबोर्ड मध्ये स्वागत आहे, ${foundUser.name}! ☁️`);

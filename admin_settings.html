@@ -236,6 +236,8 @@
             <div class="menu-item" onclick="switchTab('m28')">🛡️ ३६. Audit Log</div>
             <div class="menu-item" onclick="switchTab('m29')">📝 ३७. CMS Editor</div>
             <div class="menu-item" onclick="switchTab('m30')">🔌 ३८. API Manager</div>
+            <!-- 🔥 NEW: M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥 -->
+            <div class="menu-item" onclick="switchTab('m_khillar_admin')" style="color: #ff9800; font-weight: 900;">🏆 ३९. शर्यत बैल व खिलार नियंत्रण</div>
         </div>
     </div>
 
@@ -286,7 +288,7 @@
             <!-- 🔥 NEW: M36 - CUSTOMER SUPPORT HELPDESK 🔥 -->
             <div id="m36" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #ff5252;">
-                    <h4 style="color:#c62828; border-bottom-color:#ffcdd2;">📩 कस्टम সাপোর্ট डेस्क (Helpdesk Tickets)</h4>
+                    <h4 style="color:#c62828; border-bottom-color:#ffcdd2;">📩 कस्टम सपोर्ट डेस्क (Helpdesk Tickets)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापारी किंवा शेतकऱ्यांनी ॲपमधून विचारलेले प्रश्न येथे दिसतील. त्यांना रिप्लाय केल्यावर त्यांच्या डॅशबोर्डमध्ये उत्तर दिसेल.</p>
                     <div id="support_tickets_container"></div>
                 </div>
@@ -781,7 +783,7 @@
             <div id="m25" class="tab-content">
                 <div class="admin-card">
                     <h4 style="border-bottom-color: #1b5e20;">💳 मास्टर प्राईसिंग सेटिंग्ज (Master Pricing Control)</h4>
-                    <p style="font-size: 12px; color: #666;">येथून तुम्ही सेट केलेले दर संपूर्ण ॲपमध्ये (शेतकरी आणि व्यापारी) आपोआप अपडेट होतील.</p>
+                    <p style="font-size: 12px; color: #666;">येथून तुम्ही सेट केलेले दर संपूर्ण ॲपमध्ये (शेतकरी आणि व्यापारी) आपोआप अपडेट होतील. <b>टीप: ० रुपये (0) सेट केल्यास ते फीचर पेमेंट न मागता मोफत (Free/Trial) अनलॉक होईल!</b></p>
                     
                     <h5 style="color:#d32f2f; margin-bottom:5px;">१. शेतकरी प्रीमियम प्लॅन्स (Farmer Plans)</h5>
                     <div class="grid-3">
@@ -795,6 +797,21 @@
                         <div class="field"><label>Platinum (1 Month)</label><input type="number" id="m25_f_plat1" value="199"></div>
                     </div>
                     <div class="field"><label>Platinum (6 Months - Auto 10% Off)</label><input type="number" id="m25_f_plat6" value="1074"></div>
+
+                    <!-- 🔥 NEW: RACING KHILLAR KHOND & BULL FARMER PACKAGES (0 = Free Testing Mode) 🔥 -->
+                    <h5 style="color:#d84315; margin-bottom:5px; margin-top:15px;">🏆 शर्यत बैल व खिलार स्पेशल शेतकरी प्लॅन्स (Khillar Special Plans)</h5>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>शर्यत खोंड ॲडव्हान्स रेशन (24h) ₹</label>
+                            <input type="number" id="m25_f_khillar_ration" value="49" placeholder="49">
+                            <span style="font-size:10px; color:#2e7d32; font-weight:bold; margin-top:2px;">(0 केले तर रेशन बॅलन्सर मोफत अनलॉक होईल)</span>
+                        </div>
+                        <div class="field">
+                            <label>खिलार बाजार प्राईम पॅक (1 Month) ₹</label>
+                            <input type="number" id="m25_f_khillar_prime" value="99" placeholder="99">
+                            <span style="font-size:10px; color:#2e7d32; font-weight:bold; margin-top:2px;">(0 केले तर बैल बाजारात विक्री व रेशन मोफत होईल)</span>
+                        </div>
+                    </div>
 
                     <h5 style="color:#1565c0; margin-bottom:5px; margin-top:20px;">२. व्यापारी सेलर पॅकेजेस (Vendor Plans)</h5>
                     <div class="grid-4">
@@ -816,6 +833,8 @@
 
                     <h5 style="color:#8e24aa; margin-bottom:5px; margin-top:20px;">४. स्मार्ट पेज-स्पेसिफिक जाहिराती (Targeted Ads)</h5>
                     <div class="grid-4">
+                        <!-- 🔥 NEW: RACING KHILLAR AD PRICING INTEGRATED HERE 🔥 -->
+                        <div class="field"><label>शर्यत खोंड सजेशन (₹/१५ दिवस)</label><input type="number" id="m25_t_khillar" value="499"></div>
                         <div class="field"><label>रेशन सजेशन (₹/१५ दिवस)</label><input type="number" id="m25_t_ration" value="499"></div>
                         <div class="field"><label>आजार सजेशन (₹/महिना)</label><input type="number" id="m25_t_disease" value="299"></div>
                         <div class="field"><label>वासरू संगोपन (₹/महिना)</label><input type="number" id="m25_t_calf" value="399"></div>
@@ -991,6 +1010,43 @@
                 </div>
             </div>
 
+            <!-- 🔥🔥🔥 NEW: M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥🔥🔥 -->
+            <div id="m_khillar_admin" class="tab-content">
+                
+                <!-- 1. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Moderation) -->
+                <div class="admin-card" style="border-left: 5px solid #ff6f00;">
+                    <h4 style="color:#d84315; border-bottom-color:#ffe0b2;">🏆 १. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Ads)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">शेतकऱ्यांनी शर्यत बैल बाजारामध्ये (`khillari_bazar.html`) टाकलेल्या सर्व जाहिराती येथे दिसतील. खोटी वंशावळ किंवा फसव्या जाहिराती तुम्ही एका क्लिकवर डिलीट करू शकता.</p>
+                    <div id="admin_khillar_bazar_list"></div>
+                </div>
+
+                <!-- 2. ₹९९ 'दिशा प्राईम' महसूल ट्रॅकिंग (Khillar Prime Revenue) -->
+                <div class="admin-card" style="border-left: 5px solid #4caf50;">
+                    <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;">⭐ २. ₹९९ 'दिशा प्राईम' महसूल व ॲक्सेस (Khillar Prime Revenue)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">ज्या शेतकऱ्यांनी शर्यतीच्या बैलासाठी ₹९९ भरून 'URGENT' जाहिरात व मोफत रेशन बॅलन्सर घेतला आहे, त्यांची यादी आणि कमाई येथे तपासा.</p>
+                    <div id="admin_khillar_revenue_list"></div>
+                </div>
+
+                <!-- 3. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation) -->
+                <div class="admin-card" style="border-left: 5px solid #1976d2;">
+                    <h4 style="color:#0d47a1; border-bottom-color:#bbdefb;">🛒 ३. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">कृषी मॉलमध्ये व्यापाऱ्यांनी <b>'🐂 शर्यत बैल / खोंड खुराक व सप्लीमेंट'</b> कॅटेगरीत टाकलेली उत्पादने तपासा. बंदी असलेली औषधे असल्यास लिस्टिंगमधून काढा.</p>
+                    <div id="admin_khillar_products_list"></div>
+                </div>
+
+                <!-- 4. वंशावळ व ब्लडलाईन मास्टर लिस्ट (Pedigree Master Database) -->
+                <div class="admin-card" style="border-left: 5px solid #8e24aa;">
+                    <h4 style="color:#6a1b9a; border-bottom-color:#e1bee7;">🧬 ४. प्रसिद्ध वंशावळ व ब्लडलाईन मास्टर (Pedigree Master DB)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">महाराष्ट्रातील प्रसिद्ध वळू व ब्लडलाईन (उदा. <i>माणदेशी खिलार, सोन्या, बंड्या, राजा, बहाद्दूर</i>) यांची नावे येथे جوडा किंवा डिलीट करा.</p>
+                    <div class="grid-2">
+                        <div class="field" style="margin-bottom:0;"><input type="text" id="new_bloodline_input" placeholder="नवीन प्रसिद्ध वळू/वंशावळ नाव टाका..."></div>
+                        <button class="btn-prime" style="margin-top:0; background:#8e24aa;" onclick="addKhillarBloodline()">➕ वंशावळ मास्टरमध्ये जोडा</button>
+                    </div>
+                    <div id="admin_khillar_bloodlines_list" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+
+            </div>
+
         </div>
     </div>
 
@@ -1065,6 +1121,9 @@
                 let fullText = clickedItem.innerText;
                 let cleanText = fullText.split('. ')[1] || fullText; 
                 document.getElementById('current_module_title').innerText = cleanText;
+            }
+            if(tabId === 'm_khillar_admin') {
+                initKhillarAdmin();
             }
             if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('active-mobile'); } 
         }
@@ -1358,9 +1417,13 @@
                 document.getElementById('m25_t_poison').value = 299;
                 document.getElementById('m25_t_weather').value = 299;
                 document.getElementById('m25_t_bcs').value = 399;
+                // 🔥 NEW: KHILLAR AD PRICE & FARMER PACKAGE DEFAULTS 🔥
+                if(document.getElementById('m25_t_khillar')) document.getElementById('m25_t_khillar').value = 499;
+                if(document.getElementById('m25_f_khillar_ration')) document.getElementById('m25_f_khillar_ration').value = 49;
+                if(document.getElementById('m25_f_khillar_prime')) document.getElementById('m25_f_khillar_prime').value = 99;
 
                 saveModule('M25');
-                alert("✅ सर्व किमती मूळ दरांनुसार (Default) सेट केल्या गेल्या आहेत आणि सेव्ह झाल्या आहेत!");
+                alert("✅ सर्व किमती मूळ दरांनुसार (Default) सेट केल्या गेल्या आहेत आणि क्लाऊडवर सेव्ह झाल्या आहेत!");
             }
         }
 
@@ -1386,7 +1449,11 @@
             };
 
             localStorage.setItem('admin_platform_fee_config', JSON.stringify(feeConfig));
-            alert("✅ प्लॅटफॉर्म सर्व्हिस फीचे नवीन नियम यशस्वीरीत्या सेव्ह झाले आहेत.");
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("platform_fee_config").set(feeConfig, { merge: true })
+            .catch(e => console.error("Error saving fee config to cloud:", e));
+
+            alert("✅ प्लॅटफॉर्म सर्व्हिस फीचे नवीन नियम यशस्वीरीत्या क्लाऊडवर सेव्ह झाले आहेत.");
         }
 
         function loadPlatformFeeConfig() {
@@ -1401,7 +1468,7 @@
             }
         }
 
-        // --- 🚀 2. CENTRALIZED SAVE/LOAD LOGIC FOR ALL MODULES ---
+        // --- 🚀 2. CENTRALIZED SAVE/LOAD LOGIC FOR ALL MODULES (NOW CONNECTED TO FIREBASE CLOUD) ---
         const configMap = {
             'M3': ['m3_name', 'm3_cat', 'm3_cost', 'm3_dm', 'm3_cp', 'm3_me', 'm3_desc', 'm3_status'],
             'M4': ['m4_f1', 'm4_f2', 'm4_f3', 'm4_f4', 'm4_f5'],
@@ -1423,10 +1490,9 @@
             'M23': ['m23_1', 'm23_2', 'm23_3', 'm23_4'],
             'M24': ['m24_1', 'm24_2', 'm24_3', 'm24_4'],
             'M25': ['m25_basic_price', 'm25_silver_price', 'm25_gold_price', 'm25_platinum_price', 'm25_cpc', 'm25_cpm', 
-                    'm25_ad2_price', 'm25_ad3_price', 'm25_ad4_price', 'm25_ad5_price', 'm25_ad6_price', 
-                    'm25_ad7_price', 'm25_ad8_price', 'm25_f_doctor', 'm25_f_pro', 'm25_f_adv', 'm25_f_silver', 
-                    'm25_f_gold', 'm25_f_plat1', 'm25_f_plat6', 'm25_t_ration', 'm25_t_disease', 'm25_t_calf', 
-                    'm25_t_repro', 'm25_t_milk', 'm25_t_vaccine', 'm25_t_poison', 'm25_t_weather', 'm25_t_bcs'],
+                    'm25_ad2_price', 'm25_ad3_price', 'm25_ad4_price', 'm25_ad5_price', 'm25_f_doctor', 'm25_f_pro', 'm25_f_adv', 'm25_f_silver', 
+                    'm25_f_gold', 'm25_f_plat1', 'm25_f_plat6', 'm25_f_khillar_ration', 'm25_f_khillar_prime', 'm25_t_ration', 'm25_t_disease', 'm25_t_calf', 
+                    'm25_t_repro', 'm25_t_milk', 'm25_t_vaccine', 'm25_t_poison', 'm25_t_weather', 'm25_t_bcs', 'm25_t_khillar'],
             'M26': ['m26_gw', 'm26_key', 'm26_merchant_id', 'm26_gst', 'm26_addr', 'upi_payee_name', 'upi_id_value']
         };
 
@@ -1456,6 +1522,7 @@
                 } else {
                     let data = { m29_1: page, m29_2: document.getElementById('m29_2').value };
                     localStorage.setItem('admin_data_M29', JSON.stringify(data));
+                    db.collection("admin_settings").doc("M29").set(data, { merge: true });
                     alert('✅ CMS Content saved successfully!');
                 }
                 return;
@@ -1480,15 +1547,79 @@
 
             if(Object.keys(data).length > 0) {
                 localStorage.setItem('admin_data_' + mod, JSON.stringify(data));
+                // 🔥 FIREBASE CLOUD SAVE 🔥 (येथून माहिती थेट क्लाऊडवर सेव्ह होईल)
+                db.collection("admin_settings").doc(mod).set(data, { merge: true })
+                .then(() => console.log(`✅ Module ${mod} synced to Firebase Cloud`))
+                .catch(e => console.error(`Error syncing ${mod} to cloud:`, e));
             }
             
             if(mod === 'M26') {
-                localStorage.setItem("admin_payment_settings", JSON.stringify({ payee_name: data['upi_payee_name'], upi_id: data['upi_id_value'] }));
+                let paySettings = { payee_name: data['upi_payee_name'], upi_id: data['upi_id_value'] };
+                localStorage.setItem("admin_payment_settings", JSON.stringify(paySettings));
+                db.collection("admin_settings").doc("payment_settings").set(paySettings, { merge: true });
             }
             
             if(event && event.target && !event.target.innerText.includes('मूळ किमती')) {
-                alert('✅ ' + mod + ' टॅबमधील सर्व डेटा यशस्वीरीत्या सेव्ह झाला!');
+                alert('✅ ' + mod + ' टॅबमधील सर्व डेटा यशस्वीरीत्या क्लाऊडवर (Firebase) सेव्ह झाला!');
             }
+        }
+
+        // 🔥 FIREBASE CLOUD वरून सर्व ॲडमिन सेटिंग्ज डाऊनलोड करणारे ऑटो-सिंक फंक्शन 🔥
+        function syncAdminSettingsFromCloud() {
+            db.collection("admin_settings").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    let mod = doc.id;
+                    let data = doc.data();
+                    if (data) {
+                        localStorage.setItem('admin_data_' + mod, JSON.stringify(data));
+                        let ids = configMap[mod];
+                        if (ids) {
+                            ids.forEach(id => {
+                                let el = document.getElementById(id);
+                                if (el && data[id] !== undefined) {
+                                    if (el.type === 'checkbox') el.checked = data[id];
+                                    else el.value = data[id];
+                                }
+                            });
+                        }
+                    }
+                });
+                console.log("✅ सर्व ॲडमिन सेटिंग्ज आणि दर Firebase Cloud वरून अपडेट झाले!");
+            }).catch(e => console.error("Error syncing cloud admin settings:", e));
+        }
+
+        // --- 🔥 NEW: SYNC ALL PENDING APPROVALS FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+        function syncAllPendingApprovalsFromCloud() {
+            // १. शेतकरी पेमेंट अर्ज क्लाऊडवरून सिंक
+            db.collection("successful_payments").where("status", "==", "pending").get()
+            .then(querySnapshot => {
+                let cloudPayments = [];
+                querySnapshot.forEach(doc => {
+                    let d = doc.data();
+                    d.id = doc.id;
+                    cloudPayments.push(d);
+                });
+                if(cloudPayments.length > 0) {
+                    localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(cloudPayments));
+                    loadFarmerPayments();
+                }
+            }).catch(e => console.log("Cloud farmer pay sync:", e));
+
+            // २. कस्टमर सपोर्ट हेल्पडेस्क तिकिटे क्लाऊडवरून सिंक
+            db.collection("support_tickets").orderBy("timestamp", "desc").get()
+            .then(querySnapshot => {
+                let cloudTickets = [];
+                querySnapshot.forEach(doc => {
+                    let d = doc.data();
+                    d.id = doc.id;
+                    cloudTickets.push(d);
+                });
+                if(cloudTickets.length > 0) {
+                    localStorage.setItem('admin_support_tickets', JSON.stringify(cloudTickets));
+                    loadCustomerSupportTickets();
+                    loadAdminNotifications();
+                }
+            }).catch(e => console.log("Cloud tickets sync:", e));
         }
 
         function loadAllModules() {
@@ -1569,6 +1700,8 @@
         // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
             loadAllModules();
+            syncAdminSettingsFromCloud(); // 🔥 येथे क्लाऊड सिंक सुरू होईल
+            syncAllPendingApprovalsFromCloud(); // 🔥 येथे सर्व पेंडिंग मंजुरी क्लाऊडवरून येतील
             loadPlatformFeeConfig(); 
             loadDashboardStats(); 
             loadDeliveryRates();
@@ -1584,6 +1717,251 @@
             refreshSupplierTable();
             refreshAllProductsTable();
             toggleCmsSection();
+            initKhillarAdmin(); // 🔥 येथे नवीन शर्यत बैल आणि खिलार मॉड्यूल लोड होईल
+        }
+
+        // --- 🔥 NEW: M_KHILLAR_ADMIN - MASTER KHILLAR & RACING BULL CONTROLS 🔥 ---
+        function initKhillarAdmin() {
+            loadKhillarBazarAdsAdmin();
+            loadKhillarPrimeRevenueAdmin();
+            loadKhillarProductsAdmin();
+            loadKhillarBloodlinesAdmin();
+        }
+
+        // १. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Moderation)
+        function loadKhillarBazarAdsAdmin() {
+            let container = document.getElementById('admin_khillar_bazar_list');
+            if(!container) return;
+            container.innerHTML = '<p style="color:#666;">⏳ शर्यत बैलांच्या जाहिराती लोड होत आहेत...</p>';
+
+            function renderBazarTable(racingAnimals) {
+                if (racingAnimals.length === 0) {
+                    container.innerHTML = '<p style="color:#888;">सध्या शर्यतीच्या बैलांची किंवा खिलार खोंडांची कोणतीही जाहिरात बाजारात नाही.</p>';
+                    return;
+                }
+                let html = '<table class="report-table"><thead><tr><th>ID/टॅग</th><th>नाव/जात</th><th>किंमत</th><th>मालक/मोबाईल</th><th>स्टेटस</th><th>कृती</th></tr></thead><tbody>';
+                racingAnimals.forEach(a => {
+                    let isSold = a.status === 'sold';
+                    html += `<tr>
+                        <td><b>${a.firebaseDocId || a.id || 'N/A'}</b></td>
+                        <td>${a.breed} (${a.type || 'बैल'})</td>
+                        <td style="color:#d32f2f; font-weight:bold;">₹${a.price || 0}</td>
+                        <td>${a.farmerName || 'मालक'} (${a.mobile || '-'})</td>
+                        <td><span style="background:${isSold ? '#ffebee' : '#e8f5e9'}; color:${isSold ? '#c62828' : '#2e7d32'}; padding:3px 8px; border-radius:4px; font-weight:bold;">${isSold ? 'Sold' : 'Live'}</span></td>
+                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteKhillariAdAdmin('${a.firebaseDocId || a.id}')">🗑️ Delete Ad</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            db.collection("market_animals").get()
+            .then((querySnapshot) => {
+                let racingAnimals = [];
+                querySnapshot.forEach((doc) => {
+                    let animal = doc.data();
+                    animal.firebaseDocId = doc.id;
+                    let bText = (animal.breed || "").toLowerCase();
+                    if (bText.includes("खिलार") || bText.includes("khillar") || bText.includes("खोंड") || bText.includes("वळू") || bText.includes("शर्यत")) {
+                        racingAnimals.push(animal);
+                    }
+                });
+                renderBazarTable(racingAnimals);
+            })
+            .catch(e => {
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                let localAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
+                let racingAnimals = localAnimals.filter(a => {
+                    let bText = (a.breed || "").toLowerCase();
+                    return (bText.includes("खिलार") || bText.includes("khillar") || bText.includes("खोंड") || bText.includes("वळू") || bText.includes("शर्यत"));
+                });
+                renderBazarTable(racingAnimals);
+            });
+        }
+
+        function deleteKhillariAdAdmin(id) {
+            if(confirm("ही जाहिरात बाजारातून कायमची डिलीट करायची का?")) {
+                db.collection("market_animals").doc(id).delete()
+                .then(() => {
+                    alert("✅ शर्यत बैलाची जाहिरात डिलीट केली.");
+                    loadKhillarBazarAdsAdmin();
+                })
+                .catch(e => alert("❌ एरर: " + e));
+            }
+        }
+
+        // २. ₹९९ 'दिशा प्राईम' महसूल ट्रॅकिंग (Khillar Prime Revenue)
+        function loadKhillarPrimeRevenueAdmin() {
+            let container = document.getElementById('admin_khillar_revenue_list');
+            if(!container) return;
+            container.innerHTML = '<p style="color:#666;">⏳ महसूल रिपोर्ट लोड होत आहे...</p>';
+
+            function renderRevenueTable(primePayments) {
+                if (primePayments.length === 0) {
+                    container.innerHTML = '<p style="color:#888;">अद्याप ₹९९ प्राईम प्लॅनचे कोणतेही पेमेंट रेकॉर्ड सापडले नाही.</p>';
+                    return;
+                }
+                let totalKhillarRevenue = primePayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+                let html = `<div style="background:#e8f5e9; padding:10px 15px; border-radius:8px; margin-bottom:10px; font-size:14px; font-weight:bold; color:#1b5e20;">एकूण ₹९९ प्राईम कमाई: ₹${totalKhillarRevenue}</div>`;
+                html += '<table class="report-table"><thead><tr><th>शेतकरी</th><th>मोबाईल</th><th>प्लॅन</th><th>रक्कम</th><th>तारीख</th></tr></thead><tbody>';
+                primePayments.forEach(p => {
+                    html += `<tr>
+                        <td><b>${p.farmerName || 'शेतकरी'}</b></td>
+                        <td>${p.mobile || '-'}</td>
+                        <td style="color:#e65100; font-weight:bold;">${p.planName || 'Prime Pack'}</td>
+                        <td style="color:#2e7d32; font-weight:bold;">₹${p.amount || 99}</td>
+                        <td>${p.date || 'N/A'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            db.collection("successful_payments").orderBy("timestamp", "desc").limit(30).get()
+            .then((querySnapshot) => {
+                let primePayments = [];
+                querySnapshot.forEach((doc) => {
+                    let pay = doc.data();
+                    let note = (pay.note || "").toLowerCase();
+                    let pName = (pay.planName || "").toLowerCase();
+                    if (note.includes("khillar") || note.includes("bazar") || pName.includes("99") || pName.includes("prime") || pName.includes("silver")) {
+                        primePayments.push(pay);
+                    }
+                });
+                renderRevenueTable(primePayments);
+            })
+            .catch(e => {
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                let localPayments = JSON.parse(localStorage.getItem('successful_payments_log')) || [];
+                let primePayments = localPayments.filter(pay => {
+                    let note = (pay.note || "").toLowerCase();
+                    let pName = (pay.planName || "").toLowerCase();
+                    return (note.includes("khillar") || note.includes("bazar") || pName.includes("99") || pName.includes("prime") || pName.includes("silver"));
+                });
+                renderRevenueTable(primePayments);
+            });
+        }
+
+        // ३. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation)
+        function loadKhillarProductsAdmin() {
+            let container = document.getElementById('admin_khillar_products_list');
+            if(!container) return;
+            container.innerHTML = '<p style="color:#666;">⏳ प्रॉडक्ट्स लोड होत आहेत...</p>';
+
+            function renderProductsTable(racingProducts) {
+                if (racingProducts.length === 0) {
+                    container.innerHTML = '<p style="color:#888;">सध्या कृषी मॉलमध्ये शर्यतीच्या बैलांसाठी कोणतेही स्वतंत्र सप्लीमेंट लिस्टेड नाही.</p>';
+                    return;
+                }
+                let html = '<table class="report-table"><thead><tr><th>ID</th><th>प्रॉडक्ट नाव</th><th>ब्रँड</th><th>किंमत</th><th>व्यापारी</th><th>कृती</th></tr></thead><tbody>';
+                racingProducts.forEach(p => {
+                    html += `<tr>
+                        <td><b>${p.id || 'N/A'}</b></td>
+                        <td>${p.name || ''}</td>
+                        <td>${p.brand || ''}</td>
+                        <td style="color:#d32f2f; font-weight:bold;">₹${p.offerPrice || p.mrp || 0}</td>
+                        <td>${p.vendorName || '-'}</td>
+                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteProduct('${p.id}'); setTimeout(loadKhillarProductsAdmin, 1000);">🗑️ Remove</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            db.collection("vendor_products").get()
+            .then((querySnapshot) => {
+                let racingProducts = [];
+                querySnapshot.forEach((doc) => {
+                    let p = doc.data();
+                    p.id = doc.id;
+                    let cat = (p.category || "").toLowerCase();
+                    let filters = p.aiFilters || [];
+                    if (cat.includes("शर्यत") || cat.includes("खोंड") || filters.includes("Khillar_Racing_Stamina") || filters.includes("Khillar_Hoof_Neck")) {
+                        racingProducts.push(p);
+                    }
+                });
+                renderProductsTable(racingProducts);
+            })
+            .catch(e => {
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                let localProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
+                let racingProducts = localProducts.filter(p => {
+                    let cat = (p.category || "").toLowerCase();
+                    let filters = p.aiFilters || [];
+                    return (cat.includes("शर्यत") || cat.includes("खोंड") || filters.includes("Khillar_Racing_Stamina") || filters.includes("Khillar_Hoof_Neck"));
+                });
+                renderProductsTable(racingProducts);
+            });
+        }
+
+        // ४. प्रसिद्ध वंशावळ व ब्लडलाईन मास्टर लिस्ट (Pedigree Master DB)
+        function loadKhillarBloodlinesAdmin() {
+            let container = document.getElementById('admin_khillar_bloodlines_list');
+            if(!container) return;
+
+            let defaultBloodlines = [
+                "माणदेशी खिलार", "म्हसवड खिलार", "सोलापूर खिलार", "गावरान खिलार", 
+                "सोन्या ब्लडलाईन", "बंड्या ब्लडलाईन", "राजा वंशावळ", "बहाद्दूर वंशावळ"
+            ];
+            let savedBloodlines = JSON.parse(localStorage.getItem('admin_khillar_bloodlines')) || defaultBloodlines;
+
+            let html = '';
+            savedBloodlines.forEach((bName, index) => {
+                html += `
+                <div style="background:#fff3e0; border:1px solid #ffb74d; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:bold; color:#d84315; display:flex; align-items:center; gap:8px;">
+                    <span>🏆 ${bName}</span>
+                    <span style="cursor:pointer; color:#c62828; font-size:15px;" onclick="removeKhillarBloodline(${index})" title="काढून टाका">✕</span>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function addKhillarBloodline() {
+            let inputEl = document.getElementById('new_bloodline_input');
+            let val = inputEl.value.trim();
+            if (!val) {
+                alert("कृपया नवीन प्रसिद्ध वळू किंवा वंशावळीचे नाव टाका!");
+                return;
+            }
+
+            let defaultBloodlines = [
+                "माणदेशी खिलार", "म्हसवड खिलार", "सोलापूर खिलार", "गावरान खिलार", 
+                "सोन्या ब्लडलाईन", "बंड्या ब्लडलाईन", "राजा वंशावळ", "बहाद्दूर वंशावळ"
+            ];
+            let savedBloodlines = JSON.parse(localStorage.getItem('admin_khillar_bloodlines')) || defaultBloodlines;
+
+            if (savedBloodlines.includes(val)) {
+                alert("हे नाव आधीपासूनच लिस्टमध्ये समाविष्ट आहे!");
+                return;
+            }
+
+            savedBloodlines.push(val);
+            localStorage.setItem('admin_khillar_bloodlines', JSON.stringify(savedBloodlines));
+            
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("khillar_bloodlines").set({ list: savedBloodlines }, { merge: true })
+            .catch(e => console.error("Cloud bloodline sync error:", e));
+
+            inputEl.value = "";
+            alert(`✅ '${val}' हे नाव वंशावळ मास्टरमध्ये यशस्वीरीत्या जोडले गेले!`);
+            loadKhillarBloodlinesAdmin();
+        }
+
+        function removeKhillarBloodline(index) {
+            if(confirm("हे नाव वंशावळ लिस्टमधून काढायचे आहे का?")) {
+                let defaultBloodlines = [
+                    "माणदेशी खिलार", "म्हसवड खिलार", "सोलापूर खिलार", "गावरान खिलार", 
+                    "सोन्या ब्लडलाईन", "बंड्या ब्लडलाईन", "राजा वंशावळ", "बहाद्दूर वंशावळ"
+                ];
+                let savedBloodlines = JSON.parse(localStorage.getItem('admin_khillar_bloodlines')) || defaultBloodlines;
+                savedBloodlines.splice(index, 1);
+                localStorage.setItem('admin_khillar_bloodlines', JSON.stringify(savedBloodlines));
+                
+                db.collection("admin_settings").doc("khillar_bloodlines").set({ list: savedBloodlines }, { merge: true })
+                .catch(e => console.error("Cloud bloodline sync error:", e));
+
+                loadKhillarBloodlinesAdmin();
+            }
         }
 
         // --- 🔥 NEW: VIEW DOCUMENT MODAL FUNCTIONS 🔥 ---
@@ -1658,6 +2036,13 @@
                 tickets[tIndex].status = "Closed"; 
                 localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
                 
+                // 🔥 FIREBASE CLOUD TICKET UPDATE 🔥
+                db.collection("support_tickets").doc(ticketId).update({
+                    reply: replyText,
+                    status: "Closed",
+                    repliedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.log("Cloud ticket reply error:", e));
+
                 alert("✅ तुमचा रिप्लाय व्यापाऱ्याला/शेतकऱ्याला पाठवला गेला आहे.");
                 loadCustomerSupportTickets();
                 loadAdminNotifications(); 
@@ -2168,7 +2553,7 @@
                 pendingKycList.splice(index, 1);
                 localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
 
-                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
+                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता تو प्रॉडक्ट आणि जाहिरात लावू शकतो.");
                 loadPendingKyc(); 
                 loadAdminNotifications(); 
                 refreshSupplierTable();
@@ -2186,7 +2571,7 @@
             }
         }
 
-        // --- 📢 M12: NOTIFICATIONS LOGIC ---
+        // --- 📢 M12: NOTIFICATIONS LOGIC (NOW CLOUD SYNCED) ---
         function sendBroadcastNotification() {
             let type = document.getElementById('notif_type').value;
             let title = document.getElementById('notif_title').value;
@@ -2205,7 +2590,11 @@
             notifs.unshift(newNotif);
             localStorage.setItem('system_notifications', JSON.stringify(notifs));
 
-            alert("🚀 सर्व युजर्सना नोटिफिकेशन यशस्वीरीत्या पाठवले आहे!");
+            // 🔥 FIREBASE CLOUD BROADCAST SAVE 🔥
+            db.collection("broadcast_notifications").add(newNotif)
+            .catch(e => console.error("Cloud broadcast error: ", e));
+
+            alert("🚀 सर्व युजर्सना नोटिफिकेशन यशस्वीरीत्या क्लाऊडवरून पाठवले आहे!");
             document.getElementById('notif_title').value = '';
             document.getElementById('notif_msg').value = '';
         }

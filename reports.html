@@ -136,9 +136,14 @@
             cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2);
         }
         .btn-calculate:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+        
+        /* Table styles for PDF/Print report */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; display: none; }
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        .report-table th { background: #1b5e20; color: white; }
     </style>
 </head>
-<body>
+<body onload="initReportsPage()">
 
 <div class="app-container">
     
@@ -171,7 +176,7 @@
             </div>
         </div>
 
-        <button class="btn-calculate" onclick="generateReport()">अहवाल तयार करा</button>
+        <button class="btn-calculate" onclick="generateReport()">अहवाल तयार करा (Cloud Sync)</button>
     </div>
 
     <!-- Generated Report View -->
@@ -183,31 +188,47 @@
         <div class="summary-stats">
             <div class="stat-item">
                 <h4>एकूण लिटर</h4>
-                <h2 id="total_val1">८४० L</h2>
+                <h2 id="total_val1">० L</h2>
             </div>
             <div class="stat-item">
                 <h4>सरासरी दर</h4>
-                <h2 id="total_val2">₹ ३४.५</h2>
+                <h2 id="total_val2">₹ ०.०</h2>
             </div>
             <div class="stat-item">
                 <h4>एकूण रक्कम</h4>
-                <h2 id="total_val3" style="color: #1b5e20;">₹ २८,९८०</h2>
+                <h2 id="total_val3" style="color: #1b5e20;">₹ ०</h2>
             </div>
         </div>
 
-        <!-- CSS Bar Chart (Simulation) -->
-        <div class="bar-chart">
-            <div class="bar" style="height: 40%;"><span>110</span></div>
-            <div class="bar" style="height: 50%;"><span>120</span></div>
-            <div class="bar" style="height: 45%;"><span>115</span></div>
-            <div class="bar" style="height: 70%;"><span>135</span></div>
-            <div class="bar" style="height: 60%;"><span>125</span></div>
-            <div class="bar" style="height: 50%;"><span>120</span></div>
-            <div class="bar" style="height: 45%;"><span>115</span></div>
+        <!-- Dynamic Bar Chart -->
+        <div class="bar-chart" id="dynamic_bar_chart">
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
+            <div class="bar" style="height: 0%;"><span>0</span></div>
         </div>
-        <div class="bar-labels">
-            <div>सोम</div><div>मंगळ</div><div>बुध</div><div>गुरू</div><div>शुक्र</div><div>शनी</div><div>रवी</div>
+        <div class="bar-labels" id="dynamic_bar_labels">
+            <div>१</div><div>२</div><div>३</div><div>४</div><div>५</div><div>६</div><div>७</div>
         </div>
+
+        <!-- Printable HTML Table -->
+        <table class="report-table" id="data_print_table">
+            <thead>
+                <tr>
+                    <th>तारीख</th>
+                    <th>वेळ</th>
+                    <th>जनावर</th>
+                    <th>लिटर</th>
+                    <th>फॅट</th>
+                    <th>रक्कम (₹)</th>
+                </tr>
+            </thead>
+            <tbody id="print_table_body">
+            </tbody>
+        </table>
 
         <!-- Export Action Buttons -->
         <div class="export-grid">
@@ -242,13 +263,43 @@
     }
     const db = firebase.firestore();
 
-    // Set default dates (Last 7 days)
-    let today = new Date();
-    let lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
-    
-    document.getElementById('end_date').valueAsDate = today;
-    document.getElementById('start_date').valueAsDate = lastWeek;
+    let filteredRecords = [];
+
+    function initReportsPage() {
+        // Set default dates (Last 7 days)
+        let today = new Date();
+        let lastWeek = new Date();
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('end_date').valueAsDate = today;
+        document.getElementById('start_date').valueAsDate = lastWeek;
+
+        // 🔥 FIREBASE CLOUD SYNC: पेज उघडताच दुधाचे सर्व रेकॉर्ड्स क्लाऊडवरून सिंक करा 🔥
+        syncReportsFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE REPORT SYNC ACROSS ALL DEVICES 🔥 ---
+    function syncReportsFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("milk_records")
+            .where("farmerMobile", "==", userMobile)
+            .get()
+            .then((querySnapshot) => {
+                let cloudRecords = [];
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    data.firebaseDocId = doc.id;
+                    cloudRecords.push(data);
+                });
+                if (cloudRecords.length > 0) {
+                    cloudRecords.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
+                }
+            })
+            .catch(e => console.log("Error syncing report data from cloud: ", e));
+        }
+    }
 
     function generateReport() {
         let type = document.getElementById('report_type').value;
@@ -268,6 +319,35 @@
         else if(type === 'feed') title.innerText = "पशुखाद्य आणि चारा खर्च";
         else if(type === 'health') title.innerText = "लसीकरण आणि उपचार रेकॉर्ड";
 
+        // --- 🔥 REAL DATA CALCULATION FROM LOCAL/CLOUD STORAGE 🔥 ---
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        let startDateObj = new Date(start);
+        let endDateObj = new Date(end);
+
+        filteredRecords = records.filter(rec => {
+            if (!rec.date) return false;
+            let recDate = new Date(rec.date);
+            return recDate >= startDateObj && recDate <= endDateObj;
+        });
+
+        let totalLiters = 0;
+        let totalAmount = 0;
+
+        filteredRecords.forEach(rec => {
+            totalLiters += parseFloat(rec.liters || 0);
+            totalAmount += parseFloat(rec.total || 0);
+        });
+
+        let avgRate = totalLiters > 0 ? (totalAmount / totalLiters).toFixed(1) : 0;
+
+        document.getElementById('total_val1').innerText = `${totalLiters.toFixed(1)} L`;
+        document.getElementById('total_val2').innerText = `₹ ${avgRate}`;
+        document.getElementById('total_val3').innerText = `₹ ${Math.round(totalAmount).toLocaleString('en-IN')}`;
+
+        // --- Update Dynamic Bar Chart ---
+        updateBarChart(filteredRecords);
+        updatePrintTable(filteredRecords);
+
         // Show the chart area
         let view = document.getElementById('reportView');
         view.style.display = "block";
@@ -276,13 +356,115 @@
         view.scrollIntoView({behavior: "smooth", block: "start"});
     }
 
+    function updateBarChart(records) {
+        let chart = document.getElementById('dynamic_bar_chart');
+        let labels = document.getElementById('dynamic_bar_labels');
+
+        if(records.length === 0) {
+            chart.innerHTML = `<div style="text-align:center; width:100%; color:#888;">या कालावधीत कोणतीही नोंद नाही.</div>`;
+            labels.innerHTML = "";
+            return;
+        }
+
+        // Get recent up to 7 records for graph
+        let recent7 = records.slice(0, 7).reverse();
+        let maxLiters = Math.max(...recent7.map(r => parseFloat(r.liters || 0)), 1);
+
+        chart.innerHTML = "";
+        labels.innerHTML = "";
+
+        recent7.forEach(rec => {
+            let val = parseFloat(rec.liters || 0);
+            let heightPerc = Math.max(Math.round((val / maxLiters) * 90), 10);
+            let dateStr = rec.date ? rec.date.split('-')[2] + '/' + rec.date.split('-')[1] : '-';
+
+            chart.innerHTML += `<div class="bar" style="height: ${heightPerc}%;"><span>${val}</span></div>`;
+            labels.innerHTML += `<div>${dateStr}</div>`;
+        });
+    }
+
+    function updatePrintTable(records) {
+        let tbody = document.getElementById('print_table_body');
+        tbody.innerHTML = "";
+
+        if(records.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6">कोणतीही नोंद आढळली नाही.</td></tr>`;
+            return;
+        }
+
+        records.forEach(rec => {
+            let shortAnimal = rec.animalId === 'all' ? 'एकत्रित' : (rec.animalName || '-').split('(')[0];
+            tbody.innerHTML += `
+            <tr>
+                <td>${rec.date || '-'}</td>
+                <td>${rec.shift || '-'}</td>
+                <td>${shortAnimal}</td>
+                <td>${rec.liters || 0}</td>
+                <td>${rec.fat || 0}</td>
+                <td>₹ ${rec.total || 0}</td>
+            </tr>`;
+        });
+    }
+
+    // --- 🔥 REAL FILE EXPORT LOGIC (CSV / EXCEL / PDF) 🔥 ---
     function downloadFile(format) {
-        let type = document.getElementById('report_type').options[document.getElementById('report_type').selectedIndex].text;
-        alert(`तुमचा '${type}' चा अहवाल ${format} फॉरमॅटमध्ये जनरेट होत आहे. फाईल लवकरच तुमच्या मोबाईलमध्ये सेव्ह होईल.`);
+        if(filteredRecords.length === 0) {
+            alert("डाऊनलोड करण्यासाठी या कालावधीत कोणताही डेटा उपलब्ध नाही.");
+            return;
+        }
+
+        let typeText = document.getElementById('report_type').options[document.getElementById('report_type').selectedIndex].text;
+
+        if (format === 'Excel') {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "दिनांक,वेळ,जनावर,लिटर,फॅट,SNF,दर (₹),रक्कम (₹)\n";
+
+            filteredRecords.forEach(rec => {
+                let row = [
+                    rec.date || '',
+                    rec.shift || '',
+                    rec.animalName ? rec.animalName.replace(/,/g, ' ') : '',
+                    rec.liters || 0,
+                    rec.fat || 0,
+                    rec.snf || 0,
+                    rec.rate || 0,
+                    rec.total || 0
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Dugdha_Disha_Report_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`✅ तुमचा '${typeText}' चा अहवाल Excel (CSV) फॉरमॅटमध्ये यशस्वीरीत्या डाऊनलोड झाला आहे!`);
+        } else if (format === 'PDF') {
+            // Unhide table for PDF print
+            let printTable = document.getElementById('data_print_table');
+            printTable.style.display = "table";
+            
+            window.print();
+            
+            setTimeout(() => {
+                printTable.style.display = "none";
+            }, 1000);
+        }
     }
 
     function shareReport() {
-        alert("रिपोर्टची लिंक कॉपी केली आहे. आता तुम्ही ती WhatsApp वर पाठवू शकता!");
+        let totalL = document.getElementById('total_val1').innerText;
+        let totalAmt = document.getElementById('total_val3').innerText;
+        let start = document.getElementById('start_date').value;
+        let end = document.getElementById('end_date').value;
+
+        let msg = `*दुग्ध दिशा AI - माझा गोठा अहवाल*\n\n📅 कालावधी: ${start} ते ${end}\n🥛 एकूण दूध: ${totalL}\n💰 एकूण रक्कम: ${totalAmt}\n\nहे रेकॉर्ड 'दुग्ध दिशा AI' ॲपवरून जनरेट केले आहे.`;
+        let encodedMsg = encodeURIComponent(msg);
+        
+        window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
     }
 </script>
 

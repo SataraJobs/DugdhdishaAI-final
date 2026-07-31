@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दुग्ध दिशा AI - शर्यत खोंड व वळू आजार, खूर निगा व उपचार</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f3d14">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-dark: #0f3d14;
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --bhagwa-main: #ff6f00;
+            --bhagwa-light: #ff9800;
+            --gold: #ffd700;
+            --accent-red: #d32f2f;
+            --bg: #eff3f1;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #555555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding-bottom: 95px !important;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 1. 3D Royal Header */
+        .top-header {
+            background: linear-gradient(135deg, #0f3d14 0%, #1b5e20 60%, #2e7d32 100%);
+            color: white;
+            padding: 18px 20px 24px 20px;
+            border-radius: 0 0 26px 26px;
+            box-shadow: 0 8px 25px rgba(15, 61, 20, 0.4);
+            position: relative;
+            z-index: 100;
+            border-bottom: 3.5px solid var(--gold);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-title p {
+            font-size: 11.5px;
+            color: #ffd54f;
+            font-weight: bold;
+            margin: 4px 0 0 0;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        .back-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 2. Section Titles & Cards */
+        .section-heading {
+            margin: 20px 16px 12px 16px;
+            font-size: 15.5px;
+            font-weight: 900;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--bhagwa-main);
+            padding-left: 10px;
+        }
+
+        .card-box {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin: 16px 16px 16px 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            border: 1.5px solid #dbe4de;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #f0f4f1;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: #222;
+            margin-bottom: 6px;
+        }
+
+        .field select, .field textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1.5px solid #c8d4ce;
+            border-radius: 11px;
+            font-size: 13.5px;
+            background: #f8fbf9;
+            font-weight: 700;
+            color: #111;
+            transition: 0.2s;
+        }
+
+        .field select:focus, .field textarea:focus {
+            border-color: var(--bhagwa-main);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.18);
+        }
+
+        .btn-diagnose {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #d32f2f 0%, #9a0007 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(211, 47, 47, 0.35);
+            transition: all 0.2s ease;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-diagnose:active {
+            transform: scale(0.98);
+        }
+
+        /* 3. Disease Knowledge Accordion Cards */
+        .disease-accordion {
+            background: white;
+            border-radius: 14px;
+            margin: 0 16px 12px 16px;
+            border: 1.5px solid #e0e6e2;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        .accordion-header {
+            padding: 15px 16px;
+            background: #fff;
+            font-weight: 900;
+            font-size: 14px;
+            color: #222;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid var(--primary);
+            transition: 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: #f8fafc;
+        }
+
+        .accordion-body {
+            padding: 16px;
+            display: none;
+            border-top: 1px solid #eeeeee;
+            background: #fcfdfe;
+            font-size: 12.5px;
+            color: #333;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .accordion-body.open {
+            display: block;
+        }
+
+        .symptom-tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0 10px 0;
+        }
+
+        .s-tag {
+            background: #ffebee;
+            color: #c62828;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 14px;
+            border: 1px solid #ffcdd2;
+        }
+
+        .first-aid-box {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-left: 5px solid #2e7d32;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .first-aid-box h5 {
+            color: #1b5e20;
+            font-size: 13.5px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .btn-buy-med {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, #1565c0, #1976d2);
+            color: white;
+            padding: 11px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            text-decoration: none;
+            margin-top: 12px;
+            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.3);
+        }
+
+        /* 4. Bottom Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+            border-radius: 20px 20px 0 0;
+            border-top: 1px solid #eaeef0;
+        }
+
+        .b-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #757575;
+            transition: 0.3s ease;
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        .b-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+        }
+
+        .b-nav-text {
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .b-nav-item.active {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .b-nav-item.active .b-nav-icon {
+            filter: grayscale(0%);
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body onload="initHealthCare()">
+
+<div class="app-container">
+
+    <!-- 1. 3D Royal Header -->
+    <header class="top-header">
+        <div class="header-top-row">
+            <div class="header-title">
+                <a href="khond_care_dashboard.html" class="back-btn">⬅</a>
+                <div>
+                    <h1>🏥 शर्यत खोंड व वळू उपचार AI</h1>
+                    <p>स्पोर्ट्स दुखापती व आजार उपचार मार्गदर्शक</p>
+                </div>
+            </div>
+            <div style="font-size: 26px;">🩺</div>
+        </div>
+    </header>
+
+    <!-- 2. Symptom Diagnosis Input Box -->
+    <div class="card-box">
+        <div class="card-title">🔍 १. लक्षणे ओळखा व प्रथमोपचार जाणून घ्या (AI Diagnosis)</div>
+        
+        <div class="field">
+            <label>तुमचा खोंड / शर्यतीचा बैल निवडा *</label>
+            <select id="hc_calf_select">
+                <option value="">-- बैल किंवा खोंड निवडा --</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>दिसणारे मुख्य लक्षण किंवा दुखापत निवडा *</label>
+            <select id="hc_symptom" onchange="autoSelectDiseaseInfo()">
+                <option value="">-- लक्षण किंवा दुखापत निवडा --</option>
+                <option value="cramps">पळताना पायात गोळे येणे / लचक भरणे (Muscle Cramps & Sprain)</option>
+                <option value="hoof">खूर दुखापत, कुजणे किंवा दगडाचा मार (Hoof Injury / Cracks)</option>
+                <option value="heat">उष्णतेचा ताण, धाप लागणे व लाळ गाळणे (Heat Stroke)</option>
+                <option value="joint">सांध्यावर सूज, लंगडणे किंवा जखम (Joint Swelling)</option>
+                <option value="navel">बेंबीजवळ सूज, दुखणे व ताप (नाळ संसर्ग - लहान खोंड)</option>
+                <option value="scours">पांढरे/पिवळे पातळ जुलाब व डोळे खोल जाणे (हागवण)</option>
+                <option value="worms">पोट फुगणे, माती चाटणे व केस रखरखीत (जंत प्रादुर्भाव)</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>अतिरिक्त नोंद किंवा सद्यस्थिती (Optional)</label>
+            <textarea id="hc_notes" rows="2" placeholder="उदा. काल मैदानावरून आल्यापासून उजवा पाय लंगडतोय..."></textarea>
+        </div>
+
+        <button class="btn-diagnose" onclick="diagnoseKhondHealth()">
+            <span>🩺</span> AI निदान व अचूक प्रथमोपचार पाहा
+        </button>
+    </div>
+
+    <!-- 3. Diagnosis Result Box (Hidden by default) -->
+    <div id="diagnosis_result_box" class="card-box" style="display: none; border: 2px solid #d32f2f; background: #fff9f9;">
+        <div class="card-title" style="color: #c62828;">🚨 AI निदान आणि प्राथमिक उपचार सल्ला</div>
+        
+        <h3 id="diag_disease_title" style="font-size: 16px; color: #b71c1c; margin-bottom: 6px; font-weight: 900;">--</h3>
+        <p id="diag_disease_desc" style="font-size: 12.5px; color: #333; line-height: 1.5; margin-bottom: 12px; font-weight: 700;">--</p>
+
+        <div class="first-aid-box">
+            <h5>✅ तातडीने करायचे प्राथमिक उपचार (First Aid):</h5>
+            <div id="diag_first_aid_text" style="font-size:12.5px; color:#1b5e20; line-height:1.6; font-weight:700;">--</div>
+        </div>
+
+        <a href="krushi_mall.html" class="btn-buy-med" id="diag_mall_btn">🛒 आवश्यक मलम व स्प्रे कृषी मॉलमधून मागवा</a>
+    </div>
+
+    <!-- 4. Knowledge Base - Racing & Newborn Calf Disease Guide -->
+    <div class="section-heading">
+        <span>📚 शर्यत दुखापती व आजार मार्गदर्शक</span>
+        <span style="font-size: 11px; color: #1b5e20; font-weight: 900;">Guide</span>
+    </div>
+
+    <!-- Disease 1: Muscle Cramps & Sprains (Racing Specific) -->
+    <div class="disease-accordion" id="acc_cramps">
+        <div class="accordion-header" onclick="toggleAccordion('acc_cramps')">
+            <span>१. स्नायूंमध्ये गोळे व लचक भरणे (Muscle Cramps / Sprain)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">पायात गोळे येणे</span>
+                <span class="s-tag">पाय आखडणे</span>
+                <span class="s-tag">लंगडणे</span>
+            </div>
+            <p><b>कारणे:</b> शर्यतीमध्ये अचानक वेग घेतल्यामुळे, सराव कमी असल्यामुळे किंवा शरीरात इलेक्ट्रोलाईट्स (मीठ/कॅल्शियम) कमी पडल्यामुळे स्नायू ताणले जातात.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. दुखापत झालेल्या स्नायूंवर कोमट पाण्याचा किंवा गरम कपड्याचा हलका शेक द्या.<br>
+                   २. त्यावर <b>पेन-किलर स्प्रे (Iodex / Moov Vet)</b> किंवा आयुर्वेदिक तेल लावून मालिश करा.<br>
+                   ३. पिण्याच्या पाण्यातून रोज <b>५० ग्रॅम इलेक्ट्रोलाईट पावडर व गूळ</b> देणे अनिवार्य आहे.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 पेन-किलर स्प्रे व इलेक्ट्रोलाईट पावडर खरेदी करा</a>
+        </div>
+    </div>
+
+    <!-- Disease 2: Hoof Injury / Cracks (Racing Specific) -->
+    <div class="disease-accordion" id="acc_hoof">
+        <div class="accordion-header" onclick="toggleAccordion('acc_hoof')">
+            <span>२. खूर दुखापत, कुजणे व मार लागणे (Hoof Injuries)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">خुरांना तडे जाणे</span>
+                <span class="s-tag">चिखलात कुजणे</span>
+                <span class="s-tag">दगडाचा मार</span>
+            </div>
+            <p><b>कारणे:</b> खडकाळ मैदानावर पळताना दगडाचा मार लागणे, खूर वेळेवर न तासणे किंवा गोठ्यात चिखल असल्यामुळे जंतूसंसर्ग होणे.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. खूर पोटॅशियम परमँगनेट (PP) किंवा कॉपर सल्फेटच्या पाण्याने स्वच्छ धुवा.<br>
+                   २. जखमेवर <b>Himax मलम</b> किंवा अँटीसेप्टिक पावडर भरून पट्टी बांधा.<br>
+                   ३. खूर स्वच्छ ठेवून पशुवैद्यकीय डॉक्टरांच्या सल्ल्याने आवश्यक उपचार करा.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 Himax मलम व खूर काळजी साधने खरेदी करा</a>
+        </div>
+    </div>
+
+    <!-- Disease 3: Heat Stroke (Racing Specific) -->
+    <div class="disease-accordion" id="acc_heat">
+        <div class="accordion-header" onclick="toggleAccordion('acc_heat')">
+            <span>३. उष्णतेचा ताण व धाप लागणे (Heat Stroke)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">जलद श्वास घेणे</span>
+                <span class="s-tag">जिभ बाहेर काढणे</span>
+                <span class="s-tag">लाळ गाळणे</span>
+            </div>
+            <p><b>कारणे:</b> कडक उन्हात शर्यत पळाल्यामुळे शरीराचे तापमान १०५°F च्या वर जाते आणि डिहायड्रेशन होते.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. बैलाला सावलीत बांधा आणि डोक्यावर व संपूर्ण अंगावर थंड पाणी टाका.<br>
+                   २. पिण्यासाठी थंड पाण्यात <b>ORS व ग्लुकोज पावडर</b> मिसळून पाजा.<br>
+                   ३. गोठ्यात पंखा किंवा कुलर चालू ठेवा. जास्त त्रास असल्यास डॉक्टरांकडून सलाईन लावून घ्या.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 ग्लुकोज व स्टॅमिना इलेक्ट्रोलाईट्स खरेदी करा</a>
+        </div>
+    </div>
+
+    <!-- Disease 4: Navel Ill (Calf Specific) -->
+    <div class="disease-accordion" id="acc_navel">
+        <div class="accordion-header" onclick="toggleAccordion('acc_navel')">
+            <span>४. नाळ सुजणे / संसर्ग (Navel Ill - लहान खोंड)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">बेंबीला सूज</span>
+                <span class="s-tag">ताप येणे</span>
+                <span class="s-tag">दूध न पिणे</span>
+            </div>
+            <p><b>कारणे:</b> खोंड जन्मल्यानंतर नाळ अस्वच्छ ठिकाणी टेकल्यामुळे जंतूसंसर्ग होऊन बेंबीला सूज येते.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. नाळेवर दिवसातून २ वेळा <b>टिंचर आयोडीन (Tincture Iodine)</b> लावा.<br>
+                   २. खोंडाला कोरड्या व स्वच्छ जागेवर (पेंढा/मॅट) बांधा.<br>
+                   ३. जास्त सूज असल्यास पशुवैद्यकीय डॉक्टरांच्या सल्ल्याने अँटीबायोटिक डोस द्या.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 टिंचर आयोडीन व अँटीसेप्टिक स्प्रे खरेदी करा</a>
+        </div>
+    </div>
+
+    <!-- Disease 5: Calf Scours -->
+    <div class="disease-accordion" id="acc_scours">
+        <div class="accordion-header" onclick="toggleAccordion('acc_scours')">
+            <span>५. पांढरे जुलाब / हागवण (Calf Scours)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">पांढरी/पिवळी विष्ठा</span>
+                <span class="s-tag">डोळे खोल जाणे</span>
+                <span class="s-tag">अशक्तपणा</span>
+            </div>
+            <p><b>कारणे:</b> अस्वच्छ दूध किंवा जास्त दूध पाजल्यामुळे आणि बॅक्टेरिया संसर्गामुळे पांढरे जुलाब होतात.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. दूध पाजणे तात्पुरते अर्धे करा आणि <b>ORS इलेक्ट्रोलाईट पाणी</b> पाजा.<br>
+                   २. खोंडाच्या शरीरातील पाणी कमी होऊ देऊ नका.<br>
+                   ३. सौंफ व जिऱ्याचे उकळलेले थंड पाणी ५० मिली पाजल्यास आराम मिळतो.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 ORS इलेक्ट्रोलाईट पावडर खरेदी करा</a>
+        </div>
+    </div>
+
+    <!-- Disease 6: Worms & Joint Care -->
+    <div class="disease-accordion" id="acc_worms">
+        <div class="accordion-header" onclick="toggleAccordion('acc_worms')">
+            <span>६. जंत प्रादुर्भाव व सांधे सूज (Deworming & Joints)</span>
+            <span>▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="symptom-tag-list">
+                <span class="s-tag">पोट फुगणे</span>
+                <span class="s-tag">माती चाटणे</span>
+                <span class="s-tag">सांध्यावर सूज</span>
+            </div>
+            <p><b>कारणे:</b> पोटात जंत (Roundworms) वाढल्यामुळे अन्न अंगाला लागत नाही. तसेच सिमेंटच्या फरशीवर बसल्याने गुडघ्यांना सूज येते.</p>
+            <div class="first-aid-box">
+                <h5>✅ प्राथमिक उपचार:</h5>
+                <p>१. जन्मल्यानंतर <b>७ ते १० दिवसांच्या आत</b> पहिले जंतनाशक औषध (Dewormer) द्या.<br>
+                   २. सांध्यांवर सूज असल्यास गरम शेक द्या आणि गोठ्यात रबर मॅटचा वापर करा.<br>
+                   ३. आहारात लिक्विड व्हिटॅमिन D3 आणि कॅल्शियम समाविष्ट करा.</p>
+            </div>
+            <a href="krushi_mall.html" class="btn-buy-med">🛒 जंतनाशक औषध व रबर मॅट खरेदी करा</a>
+        </div>
+    </div>
+
+</div>
+
+<!-- 5. Bottom Navigation Bar -->
+<div class="bottom-nav-bar">
+    <a href="index.html" class="b-nav-item">
+        <span class="b-nav-icon">🏠</span>
+        <span class="b-nav-text">होम</span>
+    </a>
+    <a href="kharedi_vikri.html" class="b-nav-item">
+        <span class="b-nav-icon">🐄</span>
+        <span class="b-nav-text">बाजार</span>
+    </a>
+    <a href="krushi_mall.html" class="b-nav-item">
+        <span class="b-nav-icon">🛒</span>
+        <span class="b-nav-text">मॉल</span>
+    </a>
+    <a href="ration_balancer.html" class="b-nav-item">
+        <span class="b-nav-icon">⚖️</span>
+        <span class="b-nav-text">आहार</span>
+    </a>
+    <a href="my_account.html" class="b-nav-item">
+        <span class="b-nav-icon">👤</span>
+        <span class="b-nav-text">खाते</span>
+    </a>
+</div>
+
+<!-- 🔥 JAVASCRIPT & FIREBASE CLOUD SYNC 🔥 -->
+<script>
+    // 1. FIREBASE INITIALIZATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+        authDomain: "dugdhdishaai.firebaseapp.com",
+        projectId: "dugdhdishaai",
+        storageBucket: "dugdhdishaai.firebasestorage.app",
+        messagingSenderId: "1059551640041",
+        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+        measurementId: "G-6TFEJKBVFL"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let myKhondsList = [];
+
+    function initHealthCare() {
+        loadKhondsIntoSelect();
+        
+        // URL मधून ID आला असल्यास ऑटो-सिलेक्ट करा
+        const urlParams = new URLSearchParams(window.location.search);
+        const calfId = urlParams.get('id');
+        if (calfId) {
+            setTimeout(() => {
+                document.getElementById("hc_calf_select").value = calfId;
+            }, 500);
+        }
+    }
+
+    // 2. LOAD REGISTERED KHONDS INTO SELECT
+    function loadKhondsIntoSelect() {
+        myKhondsList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
+        let select = document.getElementById("hc_calf_select");
+        
+        let html = '<option value="">-- खोंड किंवा बैल निवडा --</option>';
+        myKhondsList.forEach(item => {
+            html += `<option value="${item.id}">${item.name} (${item.breed})</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    // 3. ACCORDION TOGGLE LOGIC
+    function toggleAccordion(id) {
+        let acc = document.getElementById(id);
+        let body = acc.querySelector('.accordion-body');
+        
+        if (body.classList.contains('open')) {
+            body.classList.remove('open');
+        } else {
+            document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+            body.classList.add('open');
+        }
+    }
+
+    function autoSelectDiseaseInfo() {
+        let sym = document.getElementById("hc_symptom").value;
+        if (!sym) return;
+
+        if (sym === "cramps") toggleAccordion("acc_cramps");
+        else if (sym === "hoof") toggleAccordion("acc_hoof");
+        else if (sym === "heat") toggleAccordion("acc_heat");
+        else if (sym === "navel") toggleAccordion("acc_navel");
+        else if (sym === "scours") toggleAccordion("acc_scours");
+        else if (sym === "worms" || sym === "joint") toggleAccordion("acc_worms");
+    }
+
+    // 4. DIAGNOSE HEALTH & SHOW FIRST AID (Racing Bull Tailored)
+    function diagnoseKhondHealth() {
+        let calfId = document.getElementById("hc_calf_select").value;
+        let symptom = document.getElementById("hc_symptom").value;
+        let notes = document.getElementById("hc_notes").value.trim();
+
+        if (!symptom) {
+            alert("⚠️ कृपया लक्षण किंवा दुखापत निवडा!");
+            return;
+        }
+
+        let title = document.getElementById("diag_disease_title");
+        let desc = document.getElementById("diag_disease_desc");
+        let firstAid = document.getElementById("diag_first_aid_text");
+        let resultBox = document.getElementById("diagnosis_result_box");
+
+        if (symptom === "cramps") {
+            title.innerText = "🚨 संशयित दुखापत: स्नायूंमध्ये गोळे / लचक भरणे";
+            desc.innerText = "शर्यतीच्या मैदानात वेग घेतल्यामुळे किंवा सरावानंतर इलेक्ट्रोलाईट्स कमी पडल्यामुळे पायातील स्नायू ताणले गेले आहेत.";
+            firstAid.innerHTML = "१. ताणलेल्या स्नायूंवर कोमट पाण्याचा किंवा गरम कपड्याचा हलका शेक द्या.<br>२. त्यावर <b>पेन-किलर स्प्रे (Iodex / Moov Vet)</b> लावून मालिश करा.<br>३. पिण्याच्या पाण्यातून <b>५० ग्रॅम इलेक्ट्रोलाईट पावडर व गूळ</b> लगेच पाजा.";
+        } else if (symptom === "hoof") {
+            title.innerText = "🚨 संशयित दुखापत: खूर दुखापत / दगडाचा मार";
+            desc.innerText = "खडकाळ मैदानावर पळताना दगडाचा मार लागला आहे किंवा चिखलामुळे खुरांमध्ये जंतूसंसर्ग झाला आहे.";
+            firstAid.innerHTML = "१. खूर पोटॅशियम परमँगनेटच्या पाण्याने स्वच्छ धुवा.<br>२. जखमेवर <b>Himax मलम</b> लावून पट्टी बांधा.<br>३. पशुवैद्यकीय डॉक्टरांचा सल्ला घेऊन आवश्यक उपचार करा.";
+        } else if (symptom === "heat") {
+            title.innerText = "🚨 संशयित आजार: उष्णतेचा ताण / धाप लागणे (Heat Stroke)";
+            desc.innerText = "कडक उन्हात शर्यत पळाल्यामुळे शरीराचे तापमान १०५°F च्या वर गेले असून डिहायड्रेशन झाले आहे.";
+            firstAid.innerHTML = "१. बैलाला सावलीत बांधा व डोक्यावर थंड पाणी टाका.<br>२. पिण्यासाठी थंड पाण्यात <b>ORS व ग्लुकोज पावडर</b> पाजा.<br>३. <b>तातडीने पशुवैद्यकीय डॉक्टरांना कॉल करा!</b>";
+        } else if (symptom === "joint") {
+            title.innerText = "🚨 संशयित दुखापत: सांधे सूज / लंगडणे";
+            desc.innerText = "पळताना सांध्याला लचक भरली आहे किंवा गोठ्यातील कडक फरशीमुळे सांध्यावर सूज आली आहे.";
+            firstAid.innerHTML = "१. सांध्यावर गरम शेक द्या आणि पळवणे थांबवून विश्रांती द्या.<br>२. सांध्यावर अँटी-इन्फ्लेमेटरी मलम लावा.<br>३. गोठ्यात बसण्यासाठी <b>रबर मॅटचा</b> वापर करा.";
+        } else if (symptom === "navel") {
+            title.innerText = "🚨 संशयित आजार: नाळ संसर्ग (Navel Ill)";
+            desc.innerText = "नाळेवर जंतूसंसर्ग झाल्यामुळे बेंबीला सूज येते आणि ताप येतो.";
+            firstAid.innerHTML = "१. बेंबीवर दिवसातून २-३ वेळा <b>टिंचर आयोडीन</b> लावा.<br>२. खोंडाला स्वच्छ व कोरड्या जागेवर ठेवा.<br>३. पशुवैद्यकीय डॉक्टरांकडून अँटीबायोटिक डोस घ्या.";
+        } else if (symptom === "scours") {
+            title.innerText = "🚨 संशयित आजार: पांढरी हागवण (Calf Scours)";
+            desc.innerText = "अस्वच्छ दूध किंवा ई-कोलाय बॅक्टेरियांमुळे पांढरे जुलाब होतात. डिहायड्रेशनचा धोका असतो.";
+            firstAid.innerHTML = "१. दूध पाजणे तात्पुरते अर्धे करा आणि <b>ORS इलेक्ट्रोलाईट पाणी</b> पाजा.<br>२. खोंडाच्या शरीरात पाण्याचे प्रमाण टिकवून ठेवा.<br>३. डॉक्टरांच्या सल्ल्याने अँटीबायोटिक सिरप द्या.";
+        } else if (symptom === "worms") {
+            title.innerText = "🚨 संशयित आजार: जंत प्रादुर्भाव (Roundworms)";
+            desc.innerText = "पोटात जंत वाढल्यामुळे खोंडाचे पोट फुगते, केस रखरखीत होतात आणि तो माती चाटतो.";
+            firstAid.innerHTML = "१. खोंडाला भुकेल्या पोटी <b>जंतनाशक औषध (Dewormer)</b> पाजा.<br>२. पुढील १० दिवसांनी पुनरावृत्ती करा.<br>३. आहारात लिक्विड व्हिटॅमिन आणि कॅल्शियम वाढवा.";
+        }
+
+        resultBox.style.display = "block";
+        resultBox.scrollIntoView({ behavior: 'smooth' });
+
+        // Firebase Cloud Save
+        saveHealthLogToCloud(calfId, symptom, notes);
+    }
+
+    function saveHealthLogToCloud(calfId, symptom, notes) {
+        let userMobile = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        let logData = {
+            farmerMobile: userMobile,
+            calfId: calfId || "General",
+            symptom: symptom,
+            notes: notes,
+            timestamp: new Date().toISOString()
+        };
+
+        db.collection("khond_health_logs").add(logData)
+        .then(() => console.log("✅ हेल्थ चेक लॉग क्लाऊडवर सेव्ह झाला."))
+        .catch(e => console.log("Cloud health log error:", e));
+    }
+</script>
+
+</body>
+</html>
