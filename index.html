@@ -1125,9 +1125,10 @@
     function isPlanActive(requiredFeature) {
         // १. ॲडमिन पॅनेलमधील M25 चे दर तपासा (जर किंमत 0 असेल तर थेट मोफत प्रवेश द्या)
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
-        let proPrice = adminPrices.m25_f_pro !== undefined ? parseInt(adminPrices.m25_f_pro) : 29;
-        let advPrice = adminPrices.m25_f_adv !== undefined ? parseInt(adminPrices.m25_f_adv) : 49;
-        let doctorPrice = adminPrices.m25_f_doctor !== undefined ? parseInt(adminPrices.m25_f_doctor) : 25;
+        
+        let proPrice = (adminPrices.m25_f_pro !== undefined && adminPrices.m25_f_pro !== "") ? parseInt(adminPrices.m25_f_pro) : 29;
+        let advPrice = (adminPrices.m25_f_adv !== undefined && adminPrices.m25_f_adv !== "") ? parseInt(adminPrices.m25_f_adv) : 49;
+        let doctorPrice = (adminPrices.m25_f_doctor !== undefined && adminPrices.m25_f_doctor !== "") ? parseInt(adminPrices.m25_f_doctor) : 25;
 
         // जर ॲडमिनने किंमत 0 ठेवली असेल, तर कोणतेही पेमेंट न मागता थेट ॲक्सेस द्या!
         if (requiredFeature === 'ration' && (proPrice === 0 || advPrice === 0)) return true;
@@ -1214,7 +1215,7 @@
             event.stopPropagation();
             event.preventDefault();
         }
-        let shareTitle = "🏆 चॅम्पियन खिल्लार AI";
+        let shareTitle = "🏆 चॅम्पियन खिल्लार AI - शर्यतीच्या बैलांसाठी पहिला AI Performance Platform";
         let shareText = `🏆 *चॅम्पियन खिल्लार AI*\n"शर्यतीच्या बैलांसाठी बनवलेला पहिला AI आधारित Performance Platform."\n\n🐂 तुमच्या शर्यतीच्या बैलाचा स्टॅमिना, ताकद, खुराक नियोजन आणि अस्सल बैल बाजार आता AI सोबत करा!\n\n👉 *आत्ताच खालील लिंकवर क्लिक करा आणि लॉगिन/नोंदणी करा:*`;
         let shareUrl = `https://dugdhadisha.com/login.html?ref=champion_khillar`;
 
@@ -1445,13 +1446,13 @@
             }
         }).catch(e => console.log("Cloud plan status sync error: ", e));
 
-        // ४. क्लाऊडवरून ॲडमिन किमती (M25) सिंक करा (जेणेकरून 0 रुपये दर लगेच अपडेट होतील)
+        // ४. 🔥 क्लाऊडवरून ॲडमिनचे लेटेस्ट प्राईसिंग (M25) आणा (जेणेकरून 0 रुपये आल्यावर मोफत होईल) 🔥
         db.collection("admin_settings").doc("M25").get()
         .then(doc => {
             if (doc.exists && doc.data()) {
                 localStorage.setItem("admin_data_M25", JSON.stringify(doc.data()));
             }
-        }).catch(e => console.log("Cloud M25 sync error: ", e));
+        }).catch(e => console.log("Cloud pricing sync error: ", e));
     }
 
     function logoutUser() {
