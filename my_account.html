@@ -348,7 +348,7 @@
         }
     }
 
-    // --- 🔥 FETCH ADMIN PRICES 🔥 ---
+    // --- 🔥 FETCH ADMIN PRICES (UPDATED DYNAMIC KHILLAR BINDING) 🔥 ---
     function loadDynamicPrices() {
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         
@@ -356,8 +356,11 @@
         let p_plat1 = adminPrices.m25_f_plat1 !== undefined ? adminPrices.m25_f_plat1 : 199;
         let p_gold = adminPrices.m25_f_gold !== undefined ? adminPrices.m25_f_gold : 149;
         let p_silver = adminPrices.m25_f_silver !== undefined ? adminPrices.m25_f_silver : 99;
-        let p_khond_adv = 49;
-        let p_bazar_ad = 99;
+        
+        // 🔥 सुधारित: खिलारचे दोन्ही दर आता थेट ॲडमिनच्या क्लाऊड सेटिंग्जवरून वाचले जातील 🔥
+        let p_khond_adv = (adminPrices.m25_f_khillar_ration !== undefined && adminPrices.m25_f_khillar_ration !== "") ? adminPrices.m25_f_khillar_ration : ((adminPrices.m25_t_khillar !== undefined && adminPrices.m25_t_khillar !== "") ? adminPrices.m25_t_khillar : 49);
+        let p_bazar_ad = (adminPrices.m25_f_khillar_prime !== undefined && adminPrices.m25_f_khillar_prime !== "") ? adminPrices.m25_f_khillar_prime : 99;
+        
         let p_adv = adminPrices.m25_f_adv !== undefined ? adminPrices.m25_f_adv : 49;
         let p_pro = adminPrices.m25_f_pro !== undefined ? adminPrices.m25_f_pro : 29;
         let p_doc = adminPrices.m25_f_doctor !== undefined ? adminPrices.m25_f_doctor : 25;
