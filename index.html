@@ -30,7 +30,7 @@
             let role = localStorage.getItem("current_logged_in_role");
             let isVerified = localStorage.getItem("vendor_verified") === 'true' || localStorage.getItem("vendor_verified") === true;
             
-            // चेक करा तो स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
+            // चेक करा تو स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
             let fromSpecialPage = sessionStorage.getItem("visited_user_page") === 'true';
 
             // 🚀 नियम १: जर युजर प्रमाणित "डीलर" असेल आणि ॲप नव्याने उघडले असेल...
@@ -384,27 +384,6 @@
         .btn-wa { flex: 1; background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; display:flex; align-items:center; justify-content:center; gap:5px; transition: 0.2s; text-decoration: none;}
         .btn-book { flex: 1.5; background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 2px 5px rgba(230,81,0,0.3); transition: 0.2s;}
         .close-modal-btn { background: #e0e0e0; color: #333; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; box-sizing: border-box;}
-
-        /* 🔥 ABOUT US MODAL STYLES 🔥 */
-        .about-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: flex-end; }
-        .about-modal-content { background: #f4f7f6; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; box-sizing: border-box; animation: slideUp 0.3s ease-out; }
-        .about-section { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .about-section h3 { color: #1b5e20; font-size: 18px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
-        .about-section p, .about-section ul, .about-section table { font-size: 13px; color: #333; line-height: 1.6; margin: 0; }
-        .about-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
-        .about-table th, .about-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .about-table th { background: #e8f5e9; color: #1b5e20; }
-        /* 3D Contact Card */
-        .contact-3d-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
-        .contact-3d-card { flex: 1; min-width: 130px; background: white; border-radius: 12px; padding: 15px 10px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08); transition: all 0.3s ease; transform: perspective(600px) rotateX(0deg) rotateY(0deg); cursor: pointer; }
-        .contact-3d-card:hover { transform: perspective(600px) rotateX(3deg) rotateY(3deg) translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
-        .contact-3d-card .card-icon { font-size: 28px; margin-bottom: 8px; }
-        .contact-3d-card .card-title { font-size: 13px; font-weight: 900; color: #1b5e20; margin: 0 0 4px; }
-        .contact-3d-card .card-detail { font-size: 14px; font-weight: bold; color: #333; word-break: break-word; }
-        .contact-3d-card a { color: #1565c0; text-decoration: none; }
-        .team-grid { display: flex; flex-wrap: wrap; gap: 12px; }
-        .team-member { text-align: center; flex: 1 0 100px; padding: 10px; }
-        .team-avatar { width: 60px; height: 60px; border-radius: 50%; background: #e8f5e9; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     </style>
 </head>
 <body onload="initDashboard()"> 
@@ -431,8 +410,8 @@
             <span class="m-icon">📞</span> कंपनी डॉक्टर (सल्ला) <span style="font-size:12px; margin-left:auto;">🔒</span>
         </a>
 
-        <!-- 🔥 ABOUT US MENU ITEM 🔥 -->
-        <a onclick="openAboutUsModal(); closeMenu();" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
+        <!-- 🔥 ABOUT US MENU ITEM (लॉगिन/मोडल न उघडता थेट about_us.html पेज उघडेल) 🔥 -->
+        <a href="about_us.html" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
             <span class="m-icon">ℹ️</span> आमच्याबद्दल (About Us)
         </a>
 
@@ -520,104 +499,6 @@
         </div>
         
         <div class="close-modal-btn" onclick="closeJoinUsModal()">बंद करा</div>
-    </div>
-</div>
-
-<!-- 🔥 NEW: ABOUT US MODAL 🔥 -->
-<div class="about-modal" id="aboutUsModal">
-    <div class="about-modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:#1b5e20;">🐄 दुग्ध दिशा AI – स्मार्ट पशुपालन, समृद्ध शेतकरी</h3>
-            <span onclick="closeAboutUsModal()" style="font-size:20px; cursor:pointer; color:#555;">✖</span>
-        </div>
-
-        <!-- INTRODUCTION -->
-        <div class="about-section">
-            <p><strong>दुग्ध दिशा AI</strong> हे फक्त एक मोबाइल अ‍ॅप नाही; ती एक सर्वसमावेशक डिजिटल इकोसिस्टम आहे, जी पशुपालक शेतकरी, पुरवठादार (डीलर्स/कंपन्या) आणि पशुवैद्यक तज्ज्ञ यांना एकाच व्यासपीठावर आणते. पारंपरिक पशुपालनातील आव्हाने — जसे की असंतुलित आहार, रोगनिदानातील विलंब, बाजारपेठेपर्यंत मर्यादित पोहोच — यावर मात करण्यासाठी आम्ही <strong>कृत्रिम बुद्धिमत्ता (AI)</strong> आणि <strong>डेटा-आधारित निर्णयप्रणाली</strong> यांचा मेळ घातला आहे.</p>
-            <p>आमचे उद्दिष्ट स्पष्ट आहे:</p>
-            <blockquote style="font-style:italic; background:#f1f8e9; padding:10px; border-left:4px solid #2e7d32; margin:10px 0;">
-                "प्रत्येक दुभत्या जनावरामागील शेतकऱ्याला तंत्रज्ञानाच्या जोरावर आर्थिकदृष्ट्या सक्षम करणे आणि डेअरी व्यवसायाला अधिक शाश्वत, लाभदायक उद्योग बनविणे."
-            </blockquote>
-        </div>
-
-        <!-- MISSION -->
-        <div class="about-section">
-            <h3>🎯 आमची मोहीम (Mission)</h3>
-            <ul style="padding-left:20px;">
-                <li>शेतकऱ्यांना <strong>वैज्ञानिक आहार नियोजन</strong> (AI Ration Balancer) द्वारे दूध उत्पादन खर्च कमी करून नफा वाढविणे.</li>
-                <li>विश्वासार्ह पशुवैद्यक सल्ला आणि <strong>रोगनिदान सहाय्य</strong> २४x७ उपलब्ध करून देणे.</li>
-                <li><strong>पारदर्शक बाजारपेठ</strong> (कृषी मॉल व पशु बाजार) द्वारे शेतकरी आणि दर्जेदार पुरवठादार यांना जोडणे.</li>
-                <li>व्यापारी व पुरवठादारांना <strong>लक्ष्यित जाहिरात व विक्री व्यवस्थापन</strong> प्लॅटफॉर्म देऊन त्यांचा व्यवसाय वाढविणे.</li>
-            </ul>
-        </div>
-
-        <!-- FARMER FEATURES -->
-        <div class="about-section">
-            <h3>👨‍🌾 शेतकऱ्यांसाठी प्रमुख सुविधा</h3>
-            <table class="about-table">
-                <tr><th>फीचर</th><th>वर्णन</th></tr>
-                <tr><td><strong>⚖️ AI रेशन बॅलन्सर</strong></td><td>जनावराचे वजन, दूध उत्पादन व उपलब्ध चारा यानुसार संतुलित आहार योजना. प्रोटीन, ऊर्जा, फायबरचे अचूक विश्लेषण.</td></tr>
-                <tr><td><strong>🩺 डॉक्टर कॉल व आजार ओळख</strong></td><td>अनुभवी पशुवैद्यकांशी थेट संपर्क. लक्षणांवरून आजार ओळखून प्राथमिक उपचार मार्गदर्शन.</td></tr>
-                <tr><td><strong>🧬 प्रजनन व वासरू व्यवस्थापन</strong></td><td>माज नोंद, गर्भधारणा तपासणी, प्रजनन कॅलेंडर, वासरू संगोपन टिप्स.</td></tr>
-                <tr><td><strong>🛒 कृषी मॉल</strong></td><td>प्रमाणित विक्रेत्यांकडून पशुखाद्य, मिनरल मिक्सचर, औषधे, उपकरणे थेट खरेदी.</td></tr>
-                <tr><td><strong>🐄 पशु बाजार</strong></td><td>जनावरांची सुरक्षित ऑनलाइन खरेदी-विक्री.</td></tr>
-                <tr><td><strong>📈 BCS व आरोग्य रेकॉर्ड</strong></td><td>शरीर स्थिती मापन, दूध संकलन नोंदी, वजन वाढ मॉनिटरिंग.</td></tr>
-                <tr><td><strong>🌡️ हवामान अंदाज</strong></td><td>उष्णतेचा ताण (Heat Stress) व्यवस्थापन, ऋतूनुसार सूचना.</td></tr>
-            </table>
-        </div>
-
-        <!-- VENDOR FEATURES -->
-        <div class="about-section">
-            <h3>🏢 व्यापारी / पुरवठादार यांच्यासाठी</h3>
-            <table class="about-table">
-                <tr><th>फीचर</th><th>वर्णन</th></tr>
-                <tr><td><strong>🛍️ प्रॉडक्ट स्टोअर</strong></td><td>स्वतःची उत्पादने लिस्ट करा आणि हजारो शेतकऱ्यांपर्यंत पोहोचवा.</td></tr>
-                <tr><td><strong>📢 स्मार्ट जाहिरात (Ad Studio)</strong></td><td>शेतकरी ज्या पानावर असेल तिथे तुमची जाहिरात. पेज-स्पेसिफिक टार्गेटिंग, बजेट कंट्रोल.</td></tr>
-                <tr><td><strong>📦 ऑर्डर मॅनेजमेंट</strong></td><td>येणाऱ्या ऑर्डर्सचे लाइव्ह ट्रॅकिंग, शिपिंग स्टेटस अपडेट, ग्राहक संपर्क.</td></tr>
-                <tr><td><strong>👨‍⚕️ कंपनी डॉक्टर नंबर</strong></td><td>शेतकऱ्यांचे कॉल थेट तुमच्या प्रतिनिधीला लागतील (कॉर्पोरेट प्लॅन).</td></tr>
-                <tr><td><strong>🎯 लीड जनरेशन</strong></td><td>मोठ्या ऑर्डर्सच्या चौकशी (Bulk Enquiries) पाहा आणि योग्य लीड खरेदी करा.</td></tr>
-                <tr><td><strong>💰 बिलिंग आणि लेजर</strong></td><td>प्लॅटफॉर्म फी, कमिशनचा पारदर्शक हिशोब. सुलभ पेमेंट प्रणाली.</td></tr>
-            </table>
-        </div>
-
-        <!-- VISION -->
-        <div class="about-section">
-            <h3>🚀 भविष्यकालीन दृष्टी (Vision)</h3>
-            <p>येत्या काळात आम्ही <strong>क्लाउड-आधारित डेटा स्टोरेज, लाइव्ह GPS ट्रॅकिंग, आणि प्रगत AI मॉडेल्स</strong> (जसे की Google Gemini) यांचे एकत्रीकरण करून पशुपालन क्षेत्रात अभूतपूर्व पारदर्शकता व कार्यक्षमता आणू इच्छितो. आमचे ध्येय आहे की <strong>प्रत्येक गोठा हा एक डेटा-चालित, आधुनिक व्यवसाय युनिट बनावा</strong>, जिथे निर्णय अंदाजावर नव्हे तर अचूक आकडेवारीवर आधारित असतील.</p>
-        </div>
-
-        <!-- TEAM SECTION (DYNAMIC) -->
-        <div class="about-section">
-            <h3>👥 आमची टीम</h3>
-            <p style="font-size:11px; color:#666;">(हा विभाग ॲडमिन पॅनेलमधून अपडेट केला जातो. खाली टीम सदस्य दिसतील.)</p>
-            <div id="team_container" class="team-grid">
-                <!-- JavaScript भरेल -->
-            </div>
-        </div>
-
-        <!-- 3D CONTACT SECTION -->
-        <div class="about-section">
-            <h3>📞 संपर्क</h3>
-            <div class="contact-3d-grid">
-                <div class="contact-3d-card">
-                    <div class="card-icon">📱</div>
-                    <div class="card-title">मोबाईल</div>
-                    <div class="card-detail"><a href="tel:9579535290">९५७९५३५२९०</a></div>
-                </div>
-                <div class="contact-3d-card">
-                    <div class="card-icon">📧</div>
-                    <div class="card-title">ईमेल</div>
-                    <div class="card-detail"><a href="mailto:dugdhdisa@gmail.com">dugdhdisa@gmail.com</a></div>
-                </div>
-                <div class="contact-3d-card">
-                    <div class="card-icon">📍</div>
-                    <div class="card-title">मुख्य कार्यालय</div>
-                    <div class="card-detail">सातारा, महाराष्ट्र</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="close-modal-btn" onclick="closeAboutUsModal()">बंद करा</div>
     </div>
 </div>
 
@@ -1025,38 +906,6 @@
 
     function closeJoinUsModal() {
         document.getElementById("joinUsModal").style.display = "none";
-    }
-
-    // --- 🔥 NEW: ABOUT US MODAL LOGIC 🔥 ---
-    function openAboutUsModal() {
-        document.getElementById("aboutUsModal").style.display = "flex";
-        loadTeamMembers(); // टीम लोड करा
-    }
-
-    function closeAboutUsModal() {
-        document.getElementById("aboutUsModal").style.display = "none";
-    }
-
-    // डायनॅमिक टीम मेंबर्स लोड करा (केवळ अ‍ॅडमिन ने सेट केलेला डेटा, डमी डेटा नाही)
-    function loadTeamMembers() {
-        let teamContainer = document.getElementById("team_container");
-        // अ‍ॅडमिन पॅनेलमधून सेट केलेला डेटा तपासा
-        let teamData = JSON.parse(localStorage.getItem("about_team_members")) || [];
-        let html = "";
-        if (teamData.length > 0) {
-            teamData.forEach(member => {
-                html += `
-                    <div class="team-member">
-                        <div class="team-avatar">${member.avatar || '👤'}</div>
-                        <div style="font-weight:bold; font-size:13px;">${member.name || ''}</div>
-                        <div style="font-size:11px; color:#666;">${member.role || ''}</div>
-                    </div>
-                `;
-            });
-        } else {
-            html = `<p style="text-align:center; width:100%; color:#888;">सध्या कोणतेही टीम सदस्य उपलब्ध नाहीत.</p>`;
-        }
-        teamContainer.innerHTML = html;
     }
 
     // --- 🔥 NEW: VET / पशुवैद्यक LOGIC (डायनॅमिक, अ‍ॅडमिन डेटावर आधारित) 🔥 ---
