@@ -97,9 +97,40 @@
             cursor: pointer; box-shadow: 0 4px 0 #0d47a1, 0 8px 15px rgba(0,0,0,0.2);
         }
         .btn-calculate:active { top: 4px; box-shadow: 0 1px 0 #0d47a1; position: relative; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body>
+<body onload="initProfitCalc()">
+
+<!-- 🔒 सिक्युरिटी चेक -->
+<script>
+    if (!localStorage.getItem("current_user_mobile") || localStorage.getItem("current_user_mobile") === "+91 9XXXX XXXX") {
+        window.location.replace("login.html");
+    }
+</script>
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -204,6 +235,32 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // --- 🔥 NEW: SINGLE DEVICE SESSION WATCHER 🔥 ---
+    function initProfitCalc() {
+        syncUserSessionFromCloud();
+    }
+
+    function syncUserSessionFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+        }
+    }
 
     function calculateEconomics() {
         // Get Inputs

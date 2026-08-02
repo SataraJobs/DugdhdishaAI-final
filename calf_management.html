@@ -87,9 +87,33 @@
         .btn-view { background: #e65100; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; flex:1;}
         .btn-edit-tag { background: #4caf50; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; flex:1;}
         .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; width: 40px;}
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -206,12 +230,12 @@
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
     }
-    syncProducts();
 
-    // 🔥 NEW: CLOUD SYNC FOR CALF PLANS ACROSS DEVICES 🔥
+    // 🔥 NEW: CLOUD SYNC FOR CALF PLANS ACROSS DEVICES (WITH SESSION WATCHER) 🔥
     function syncCalvesFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // 1. Sync Calf Plans
             db.collection("calf_plans").where("farmerMobile", "==", userMobile).get()
             .then((querySnapshot) => {
                 let cloudPlans = [];
@@ -228,21 +252,35 @@
                 }
             })
             .catch(e => console.log("Error syncing calf plans from cloud: ", e));
+
+            // 2. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
         }
     }
 
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
     function generateDynamicAd(targetTag, defaultHtml) {
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-        
-        // Find a product that contains the specific tag in its aiFilters array
         let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
         
         if (matchedProduct) {
             let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
             let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
             
-            // Generate Vendor Ad UI (linking to krushi mall)
             return `
                 <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
                     <h4>✨ तुमच्या वासरासाठी सुचवलेले</h4>
@@ -259,8 +297,6 @@
                     </div>
                 </div>`;
         }
-        
-        // Return default static AD if no vendor product matches
         return defaultHtml;
     }
 
@@ -284,8 +320,7 @@
     function initPage() {
         document.getElementById('calf_dob').valueAsDate = new Date();
         loadSavedCalves();
-        
-        // 🔥 TRIGGER FIREBASE CLOUD SYNC ON LOAD 🔥
+        syncProducts();
         syncCalvesFromCloud();
     }
 
@@ -299,9 +334,7 @@
         if(!dobVal) { alert("कृपया जन्म तारीख निवडा!"); return; }
 
         let dob = new Date(dobVal);
-        let timestampId = new Date().getTime(); // Unique ID
-        
-        // Create Display Name based on availability of calf tag
+        let timestampId = new Date().getTime();
         let displayName = calfTag ? calfTag : `वासरू (आई: ${motherTag})`;
 
         function addDays(date, days) {
@@ -310,7 +343,6 @@
             return result.toISOString().split('T')[0];
         }
 
-        // Create the structured data object to save
         let planData = {
             id: timestampId,
             motherTag: motherTag,
@@ -327,12 +359,10 @@
             ]
         };
 
-        // 1. Save to LocalStorage for Calf Management
         let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
         savedCalves.push(planData);
         localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
 
-        // 2. Save to 'My Animals' (Cattle Profile) Database
         let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
         allAnimals.push({
             id: timestampId,
@@ -344,7 +374,6 @@
         });
         localStorage.setItem('my_cattle_list', JSON.stringify(allAnimals));
 
-        // 3. 🔥 FIREBASE: Save to Live Database 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
         db.collection("calf_plans").add({
@@ -359,16 +388,13 @@
 
         alert(`✅ ${displayName} ची नोंदणी यशस्वी झाली आहे!\nहे वासरू 'माझी जनावरे' मध्येही ॲड झाले आहे व याचे सर्व ॲलर्ट्स डॅशबोर्डवर येतील.`);
         
-        // Clear input form
         document.getElementById('mother_tag').value = '';
         document.getElementById('calf_tag').value = '';
         
-        // Generate UI
         generateTimelineUI(planData);
         loadSavedCalves();
     }
 
-    // --- Edit Calf Tag Later (Updated with Firebase Cloud Sync) ---
     function updateCalfTag(id) {
         let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
         let index = savedCalves.findIndex(p => p.id === id);
@@ -379,16 +405,14 @@
             
             if(newTag !== null && newTag.trim() !== "") {
                 savedCalves[index].calfTag = newTag.trim();
-                savedCalves[index].displayName = newTag.trim(); // Update display name removing mother tag ref if they want
+                savedCalves[index].displayName = newTag.trim();
                 
-                // Also update the alerts text globally
                 savedCalves[index].alerts.forEach(alert => {
                     alert.msg = alert.msg.replace(/वासरू \(आई: .*?\)/g, newTag.trim());
                 });
 
                 localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
                 
-                // 🔥 FIREBASE CLOUD UPDATE 🔥
                 let docId = savedCalves[index].firebaseDocId;
                 if(docId) {
                     db.collection("calf_plans").doc(docId).update({
@@ -398,7 +422,6 @@
                     }).catch(e => console.error("Error updating calf tag on cloud: ", e));
                 }
                 
-                // Update in Global Animal List too
                 let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
                 let aniIndex = allAnimals.findIndex(a => a.id === id);
                 if(aniIndex !== -1) {
@@ -413,7 +436,6 @@
         }
     }
 
-    // --- Generate HTML Timeline ---
     function generateTimelineUI(planData) {
         let outputContainer = document.getElementById('planner_output');
         let timelineContent = document.getElementById('timeline_content');
@@ -449,7 +471,6 @@
         outputContainer.scrollIntoView({behavior: "smooth"});
     }
 
-    // --- Load Saved History ---
     function loadSavedCalves() {
         let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
         let historySection = document.getElementById('history_section');
@@ -481,22 +502,18 @@
         }
     }
 
-    // --- Delete Calf Plan (Updated with Firebase Cloud Sync) ---
     function deleteCalfPlan(id) {
         if(confirm("खरोखर हे रेकॉर्ड डिलीट करायचे आहे का?")) {
-            // Delete from Calf Plans
             let savedCalves = JSON.parse(localStorage.getItem('calf_ai_plans')) || [];
             let targetPlan = savedCalves.find(p => p.id === id);
             
             savedCalves = savedCalves.filter(p => p.id !== id);
             localStorage.setItem('calf_ai_plans', JSON.stringify(savedCalves));
             
-            // 🔥 FIREBASE CLOUD DELETE 🔥
             if(targetPlan && targetPlan.firebaseDocId) {
                 db.collection("calf_plans").doc(targetPlan.firebaseDocId).delete()
                 .catch(e => console.error("Error deleting calf from cloud: ", e));
             } else {
-                // Search by query if docId missing
                 let fMob = localStorage.getItem("current_user_mobile");
                 if(fMob) {
                     db.collection("calf_plans").where("farmerMobile", "==", fMob).get()
@@ -510,7 +527,6 @@
                 }
             }
             
-            // Delete from Global Cattle List
             let allAnimals = JSON.parse(localStorage.getItem('my_cattle_list')) || [];
             allAnimals = allAnimals.filter(a => a.id !== id);
             localStorage.setItem('my_cattle_list', JSON.stringify(allAnimals));
@@ -520,7 +536,6 @@
         }
     }
 
-    // --- 3. Troubleshooter Logic (WITH DYNAMIC ADS) ---
     function hideResult() {
         document.getElementById('calf_result').style.display = "none";
     }
@@ -546,7 +561,6 @@
             title.style.color = "#1565c0";
             title.innerHTML = "🍼 नवजात वासरू (० ते ३ दिवस)";
             advice.innerHTML = "<b>AI विश्लेषण:</b> या वयात वासराची नाळ (Navel) आणि पचनसंस्था खूप नाजूक असते.<br><br><b>सुवर्ण नियम:</b><br>• जन्मानंतर ताबडतोब वासराची नाळ २ इंच सोडून नवीन ब्लेडने कापा आणि टिंचर आयोडीन लावा.<br>• पहिल्या ३ दिवसांत वासराच्या वजनाच्या १०% चीक आणि दूध पाजा.<br>• गोठ्यात कोरडी आणि उबदार जागा द्या.";
-            
             targetFilterTag = "Calf_Growth";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
@@ -554,14 +568,12 @@
                     <p>नवजात वासराची नाळ लवकर सुकण्यासाठी आणि इन्फेक्शन टाळण्यासाठी <b>Himalaya Himax Ointment</b> किंवा स्प्रे नक्की वापरा.</p>
                     <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
                 </div>`;
-                
         } 
         else if (phase === 'growth') {
             resultBox.style.borderLeftColor = "#4caf50";
             title.style.color = "#2e7d32";
             title.innerHTML = "📈 वाढीचे वय (१५ दिवस ते ३ महिने)";
             advice.innerHTML = "<b>AI विश्लेषण:</b> वासराचे कोटीपोट (Rumen) विकसित होण्यासाठी आणि दुधावरील खर्च कमी करण्यासाठी हा टप्पा अत्यंत महत्त्वाचा आहे.<br><br><b>काय करावे:</b><br>• वासराला १५ दिवसांनंतर मऊ आणि दर्जेदार सुका चारा द्यायला सुरुवात करा.<br>• केवळ दुधावर अवलंबून न राहता 'काफ स्टार्टर' (Calf Starter) खाऊ घाला जेणेकरून कोटीपोट लवकर विकसित होईल.";
-            
             targetFilterTag = "Calf_Growth";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
@@ -569,14 +581,12 @@
                     <p>वासराचे वजन वेगाने वाढवण्यासाठी आणि कोटीपोट विकसित करण्यासाठी <b>गोदरेज ॲग्रोव्हेट - काफ स्टार्टर (Calf Starter)</b> खायला द्या.</p>
                     <span class="sponsor-tag">Sponsored by गोदरेज ॲग्रोव्हेट</span>
                 </div>`;
-
         } 
         else if (phase === 'deworming') {
             resultBox.style.borderLeftColor = "#ff9800";
             title.style.color = "#e65100";
             title.innerHTML = "🐛 ३ महिने पूर्ण (जंतनिर्मूलन व वाढ)";
             advice.innerHTML = "<b>AI विश्लेषण:</b> वासराचे वजन वाढत नसल्यास किंवा त्याचे पोट लोंबत असल्यास त्याच्या पोटात जंत असू शकतात.<br><br><b>उपाय:</b><br>• डॉक्टरांच्या सल्ल्याने वासराला त्याच्या वजनानुसार 'जंतनाशक औषध' (Deworming Liquid/Tablet) द्या.<br>• आहारामध्ये खनिज मिश्रण (Mineral Mixture) आणि जीवनसत्त्वे सुरू करा.";
-            
             targetFilterTag = "De_worming";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
@@ -584,14 +594,12 @@
                     <p>वासराच्या पोटातील सर्व प्रकारचे जंत मारून उत्तम वाढीसाठी <b>Intas Albomar / Neozash</b> हे जंतनाशक डॉक्टरांच्या सल्ल्याने द्या.</p>
                     <span class="sponsor-tag">Sponsored by Intas Pharmaceuticals</span>
                 </div>`;
-                
         } 
         else if (phase === 'scours') {
             resultBox.style.borderLeftColor = "#d32f2f";
             title.style.color = "#c62828";
             title.innerHTML = "🚨 इमर्जन्सी: जुलाब/हगवण (Calf Scours)";
-            advice.innerHTML = "<b>AI विश्लेषण:</b> वासरांमध्ये मृत्यूचे सर्वात मोठे कारण म्हणजे जुलाब (Scours). यामुळे वासराच्या शरीरातील पाणी कमी (Dehydration) होते.<br><br><b>तातडीचे उपाय:</b><br>• दूध पाजणे तात्पुरते अर्धे करा.<br>• वासराला शरीरात पाणी कमी पडू नये म्हणून स्वच्छ पाण्यात <b>ORS (इलेक्ट्रोलाईट)</b> मिसळून पाजा.<br>• ताबडतोब पशुवैद्यкала बोलावून योग्य उपचार सुरू करा.";
-            
+            advice.innerHTML = "<b>AI विश्लेषण:</b> वासरांमध्ये मृत्यूचे सर्वात मोठे कारण म्हणजे जुलाब (Scours). यामुळे वासराच्या शरीरातील पाणी कमी (Dehydration) होते.<br><br><b>तातडीचे उपाय:</b><br>• दूध पाजणे तात्पुरते अर्धे करा.<br>• वासराला शरीरात पाणी कमी पडू नये म्हणून स्वच्छ पाण्यात <b>ORS (इलेक्ट्रोलाईट)</b> मिसळून पाजा.<br>• ताबडतोब पशुवैद्यकाला बोलावून योग्य उपचार सुरू करा.";
             targetFilterTag = "Digestion";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
@@ -601,10 +609,9 @@
                 </div>`;
         }
 
-        // 🔥 Call the Dynamic Ad Function 🔥
         adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml);
     }
 </script>
-    <script src="fcm_setup.js"></script>
+<script src="fcm_setup.js"></script>
 </body>
 </html>

@@ -595,6 +595,24 @@
         .risk-matrix-box h5 { color: #d84315; font-size: 13.5px; font-weight: 900; margin: 0 0 10px; }
         .risk-item { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 6px; font-weight: 800; color: #333; }
 
+        /* 🔥 नवीन ॲडव्हान्स बॉक्सेस (Daily Routine, Exercise Plan & Countdown Plan) 🔥 */
+        .routine-box, .exercise-box, .countdown-box {
+            background: #ffffff;
+            border: 2px solid #c8e6c9;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .routine-box h5, .exercise-box h5, .countdown-box h5 {
+            color: #1b5e20;
+            font-size: 14.5px;
+            font-weight: 900;
+            border-bottom: 1px dashed #a5d6a7;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+
         .diet-table {
             width: 100%;
             border-collapse: collapse;
@@ -837,6 +855,22 @@
             transform: scale(1.15);
         }
 
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
         @media (max-width: 480px) {
             .form-grid-2, .basic-summary-grid, .nutrition-14-grid {
                 grid-template-columns: 1fr;
@@ -849,6 +883,14 @@
     </style>
 </head>
 <body onload="initRationBalancer()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
 
@@ -907,7 +949,8 @@
         <div class="form-grid-2">
             <div class="field">
                 <label>शर्यत व सरावाचा टप्पा (Stage) *</label>
-                <select id="rb_racing_stage">
+                <!-- 🔥 शर्यतीचा टप्पा बदलल्यावर शर्यतीची तारीख व बाकी दिवस फील्ड टॉगल होईल -->
+                <select id="rb_racing_stage" onchange="toggleRaceDateField()">
                     <option value="heavy">शर्यतीचा काळ (Heavy Racing Season)</option>
                     <option value="moderate">नियमित सराव (Moderate Training)</option>
                     <option value="rest">विश्रांती काळ (Off-Season Rest)</option>
@@ -917,6 +960,18 @@
             <div class="field">
                 <label>पशुखाद्य / एनर्जी फीड (Grams/Day) *</label>
                 <input type="number" id="rb_starter" placeholder="उदा. 1000" value="1000" step="100">
+            </div>
+        </div>
+
+        <!-- 🔥 नवीन / पुनर्स्थापित: पुढील शर्यत / सराव तारीख व बाकी दिवस मोजण्याचा विभाग -->
+        <div class="form-grid-2" id="race_date_section" style="display: none;">
+            <div class="field">
+                <label>📅 पुढील शर्यत / सराव तारीख</label>
+                <input type="date" id="race_date">
+            </div>
+            <div class="field">
+                <label>शर्यतीला बाकी दिवस</label>
+                <input type="text" id="days_remaining_display" readonly placeholder="आपोआप भरेल" style="background:#eef; font-weight:900;">
             </div>
         </div>
 
@@ -1159,6 +1214,22 @@
                 <div class="risk-item"><span>4. Muscle Fatigue (स्नायू थकवा):</span> <span style="color:#d32f2f;">⭐⭐⭐⭐ (Critical Need)</span></div>
             </div>
 
+            <!-- 🔥 नवीन ॲडव्हान्स सेक्शन्स (Daily Routine, Exercise Plan & Countdown Plan) 🔥 -->
+            <div class="routine-box" id="daily_routine_box">
+                <h5>🕒 रोजचा आहार वेळापत्रक (Daily Routine)</h5>
+                <div id="daily_routine_content"></div>
+            </div>
+
+            <div class="exercise-box" id="exercise_plan_box">
+                <h5>🏋️ व्यायाम व प्रशिक्षण योजना</h5>
+                <div id="exercise_plan_content"></div>
+            </div>
+
+            <div class="countdown-box" id="countdown_plan_box" style="display:none;">
+                <h5>⏳ शर्यतपूर्व खास तयारी (Countdown Plan)</h5>
+                <div id="countdown_plan_content"></div>
+            </div>
+
             <p style="font-size: 13px; color: #111; line-height: 1.5; font-weight: 700;" id="advance_tips_ui"></p>
             
             <table class="diet-table">
@@ -1202,8 +1273,8 @@
             <div style="font-size: 42px; margin-bottom: 6px;">🔒</div>
             <h3>अचूक उपाय आणि शर्यत डाएट चार्ट लॉक आहे!</h3>
             <p>तुमच्या बैलाची छाती, मान व स्नायू बळकट करण्यासाठी, हाडांची मजबूती आणि पारंपारिक देशी खुराक + वैज्ञानिक आहाराचा अचूक चार्ट पाहण्यासाठी <b>'ॲडव्हान्स प्लॅन'</b> अनलॉक करा.</p>
-            <button class="btn-upgrade" onclick="showPaywall()">
-                👑 Advance Plan अनलॉक करा (Upgrade ₹४९ Value)
+            <button class="btn-upgrade" id="btn_upgrade_locked" onclick="showPaywall()">
+                👑 Advance Plan अनलॉक करा
             </button>
         </div>
 
@@ -1216,7 +1287,7 @@
 
 </div>
 
-<!-- 🔥 PAYWALL OVERLAY MODAL (Razorpay ₹49) 🔥 -->
+<!-- 🔥 PAYWALL OVERLAY MODAL (Razorpay Dynamic Price) 🔥 -->
 <div class="paywall-overlay" id="ration_paywall_overlay">
     <div class="paywall-box">
         <div class="paywall-icon">🔒</div>
@@ -1277,11 +1348,68 @@
     let CURRENT_MODEL = "";
 
     function initRationBalancer() {
+        // 🔥 FIREBASE CLOUD SYNC: ॲडमिनचे ताजे दर क्लाऊडवरून आणा 🔥
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
+                checkUserPlanStatus();
+                updateTabLockUI();
+            }
+        }).catch(e => console.log("Cloud price sync error:", e));
+
+        // 🔥 NEW: AI API Key (M16) थेट क्लाऊडवरून आणा 🔥
+        db.collection("admin_settings").doc("M16").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M16', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud API Key sync error:", e));
+
+        // युजरचा सेशन वॉचर आणि प्लॅन सिंक
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    if(cloudData.activePlan) {
+                        localStorage.setItem("farmer_active_plan", JSON.stringify(cloudData.activePlan));
+                    }
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            });
+
+            // 🔥 NEW: रेशन बॅलन्सर व्हिजिटचे क्लाऊड लॉगिंग (ration_activity_logs) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("ration_activity_logs").add({
+                userName: fName,
+                userMobile: userMobile,
+                action: "Visited Khond & Bull 3D Ration Balancer",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        }
+
         checkUserPlanStatus();
         updateTabLockUI();
+        toggleRaceDateField();
     }
 
-    // 2. TABS MANAGEMENT (2 Tiers: Basic Free vs Advance Rs 49)
+    // --- ॲडमिन किंमत मिळवा (Dynamic Price) ---
+    function getKhillarAdvPrice() {
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let val = adminPrices.m25_f_khillar_ration;
+        if (val === undefined || val === null || val === '') return 49;
+        return parseInt(val);
+    }
+
+    // 2. TABS MANAGEMENT (2 Tiers: Basic Free vs Advance)
     function setLevel(mode) {
         if(mode === 'adv' && !isPlanActive('adv')) {
             showPaywall();
@@ -1305,6 +1433,11 @@
     }
 
     function isPlanActive(featureType) {
+        // 1. Check Admin Prices for Zero (Free Mode)
+        let price = getKhillarAdvPrice();
+        if(featureType === 'adv' && price === 0) return true;
+
+        // 2. Check regular active plan
         let activePlan = JSON.parse(localStorage.getItem('farmer_active_plan'));
         if(!activePlan) return false;
 
@@ -1336,14 +1469,28 @@
     }
 
     function updateTabLockUI() {
+        let price = getKhillarAdvPrice();
         let advTab = document.getElementById('tab_price_adv');
+        let upgradeBtn = document.getElementById('btn_upgrade_locked');
+
         if(isPlanActive('adv')) {
             advTab.innerHTML = `✅ ॲक्टिव्ह`;
             advTab.style.color = '#1b5e20';
         } else {
-            advTab.innerHTML = `🔒 ₹४९ (संपूर्ण उपाय)`;
+            advTab.innerHTML = `🔒 ₹${price} (संपूर्ण उपाय)`;
             advTab.style.color = '#d32f2f';
         }
+
+        if(upgradeBtn) {
+            if (price > 0) {
+                upgradeBtn.innerText = `👑 Advance Plan अनलॉक करा (₹${price})`;
+            } else {
+                upgradeBtn.innerText = `👑 Advance Plan ॲक्टिव्हेट करा (मोफत)`;
+            }
+        }
+        
+        let paywallPrice = document.getElementById('paywall_price');
+        if(paywallPrice) paywallPrice.innerText = `₹ ${price} / २४ तास`;
     }
 
     // 3. PAYWALL MODAL LOGIC
@@ -1356,7 +1503,14 @@
     }
 
     function triggerRazorpayPayment() {
-        let numAmount = 49;
+        let numAmount = getKhillarAdvPrice();
+        
+        // जर ॲडमिनने किंमत ० रुपये केली असेल, तर थेट ॲक्सेस द्या!
+        if (numAmount === 0) {
+            activateAdvancePlanFree();
+            return;
+        }
+
         let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
         let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
 
@@ -1380,22 +1534,7 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.log("Firebase log error", e));
 
-                let now = new Date();
-                let expiryDate = new Date();
-                expiryDate.setHours(expiryDate.getHours() + 24);
-
-                let activePlan = {
-                    name: "Advance Racing Ration",
-                    activatedOn: now.toISOString(),
-                    expiryDate: expiryDate.toISOString(),
-                    status: "Active"
-                };
-
-                localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
-                alert("🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि 'ॲडव्हान्स शर्यत डाएट चार्ट' लगेच अनलॉक करण्यात आला आहे!");
-                closePaywall();
-                updateTabLockUI();
-                setLevel('adv');
+                activateAdvancePlanFree(); // reusing function name to keep logic clean
             },
             "prefill": {
                 "name": userName,
@@ -1410,6 +1549,53 @@
         });
         rzp1.open();
     }
+
+    // पेमेंट यशस्वी झाल्यावर किंवा ० रुपये असल्यास हा फंक्शन चालेल
+    function activateAdvancePlanFree() {
+        let now = new Date();
+        let expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 24);
+
+        let activePlan = {
+            name: "Advance Racing Ration",
+            activatedOn: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            status: "Active"
+        };
+
+        localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
+        
+        // Cloud Save
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob) {
+            db.collection("users").doc(uMob).set({ activePlan: activePlan }, { merge: true });
+        }
+
+        alert("🎉 अभिनंदन! 'ॲडव्हान्स शर्यत डाएट चार्ट' अनलॉक झाला आहे!");
+        closePaywall();
+        updateTabLockUI();
+        setLevel('adv');
+    }
+
+    function toggleRaceDateField() {
+        let stage = document.getElementById("rb_racing_stage").value;
+        let section = document.getElementById("race_date_section");
+        if (stage === "heavy" || stage === "moderate") section.style.display = "grid";
+        else section.style.display = "none";
+        updateDaysRemaining();
+    }
+
+    function updateDaysRemaining() {
+        let dateInput = document.getElementById("race_date").value;
+        let display = document.getElementById("days_remaining_display");
+        if (!dateInput) { display.value = "तारीख निवडा"; return; }
+        let raceDate = new Date(dateInput);
+        let today = new Date(); today.setHours(0,0,0,0);
+        let diffDays = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
+        display.value = diffDays > 0 ? `${diffDays} दिवस बाकी` : (diffDays === 0 ? "आजच शर्यत!" : "तारीख गेली");
+    }
+
+    document.getElementById("race_date").addEventListener("change", updateDaysRemaining);
 
     // 4. MAIN RATION BALANCER CALCULATION ENGINE (Khillar Racing Bull Logic)
     function calculateKhondRation() {
@@ -1464,6 +1650,8 @@
         // 🔥 UPDATE EXPLICIT BASIC 2-ITEM SUMMARY (DM & CP Target vs Supplied) 🔥
         document.getElementById("dm_req_val").innerText = `${targetDM.toFixed(1)} Kg`;
         document.getElementById("dm_supp_val").innerText = `${suppliedDM.toFixed(1)} Kg`;
+        
+        // 🔥 सुधारणा १: DM फरक दाखवताना वजा चिन्ह (-) हटवले
         let dmDiff = (suppliedDM - targetDM).toFixed(1);
         let dmDiffEl = document.getElementById("dm_diff_val");
         let dmPill = document.getElementById("dm_status_pill");
@@ -1474,7 +1662,7 @@
             dmPill.style.background = "#e8f5e9";
             dmPill.style.color = "#2e7d32";
         } else {
-            dmDiffEl.innerText = `${dmDiff} Kg कमतरता (${dmPercent}%)`;
+            dmDiffEl.innerText = `${Math.abs(dmDiff)} Kg कमतरता (${dmPercent}%)`;
             dmDiffEl.style.color = "#c62828";
             dmPill.innerText = "कमतरता";
             dmPill.style.background = "#ffebee";
@@ -1483,6 +1671,8 @@
 
         document.getElementById("cp_req_val").innerText = `${Math.round(targetProteinGrams)} g`;
         document.getElementById("cp_supp_val").innerText = `${Math.round(suppliedProtein)} g`;
+        
+        // 🔥 सुधारणा १: प्रथिने (CP) फरक दाखवताना वजा चिन्ह (-) हटवले
         let cpDiff = Math.round(suppliedProtein - targetProteinGrams);
         let cpDiffEl = document.getElementById("cp_diff_val");
         let cpPill = document.getElementById("cp_status_pill");
@@ -1493,7 +1683,7 @@
             cpPill.style.background = "#e8f5e9";
             cpPill.style.color = "#2e7d32";
         } else {
-            cpDiffEl.innerText = `${cpDiff} g कमतरता (${cpPercent}%)`;
+            cpDiffEl.innerText = `${Math.abs(cpDiff)} g कमतरता (${cpPercent}%)`;
             cpDiffEl.style.color = "#c62828";
             cpPill.innerText = "कमतरता";
             cpPill.style.background = "#ffebee";
@@ -1543,8 +1733,11 @@
             document.getElementById("n14_dm").innerText = `${suppliedDM.toFixed(1)} kg / ${targetDM.toFixed(1)} kg (${dmPercent}%)`;
             document.getElementById("n14_cp").innerText = `${(suppliedProtein/1000).toFixed(2)} kg / ${(targetProteinGrams/1000).toFixed(2)} kg (${cpPercent}%)`;
             document.getElementById("n14_me").innerText = `${suppliedME.toFixed(1)} Mcal / ${targetME} Mcal (${mePercent}%)`;
-            let waterReq = Math.round(weight * 0.12);
-            document.getElementById("n14_water").innerText = `42 L / ${waterReq} L Needed`;
+            
+            // 🔥 सुधारणा २: १४-पॅरामीटर रिपोर्टमध्ये पाण्याची गरज वजनानुसार डायनॅमिक मोजली (१०% ते ११%)
+            let waterReq = Math.round(weight * 0.11);
+            let currentWaterEst = Math.round(weight * 0.09);
+            document.getElementById("n14_water").innerText = `${currentWaterEst} L / ${waterReq} L Needed`;
             
             // Calculate AI Race Bull Performance Score
             let perfScore = Math.min(100, Math.round((dmPercent * 0.35) + (cpPercent * 0.4) + (calPercent * 0.25)));
@@ -1579,9 +1772,48 @@
                 </tr>`;
             document.getElementById("advance_diet_tbody").innerHTML = tbody;
 
+            // 🔥 सुधारणा: सविस्तर मराठी विश्लेषण व मार्गदर्शन
             document.getElementById("advance_tips_ui").innerHTML = `
-                <b>शर्यतीच्या बैलासाठी विशेष शिफारस:</b> तुमच्या बैलाचे वजन (${weight} Kg) आणि शर्यतीची तयारी लक्षात घेता, आहारात <b>${trad1Type}</b> सोबत रोज <b>३० मिली लिक्विड कॅल्शियम + इलेक्ट्रोलाईट्स</b> देणे आवश्यक आहे. यामुळे मैदानात पळताना पायात गोळे (Cramps) येणार नाहीत आणि हाडांचा सांगाडा मजबूत बनेल.`;
+                <b>शर्यतीच्या बैलासाठी विशेष शिफारस:</b> तुमच्या बैलाचे सध्याचे वजन (${weight} Kg) आणि शर्यतीची तयारी लक्षात घेता, आहारात <b>${trad1Type}</b> सोबत रोज <b>३० मिली लिक्विड कॅल्शियम + इलेक्ट्रोलाईट्स</b> देणे अत्यंत आवश्यक आहे. यामुळे मैदानात पळताना पायात गोळे (Cramps) येणार नाहीत, धाप लागणार नाही आणि हाडांचा सांगाडा मजबूत बनेल.`;
             
+            // Daily Routine
+            document.getElementById("daily_routine_content").innerHTML = `
+                <p><b>सकाळी ६:०० वाजता:</b> हिरवा चारा (${(totalGreen/2).toFixed(1)} Kg) + ताजे स्वच्छ पाणी</p>
+                <p><b>सकाळी ९:०० वाजता:</b> पशुखाद्य (${(starter/2)} g) + देशी खुराक (${(totalTradGrams/2)} g)</p>
+                <p><b>दुपारी १२:०० वाजता:</b> सुका चारा (${(totalDry/2).toFixed(1)} Kg) (ज्वारीचा कडबा कुट्टी)</p>
+                <p><b>संध्याकाळी ५:०० वाजता:</b> उर्वरित हिरवा/सुका चारा व खुराक + व्यायामानंतर ३० मिनिटांनी पाणी</p>`;
+
+            // Exercise Plan
+            document.getElementById("exercise_plan_content").innerHTML = `
+                <p><b>सकाळचे प्रशिक्षण:</b> सकाळी २ ते ३ किमी हलकी चाल (पहाटेच्या थंड हवेत).</p>
+                <p><b>संध्याकाळचे प्रशिक्षण:</b> मैदानावर हलका धावण्याचा सराव आणि स्नायूंना मालिश (जर 'शर्यतीचा काळ' किंवा 'नियमित सराव' असेल तर).</p>`;
+
+            // 🔥 सुधारणा ३: Countdown Plan मध्ये तारखेवरून उरलेले दिवस मोजण्याचे अचूक लॉजिक
+            let dateVal = document.getElementById("race_date").value;
+            let countdownBox = document.getElementById("countdown_plan_box");
+            if (dateVal && (stage === "heavy" || stage === "moderate")) {
+                let raceDate = new Date(dateVal);
+                let today = new Date(); today.setHours(0,0,0,0);
+                let diffDays = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
+                
+                countdownBox.style.display = "block";
+                if (diffDays <= 7 && diffDays >= 0) {
+                    document.getElementById("countdown_plan_content").innerHTML = `
+                        <p style="color:#d32f2f; font-weight:900;">🔥 अंतिम आठवडा (Last 7 Days):</p>
+                        <p>आता शर्यत खूप जवळ आली आहे. जनावराला जड खुराक देण्याचे प्रमाण थोडे कमी करा, जेणेकरून पोट हलके राहील. पिण्याच्या पाण्यात रोज ५० ग्रॅम इलेक्ट्रोलाईट्स पावडर आणि गुळाचे पाणी द्या. शर्यतीच्या २ दिवस आधी पूर्ण विश्रांती द्या.</p>`;
+                } else if (diffDays <= 14 && diffDays > 7) {
+                    document.getElementById("countdown_plan_content").innerHTML = `
+                        <p style="color:#e65100; font-weight:900;">⚡ पीक ट्रेनिंग काळ (14 Days Remaining):</p>
+                        <p>या काळात बैलाचे स्नायू बळकट होणे गरजेचे आहे. आहारात उकडलेली मटकी आणि उडदाची डाळ वाढवा. सकाळी आणि संध्याकाळी धावण्याचा सराव तीव्र ठेवा.</p>`;
+                } else {
+                    document.getElementById("countdown_plan_content").innerHTML = `
+                        <p style="color:#1b5e20; font-weight:900;">🏆 पूर्वतयारी टप्पा (${diffDays} Days Remaining):</p>
+                        <p>हळूहळू बैलाचा स्टॅमिना आणि ताकद वाढवण्यावर भर द्या. रोजच्या आहारात हिरवा व सुका चारा संतुलित ठेवा आणि नियमित व्यायाम चालू ठेवा.</p>`;
+                }
+            } else {
+                countdownBox.style.display = "none";
+            }
+
             document.getElementById("btn_pdf_download").style.display = "block";
             document.getElementById("btn_gemini_trigger").style.display = "block";
         } else {

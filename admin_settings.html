@@ -989,7 +989,7 @@
                         <div id="team_members_container">
                             <!-- Dynamic team member fields येतील -->
                         </div>
-                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()">➕ नवीन सदस्य जोडा</button>
+                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()">➕ नवीन सदस्य جوडा</button>
                     </div>
 
                     <button class="btn-prime" onclick="saveModule('M29')">💾 Publish Page Content</button>
@@ -1037,7 +1037,7 @@
                 <!-- 4. वंशावळ व ब्लडलाईन मास्टर लिस्ट (Pedigree Master Database) -->
                 <div class="admin-card" style="border-left: 5px solid #8e24aa;">
                     <h4 style="color:#6a1b9a; border-bottom-color:#e1bee7;">🧬 ४. प्रसिद्ध वंशावळ व ब्लडलाईन मास्टर (Pedigree Master DB)</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">महाराष्ट्रातील प्रसिद्ध वळू व ब्लडलाईन (उदा. <i>माणदेशी खिलार, सोन्या, बंड्या, राजा, बहाद्दूर</i>) यांची नावे येथे جوडा किंवा डिलीट करा.</p>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">महाराष्ट्रातील प्रसिद्ध वळू व ब्लडलाईन (उदा. <i>माणदेशी खिलार, सोन्या, बंड्या, राजा, बहाद्दूर</i>) यांची नावे येथे जोडा किंवा डिलीट करा.</p>
                     <div class="grid-2">
                         <div class="field" style="margin-bottom:0;"><input type="text" id="new_bloodline_input" placeholder="नवीन प्रसिद्ध वळू/वंशावळ नाव टाका..."></div>
                         <button class="btn-prime" style="margin-top:0; background:#8e24aa;" onclick="addKhillarBloodline()">➕ वंशावळ मास्टरमध्ये जोडा</button>
@@ -1185,7 +1185,6 @@
         function saveAdminCroppedImage() {
             if(!adminCropper) return;
 
-            // Save बटण अपडेट करणे (युजरला समजण्यासाठी)
             let saveBtn = document.querySelector('#admin_crop_modal .btn-prime.save') || document.querySelector('#admin_crop_modal button[onclick="saveAdminCroppedImage()"]');
             let originalText = saveBtn.innerHTML;
             saveBtn.innerHTML = "⏳ Uploading...";
@@ -1197,13 +1196,12 @@
                 imageSmoothingQuality: 'high'
             });
 
-            // Canvas चे Blob मध्ये रूपांतर करून Cloudinary वर पाठवणे
             canvas.toBlob(function(blob) {
                 const formData = new FormData();
                 formData.append("file", blob);
-                formData.append("upload_preset", "DugdhdishaAI"); // तुमचा Preset Name
+                formData.append("upload_preset", "DugdhdishaAI");
                 
-                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; // तुमचे Cloud Name
+                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload";
 
                 fetch(cloudinaryUrl, {
                     method: "POST",
@@ -1212,7 +1210,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.secure_url) {
-                        let finalImageSrc = data.secure_url; // Cloudinary ची खरी लिंक
+                        let finalImageSrc = data.secure_url;
 
                         document.getElementById(currentAdminHiddenInputId).value = finalImageSrc;
                         let previewImg = document.getElementById(currentAdminPreviewImgId);
@@ -1285,6 +1283,8 @@
                 if (savedAds && savedAds.ads) {
                     savedAds.ads.splice(uniqueId, 1);
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(savedAds));
+                    // 🔥 FIREBASE CLOUD SAVE 🔥
+                    db.collection("admin_settings").doc("live_admin_ad_images").set(savedAds, { merge: true });
                     loadSavedAds();
                     loadDashboardStats();
                 }
@@ -1323,7 +1323,13 @@
             }
             if(allAds.length === 0) { alert("कृपया किमान १ तरी जाहिरात / मजकूर भरा!"); return; }
             let adPlace = document.getElementById('ad_place').value;
-            localStorage.setItem("live_admin_ad_images", JSON.stringify({ ads: allAds, active: true, place: adPlace }));
+            
+            let adData = { ads: allAds, active: true, place: adPlace };
+            localStorage.setItem("live_admin_ad_images", JSON.stringify(adData));
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("live_admin_ad_images").set(adData, { merge: true })
+            .catch(e => console.error("Cloud ad sync error:", e));
+
             alert(`✅ ${allAds.length} जाहिराती ॲपवर यशस्वीरीत्या लाईव्ह झाल्या आहेत!`);
             loadDashboardStats();
             loadSavedAds(); 
@@ -1332,6 +1338,8 @@
         function removeAds() {
             if(confirm("तुम्हाला नक्की सर्व जाहिराती कायमच्या काढून टाकायच्या आहेत का?")) {
                 localStorage.removeItem("live_admin_ad_images");
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
+                db.collection("admin_settings").doc("live_admin_ad_images").set({ ads: [], active: false }, { merge: true });
                 document.getElementById('dynamic_ads_container').innerHTML = '';
                 addNewAdBlock(); 
                 alert("🗑️ सर्व जाहिराती काढून टाकल्या आहेत.");
@@ -2336,6 +2344,8 @@
             if(!approvedDoctors.includes(number)) {
                 approvedDoctors.push(number);
                 localStorage.setItem('admin_approved_doctors', JSON.stringify(approvedDoctors));
+                // 🔥 FIREBASE CLOUD SAVE 🔥
+                db.collection("admin_settings").doc("admin_approved_doctors").set({ list: approvedDoctors }, { merge: true });
             }
 
             let submissions = JSON.parse(localStorage.getItem("vendor_submitted_cc"));
@@ -2553,7 +2563,7 @@
                 pendingKycList.splice(index, 1);
                 localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
 
-                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता تو प्रॉडक्ट आणि जाहिरात लावू शकतो.");
+                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
                 loadPendingKyc(); 
                 loadAdminNotifications(); 
                 refreshSupplierTable();
@@ -2605,10 +2615,14 @@
             let url = document.getElementById('flash_ad_url').value;
             if(!text) { alert("कृपया फ्लॅश ॲडचा मजकूर भरा!"); return; }
             localStorage.setItem('live_flash_ad', JSON.stringify({text: text, url: url, active: true}));
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("live_flash_ad").set({text: text, url: url, active: true}, { merge: true });
             alert("⚡ फ्लॅश जाहिरात ॲपवर लाईव्ह झाली आहे!");
         }
         function removeFlashAd() {
             localStorage.removeItem('live_flash_ad');
+            // 🔥 FIREBASE CLOUD UPDATE 🔥
+            db.collection("admin_settings").doc("live_flash_ad").set({active: false}, { merge: true });
             document.getElementById('flash_ad_text').value = '';
             document.getElementById('flash_ad_url').value = '';
             alert("🗑️ फ्लॅश जाहिरात काढून टाकली आहे.");
@@ -2623,6 +2637,8 @@
             let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
             rates[pincode] = { courier: courier, charge: parseInt(charge) };
             localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
             alert("✅ पिनकोड दर सेव्ह झाले!");
             document.getElementById('del_pincode').value = ''; document.getElementById('del_charge').value = '';
             loadDeliveryRates(); 
@@ -2647,6 +2663,8 @@
                     }
                 }
                 localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+                // 🔥 FIREBASE CLOUD SAVE 🔥
+                db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
                 alert(`✅ यशस्वी! ${count} नवीन पिनकोडचे दर सिस्टीममध्ये अपलोड झाले आहेत.`);
                 loadDeliveryRates(); fileInput.value = '';
             };
@@ -2663,10 +2681,17 @@
         }
         function deleteDeliveryRate(pin) {
             let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {}; delete rates[pin];
-            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates)); loadDeliveryRates();
+            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
+            // 🔥 FIREBASE CLOUD SAVE 🔥
+            db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
+            loadDeliveryRates();
         }
         function clearAllRates() {
-            if(confirm("सर्व पिनकोड डिलीट करायचे?")) { localStorage.removeItem('admin_delivery_rates'); loadDeliveryRates(); }
+            if(confirm("सर्व पिनकोड डिलीट करायचे?")) { 
+                localStorage.removeItem('admin_delivery_rates'); 
+                db.collection("admin_settings").doc("admin_delivery_rates").delete();
+                loadDeliveryRates(); 
+            }
         }
 
         // --- 🔥 M31: PENDING AD APPROVALS LOGIC 🔥 ---
@@ -2720,6 +2745,8 @@
                     });
                     liveAds.active = true;
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
+                    // 🔥 FIREBASE CLOUD SAVE 🔥
+                    db.collection("admin_settings").doc("live_admin_ad_images").set(liveAds, { merge: true });
                 }
                 
                 alert(`✅ जाहिरात ${adId} मंजूर करून होमपेजवर लाईव्ह केली!`);

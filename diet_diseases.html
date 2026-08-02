@@ -85,6 +85,13 @@
         </div>
     </div>
 
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <div class="permanent-disclaimer">
         💡 <b>माहिती:</b> आहारातील कमतरतेमुळे किंवा चुकीच्या आहारामुळे जनावरांना 'मिल्क फिव्हर', 'कीटोसिस' सारखे चयापचयाचे आजार होतात.
     </div>
@@ -135,6 +142,32 @@
     }
     const db = firebase.firestore();
 
+    function initPage() {
+        syncProducts();
+        
+        // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
+        syncUserSessionFromCloud();
+    }
+
+    function syncUserSessionFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+        }
+    }
+
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -146,10 +179,6 @@
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
-    }
-
-    function initPage() {
-        syncProducts();
     }
 
     // 🔥 Dynamic Ad Generation based on AI Filters (Tags) 🔥
@@ -190,11 +219,24 @@
     }
 
     function showDietAnalysis() {
-        let symptom = document.getElementById('diet_symptom').value;
+        let symptomSelect = document.getElementById('diet_symptom');
+        let symptom = symptomSelect.value;
+        let symptomText = symptomSelect.options[symptomSelect.selectedIndex].text;
+        
         if (!symptom) {
             alert("कृपया प्रथम लक्षणे निवडा.");
             return;
         }
+
+        // 🔥 FIREBASE: LOG SEARCHED DISEASE (CLOUD SYNC)
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("diet_disease_searches").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            searchedDisease: symptomText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging diet search: ", err));
 
         let reportContainer = document.getElementById('ai_report_container');
         let adContainer = document.getElementById('diet_pharma_ad');

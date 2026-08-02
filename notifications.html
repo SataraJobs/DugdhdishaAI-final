@@ -6,6 +6,11 @@
     <title>सूचना | दुग्ध दिशा AI</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
+
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -84,9 +89,34 @@
             margin: 0;
             font-size: 22px;
         }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body>
+<body onload="initNotificationsPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
+
     <div class="notif-page">
         <div class="header-area">
             <button class="back-btn" onclick="history.back()">⬅️ मागे</button>
@@ -96,10 +126,92 @@
         <div id="notif_container"></div>
     </div>
 
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
+        // 🔥 FIREBASE INITIALIZATION 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+            measurementId: "G-6TFEJKBVFL"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
         // वर्तमान युजरची भूमिका (role)
         const CURRENT_ROLE = localStorage.getItem("current_logged_in_role") || 'farmer';
         const EIGHT_DAYS_MS = 8 * 24 * 60 * 60 * 1000;
+
+        // --- 🔥 NEW: PAGE INIT & CLOUD SECURITY WATCHER 🔥 ---
+        function initNotificationsPage() {
+            syncNotificationsFromCloud();
+            loadNotificationsPage();
+        }
+
+        // --- 🔥 NEW: CLOUD DATABASE SYNC & SINGLE-DEVICE SECURITY 🔥 ---
+        function syncNotificationsFromCloud() {
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
+
+            // १. सिंगल डिव्हाईस सेशन वॉचर (सुरक्षा)
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+
+            // २. क्लाऊडवरून 'Broadcast' नोटिफिकेशन्स आणा (`broadcast_notifications`)
+            db.collection("broadcast_notifications").get()
+            .then((querySnapshot) => {
+                let cloudNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+                querySnapshot.forEach((doc) => {
+                    let cData = doc.data();
+                    if(cData.target === 'all' || cData.target === CURRENT_ROLE) {
+                        let exists = cloudNotifs.some(n => n.message === cData.message && n.title === cData.title);
+                        if (!exists) {
+                            cloudNotifs.push(cData);
+                        }
+                    }
+                });
+                localStorage.setItem('system_notifications', JSON.stringify(cloudNotifs));
+                loadNotificationsPage();
+            }).catch(e => console.log("Cloud broadcast sync error:", e));
+
+            // ३. क्लाऊडवरून 'Personal' नोटिफिकेशन्स आणा (`app_notifications`)
+            db.collection("app_notifications")
+            .where("receiver_mobile", "==", userMobile)
+            .get()
+            .then((querySnapshot) => {
+                let cloudNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
+                querySnapshot.forEach((doc) => {
+                    let cData = doc.data();
+                    let exists = cloudNotifs.some(n => n.message === cData.message && n.title === cData.title);
+                    if (!exists) {
+                        cloudNotifs.push(cData);
+                    }
+                });
+                localStorage.setItem('system_notifications', JSON.stringify(cloudNotifs));
+                loadNotificationsPage();
+            }).catch(e => console.log("Cloud private notifications sync error:", e));
+        }
 
         // 8 दिवस जुन्या नोटिफिकेशन्स आपोआप हटवा आणि उरलेली दाखवा
         function loadNotificationsPage() {
@@ -117,8 +229,12 @@
                 localStorage.setItem('system_notifications', JSON.stringify(freshNotifs));
             }
 
-            // फक्त या युजरसाठी (त्याच्या role किंवा 'all' साठी) असलेली नोटिफिकेशन्स
-            let myNotifs = freshNotifs.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+            // फक्त या युजरसाठी (त्याच्या role किंवा 'all' साठी किंवा त्याच्या मोबाईलसाठी) असलेली नोटिफिकेशन्स
+            let myNotifs = freshNotifs.filter(n => 
+                n.target === CURRENT_ROLE || 
+                n.target === 'all' || 
+                n.receiver_mobile === localStorage.getItem("current_user_mobile")
+            );
 
             // नवीनतम वर दिसावी म्हणून उतरता क्रम
             myNotifs.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
@@ -153,13 +269,18 @@
             if (!confirm("तुम्हाला खात्री आहे? सर्व सूचना कायमच्या हटवल्या जातील.")) return;
 
             let allNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            // इतर भूमिकांच्या नोटिफिकेशन्स ठेवा, फक्त CURRENT_ROLE आणि 'all' काढा
-            let remainingNotifs = allNotifs.filter(n => n.target !== CURRENT_ROLE && n.target !== 'all');
+            let userMobile = localStorage.getItem("current_user_mobile");
+            
+            // इतर भूमिकांच्या नोटिफिकेशन्स ठेवा, फक्त CURRENT_ROLE, 'all' आणि 'या युजरची' काढा
+            let remainingNotifs = allNotifs.filter(n => 
+                n.target !== CURRENT_ROLE && 
+                n.target !== 'all' && 
+                n.receiver_mobile !== userMobile
+            );
+            
             localStorage.setItem('system_notifications', JSON.stringify(remainingNotifs));
             loadNotificationsPage();
         }
-
-        window.onload = loadNotificationsPage;
     </script>
     
     <script src="fcm_setup.js"></script>

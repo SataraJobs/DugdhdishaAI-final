@@ -7,6 +7,11 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         .search-box {
             background: #fff;
@@ -90,9 +95,40 @@
         .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
         .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
         .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body onload="loadAdminArticles()">
+<body onload="initLearningCenter()">
+
+<!-- 🔒 सिक्युरिटी चेक: युजर लॉगिन नसेल तर थेट बाहेर काढा -->
+<script>
+    if (!localStorage.getItem("current_user_mobile") || localStorage.getItem("current_user_mobile") === "+91 9XXXX XXXX") {
+        window.location.replace("login.html");
+    }
+</script>
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -181,7 +217,7 @@
     <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">📚 पशुखाद्य व चारा ज्ञान (Articles)</div>
     
     <div class="topic-container" id="articleTopics">
-        <!-- 🔥 Dynamic Admin Articles Will Load Here -->
+        <!-- 🔥 Dynamic Admin & Cloud Articles Will Load Here -->
 
         <button class="accordion">हिरवा चारा आणि सुका चारा यांचे प्रमाण <span>➕</span></button>
         <div class="panel">
@@ -226,13 +262,87 @@
     }
     const db = firebase.firestore();
 
-    // --- 🔥 ADMIN SYNC LOGIC (Load custom articles from Admin Panel) ---
+    function initLearningCenter() {
+        loadAdminArticles();
+        syncLearningCenterFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC & SINGLE-DEVICE SECURITY WATCHER 🔥 ---
+    function syncLearningCenterFromCloud() {
+        // १. युजरचा सिंगल डिव्हाईस सुरक्षा वॉचर (सुरक्षिततेसाठी)
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud security watcher error:", err));
+        }
+
+        // २. 🔥 FIREBASE FIRESTORE वरून रिअल-टाईम लाईव्ह आर्टिकल्स फेच करा (learning_articles Collection) 🔥
+        db.collection("learning_articles").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
+            let articleContainer = document.getElementById('articleTopics');
+            if (!articleContainer) return;
+
+            // जुने डायनॅमिक क्लाऊड आर्टिकल्स (जर आधी लोड झाले असतील तर) हटवा जेणेकरून डुप्लिकेट होणार नाहीत
+            document.querySelectorAll(".cloud-dynamic-article").forEach(el => el.remove());
+
+            querySnapshot.forEach((doc) => {
+                let artData = doc.data();
+                if (!artData.title || !artData.content) return;
+
+                // Accordion Button तयार करा
+                let newAccordionBtn = document.createElement("button");
+                newAccordionBtn.className = "accordion cloud-dynamic-article";
+                newAccordionBtn.innerHTML = `🌟 ${artData.title} <span style="font-size:11px; background:#e8f5e9; color:#1b5e20; padding:2px 6px; border-radius:4px; margin-left:auto; margin-right:8px;">Live</span> <span>➕</span>`;
+                
+                // Panel Content तयार करा
+                let newPanel = document.createElement("div");
+                newPanel.className = "panel cloud-dynamic-article";
+                
+                let contentHtml = `<div style="padding-top:10px;">${artData.content}</div>`;
+                
+                // जर स्पॉन्सर किंवा औषध जाहिरात असेल तर जोडा
+                if (artData.sponsorTitle && artData.sponsorDesc) {
+                    contentHtml += `
+                    <div class="ai-recommendation-box" onclick="window.location.href='${artData.sponsorUrl || 'krushi_mall.html'}'">
+                        <h4>🩺 ${artData.sponsorTitle}</h4>
+                        <p>${artData.sponsorDesc}</p>
+                        <span class="sponsor-tag">Sponsored by ${artData.sponsorBrand || 'Dugdha Disha'}</span>
+                        <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:6px;">मॉलमध्ये पहा ➔</span>
+                    </div>`;
+                }
+
+                newPanel.innerHTML = contentHtml;
+                
+                // सर्वात वर (Top ला) जोडा
+                articleContainer.prepend(newPanel);
+                articleContainer.prepend(newAccordionBtn);
+            });
+
+            // आर्टिकल्स आल्यावर Accordion इव्हेंट लिस्टनर पुन्हा सुरू करा
+            initAccordions();
+        }, (error) => {
+            console.error("Cloud learning articles fetch error:", error);
+        });
+    }
+
+    // --- 🔥 ADMIN SYNC LOGIC (Load custom articles from local Admin Panel M6) ---
     function loadAdminArticles() {
-        // Checking M6 module which holds Custom Admin Content
         let adminKnowledgeData = JSON.parse(localStorage.getItem('admin_data_M6'));
         
         if(adminKnowledgeData && adminKnowledgeData.m6_1 && adminKnowledgeData.m6_2) {
             let articleContainer = document.getElementById('articleTopics');
+            if (!articleContainer) return;
             
             // Create New Accordion for Admin Article
             let newAccordionBtn = document.createElement("button");
@@ -266,61 +376,63 @@
         initAccordions();
     }
 
-    // Accordion Logic
+    // --- 🌟 सुधारित Accordion Logic (Static NodeList व Safe Check वापरून) ---
     function initAccordions() {
-        var acc = document.getElementsByClassName("accordion");
-        for (var i = 0; i < acc.length; i++) {
-            // Remove old listeners to prevent duplicates
-            let newElement = acc[i].cloneNode(true);
-            acc[i].parentNode.replaceChild(newElement, acc[i]);
+        const acc = document.querySelectorAll(".accordion");
+        acc.forEach((item) => {
+            // जुने इव्हेंट लिस्टनर्स काढण्यासाठी क्लोन पद्धत
+            const newElement = item.cloneNode(true);
+            item.parentNode.replaceChild(newElement, item);
             
             newElement.addEventListener("click", function() {
                 this.classList.toggle("active");
-                var panel = this.nextElementSibling;
-                var icon = this.querySelector("span");
+                const panel = this.nextElementSibling;
+                const icon = this.querySelector("span:last-child") || this.querySelector("span");
                 
-                if (panel.style.display === "block") {
+                if (panel && panel.style.display === "block") {
                     panel.style.display = "none";
-                    icon.innerHTML = "➕";
-                } else {
+                    if (icon) icon.innerHTML = "➕";
+                } else if (panel) {
                     panel.style.display = "block";
-                    icon.innerHTML = "➖";
+                    if (icon) icon.innerHTML = "➖";
                 }
             });
-        }
+        });
     }
 
-    // Search Logic (Feature 26) with Firebase Logging
+    // --- 🌟 सुधारित Search Logic (Debounced Cloud Logging सोबत) ---
     let searchTimeout;
     function searchTopics() {
-        let input = document.getElementById('searchInput').value.toLowerCase();
-        let accordions = document.getElementsByClassName('accordion');
+        const input = document.getElementById('searchInput').value.toLowerCase().trim();
+        const accordions = document.querySelectorAll('.accordion');
         
-        for (let i = 0; i < accordions.length; i++) {
-            let title = accordions[i].innerText.toLowerCase();
-            let content = accordions[i].nextElementSibling.innerText.toLowerCase();
+        accordions.forEach((acc) => {
+            const title = acc.innerText.toLowerCase();
+            const panel = acc.nextElementSibling;
+            const content = panel ? panel.innerText.toLowerCase() : "";
+            const icon = acc.querySelector("span:last-child") || acc.querySelector("span");
             
             if (title.includes(input) || content.includes(input)) {
-                accordions[i].style.display = "flex";
+                acc.style.display = "flex";
             } else {
-                accordions[i].style.display = "none";
-                accordions[i].nextElementSibling.style.display = "none"; // Hide panel if open
-                accordions[i].classList.remove("active");
-                accordions[i].querySelector("span").innerHTML = "➕";
+                acc.style.display = "none";
+                if (panel) panel.style.display = "none"; // ओपन असलेला पॅनल बंद करा
+                acc.classList.remove("active");
+                if (icon) icon.innerHTML = "➕";
             }
-        }
+        });
 
         // 🔥 FIREBASE: LOG SEARCH KEYWORD (Debounced)
         clearTimeout(searchTimeout);
-        if(input.trim().length > 2) {
+        if (input.length > 2) {
             searchTimeout = setTimeout(() => {
-                let fName = localStorage.getItem("current_user_name") || "शेतकरी";
-                let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+                const fName = localStorage.getItem("current_user_name") || "शेतकरी";
+                const fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
                 
                 db.collection("learning_searches").add({
                     farmerName: fName,
                     farmerMobile: fMob,
-                    searchQuery: input.trim(),
+                    searchQuery: input,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.error("Firebase Search Log Error: ", e));
             }, 2000); // User थांबल्यावर 2 सेकंदांनी सेव्ह होईल (Data Spam टाळण्यासाठी)
@@ -328,6 +440,6 @@
     }
 </script>
 
-    <script src="fcm_setup.js"></script>
+<script src="fcm_setup.js"></script>
 </body>
 </html>

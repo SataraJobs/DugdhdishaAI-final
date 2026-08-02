@@ -65,9 +65,33 @@
         .notif-bell { font-size: 22px; cursor: pointer; }
         .notif-badge { position: absolute; top: -8px; right: -8px; background: #e65100; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; display: none; }
         .notif-dropdown { display: none; position: absolute; top: 35px; right: 0; background: white; width: 260px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #e0e6ed; z-index: 1000; padding: 12px; text-align: left; color: #333; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="checkVetStatus()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="container">
     <div class="header">
@@ -315,7 +339,7 @@
         }
     }
 
-    // --- 🔥 NEW: SYNC VET PROFILE FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+    // --- 🔥 NEW: SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
     function syncVetProfileFromCloud(doc) {
         if(doc && doc.mobile) {
             db.collection("vet_partners").doc(doc.mobile).get()
@@ -334,6 +358,32 @@
                 }
             })
             .catch(e => console.log("Cloud vet profile sync error: ", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (`users` Collection) 🔥
+            db.collection("users").doc(doc.mobile).onSnapshot((userDoc) => {
+                if (userDoc.exists && userDoc.data()) {
+                    let cloudData = userDoc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud security watcher error:", err));
+
+            // 🔥 NEW: व्हेटर्नरी पार्टनर पेज व्हिजिटचे क्लाऊड लॉगिंग (`vet_partner_activity_logs`) 🔥
+            let fName = localStorage.getItem("current_user_name") || doc.name || "डॉक्टर";
+            db.collection("vet_partner_activity_logs").add({
+                userName: fName,
+                userMobile: doc.mobile,
+                action: "Visited Vet Partner Portal",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
         }
     }
 

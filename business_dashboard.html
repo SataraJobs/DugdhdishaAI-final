@@ -213,6 +213,22 @@
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--b-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
         @media (max-width: 768px) {
             .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
             .sidebar { transform: translateX(-280px); z-index: 1001; }
@@ -235,6 +251,14 @@
 </head>
 <body onload="initializeDashboard()"> 
     
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
+
     <div class="sidebar-overlay" id="sidebar_overlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
@@ -1303,7 +1327,7 @@
             syncPlatformFeeConfigFromCloud();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC ACROSS ALL DEVICES 🔥 ---
+        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
@@ -1366,6 +1390,22 @@
                 });
                 document.getElementById('dash_leads').innerText = myLeads;
             }).catch(e => console.log("Cloud leads sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (व्यापारी डॅशबोर्डवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            if (myMobile && myMobile !== "+91 9XXXX XXXX") {
+                db.collection("users").doc(myMobile).onSnapshot((doc) => {
+                    if (doc.exists && doc.data()) {
+                        let cloudData = doc.data();
+                        let localSessionId = localStorage.getItem("current_session_id");
+                        let cloudSessionId = cloudData.currentSessionId;
+                        if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }
+                    }
+                }, (err) => console.log("Cloud user sync error:", err));
+            }
         }
 
         // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS 🔥 ---
@@ -1703,7 +1743,7 @@
             allProducts.unshift(newProduct);
             localStorage.setItem('vendor_products', JSON.stringify(allProducts));
 
-            // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला جوडा 🔥
+            // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
             .catch(e => console.error("Cloud vendor product save error:", e));
 
@@ -2362,14 +2402,19 @@
             }
 
             let pendingKyc = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-            pendingKyc.push({
+            let newKycReq = {
                 vendorName: localStorage.getItem("current_user_name") || "Unknown Vendor",
                 mobile: localStorage.getItem("current_user_mobile") || "Unknown",
                 gst: gstVal || "Not Provided",
                 date: new Date().toLocaleString(),
                 status: "Pending"
-            });
+            };
+            pendingKyc.push(newKycReq);
             localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKyc));
+            
+            // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST 🔥
+            db.collection("admin_pending_kyc").add(newKycReq)
+            .catch(e => console.error("Cloud KYC save error:", e));
 
             alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
             document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
@@ -2647,6 +2692,9 @@
                 status: "Pending"
             };
             localStorage.setItem("vendor_submitted_cc", JSON.stringify(vendorData));
+            // 🔥 FIREBASE CLOUD SAVE FOR DOCTOR NUMBER REQUEST 🔥
+            db.collection("vendor_submitted_cc").add(vendorData)
+            .catch(e => console.error("Cloud doctor req error:", e));
             
             let msg = document.getElementById("cc_status_msg");
             if(msg) {
@@ -2669,6 +2717,10 @@
             coupons.push({ type: type, code: code, value: val, date: new Date().toLocaleDateString() });
             localStorage.setItem('vendor_coupons', JSON.stringify(coupons));
             
+            // 🔥 FIREBASE CLOUD SAVE FOR COUPON 🔥
+            db.collection("vendor_coupons").add({ type: type, code: code, value: val, date: new Date().toLocaleDateString() })
+            .catch(e => console.error("Cloud coupon save error:", e));
+
             alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
             document.getElementById('coupon_code').value = '';
             document.getElementById('coupon_val').value = '';

@@ -11,6 +11,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <style>
         :root { --primary: #1b5e20; --secondary: #ff9800; --bg: #f4f7f9; --text: #333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; padding-bottom: 70px; color: var(--text); }
@@ -168,14 +175,15 @@
         const db = firebase.firestore();
 
         function initializeOrders() {
-            if(typeof loadNotifications === 'function') loadNotifications('farmer');
+            loadNotifications('farmer');
             loadMyOrders('all');
             
             // 🔥 FIREBASE CLOUD SYNC: पेज उघडताच ऑर्डर्स क्लाऊडवरून आणा 🔥
             syncMyOrdersFromCloud();
+            syncUserNotificationsFromCloud();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE ORDERS SYNC ACROSS ALL DEVICES 🔥 ---
+        // --- 🔥 NEW: CLOUD DATABASE ORDERS SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
         function syncMyOrdersFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
@@ -225,6 +233,43 @@
                     });
                     console.log("Error syncing orders from cloud: ", e);
                 });
+
+                // 🔥 SINGLE DEVICE SESSION WATCHER (माझी खरेदी पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+                db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                    if (doc.exists && doc.data()) {
+                        let cloudData = doc.data();
+                        let localSessionId = localStorage.getItem("current_session_id");
+                        let cloudSessionId = cloudData.currentSessionId;
+                        if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }
+                    }
+                }, (err) => console.log("Cloud user sync error:", err));
+            }
+        }
+
+        // --- 🔥 NEW: CLOUD USER NOTIFICATIONS SYNC ACROSS ALL DEVICES 🔥 ---
+        function syncUserNotificationsFromCloud() {
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+                db.collection("app_notifications")
+                .where("receiver_mobile", "==", userMobile)
+                .get()
+                .then((querySnapshot) => {
+                    let cloudNotifs = [];
+                    querySnapshot.forEach((doc) => {
+                        let n = doc.data();
+                        n.firebaseDocId = doc.id;
+                        cloudNotifs.push(n);
+                    });
+                    if (cloudNotifs.length > 0) {
+                        localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
+                        loadNotifications('farmer');
+                    }
+                })
+                .catch(e => console.log("Error syncing notifications from cloud:", e));
             }
         }
 
@@ -459,9 +504,85 @@
             btnElement.classList.add('active');
             loadMyOrders(status);
         }
+
+        // --- 🔔 CLOUD-FIRST INLINE NOTIFICATIONS LOGIC 🔔 ---
+        function loadNotifications(userRole) {
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let currentUserMobile = localStorage.getItem("current_user_mobile");
+            
+            let userNotifs = appNotifs.filter(n => n.receiver_mobile === currentUserMobile);
+            let unreadCount = userNotifs.filter(n => !n.isRead).length;
+            
+            let badge = document.getElementById("notif_badge");
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = "inline-block";
+                } else {
+                    badge.style.display = "none";
+                }
+            }
+            
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown) {
+                if (userNotifs.length === 0) {
+                    dropdown.innerHTML = "<div style='padding:10px; font-size:12px; color:#666; text-align:center;'>कोणतेही नवीन नोटिफिकेशन नाही.</div>";
+                } else {
+                    let html = "";
+                    userNotifs.reverse().forEach((n, idx) => {
+                        let bg = n.isRead ? "#fff" : "#fff8e1";
+                        let id = n.orderId || idx;
+                        html += `<div style="padding:10px; border-bottom:1px solid #eee; background:${bg}; cursor:pointer;" onclick="markNotifRead('${id}')">
+                                    <div style="font-size:13px; font-weight:bold; color:#d32f2f;">${n.title}</div>
+                                    <div style="font-size:11px; color:#555; margin-top:3px;">${n.message}</div>
+                                    <div style="font-size:9px; color:#999; margin-top:5px; text-align:right;">${n.date}</div>
+                                 </div>`;
+                    });
+                    dropdown.innerHTML = html;
+                }
+            }
+        }
+
+        function toggleNotifications() {
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === "none" || dropdown.style.display === "" ? "block" : "none";
+                if(dropdown.style.display === "block") {
+                    loadNotifications('farmer');
+                }
+            }
+        }
+
+        function markNotifRead(id) {
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let currentUserMobile = localStorage.getItem("current_user_mobile");
+            
+            appNotifs.forEach((n, idx) => {
+                let currentId = n.orderId || idx;
+                if (n.receiver_mobile === currentUserMobile && currentId.toString() === id.toString()) {
+                    n.isRead = true;
+                    if (n.firebaseDocId) {
+                        db.collection("app_notifications").doc(n.firebaseDocId).update({ isRead: true })
+                        .catch(e => console.log("Cloud notif read update error:", e));
+                    }
+                }
+            });
+            
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+            loadNotifications('farmer');
+        }
+
+        document.addEventListener('click', function(event) {
+            let bell = document.querySelector('.top-header div[onclick="toggleNotifications()"]');
+            let dropdown = document.getElementById("notificationDropdown");
+            if (dropdown && dropdown.style.display === 'block') {
+                if (bell && !bell.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
     </script>
 
-    <script src="notifications.js"></script>
     <script src="fcm_setup.js"></script>
 
 </body>

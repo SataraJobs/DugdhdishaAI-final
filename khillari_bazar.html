@@ -483,9 +483,33 @@
             filter: grayscale(0%);
             transform: scale(1.15);
         }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initKhillarBazar()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
 
@@ -669,6 +693,57 @@
     function initKhillarBazar() {
         checkAdPricingRule();
         loadBazarAdsFromCloud();
+        
+        // 🔥 FIREBASE CLOUD SYNC: ॲडमिन सेटिंग्ज आणि सिंगल-डिव्हाईस सेशन सिंक करा 🔥
+        syncKhillariBazarFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncKhillariBazarFromCloud() {
+        // १. ॲडमिनचे ताजे दर (M25) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
+                checkAdPricingRule(); // दर पुन्हा अपडेट करा
+            }
+        }).catch(e => console.log("Cloud price sync error:", e));
+
+        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा (डिव्हाईस बदलले तरी प्लॅन चालू राहील)
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if(doc.exists && doc.data() && doc.data().activePlan) {
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(doc.data().activePlan));
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (शर्यत बैल बाजारात असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+
+            // 🔥 NEW: बाजार व्हिजिटचे क्लाऊड लॉगिंग (bazar_activity_logs) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("bazar_activity_logs").add({
+                userName: fName,
+                userMobile: uMob,
+                action: "Visited Khillar Bull Bazar",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        }
     }
 
     // 3. RENDER CARDS ON SCREEN
@@ -765,10 +840,14 @@
         let notice = document.getElementById("ad_pricing_notice");
         let btnText = document.getElementById("btn_submit_text");
 
-        if (cat === "शर्यतीचा बैल") {
+        // १. ॲडमिनचे ताजे दर तपासा (जर किंमत 0 असेल तर थेट मोफत प्रवेश द्या)
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let khillarPrimePrice = (adminPrices.m25_f_khillar_prime !== undefined && adminPrices.m25_f_khillar_prime !== "") ? parseInt(adminPrices.m25_f_khillar_prime) : 99;
+
+        if (cat === "शर्यतीचा बैल" && khillarPrimePrice > 0) {
             notice.style.display = "block";
-            notice.innerHTML = `🔥 <b>शर्यतीच्या बैलासाठी विशेष ऑफर:</b> फक्त <b>₹९९</b> मध्ये संपूर्ण महाराष्ट्रात जाहिरात प्रसिद्ध करा आणि <b>'ॲडव्हान्स शर्यत रेशन बॅलन्सर'</b> पूर्ण <b>१ महिना (01 Month)</b> मोफत (FREE) अनलॉक करा!`;
-            btnText.innerText = "₹९९ भरून जाहिरात प्रसिद्ध करा";
+            notice.innerHTML = `🔥 <b>शर्यतीच्या बैलासाठी विशेष ऑफर:</b> फक्त <b>₹${khillarPrimePrice}</b> मध्ये संपूर्ण महाराष्ट्रात जाहिरात प्रसिद्ध करा आणि <b>'ॲडव्हान्स शर्यत रेशन बॅलन्सर'</b> पूर्ण <b>१ महिना (01 Month)</b> मोफत (FREE) अनलॉक करा!`;
+            btnText.innerText = `₹${khillarPrimePrice} भरून जाहिरात प्रसिद्ध करा`;
         } else {
             notice.style.display = "block";
             notice.innerHTML = `🎉 <b>मोफत जाहिरात:</b> '${cat}' या वर्गासाठी जाहिरात प्रसिद्ध करणे पूर्णपणे <b>मोफत (FREE)</b> आहे.`;
@@ -809,17 +888,20 @@
             createdAt: new Date().toISOString()
         };
 
-        // जर शर्यतीचा बैल असेल तर ₹९९ चे पेमेंट घ्या
-        if (category === "शर्यतीचा बैल") {
-            triggerRacingBullPayment(newAdObj);
+        // १. ॲडमिनचे ताजे दर तपासा
+        let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
+        let khillarPrimePrice = (adminPrices.m25_f_khillar_prime !== undefined && adminPrices.m25_f_khillar_prime !== "") ? parseInt(adminPrices.m25_f_khillar_prime) : 99;
+
+        // जर शर्यतीचा बैल असेल आणि दर > 0 असेल तर पेमेंट घ्या
+        if (category === "शर्यतीचा बैल" && khillarPrimePrice > 0) {
+            triggerRacingBullPayment(newAdObj, khillarPrimePrice);
         } else {
-            // इतर प्रकारांसाठी मोफत जाहिरात पोस्ट करा
-            publishAdToDatabase(newAdObj, false);
+            // इतर प्रकारांसाठी किंवा दर 0 असल्यास मोफत जाहिरात पोस्ट करा
+            publishAdToDatabase(newAdObj, category === "शर्यतीचा बैल");
         }
     }
 
-    function triggerRacingBullPayment(adObj) {
-        let numAmount = 99;
+    function triggerRacingBullPayment(adObj, numAmount) {
         let userName = adObj.owner || "शेतकरी मित्र";
         let userMobile = adObj.phone || "9999999999";
 
@@ -836,9 +918,10 @@
                 db.collection("successful_payments").add({
                     farmerName: userName,
                     mobile: userMobile,
-                    planName: "Racing Bull Bazar Ad (Rs 99 - 1 Month Free Ration)",
+                    planName: `Racing Bull Bazar Ad (Rs ${numAmount} - 1 Month Free Ration)`,
                     amount: numAmount,
                     paymentId: paymentId,
+                    note: "khillar bazar prime ad",
                     date: new Date().toLocaleString(),
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.log("Firebase log error", e));
@@ -860,17 +943,26 @@
         rzp1.open();
     }
 
-    // 8. PUBLISH AD & UNLOCK 1 MONTH FREE ADVANCE RATION
+    // 8. PUBLISH AD & UNLOCK 1 MONTH FREE ADVANCE RATION (NOW CONNECTED TO FIREBASE CLOUD)
     function publishAdToDatabase(newAd, isPaidRacingBull) {
         allBazarListings.unshift(newAd);
         localStorage.setItem("khillar_bazar_ads", JSON.stringify(allBazarListings));
 
-        // Save to Firebase Cloud
+        // Save to Firebase Cloud (`khillar_bazar_ads` आणि `market_animals` दोन्ही ठिकाणी सेव्ह करा)
         db.collection("khillar_bazar_ads").doc(newAd.id).set(newAd)
-        .then(() => {
-            console.log("✅ जाहिरात क्लाऊडवर सेव्ह झाली.");
-        })
-        .catch(e => console.error("Cloud ad save error:", e));
+        .catch(e => console.error("Cloud khillar bazar ad save error:", e));
+
+        // ॲडमिन पॅनेलच्या M_KHILLAR_ADMIN आणि पशु बाजारात दिसण्यासाठी
+        let marketAnimalObj = {
+            ...newAd,
+            breed: newAd.bloodline,
+            type: newAd.category,
+            farmerName: newAd.owner,
+            mobile: newAd.phone,
+            status: "live"
+        };
+        db.collection("market_animals").doc(newAd.id).set(marketAnimalObj)
+        .catch(e => console.error("Cloud market animals save error:", e));
 
         // जर ₹९९ भरले असतील तर 'ॲडव्हान्स रेशन बॅलन्सर' पूर्ण १ महिन्यासाठी मोफत अनलॉक करा
         if (isPaidRacingBull) {
@@ -885,6 +977,14 @@
                 status: "Active"
             };
             localStorage.setItem('farmer_active_plan', JSON.stringify(freeAdvancePlan));
+
+            // 🔥 FIREBASE CLOUD SAVE: प्लॅन खरेदी झाल्यावर तो थेट क्लाऊड प्रोफाईलला जोडा 🔥
+            let uMob = localStorage.getItem("current_user_mobile");
+            if(uMob) {
+                db.collection("users").doc(uMob).set({
+                    activePlan: freeAdvancePlan
+                }, { merge: true }).catch(e => console.log("Error saving active plan to cloud:", e));
+            }
 
             alert(`🎉 अभिनंदन! तुमच्या शर्यतीच्या बैलाची जाहिरात यशस्वीरीत्या प्रसिद्ध झाली आहे!\n\n🎁 विशेष ऑफर: तुम्हाला 'ॲडव्हान्स शर्यत रेशन बॅलन्सर' पूर्ण १ महिना (01 Month) मोफत (FREE) अनलॉक करण्यात आला आहे!`);
         } else {

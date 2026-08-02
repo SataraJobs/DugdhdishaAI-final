@@ -277,6 +277,14 @@
             <p id="main_subtitle_text">वैज्ञानिक विश्लेषण आणि सविस्तर मार्गदर्शन</p>
         </div>
     </div>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
 <!-- 🔥 3D PREMIUM TABS WITH LOCK INDICATOR 🔥 -->
 <div class="level-tabs">
     <div class="level-tab active basic" id="tab_basic" onclick="setLevel('basic')">🟢 बेसिक<br><span style="font-size:9px; font-weight:bold; color:#666;">(फ्री)</span></div>
@@ -864,20 +872,52 @@
         }
     }
 
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER & API KEY) 🔥 ---
     function initRationBalancer() {
         document.getElementById('pro_inputs').style.display = 'none';
         document.getElementById('adv_inputs').style.display = 'none';
         applyTheme();
         updateTabLockUI();
         
-        // 🔥 FIREBASE CLOUD SYNC: सर्व डिव्हाईसवर किमती एकसारख्या राहण्यासाठी क्लाऊडवरून दर आणा 🔥
+        // १. ॲडमिनचे ताजे दर (M25) क्लाऊडवरून आणा
         db.collection("admin_settings").doc("M25").get().then((doc) => {
             if(doc.exists && doc.data()) {
-                let cloudData = doc.data();
-                localStorage.setItem('admin_data_M25', JSON.stringify(cloudData));
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
                 updateTabLockUI();
             }
-        }).catch(e => console.log("Cloud sync error:", e));
+        }).catch(e => console.log("Cloud price sync error:", e));
+
+        // 🔥 NEW: AI API Key (M16) थेट क्लाऊडवरून आणा 🔥
+        db.collection("admin_settings").doc("M16").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M16', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud API Key sync error:", e));
+
+        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा (डिव्हाईस बदलले तरी प्लॅन चालू राहील)
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if(doc.exists && doc.data() && doc.data().activePlan) {
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(doc.data().activePlan));
+                    updateTabLockUI();
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (रेशन बॅलन्सरवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+        }
     }
 
     function updateTabLockUI() {
@@ -1083,6 +1123,14 @@
         localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
         localStorage.removeItem('farmer_pending_plan');
         
+        // 🔥 FIREBASE CLOUD SAVE: प्लॅन खरेदी झाल्यावर तो थेट क्लाऊड प्रोफाईलला जोडा 🔥
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob) {
+            db.collection("users").doc(uMob).set({
+                activePlan: activePlan
+            }, { merge: true }).catch(e => console.log("Error saving active plan to cloud:", e));
+        }
+
         alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच अनलॉक करण्यात आला आहे!`);
         
         closePaywall();
@@ -1577,14 +1625,14 @@
             rows += addRow('ड्राय मॅटर (DM)', 'Kg', data.reqDM, data.totalDM, 'पोट न भरल्याने दूध उत्पादन घटेल, वजन कमी होईल.');
             rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध आणि SNF कमी होईल, माजावर येण्यास उशीर.');
             rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन कमी होईल, दूध उत्पादन घटेल, अशक्तपणा.');
-            rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या, दूध फॅट कमी.');
+            rows += addRow('خनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या, दूध फॅट कमी.');
             rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
             rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
         } else if (mode === 'adv') {
             rows += addRow('ड्राय मॅटर (DM)', 'Kg', data.reqDM, data.totalDM, 'पोट न भरल्याने दूध उत्पादन घटेल, वजन कमी होईल.');
             rows += addRow('प्रोटीन (CP)', 'ग्रॅम', data.reqCP, data.totalCP, 'दूध SNF कमी, माजावर उशीर.');
             rows += addRow('ऊर्जा (ME)', 'Mcal', data.reqME, data.totalME, 'वजन घटेल, दूध कमी, अशक्तपणा.');
-            rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या.');
+            rows += addRow('خनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या.');
             rows += addRow('NDF (फायबर)', 'Kg', data.reqNDF, data.totalNDF, 'रवंथ बिघडेल, दुधातील फॅट कमी होईल.');
             rows += addRow('ADF (पचनक्षमता)', 'Kg', data.reqADF, data.totalADF, 'पचन मंदावेल, आहाराचा फायदा कमी.');
             rows += addRow('CF (फॅट)', 'ग्रॅम', data.reqCF, data.totalCF, 'दुधातील फॅट कमी, ऊर्जा अपुरी.');

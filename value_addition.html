@@ -42,9 +42,33 @@
         .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
         .vendor-product-flex { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
         .vendor-product-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #64b5f6; background: #fff;}
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body onload="syncProducts()">
+<body onload="initValueAdditionPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     <div class="top-dashboard" style="background: #2e7d32; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
@@ -172,6 +196,51 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // --- 🔥 NEW: INITIALIZE PAGE & SESSION MONITORING 🔥 ---
+    function initValueAdditionPage() {
+        syncProducts();
+        syncValueAdditionFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncValueAdditionFromCloud() {
+        // १. ॲडमिन पॅनेलमधील M12 (दुग्धजन्य पदार्थांचे ताजे दर) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M12").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M12', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M12 sync error:", e));
+
+        // २. सिंगल डिव्हाईस सुरक्षा वॉचर (`users` Collection)
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud security watcher error:", err));
+
+            // ३. 🔥 NEW: मूल्यवर्धन व जोडधंदा पेज व्हिजिटचे क्लाऊड लॉगिंग (`value_addition_activity_logs`) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("value_addition_activity_logs").add({
+                userName: fName,
+                userMobile: userMobile,
+                action: "Visited Value Addition & Allied Business Center",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        }
+    }
 
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
@@ -331,6 +400,19 @@
         
         let vermiRate = 10; // Rs 10 per kg market rate
         let monthlyIncome = monthlyVermi * vermiRate;
+
+        // 🔥 FIREBASE: LOG VERMICOMPOST CALCULATION 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+        db.collection("vermicompost_logs").add({
+            farmerName: fName,
+            farmerMobile: fMob,
+            cowCount: cows,
+            dailyDungKg: dailyDung,
+            monthlyVermiKg: Math.round(monthlyVermi),
+            monthlyIncomeRs: Math.round(monthlyIncome),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Error logging vermicompost calculation: ", err));
 
         document.getElementById('daily_dung').innerText = dailyDung;
         document.getElementById('monthly_vermi').innerText = Math.round(monthlyVermi);

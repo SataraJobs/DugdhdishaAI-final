@@ -11,6 +11,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <style>
         /* --- 🔥 3D & NEUMORPHIC BASE THEME 🔥 --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e0e5ec; margin: 0; padding: 0; }
@@ -113,9 +120,33 @@
         .history-actions { display: flex; gap: 10px; border-top: 1px dashed rgba(163,177,198,0.5); padding-top: 12px; }
         .btn-view { background: linear-gradient(145deg, #2e7d32, #1b5e20); color: white; border: none; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; flex:1; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);}
         .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 45px;}
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -180,6 +211,77 @@
     }
     const db = firebase.firestore();
 
+    function initPage() {
+        document.getElementById('ai_date').valueAsDate = new Date();
+        syncProducts();
+        
+        // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
+        syncUserSessionFromCloud();
+    }
+
+    function syncUserSessionFromCloud() {
+        // १. ॲडमिन पॅनेलमधील M9 (Gestation/Heat Days Config) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M9").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M9', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M9 sync error:", e));
+
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            
+            // २. युजरच्या सर्व AI/Reproduction नोंदी क्लाऊडवरून आणा
+            db.collection("ai_calendar_plans").where("farmerMobile", "==", userMobile).get()
+            .then(querySnapshot => {
+                let cloudPlans = [];
+                querySnapshot.forEach(doc => {
+                    let p = doc.data();
+                    p.firebaseDocId = doc.id;
+                    cloudPlans.push(p);
+                });
+                if(cloudPlans.length > 0) {
+                    // Sort descending by timestamp or aiDateStr
+                    cloudPlans.sort((a, b) => new Date(b.aiDateStr) - new Date(a.aiDateStr));
+                    localStorage.setItem('cow_ai_plans', JSON.stringify(cloudPlans));
+                }
+                loadSavedPlans(); // Always call to render UI
+            })
+            .catch(e => {
+                console.log("Cloud AI plans fetch error:", e);
+                loadSavedPlans(); // Fallback to local
+            });
+
+            // ३. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+
+            // ४. 🔥 NEW: प्रजनन व कॅलेंडर पेज व्हिजिटचे क्लाऊड लॉगिंग (`reproduction_planner_activity_logs`) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("reproduction_planner_activity_logs").add({
+                userName: fName,
+                userMobile: userMobile,
+                action: "Visited 3D Reproduction AI Calendar & Planner",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        } else {
+            loadSavedPlans();
+        }
+    }
+
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -221,12 +323,6 @@
                 </div>`;
         }
         return fallbackHtml; // Return fallback static HTML if no dynamic match is found
-    }
-
-    function initPage() {
-        document.getElementById('ai_date').valueAsDate = new Date();
-        syncProducts();
-        loadSavedPlans();
     }
 
     // --- 🔥 AUTO-SAVE & NOTIFICATION LOGIC 🔥 ---
@@ -274,7 +370,7 @@
 
         // 1. Save to LocalStorage for AI Plans
         let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
-        savedPlans.push(planData);
+        savedPlans.unshift(planData);
         localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
 
         // 2. 🔥 GLOBAL INTEGRATION: Save to 'My Animals' 🔥
@@ -291,14 +387,27 @@
         // 3. 🔥 FIREBASE: LOG AI CALENDAR PLAN 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
-        db.collection("ai_calendar_plans").add({
+        
+        let firebaseData = {
+            ...planData,
             farmerName: fName,
             farmerMobile: fMob,
-            cowName: cowId,
-            aiType: typeText,
-            aiDate: dateInput,
+            aiType: typeText, // Store readable text too
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.error("Error logging AI plan: ", err));
+        };
+        
+        db.collection("ai_calendar_plans").add(firebaseData)
+        .then((docRef) => {
+            // Update local object with firebase id for future deletion
+            let updatedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
+            let index = updatedPlans.findIndex(p => p.id === timestampId);
+            if(index > -1) {
+                updatedPlans[index].firebaseDocId = docRef.id;
+                localStorage.setItem('cow_ai_plans', JSON.stringify(updatedPlans));
+                loadSavedPlans(); // Refresh list to attach correct ID to delete button
+            }
+        })
+        .catch(err => console.error("Error logging AI plan: ", err));
 
         alert(`✅ ${cowId} चे वेळापत्रक सेव्ह झाले आहे! याच्या सर्व नोटिफिकेशन्स डॅशबोर्डवर आपोआप येतील.`);
         
@@ -493,8 +602,16 @@
                 // Delete old plan
                 let cowName = savedPlans[index].cowName;
                 let aiType = savedPlans[index].type;
+                let fbId = savedPlans[index].firebaseDocId;
+                
                 savedPlans.splice(index, 1);
                 localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
+
+                // Delete from cloud
+                if(fbId) {
+                    db.collection("ai_calendar_plans").doc(fbId).delete()
+                    .catch(e => console.log("Error deleting old plan:", e));
+                }
                 
                 // Set inputs for new creation
                 document.getElementById('cow_id').value = cowName;
@@ -532,7 +649,7 @@
                         </div>
                         <div class="history-actions">
                             <button class="btn-view" onclick="generateTimelineUI(${planStr})">पहा</button>
-                            <button class="btn-delete" onclick="deletePlan(${plan.id})">🗑️</button>
+                            <button class="btn-delete" onclick="deletePlan(${plan.id}, '${plan.firebaseDocId || ''}')">🗑️</button>
                         </div>
                     </div>`;
             });
@@ -541,14 +658,30 @@
         }
     }
 
-    function deletePlan(id) {
+    function deletePlan(id, firebaseDocId) {
         if(confirm("तुम्हाला खरोखर हे रेकॉर्ड डिलीट करायचे आहे का? (याच्या नोटिफिकेशन्स सुद्धा बंद होतील)")) {
             let savedPlans = JSON.parse(localStorage.getItem('cow_ai_plans')) || [];
             savedPlans = savedPlans.filter(p => p.id !== id);
             localStorage.setItem('cow_ai_plans', JSON.stringify(savedPlans));
+
+            // Delete from Firebase
+            if(firebaseDocId) {
+                db.collection("ai_calendar_plans").doc(firebaseDocId).delete()
+                .catch(e => console.log("Cloud delete error:", e));
+            } else {
+                // If it doesn't have local fb id but might be on cloud, try query
+                let userMobile = localStorage.getItem("current_user_mobile");
+                if (userMobile) {
+                    db.collection("ai_calendar_plans").where("farmerMobile", "==", userMobile).where("id", "==", id).get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => doc.ref.delete());
+                    }).catch(e => console.log(e));
+                }
+            }
             
             document.getElementById('timelineResult').style.display = "none";
             loadSavedPlans();
+            alert("✅ रेकॉर्ड यशस्वीरीत्या डिलीट झाले.");
         }
     }
 </script>

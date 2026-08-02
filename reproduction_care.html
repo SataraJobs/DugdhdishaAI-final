@@ -72,9 +72,33 @@
         .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
 
         .disclaimer { font-size: 11px; color: #666; text-align: center; border-top: 1px dashed #ccc; padding-top: 15px; font-weight: bold; background: #fff8e1; border-radius: 8px; padding-bottom: 15px; margin-top: 20px;}
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body onload="syncProducts()">
+<body onload="initReproductionCarePage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
 
@@ -174,6 +198,71 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // --- 🔥 NEW: INITIALIZE PAGE & SESSION MONITORING 🔥 ---
+    function initReproductionCarePage() {
+        syncProducts();
+        syncReproductionCareFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncReproductionCareFromCloud() {
+        // १. ॲडमिन पॅनेलमधील M16 (Gemini API Key), M6 (custom disease articles) आणि M25 (Plan settings) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M16").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M16', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M16 sync error:", e));
+
+        db.collection("admin_settings").doc("M6").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M6', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M6 sync error:", e));
+
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M25 sync error:", e));
+
+        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा
+        let uMob = localStorage.getItem("current_user_mobile");
+        if (uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if (doc.exists && doc.data() && doc.data().activePlan) {
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(doc.data().activePlan));
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (प्रजनन सल्लागार पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+
+            // 🔥 NEW: प्रजनन सल्लागार पेज व्हिजिटचे क्लाऊड लॉगिंग (`reproduction_care_activity_logs`) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("reproduction_care_activity_logs").add({
+                userName: fName,
+                userMobile: uMob,
+                action: "Visited Reproduction Care Center",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        }
+    }
 
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {

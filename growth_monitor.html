@@ -114,9 +114,33 @@
         .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
         .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
         .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+
+        /* 🔥 NEW: Session Security Alert Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     <div class="top-dashboard" style="background: #1b5e20; padding: 20px; color: white; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
@@ -126,6 +150,13 @@
             <p style="margin:5px 0 0; color:#c8e6c9;">जनावरांच्या आरोग्याचा ग्रोथ आलेख</p>
         </div>
     </div>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
 
     <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 15px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">नवीन नोंद करा</div>
     <div class="form-section">
@@ -190,6 +221,29 @@
     }
     const db = firebase.firestore();
 
+    // 🔥 NEW: Single-Device Session & Real-time Security (onSnapshot) 🔥
+    function syncUserSessionFromCloud() {
+        let mobile = localStorage.getItem("current_user_mobile");
+        let localSessionId = localStorage.getItem("currentSessionId") || localStorage.getItem("current_session_id");
+        if (!mobile || mobile === "+91 9XXXX XXXX") return;
+
+        db.collection("users").doc(mobile).onSnapshot((doc) => {
+            if (doc.exists) {
+                let data = doc.data();
+                if (data.currentSessionId && localSessionId && data.currentSessionId !== localSessionId) {
+                    let alertBox = document.getElementById("sessionAlertBox");
+                    if (alertBox) alertBox.style.display = "flex";
+                    setTimeout(() => {
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }, 3000);
+                }
+            }
+        }, (error) => {
+            console.error("Session sync error:", error);
+        });
+    }
+
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -206,6 +260,7 @@
     function initPage() {
         syncProducts();
         loadAnimalsIntoDropdown();
+        syncUserSessionFromCloud(); // 🔥 NEW: रियल-टाईम सुरक्षा वॉचर सुरू
     }
 
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
@@ -249,12 +304,23 @@
         
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
-            if (key.startsWith("cow_") || key.startsWith("calf_")) {
+            if (key.startsWith("cow_") || key.startsWith("calf_") || key === "my_cattle_list") {
                 try {
-                    let animal = JSON.parse(localStorage.getItem(key));
-                    let typeIcon = animal.type === 'buffalo' ? '🐃' : (animal.type === 'calf' ? '🍼' : '🐄');
-                    optionsHtml += `<option value="${key}">${typeIcon} ${animal.breed} (टॅग: ${animal.tag})</option>`;
-                    found = true;
+                    let animals = JSON.parse(localStorage.getItem(key));
+                    // If it's the global list
+                    if(key === "my_cattle_list" && Array.isArray(animals)){
+                        animals.forEach(a => {
+                           let typeIcon = a.type === 'buffalo' ? '🐃' : (a.type === 'calf' ? '🍼' : '🐄');
+                           optionsHtml += `<option value="${a.id}">${typeIcon} ${a.name}</option>`;
+                           found = true;
+                        });
+                    } 
+                    // Support old format too
+                    else if(!Array.isArray(animals) && animals.type) {
+                        let typeIcon = animals.type === 'buffalo' ? '🐃' : (animals.type === 'calf' ? '🍼' : '🐄');
+                        optionsHtml += `<option value="${key}">${typeIcon} ${animals.breed || 'जनावर'} (टॅग: ${animals.tag || animals.name})</option>`;
+                        found = true;
+                    }
                 } catch(e) {}
             }
         }
@@ -324,6 +390,20 @@
         // 🔥 FIREBASE: Save Record 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+
+        // 🔥 NEW: BCS नोंदींचे क्लाऊड लॉगिंग (bcs_history Collection) 🔥
+        if (bcs) {
+            db.collection("bcs_history").add({
+                farmerName: fName,
+                farmerMobile: fMob,
+                animal: animalText,
+                bcs_score: bcs,
+                stage: "growth_monitoring",
+                weight: weight,
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => console.error("BCS history save error:", err));
+        }
 
         db.collection("growth_records").add({
             farmerName: fName,

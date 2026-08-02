@@ -26,7 +26,7 @@
         /* 🔥 FIXED IMAGE CONTAINER 🔥 */
         .image-container { text-align: center; margin-bottom: 20px; background:#fafafa; border-radius: 12px; padding: 10px; border: 1px solid #eee;}
         .img-wrapper { width: 100%; height: 220px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: #fff; border: 2px dashed #ccc; overflow: hidden;}
-        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; } /* object-fit: contain fixes the cutting issue */
+        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
         .image-caption { font-size: 12px; color: #666; margin-top: 10px; font-weight: bold; }
 
         .input-row { margin-bottom: 20px; }
@@ -102,9 +102,33 @@
         .vendor-ad-box .buy-now-btn { background: #1976d2; box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3); }
         .vendor-product-flex { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
         .vendor-product-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body>
+<body onload="initPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -119,14 +143,12 @@
     <div class="category-title">१. खालील चित्रावरून गाईचा स्कोअर ओळखा</div>
     <div class="form-section">
         <div class="image-container">
-            <!-- 🔥 FIXED IMAGE TAG 🔥 -->
             <div class="img-wrapper">
                 <img src="bcs.png" alt="BCS Image Guide" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'color:#999;\'>BCS Image Placeholder (bcs.png)</span>';">
             </div>
             <div class="image-caption">चित्रातील हाडांच्या स्थितीवरून तुमच्या जनावराची तुलना करा.</div>
         </div>
 
-        <!-- NEW ADDITIONAL PARAMETER -->
         <div class="input-row">
             <label>जनावराची सध्याची अवस्था काय आहे?</label>
             <select id="cow_stage" onchange="hideResult()">
@@ -154,7 +176,7 @@
     <div class="result-box" id="result_output">
         <h3 class="result-title">📋 AI आरोग्य अहवाल व आहार सल्ला</h3>
         <div id="ai_report_container"></div>
-        <div id="dynamic_ad_container"></div> <!-- 🔥 AD CONTAINER 🔥 -->
+        <div id="dynamic_ad_container"></div>
     </div>
 
 </div>
@@ -179,6 +201,34 @@
     }
     const db = firebase.firestore();
 
+    function initPage() {
+        syncProducts();
+        syncUserSessionFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION WATCHER) 🔥 ---
+    function syncUserSessionFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+        }
+    }
+
     // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
     function syncProducts() {
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -191,20 +241,16 @@
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
     }
-    syncProducts();
 
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
     function generateDynamicAd(targetTag, defaultHtml) {
         let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-        
-        // Find a product that contains the specific tag in its aiFilters array
         let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
         
         if (matchedProduct) {
             let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
             let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
             
-            // Generate Vendor Ad UI (linking to krushi mall)
             return `
                 <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
                     <h4>✨ तुमच्या जनावरासाठी सुचवलेले</h4>
@@ -221,8 +267,6 @@
                     </div>
                 </div>`;
         }
-        
-        // Return default static AD if no vendor product matches
         return defaultHtml;
     }
 
@@ -245,27 +289,23 @@
         let defaultAdHtml = "";
         let targetFilterTag = "";
 
-        // 🔥 DETAILED ESSAY-TYPE ADVICE & DYNAMIC AD INJECTION 🔥
         if (score === "1") {
             html = `
                 <div class="ai-action-card danger">
                     <div class="ai-action-title">🚨 स्कोअर १: अतिशय अशक्त (Emaciated)</div>
                     <b>धोक्याची पातळी: अत्यंत गंभीर</b><br>
-                    जनावराची प्रकृती अत्यंत गंभीर आहे. तिच्या शरीरातील सर्व चरबी आणि स्नायू संपले आहेत. 
-                    याचा थेट परिणाम म्हणजे दूध उत्पादन पूर्णपणे थांबेल, गाय माजावर येणार नाही आणि तिची प्रतिकारशक्ती संपल्यामुळे ती इतर आजारांना (उदा. कीटोसिस, मिल्क फिव्हर) सहज बळी पडेल.<br><br>
-                    <b>संभाव्य कारणे:</b> पोटातील जंतांचा प्रचंड प्रादुर्भाव, यकृताचा (Liver) जुना आजार किंवा आहारातून आवश्यक तेवढी ऊर्जा (Energy) न मिळणे.
+                    जनावराची प्रकृती अत्यंत गंभीर आहे. तिच्या शरीरातील सर्व चरबी आणि स्नायू संपले आहेत...
                     <div class="action-tags">
                         <span class="tag-up">🔺 तातडीने जंतनिर्मूलन (Deworming) करा</span>
                         <span class="tag-up">🔺 पशुवैद्यकीय डॉक्टरांकडून तपासणी करा</span>
                         <span class="tag-up">🔺 ऊर्जायुक्त आहार व बायपास फॅट द्या</span>
                     </div>
                 </div>`;
-                
-            targetFilterTag = "Weight_BypassFat"; // Look for Bypass Fat or weight gain products
+            targetFilterTag = "Weight_BypassFat";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>⚡ जलद ऊर्जा आणि वजन वाढ</h4>
-                    <p>अत्यंत अशक्त जनावराचे वजन भरून काढण्यासाठी आणि ऊर्जा देण्यासाठी <b>Virbac Energy Booster</b> किंवा उच्च दर्जाचे <b>बायपास फॅट</b> आजच सुरू करा.</p>
+                    <p>अत्यंत अशक्त जनावराचे वजन भरून काढण्यासाठी <b>Virbac Energy Booster</b> किंवा उच्च दर्जाचे <b>बायपास फॅट</b> आजच सुरू करा.</p>
                     <div class="sponsor-bottom-row">
                         <span class="sponsor-tag">Sponsored by Virbac</span>
                         <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
@@ -273,25 +313,17 @@
                 </div>`;
         } 
         else if (score === "2") {
-            let stageAdvice = "";
-            if(stage === 'milking') stageAdvice = "दूध देण्यासाठी ती स्वतःच्या शरीरातील चरबी वितळवून ऊर्जा वापरत মাঠে. यामुळे गाय वेळेवर गाभण राहण्यास मोठी अडचण येईल.";
-            if(stage === 'dry') stageAdvice = "गाभण काळात हा स्कोअर खूपच कमी आहे. गाय विताना अशक्त असेल आणि विल्यानंतर दूध खूप कमी देईल.";
-            if(stage === 'heifer') stageAdvice = "कालवडीची वाढ खुंटली आहे. यामुळे ती लवकर माजावर येणार नाही आणि पहिले वेत उशिरा होईल.";
-
             html = `
                 <div class="ai-action-card warning">
                     <div class="ai-action-title">⚠️ स्कोअर २: अशक्त (Under-conditioned)</div>
                     <b>धोक्याची पातळी: मध्यम</b><br>
-                    जनावर थोडे अशक्त आहे. ${stageAdvice}<br><br>
-                    <b>काय करावे?</b><br>
-                    गाईच्या आहारात ऊर्जा (Energy) वाढवणे गरजेचे आहे. खाद्यामध्ये मका भरडा किंवा कार्बोहायड्रेट्सचे प्रमाण वाढवा. रवंथ सुधारण्यासाठी चांगल्या प्रतीचा हिरवा चारा आणि सुका चारा (उदा. ज्वारीचा कडबा) योग्य प्रमाणात द्या.
+                    जनावर थोडे अशक्त आहे. गायीच्या आहारात ऊर्जा (Energy) वाढवणे गरजेचे आहे.
                     <div class="action-tags">
                         <span class="tag-up">🔺 मका भरडा / चुनी (Energy) वाढवा</span>
                         <span class="tag-up">🔺 चांगल्या प्रतीचा हिरवा चारा वाढवा</span>
                     </div>
                 </div>`;
-                
-            targetFilterTag = "Fat_SNF"; // Suggest feed or SNF increasing products
+            targetFilterTag = "Fat_SNF";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🌾 दूध आणि आरोग्य टिकवा</h4>
@@ -303,17 +335,13 @@
                 </div>`;
         } 
         else if (score === "3") {
-            let extraText = (stage === 'dry') ? "<br><br><b>टीप:</b> आटवलेल्या गाईचा स्कोअर विण्यापूर्वी साधारण ३.२ ते ३.५ च्या दरम्यान असणे जास्त फायद्याचे असते, जेणेकरून वेतानंतर येणारा अशक्तपणा ती सहन करू शकेल." : "";
-            
             html = `
                 <div class="ai-action-card success">
                     <div class="ai-action-title">✅ स्कोअर ३: आदर्श स्थिती (Ideal)</div>
                     <b>स्थिती: अतिशय उत्तम</b><br>
-                    उत्कृष्ट! जनावराचे शरीर अगदी प्रमाणबद्ध आहे. अशा स्थितीत गाय वेळेवर माजावर येते, पहिल्याच रेतनात (AI) गाभण राहते आणि दुधाचे उत्पादनही सर्वोच्च असते.${extraText}<br><br>
-                    <b>सल्ला:</b> सध्या देत असलेला आहार (रेशन) असाच चालू ठेवा. आहारात अचानक कोणतेही मोठे बदल करू नका.
+                    उत्कृष्ट! जनावराचे शरीर अगदी प्रमाणबद्ध आहे. अशा स्थितीत गाय वेळेवर माजावर येते.
                 </div>`;
-                
-            targetFilterTag = "Daily_Ration_Mineral"; // Suggest regular Daily Minerals
+            targetFilterTag = "Daily_Ration_Mineral";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>⭐ हीच स्थिती कायम ठेवण्यासाठी</h4>
@@ -325,26 +353,21 @@
                 </div>`;
         } 
         else if (score === "4") {
-            let extraText = (stage === 'dry') ? "<br><br><b>गंभीर धोका:</b> गाय गाभण असल्यास विताना (Calving) तिला खूप त्रास होऊ शकतो. 'मिल्क फिव्हर' आणि 'कीटोसिस' सारखे घातक आजार होण्याची शक्यता ८०% वाढते." : "यामुळे यकृतावर (Liver) ताण येतो आणि दूध उत्पादन घटते.";
-            
             html = `
                 <div class="ai-action-card warning">
                     <div class="ai-action-title">⚠️ स्कोअर ४: लठ्ठ (Over-conditioned)</div>
                     <b>धोक्याची पातळी: मध्यम</b><br>
-                    जनावर गरजेपेक्षा जास्त लठ्ठ आहे. पाठीवर आणि खुब्यावर खूप जास्त चरबी जमा झाली आहे. ${extraText}<br><br>
-                    <b>काय करावे?</b><br>
-                    पेंड, सरकी आणि मक्याचे प्रमाण थोडे कमी करा. हिरवा आणि सुका चारा जास्त द्या. जनावराला थोडे फिरवणे (व्यायाम) गरजेचे आहे.
+                    जनावर गरजेपेक्षा जास्त लठ्ठ आहे. पेंड, सरकी आणि मक्याचे प्रमाण थोडे कमी करा.
                     <div class="action-tags">
                         <span class="tag-down">🔻 पेंड आणि कार्बोहायड्रेट्स (मका) थोडे कमी करा</span>
-                        <span class="tag-up">🔺 जनावराला थोडा व्यायाम (मोकळे सोडणे) द्या</span>
+                        <span class="tag-up">🔺 जनावराला थोडा व्यायाम द्या</span>
                     </div>
                 </div>`;
-                
-            targetFilterTag = "Poisoning_Liver"; // Suggest Liver Tonic
+            targetFilterTag = "Poisoning_Liver";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🩺 यकृताची काळजी (Liver Protection)</h4>
-                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हर (Fatty Liver) चा मोठा धोका असतो. यकृताच्या संरक्षणासाठी <b>Himalaya Liv.52</b> किंवा चांगले लिव्हर टॉनिक वापरून पहा.</p>
+                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हरचा धोका असतो. संरक्षणासाठी <b>Himalaya Liv.52</b> किंवा चांगले लिव्हर टॉनिक वापरून पहा.</p>
                     <div class="sponsor-bottom-row">
                         <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
                         <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
@@ -356,21 +379,17 @@
                 <div class="ai-action-card danger">
                     <div class="ai-action-title">🚨 स्कोअर ५: अतिलठ्ठ (Obese)</div>
                     <b>धोक्याची पातळी: अत्यंत गंभीर</b><br>
-                    गाय खूपच लठ्ठ झाली आहे. हाडांची रचना चरबीमुळे पूर्णपणे झाकली गेली आहे. 
-                    यामुळे यकृताचे आजार (Fatty Liver) आणि कासदाह (Mastitis) होण्याची शक्यता खूप जास्त असते. अशा गाई गाभण राहण्यात मोठ्या अडचणी येतात आणि विताना त्यांना जिवघेणा त्रास होऊ शकतो.<br><br>
-                    <b>काय करावे?</b><br>
-                    जनावराचे पशुखाद्य (Concentrates) तातडीने निम्म्यावर आणा. फक्त उच्च प्रतीचा सुका चारा (Hay) आणि थोडा हिरवा चारा द्या. डॉक्टरांच्या सल्ल्याने यकृताचे उपचार सुरू करा.
+                    गाय खूपच लठ्ठ झाली आहे. पशुखाद्य तातडीने निम्म्यावर आणा.
                     <div class="action-tags">
-                        <span class="tag-down">🔻 पशुखाद्य (Concentrates) तातडीने कमी करा</span>
+                        <span class="tag-down">🔻 पशुखाद्य तातडीने कमी करा</span>
                         <span class="tag-up">🔺 फक्त उच्च प्रतीचा सुका/हिरवा चारा द्या</span>
                     </div>
                 </div>`;
-                
-            targetFilterTag = "Poisoning_Liver"; // Suggest Liver Tonic
+            targetFilterTag = "Poisoning_Liver";
             defaultAdHtml = `
                 <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
                     <h4>🩺 यकृताची काळजी (Liver Protection)</h4>
-                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हर (Fatty Liver) चा धोका असतो. यकृताच्या सुरक्षिततेसाठी आणि पचन सुधारण्यासाठी <b>Himalaya Liv.52</b> आजच सुरू करा.</p>
+                    <p>लठ्ठ गाईंमध्ये फॅटी लिव्हरचा धोका असतो. सुरक्षिततेसाठी <b>Himalaya Liv.52</b> आजच सुरू करा.</p>
                     <div class="sponsor-bottom-row">
                         <span class="sponsor-tag">Sponsored by Himalaya Vet</span>
                         <div class="buy-now-btn">मॉलमध्ये पहा ➔</div>
@@ -379,13 +398,9 @@
         }
 
         reportContainer.innerHTML = html;
-        
-        // 🔥 Generate Ad matching the AI Tag, if no product found, show default ad 🔥
         adContainer.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml);
-        
         document.getElementById('result_output').style.display = "block";
         
-        // 🔥 Firebase: Save User's BCS History
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
         db.collection("bcs_history").add({
@@ -397,13 +412,11 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(err => console.error("Error saving BCS record: ", err));
 
-        // Timeout to let display update before scrolling
         setTimeout(() => {
             document.getElementById('result_output').scrollIntoView({behavior: "smooth", block: "start"});
         }, 100);
     }
 </script>
-
-    <script src="fcm_setup.js"></script>
+<script src="fcm_setup.js"></script>
 </body>
 </html>

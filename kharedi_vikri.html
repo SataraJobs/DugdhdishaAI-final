@@ -10,6 +10,13 @@
     <!-- 🔥 RAZORPAY SDK 🔥 -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <style>
         :root{ --green:#2e7d32; --blue:#1976d2; --orange:#e65100; --bg:#f4f7f6; --card:#fff; --text:#222; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 85px !important;}
@@ -217,7 +224,45 @@
     let pendingPlanType = "Monthly";
 
     function initializeMarketPage() {
-        checkActivePlanOnLoad();
+        // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
+        syncMarketDataFromCloud();
+    }
+
+    function syncMarketDataFromCloud() {
+        // १. ॲडमिनचे ताजे दर (M25) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if(doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
+                checkActivePlanOnLoad(); // Update price UI immediately
+            }
+        }).catch(e => console.log("Cloud price sync error:", e));
+
+        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if(doc.exists && doc.data() && doc.data().activePlan) {
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(doc.data().activePlan));
+                    checkActivePlanOnLoad();
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+        }
+
+        // 3. Load Market Data
         loadRealMarketAnimals();
     }
 
@@ -240,7 +285,7 @@
         container.innerHTML = `<div style="text-align:center; padding: 30px; color:#666;">⏳ बाजार लोड होत आहे...</div>`;
 
         // Firestore मधील market_animals कलेक्शनमधून डेटा फेच करणे
-        db.collection("market_animals").get()
+        db.collection("market_animals").orderBy("timestamp", "desc").get()
         .then((querySnapshot) => {
             let liveAnimals = [];
             querySnapshot.forEach((doc) => {
@@ -252,65 +297,7 @@
             // बॅकअपसाठी LocalStorage मध्ये सुद्धा अपडेट ठेवणे
             localStorage.setItem('market_animals', JSON.stringify(liveAnimals));
 
-            if(liveAnimals.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding: 40px 20px; color:#888;"><div style="font-size: 50px; margin-bottom: 10px; filter: grayscale(100%);">🐄</div><div style="font-weight:bold; font-size: 16px;">सध्या कोणतीही जाहिरात नाही.</div></div>`;
-                return;
-            }
-
-            let html = '';
-            liveAnimals.forEach(animal => {
-                let identifier = animal.firebaseDocId || animal.id;
-                let isSold = (animal.status === 'sold');
-                
-                // "बाजार" टॅबमध्ये विकलेली जनावरे दाखवायची नाहीत
-                if(currentTab === 'buy' && isSold) return;
-
-                let urgentBadge = animal.isUrgent ? `<div class="urgent-badge">URGENT</div>` : '';
-                let imageSrc = (animal.images && animal.images[0]) ? animal.images[0] : 'https://via.placeholder.com/600x400?text=No+Photo';
-                let photoCount = animal.images ? animal.images.length : 0;
-                
-                let safeImagesString = encodeURIComponent(JSON.stringify(animal.images || []));
-
-                let actionButtons = '';
-                if(currentTab === 'my-ads' && !isSold) {
-                    actionButtons = `
-                    <div class="action-btns">
-                        <button class="sold-btn" onclick="markAsSold('${identifier}')">✅ विकले (Sold)</button>
-                        <button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ डिलीट (Delete)</button>
-                    </div>`;
-                } else if (currentTab === 'my-ads' && isSold) {
-                    actionButtons = `<div class="action-btns"><button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ कायमचे डिलीट करा</button></div>`;
-                }
-
-                let soldOverlay = isSold ? `<div class="sold-overlay"><div class="sold-stamp">SOLD</div></div>` : '';
-                let callButton = !isSold ? `<a href="tel:+91${animal.mobile}" class="call-btn">📞 मालकाला कॉल करा</a>` : '';
-
-                html += `
-                <div class="card">
-                    ${urgentBadge}
-                    
-                    <div class="card-img" onclick="openImageViewer('${safeImagesString}')">
-                        ${soldOverlay}
-                        <img src="${imageSrc}" alt="${animal.breed}">
-                        ${photoCount > 1 ? `<div class="photo-count">📸 +${photoCount - 1} फोटो</div>` : ''}
-                        <div class="price-tag">₹ ${animal.price}</div>
-                    </div>
-                    
-                    <div class="card-content">
-                        <h3 class="card-title">${animal.breed} (${animal.type}) <span class="location">📍 ${animal.location}</span></h3>
-                        <div class="details-grid">
-                            <div class="detail-item">दूध: <strong>${animal.milk || '-'} लिटर</strong></div>
-                            <div class="detail-item">वेत: <strong>${animal.lactation || '-'}</strong></div>
-                            <div class="detail-item">दात: <strong>${animal.teeth || '-'}</strong></div>
-                            <div class="detail-item">गाभण: <strong>${animal.pregnant || '-'}</strong></div>
-                        </div>
-                        ${callButton}
-                        ${actionButtons}
-                    </div>
-                </div>`;
-            });
-            
-            container.innerHTML = html === '' ? '<div style="text-align:center; padding: 20px; color:#888;">कोणतेही जनावर सापडले नाही.</div>' : html;
+            renderMarketAnimals(liveAnimals, container);
         })
         .catch((error) => {
             console.error("Error getting documents: ", error);
@@ -318,8 +305,109 @@
             let liveAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
             if(liveAnimals.length === 0) {
                 container.innerHTML = `<div style="text-align:center; padding: 30px; color:#d32f2f;">❌ डेटा लोड करण्यात अडचण आली. कृपया इंटरनेट तपासा.</div>`;
+            } else {
+                renderMarketAnimals(liveAnimals, container);
             }
         });
+    }
+
+    function renderMarketAnimals(liveAnimals, container) {
+        if(liveAnimals.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 40px 20px; color:#888;"><div style="font-size: 50px; margin-bottom: 10px; filter: grayscale(100%);">🐄</div><div style="font-weight:bold; font-size: 16px;">सध्या कोणतीही जाहिरात नाही.</div></div>`;
+            return;
+        }
+
+        let html = '';
+        let currentUserMobile = localStorage.getItem("current_user_mobile");
+
+        liveAnimals.forEach(animal => {
+            let identifier = animal.firebaseDocId || animal.id;
+            let isSold = (animal.status === 'sold');
+            
+            // "बाजार" टॅबमध्ये विकलेली जनावरे दाखवायची नाहीत
+            if(currentTab === 'buy' && isSold) return;
+
+            // "माझ्या जाहिराती" टॅबमध्ये फक्त स्वतःच्या जाहिराती दाखवा
+            if(currentTab === 'my-ads') {
+                let isMyAd = false;
+                // Format check - standardize mobile numbers to compare safely
+                let adMob = (animal.mobile || animal.phone || "").toString().replace("+91", "").trim();
+                let myMob = (currentUserMobile || "").toString().replace("+91 ", "").replace("+91", "").trim();
+                
+                if (adMob === myMob || animal.farmerMobile === currentUserMobile) {
+                    isMyAd = true;
+                }
+                
+                if(!isMyAd) return; // Skip if not my ad
+            }
+
+            let urgentBadge = animal.isUrgent ? `<div class="urgent-badge">URGENT</div>` : '';
+            let imageSrc = (animal.images && animal.images[0]) ? animal.images[0] : 'https://via.placeholder.com/600x400?text=No+Photo';
+            let photoCount = animal.images ? animal.images.length : 0;
+            
+            let safeImagesString = encodeURIComponent(JSON.stringify(animal.images || []));
+
+            let actionButtons = '';
+            if(currentTab === 'my-ads' && !isSold) {
+                actionButtons = `
+                <div class="action-btns">
+                    <button class="sold-btn" onclick="markAsSold('${identifier}')">✅ विकले (Sold)</button>
+                    <button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ डिलीट (Delete)</button>
+                </div>`;
+            } else if (currentTab === 'my-ads' && isSold) {
+                actionButtons = `<div class="action-btns"><button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ कायमचे डिलीट करा</button></div>`;
+            }
+
+            let soldOverlay = isSold ? `<div class="sold-overlay"><div class="sold-stamp">SOLD</div></div>` : '';
+            let callButton = !isSold ? `<a href="tel:+91${animal.mobile || animal.phone}" class="call-btn">📞 मालकाला कॉल करा</a>` : '';
+
+            // Handle Khillar specific data representation
+            let categoryText = animal.category ? animal.category : animal.type;
+            let typeLabel = animal.type === "शर्यतीचा बैल" ? "🐂 शर्यत बैल" : animal.type;
+            let locationDisplay = animal.location || animal.district || "N/A";
+            
+            let extraDetails = "";
+            if (animal.bloodline) {
+                extraDetails = `
+                <div class="detail-item" style="grid-column: span 2; background:#fff3e0; color:#d84315; border-color:#ffe0b2;">
+                    वंशावळ: <strong>${animal.bloodline}</strong>
+                </div>
+                <div class="detail-item">वय: <strong>${animal.age || '-'}</strong></div>
+                <div class="detail-item">मालक: <strong>${animal.owner || '-'}</strong></div>
+                `;
+            } else {
+                extraDetails = `
+                <div class="detail-item">दूध: <strong>${animal.milk || '-'} लिटर</strong></div>
+                <div class="detail-item">वेत: <strong>${animal.lactation || '-'}</strong></div>
+                <div class="detail-item">दात: <strong>${animal.teeth || '-'}</strong></div>
+                <div class="detail-item">गाभण: <strong>${animal.pregnant || '-'}</strong></div>
+                `;
+            }
+
+            html += `
+            <div class="card">
+                ${urgentBadge}
+                
+                <div class="card-img" onclick="openImageViewer('${safeImagesString}')">
+                    ${soldOverlay}
+                    <img src="${imageSrc}" alt="${animal.breed || animal.name}">
+                    ${photoCount > 1 ? `<div class="photo-count">📸 +${photoCount - 1} फोटो</div>` : ''}
+                    <div class="price-tag">₹ ${animal.price}</div>
+                </div>
+                
+                <div class="card-content">
+                    <h3 class="card-title">${animal.breed || animal.name} (${typeLabel}) <span class="location">📍 ${locationDisplay}</span></h3>
+                    <div class="details-grid">
+                        ${extraDetails}
+                    </div>
+                    <div style="font-size:12px; color:#555; margin-bottom:10px;">${animal.desc || ''}</div>
+                    ${callButton}
+                    ${actionButtons}
+                </div>
+            </div>`;
+        });
+        
+        container.innerHTML = html === '' ? '<div style="text-align:center; padding: 40px 20px; color:#888;"><div style="font-size: 50px; margin-bottom: 10px; filter: grayscale(100%);">🐄</div><div style="font-weight:bold; font-size: 16px;">कोणतेही जनावर सापडले नाही.</div></div>' : html;
     }
 
     // --- Image Viewer Logic ---
@@ -384,7 +472,7 @@
         // 🔥 FIX: ॲडमिन डेटा नसेल तर बाय डीफॉल्ट ₹९९ किंमत घ्या (0 ठेवू नका)
         if (val === undefined || val === null || val === '') return 99; 
         let parsedPrice = parseInt(val);
-        if (isNaN(parsedPrice) || parsedPrice <= 0) return 99;
+        if (isNaN(parsedPrice) || parsedPrice <= 0) return 0; // IF 0 then it's free!
         return parsedPrice;
     }
 
@@ -540,6 +628,12 @@
 
         localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
         localStorage.removeItem('farmer_pending_plan');
+
+        // 🔥 FIREBASE CLOUD SAVE FOR PLAN 🔥
+        let uMob = localStorage.getItem("current_user_mobile");
+        if(uMob) {
+            db.collection("users").doc(uMob).set({ activePlan: activePlan }, { merge: true });
+        }
         
         closeAddAnimalModal();
         alert(`🎉 अभिनंदन! तुमचे पेमेंट यशस्वी झाले आणि '${planName}' लगेच अनलॉक करण्यात आला आहे!`);
@@ -548,53 +642,7 @@
         window.location.href = "add_animal_form.html"; 
     }
 
-    // --- फोटोची साईझ कमी करण्यासाठी खास फंक्शन (Client-Side Compression) ---
-    // (टीप: हे फंक्शन तुम्ही add_animal_form.html मध्ये फोटो निवडताना वापरू शकता)
-    function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height = Math.round((height *= maxWidth / width));
-                            width = maxWidth;
-                        }
-                    } else {
-                        if (height > maxHeight) {
-                            width = Math.round((width *= maxHeight / height));
-                            height = maxHeight;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    canvas.toBlob((blob) => {
-                        resolve(blob);
-                    }, 'image/jpeg', quality);
-                };
-                
-                img.onerror = error => reject(error);
-            };
-            
-            reader.onerror = error => reject(error);
-        });
-    }
 </script>
 
-<script src="fcm_setup.js"></script>
 </body>
 </html>

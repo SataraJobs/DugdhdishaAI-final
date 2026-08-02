@@ -223,10 +223,11 @@
         syncCattleFromCloud();
     }
 
-    // --- 🔥 NEW: CLOUD DATABASE CATTLE SYNC ACROSS ALL DEVICES 🔥 ---
+    // --- 🔥 NEW: CLOUD DATABASE CATTLE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
     function syncCattleFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // १. गाई, म्हशी आणि वासरे क्लाऊडवरून आणा
             db.collection("farmer_animals").where("farmerMobile", "==", userMobile).get()
             .then((querySnapshot) => {
                 let hasCloudData = false;
@@ -246,6 +247,33 @@
                 }
             })
             .catch(e => console.log("Error syncing cattle from cloud: ", e));
+
+            // २. खिलार खोंड व शर्यत बैल क्लाऊडवरून आणा
+            db.collection("khond_profiles").where("farmerMobile", "==", userMobile).get()
+            .then(querySnapshot => {
+                let cloudKhonds = [];
+                querySnapshot.forEach(doc => {
+                    cloudKhonds.push(doc.data());
+                });
+                if (cloudKhonds.length > 0) {
+                    localStorage.setItem("my_khond_profiles", JSON.stringify(cloudKhonds));
+                    loadCowsFromStorage();
+                }
+            }).catch(e => console.log("Cloud khond sync error:", e));
+
+            // ३. 🔥 SINGLE DEVICE SESSION WATCHER (माझी जनावरे पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
         }
     }
 

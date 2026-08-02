@@ -324,7 +324,7 @@
         syncFromFirebaseCloud();
     }
 
-    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES 🔥 ---
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
     function syncFromFirebaseCloud() {
         // १. ॲडमिनचे ताजे दर (M25) क्लाऊडवरून आणा
         db.collection("admin_settings").doc("M25").get().then((doc) => {
@@ -335,16 +335,32 @@
             }
         }).catch(e => console.log("Cloud price sync error:", e));
 
-        // २. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा (डिव्हाईस बदलले तरी प्लॅन चालू राहील)
+        // २. युजरचा ॲक्टिव्ह प्लॅन आणि सेशन क्लाऊडवरून आणा (Single Device Protection)
         let uMob = localStorage.getItem("current_user_mobile");
         if(uMob && uMob !== "+91 9XXXX XXXX") {
-            db.collection("users").doc(uMob).get().then((doc) => {
-                if(doc.exists && doc.data() && doc.data().activePlan) {
-                    let cloudPlan = doc.data().activePlan;
-                    localStorage.setItem('farmer_active_plan', JSON.stringify(cloudPlan));
-                    checkActivePlan();
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if(doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+
+                    // A. ॲक्टिव्ह प्लॅन रिअल-टाईम सिंक
+                    if(cloudData.activePlan) {
+                        localStorage.setItem('farmer_active_plan', JSON.stringify(cloudData.activePlan));
+                        checkActivePlan();
+                    } else {
+                        localStorage.removeItem('farmer_active_plan');
+                        checkActivePlan();
+                    }
+
+                    // B. सिंगल डिव्हाईस सेशन चेक
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
                 }
-            }).catch(e => console.log("Cloud plan sync error:", e));
+            }, (err) => console.log("Cloud user sync error:", err));
         }
     }
 

@@ -76,7 +76,7 @@
         .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
-<body>
+<body onload="initAddAnimalPage()">
 
 <div class="app-container">
     
@@ -87,6 +87,13 @@
             <p>वय कॅल्क्युलेटर आणि अलगीकरण (Quarantine)</p>
         </div>
     </div>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
 
     <div class="category-title" style="margin-top:20px; font-weight:bold; color:#2e7d32;">१. प्राथमिक माहिती</div>
     <div class="form-section">
@@ -204,6 +211,40 @@
     const db = firebase.firestore();
 
     let calculatedAge = "";
+    let globalFarmerData = null; // Store farmer data globally for fast save
+
+    function initAddAnimalPage() {
+        // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
+        syncUserSessionFromCloud();
+    }
+
+    function syncUserSessionFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            
+            // १. शेतकऱ्याची ताजी माहिती क्लाऊडवरून आणा (नाव, पत्ता इत्यादी)
+            db.collection("users").doc(userMobile).get()
+            .then((doc) => {
+                if (doc.exists && doc.data()) {
+                    globalFarmerData = doc.data();
+                }
+            }).catch(e => console.log("Cloud user profile fetch error:", e));
+
+            // २. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+        }
+    }
 
     function toggleCalfOptions() {
         let type = document.getElementById('animal_type').value;
@@ -302,9 +343,10 @@
         let storageKey = (type === 'calf' ? "calf_" : "cow_") + uniqueId;
         let defaultDate = new Date().toISOString().split('T')[0];
 
-        // शेतकरी माहिती (Current User)
-        let farmerName = localStorage.getItem("current_user_name") || "अज्ञात शेतकरी";
+        // शेतकरी माहिती (Current User - Cloud Data preferred)
+        let farmerName = (globalFarmerData && globalFarmerData.name) ? globalFarmerData.name : (localStorage.getItem("current_user_name") || "अज्ञात शेतकरी");
         let farmerMobile = localStorage.getItem("current_user_mobile") || "अज्ञात नंबर";
+        let farmerDistrict = (globalFarmerData && globalFarmerData.district) ? globalFarmerData.district : (localStorage.getItem("current_user_district") || "N/A");
 
         let animalData = {
             id: uniqueId,
@@ -319,6 +361,7 @@
             registrationDate: defaultDate,
             farmerName: farmerName,
             farmerMobile: farmerMobile,
+            farmerDistrict: farmerDistrict,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 

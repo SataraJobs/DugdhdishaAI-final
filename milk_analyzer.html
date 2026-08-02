@@ -94,6 +94,13 @@
         </div>
     </div>
 
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
+
     <div class="ai-scanner-card">
         <div class="ai-title">🪄 AI डायरेक्ट कॅमेरा स्कॅनर</div>
         <div class="ai-subtitle">खालील बटण दाबून कॅमेरा सुरू करा आणि पावतीचा फोटो काढा.</div>
@@ -212,6 +219,46 @@
     const btnSnap = document.getElementById('btn_snap');
     const btnRetake = document.getElementById('btn_retake');
     const btnMagic = document.getElementById('btn_ai_scan');
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncMilkDataFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            
+            // १. दुधाच्या नोंदी क्लाऊडवरून आणा
+            db.collection("milk_records")
+            .where("farmerMobile", "==", userMobile)
+            .orderBy("timestamp", "desc")
+            .limit(10) // फक्त शेवटच्या १० नोंदी
+            .get()
+            .then((querySnapshot) => {
+                let cloudRecords = [];
+                querySnapshot.forEach((doc) => {
+                    cloudRecords.push(doc.data());
+                });
+                
+                if (cloudRecords.length > 0) {
+                    localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
+                    loadHistory();
+                }
+            })
+            .catch(e => console.log("Error syncing milk records from cloud: ", e));
+
+            // २. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            }, (err) => console.log("Cloud session sync error:", err));
+        }
+    }
 
     // Load Animals into Dropdown
     function loadAnimalsIntoDropdown() {
@@ -506,6 +553,7 @@
     window.addEventListener("DOMContentLoaded", () => {
         loadAnimalsIntoDropdown();
         loadHistory();
+        syncMilkDataFromCloud(); // 🔥 PAGE LOAD HOTACH CLOUD SYNC SURU KARA
     });
 </script>
 

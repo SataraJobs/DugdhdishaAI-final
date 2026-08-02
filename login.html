@@ -69,9 +69,33 @@
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #4caf50; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 🔥 NEW: Session Security Alert Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
-<body>
+<body onload="initLoginPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="login-container">
     <div class="logo-area">
@@ -224,6 +248,34 @@
     const auth = firebase.auth();
     const db = firebase.firestore(); 
 
+    // --- 🔥 NEW: INITIALIZE PAGE & SESSION MONITORING 🔥 ---
+    function initLoginPage() {
+        syncUserSessionFromCloud();
+    }
+
+    // --- 🔥 NEW: REAL-TIME CLOUD SESSION SECURITY WATCHER (onSnapshot) 🔥 ---
+    function syncUserSessionFromCloud() {
+        let mobile = localStorage.getItem("current_user_mobile");
+        let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+        if (!mobile) return;
+
+        db.collection("users").doc(mobile).onSnapshot((doc) => {
+            if (doc.exists) {
+                let data = doc.data();
+                if (data.currentSessionId && localSessionId && data.currentSessionId !== localSessionId) {
+                    let alertBox = document.getElementById("sessionAlertBox");
+                    if (alertBox) alertBox.style.display = "flex";
+                    setTimeout(() => {
+                        localStorage.clear();
+                        window.location.href = "login.html";
+                    }, 3000);
+                }
+            }
+        }, (error) => {
+            console.error("Session sync error:", error);
+        });
+    }
+
     // --- 🔥 INVISIBLE RECAPTCHA SETUP ---
     window.onload = function() {
         window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
@@ -232,6 +284,7 @@
                 // reCAPTCHA solved automatically
             }
         });
+        initLoginPage();
     };
 
     // --- 🔄 Tab Switching Logic ---
@@ -319,7 +372,7 @@
         }
     }
 
-    // --- 📝 REGISTRATION LOGIC ---
+    // --- 📝 REGISTRATION LOGIC (🔥 CLOUD-FIRST & STRICT DUPLICATE CHECK 🔥) ---
     function registerUser() {
         let name = document.getElementById('reg_name').value.trim();
         let mobile = document.getElementById('reg_mobile').value.trim();
@@ -341,36 +394,43 @@
 
         let btn = document.getElementById('regBtn');
         let originalText = btn.innerText;
-        btn.innerText = "खाते बनवत आहे... ⏳";
+        btn.innerText = "तपासत आहे... ⏳";
         btn.disabled = true;
 
-        let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
-        let userExists = localUsers.find(u => u.mobile === mobile);
-        
-        if (userExists) {
-            alert("हा मोबाईल नंबर आधीच रजिस्टर आहे. कृपया थेट लॉगिन करा.");
+        // 🔥 थेट Firebase Cloud वर आधी नंबर तपासा (Cloud-First Duplicate Check) 🔥
+        db.collection("users").doc(mobile).get().then((doc) => {
+            if (doc.exists) {
+                alert("⚠️ हा मोबाईल नंबर आधीच रजिस्टर आहे! कृपया थेट लॉगिन करा.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+                switchTab('login');
+                return;
+            }
+
+            let newUser = {
+                name: name, mobile: mobile, pincode: pincode, district: district,
+                lat: lat ? parseFloat(lat) : null, lon: lon ? parseFloat(lon) : null,
+                role: 'farmer', password: pass, secQuestion: secQ, secAnswer: secA,
+                isVerified: false, kyc_status: 'none',
+                created_at: new Date().toISOString()
+            };
+
+            // स्थानिक बॅकअप सेव्ह करा
+            let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            localUsers.push(newUser);
+            localStorage.setItem('app_users', JSON.stringify(localUsers));
+
+            // Firebase Cloud वर नवीन खाते सेव्ह करा
+            db.collection("users").doc(mobile).set(newUser).then(() => {
+                finishReg();
+            }).catch((error) => {
+                console.warn("Firebase Sync Error:", error);
+                finishReg(); 
+            });
+        }).catch((error) => {
+            alert("इंटरनेट एरर: सर्व्हरशी संपर्क होऊ शकला नाही. कृपया पुन्हा प्रयत्न करा.");
             btn.innerText = originalText;
             btn.disabled = false;
-            switchTab('login');
-            return;
-        }
-
-        let newUser = {
-            name: name, mobile: mobile, pincode: pincode, district: district,
-            lat: lat ? parseFloat(lat) : null, lon: lon ? parseFloat(lon) : null,
-            role: 'farmer', password: pass, secQuestion: secQ, secAnswer: secA,
-            isVerified: false, kyc_status: 'none',
-            created_at: new Date().toISOString()
-        };
-
-        localUsers.push(newUser);
-        localStorage.setItem('app_users', JSON.stringify(localUsers));
-
-        db.collection("users").doc(mobile).set(newUser).then(() => {
-            finishReg();
-        }).catch((error) => {
-            console.warn("Firebase Sync Error (Rules/Internet):", error);
-            finishReg(); 
         });
 
         function finishReg() {
@@ -460,73 +520,74 @@
                 loader.style.display = 'none';
             });
         } else {
-            // जर युजरने पासवर्ड टाकला असेल (ऑफलाइन किंवा थेट लॉगिन)
+            // जर युजरने पासवर्ड टाकला असेल
             fetchUserFromFirestore(mobile, pass, null, loader);
         }
     }
 
-    // 🔍 फायरबेस डेटाबेस आणि लोकल स्टोरेजमधून युजर शोधणारे फंक्शन
+    // 🔍 फायरबेस डेटाबेस आणि सिंगल डिव्हाईस सेशन तयार करणारे फंक्शन
     function fetchUserFromFirestore(mobile, pass, otp, loader) {
-        
-        // 1️⃣ आधी लोकल स्टोरेजमध्ये शोधा (Offline Support)
-        let localUsers = JSON.parse(localStorage.getItem('app_users')) || [];
-        let foundUser = localUsers.find(u => u.mobile === mobile);
-
-        if (foundUser) {
-            setTimeout(() => {
-                loader.style.display = 'none';
-                if (pass && foundUser.password === pass) {
-                    processSuccessfulLogin(foundUser);
-                } else if (otp) {
-                    processSuccessfulLogin(foundUser);
-                } else {
-                    alert("❌ पासवर्ड चुकीचा आहे.");
-                }
-            }, 800);
-            return;
-        }
-
-        // 2️⃣ लोकल स्टोरेजमध्ये नसल्यास, क्लाउडवर शोधा
+        // 🔥 क्लाऊड-फर्स्ट: आधी थेट Firebase वर शोधा 🔥
         db.collection("users").doc(mobile).get().then((doc) => {
             loader.style.display = 'none';
             if (!doc.exists) {
-                if(otp) {
-                    processSuccessfulLogin({ name: "शेतकरी", mobile: mobile, role: "farmer" });
-                } else {
-                    alert("❌ हा मोबाईल नंबर रजिस्टर नाही. कृपया 'नवीन खाते' (Sign Up) उघडा.");
-                }
+                alert("❌ हा मोबाईल नंबर रजिस्टर नाही. कृपया 'नवीन खाते' (Sign Up) उघडा.");
                 return;
             }
 
             let fbUser = doc.data();
-            if (pass) {
-                if(fbUser.password === pass) {
-                    processSuccessfulLogin(fbUser);
-                } else {
+            if (pass && !otp) {
+                if (fbUser.password !== pass) {
                     alert("❌ पासवर्ड चुकीचा आहे. कृपया पुन्हा तपासा.");
+                    return;
                 }
-            } else if (otp) {
-                processSuccessfulLogin(fbUser);
             }
+
+            // 🔥 SINGLE DEVICE SESSION LOGIC: नवीन सेशन आयडी तयार करा व क्लाऊडवर अपडेट करा 🔥
+            let newSessionId = "SESSION_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+            
+            db.collection("users").doc(mobile).set({
+                currentSessionId: newSessionId,
+                lastLogin: new Date().toISOString()
+            }, { merge: true }).then(() => {
+                fbUser.currentSessionId = newSessionId;
+                
+                // 🔥 NEW: लॉगिन नोंदींचे क्लाऊड लॉगिंग (user_login_logs) 🔥
+                db.collection("user_login_logs").add({
+                    userName: fbUser.name || "वापरकर्ता",
+                    mobile: mobile,
+                    role: fbUser.role || "farmer",
+                    loginMethod: otp ? "OTP" : "Password",
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Login logging error:", e));
+
+                processSuccessfulLogin(fbUser, newSessionId);
+            }).catch((error) => {
+                console.warn("Session Save Error:", error);
+                processSuccessfulLogin(fbUser, newSessionId);
+            });
+
         }).catch((error) => {
             console.error("Firebase Login Error:", error);
             loader.style.display = 'none';
-            
-            if(otp) {
-                processSuccessfulLogin({ name: "शेतकरी (Offline)", mobile: mobile, role: "farmer" });
-            } else {
-                alert("❌ हा मोबाईल नंबर रजिस्टर नाही किंवा सर्व्हर एरर आला आहे.\n\n👉 उपाय: कृपया वर 'नवीन खाते (Sign Up)' टॅबवर जाऊन स्वतःला रजिस्टर करा.");
-            }
+            alert("⚠️ सर्व्हरशी संपर्क होऊ शकला नाही. कृपया तुमचे इंटरनेट कनेक्शन तपासा.");
         });
     }
 
-    // --- 📍 ROUTING FUNCTION (UPDATED WITH CLOUD PLAN SYNC) ---
-    function processSuccessfulLogin(foundUser) {
+    // --- 📍 ROUTING FUNCTION (UPDATED WITH SINGLE DEVICE SESSION ID) ---
+    function processSuccessfulLogin(foundUser, sessionId) {
         localStorage.setItem("current_logged_in_role", foundUser.role);
         localStorage.setItem("current_user_name", foundUser.name);
         localStorage.setItem("current_user_mobile", foundUser.mobile); 
         localStorage.setItem("vendor_verified", foundUser.isVerified);
         localStorage.setItem("is_logged_in", "true"); 
+        
+        // 🔥 सेव्ह केलेला नवीन सेशन आयडी लोकल स्टोरेजला पण द्या 🔥
+        if (sessionId) {
+            localStorage.setItem("current_session_id", sessionId);
+            localStorage.setItem("currentSessionId", sessionId);
+        }
         
         if(foundUser.district) localStorage.setItem("current_user_district", foundUser.district);
         if(foundUser.pincode) localStorage.setItem("current_user_pincode", foundUser.pincode);

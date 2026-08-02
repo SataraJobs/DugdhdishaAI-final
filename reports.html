@@ -141,9 +141,33 @@
         .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; display: none; }
         .report-table th, .report-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         .report-table th { background: #1b5e20; color: white; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initReportsPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -274,14 +298,31 @@
         document.getElementById('end_date').valueAsDate = today;
         document.getElementById('start_date').valueAsDate = lastWeek;
 
-        // 🔥 FIREBASE CLOUD SYNC: पेज उघडताच दुधाचे सर्व रेकॉर्ड्स क्लाऊडवरून सिंक करा 🔥
+        // 🔥 FIREBASE CLOUD SYNC: पेज उघडताच दुधाचे सर्व रेकॉर्ड्स आणि सिंगल-डिव्हाईस सुरक्षा क्लाऊडवरून सिंक करा 🔥
         syncReportsFromCloud();
     }
 
-    // --- 🔥 NEW: CLOUD DATABASE REPORT SYNC ACROSS ALL DEVICES 🔥 ---
+    // --- 🔥 NEW: CLOUD DATABASE REPORT SYNC & SINGLE-DEVICE SECURITY WATCHER 🔥 ---
     function syncReportsFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // १. सिंगल डिव्हाईस सुरक्षा वॉचर (`users` Collection)
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud security watcher error:", err));
+
+            // २. क्लाऊडवरून दुधाचे रेकॉर्ड्स आणा (`milk_records` Collection)
             db.collection("milk_records")
             .where("farmerMobile", "==", userMobile)
             .get()
@@ -298,6 +339,16 @@
                 }
             })
             .catch(e => console.log("Error syncing report data from cloud: ", e));
+
+            // ३. 🔥 NEW: रिपोर्ट्स पेज व्हिजिटचे क्लाऊड लॉगिंग (`report_activity_logs`) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("report_activity_logs").add({
+                userName: fName,
+                userMobile: userMobile,
+                action: "Visited Reports & Statistics Center",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
         }
     }
 
@@ -354,6 +405,23 @@
         
         // Scroll to chart smoothly
         view.scrollIntoView({behavior: "smooth", block: "start"});
+
+        // 🔥 NEW: रिपोर्ट जनरेशनचे क्लाऊड लॉगिंग (`report_activity_logs`) 🔥
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("report_activity_logs").add({
+                userName: fName,
+                userMobile: userMobile,
+                reportType: type,
+                dateRange: `${start} to ${end}`,
+                totalLiters: totalLiters.toFixed(1),
+                totalAmount: Math.round(totalAmount),
+                action: "Generated Report",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Report generation log error:", e));
+        }
     }
 
     function updateBarChart(records) {

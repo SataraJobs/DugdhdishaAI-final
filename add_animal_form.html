@@ -104,12 +104,19 @@
         }
     </style>
 </head>
-<body>
+<body onload="initAddAnimalPage()">
 
     <div class="app-bar">
         <a href="kharedi_vikri.html" class="back-btn">⬅</a>
         <h2>जनावर विकायची माहिती भरा</h2>
     </div>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
 
     <div class="form-container">
         <div class="form-card">
@@ -213,11 +220,47 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
         // Cloudinary च्या लिंक्स स्टोअर करण्यासाठी नवीन Array
         let uploadedImagesUrls = [];
+        let globalFarmerData = null; // Store farmer data globally for fast save
+
+        function initAddAnimalPage() {
+            // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
+            syncUserSessionFromCloud();
+        }
+
+        function syncUserSessionFromCloud() {
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+                
+                // १. शेतकऱ्याची ताजी माहिती क्लाऊडवरून आणा (नाव, पत्ता इत्यादी)
+                db.collection("users").doc(userMobile).get()
+                .then((doc) => {
+                    if (doc.exists && doc.data()) {
+                        globalFarmerData = doc.data();
+                    }
+                }).catch(e => console.log("Cloud user profile fetch error:", e));
+
+                // २. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+                db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                    if (doc.exists && doc.data()) {
+                        let cloudData = doc.data();
+                        let localSessionId = localStorage.getItem("current_session_id");
+                        let cloudSessionId = cloudData.currentSessionId;
+                        if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }
+                    }
+                }, (err) => console.log("Cloud session sync error:", err));
+            }
+        }
 
         // 🔥 फोटोची साईझ कमी करण्यासाठी खास फंक्शन (Client-Side Compression) 🔥
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
@@ -376,6 +419,10 @@
                 return;
             }
 
+            // शेतकरी माहिती (Current User - Cloud Data preferred)
+            let farmerName = (globalFarmerData && globalFarmerData.name) ? globalFarmerData.name : (localStorage.getItem("current_user_name") || "अज्ञात शेतकरी");
+            let farmerDistrict = (globalFarmerData && globalFarmerData.district) ? globalFarmerData.district : (localStorage.getItem("current_user_district") || "N/A");
+
             // डेटाबेसमध्ये पाठवण्यासाठी ऑब्जेक्ट तयार करणे
             const newAnimal = {
                 id: Date.now(), 
@@ -391,6 +438,8 @@
                 images: uploadedImagesUrls, // Cloudinary लिंक्स
                 status: 'active',
                 isUrgent: false,
+                farmerName: farmerName,
+                farmerDistrict: farmerDistrict,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp() // सेव्ह केल्याची अचूक वेळ
             };
 

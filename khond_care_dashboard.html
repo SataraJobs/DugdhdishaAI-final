@@ -779,6 +779,44 @@
         checkAndTriggerLifecycleNotifications();
     }
 
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncKhondProfilesFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
+
+        // १. युजरचे खोंड आणि वासरे क्लाऊडवरून सिंक करा (Live Real-time onSnapshot)
+        db.collection("khond_profiles")
+        .where("farmerMobile", "==", userMobile)
+        .onSnapshot((querySnapshot) => {
+            let cloudList = [];
+            querySnapshot.forEach(doc => {
+                cloudList.push(doc.data());
+            });
+            if (cloudList.length > 0) {
+                cloudList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                localStorage.setItem("my_khond_profiles", JSON.stringify(cloudList));
+                renderKhondList(cloudList);
+                checkAndTriggerLifecycleNotifications();
+            } else {
+                renderKhondList([]);
+            }
+        }, (err) => console.log("Cloud khond profiles sync error:", err));
+
+        // 🔥 SINGLE DEVICE SESSION WATCHER (या पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+        db.collection("users").doc(userMobile).onSnapshot((doc) => {
+            if (doc.exists && doc.data()) {
+                let cloudData = doc.data();
+                let localSessionId = localStorage.getItem("current_session_id");
+                let cloudSessionId = cloudData.currentSessionId;
+                if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                    alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                    localStorage.clear();
+                    window.location.replace("login.html");
+                }
+            }
+        }, (err) => console.log("Cloud user sync error:", err));
+    }
+
     // 2. SAVE KHOND PROFILE TO LOCAL & CLOUD
     function saveKhondProfile() {
         let name = document.getElementById("k_name").value.trim();
@@ -1023,27 +1061,6 @@
     function loadLocalKhonds() {
         let localList = JSON.parse(localStorage.getItem("my_khond_profiles")) || [];
         renderKhondList(localList);
-    }
-
-    // 6. SYNC FROM FIREBASE CLOUD
-    function syncKhondProfilesFromCloud() {
-        let userMobile = localStorage.getItem("current_user_mobile");
-        if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
-
-        db.collection("khond_profiles").where("farmerMobile", "==", userMobile).get()
-        .then(querySnapshot => {
-            let cloudList = [];
-            querySnapshot.forEach(doc => {
-                cloudList.push(doc.data());
-            });
-
-            if (cloudList.length > 0) {
-                localStorage.setItem("my_khond_profiles", JSON.stringify(cloudList));
-                renderKhondList(cloudList);
-                checkAndTriggerLifecycleNotifications();
-            }
-        })
-        .catch(e => console.log("Cloud sync error:", e));
     }
 
     // 7. DELETE KHOND PROFILE

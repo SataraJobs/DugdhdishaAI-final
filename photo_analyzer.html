@@ -135,18 +135,49 @@
         .paywall-price-tag { background: #fff3e0; color: #e65100; border: 2px dashed #ffb300; padding: 10px; border-radius: 8px; font-size: 18px; font-weight: 900; margin-bottom: 20px;}
         .btn-pay-now { background: linear-gradient(145deg, #0d47a1, #1976d2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3); text-decoration: none; display: block; box-sizing: border-box;}
         .btn-pay-close { background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initPhotoAnalyzer()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     <div class="top-dashboard" style="background: #1b5e20; padding: 20px; color: white; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
         <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
         <div class="header-titles" style="margin-top: 15px;">
             <h1 style="margin: 0;">फोटो ॲनालायझर 📷</h1>
-            <p style="margin: 5px 0 0; color: #c8e6c9;">AI द्वारे चारा आणि आजार ओळखा</p>
+            <p style="margin: 5px 0 0; color: #c8e6c9;">AI द्वारे चारा आणि आजार अचूक ओळखा</p>
         </div>
     </div>
+
+    <!-- 🔒 सिक्युरिटी चेक -->
+    <script>
+        if (!localStorage.getItem("current_logged_in_role")) {
+            window.location.replace("login.html");
+        }
+    </script>
 
     <div class="camera-container">
         <h4 style="margin: 0 0 15px; color: #333;">चाऱ्याचा किंवा आजारी भागाचा फोटो काढा</h4>
@@ -227,6 +258,67 @@
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
         }).catch(e => console.error("Error fetching live products:", e));
+
+        // 🔥 FIREBASE CLOUD SYNC: ॲडमिन सेटिंग्ज आणि सिंगल-डिव्हाईस सेशन सिंक करा 🔥
+        syncPhotoAnalyzerFromCloud();
+    }
+
+    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    function syncPhotoAnalyzerFromCloud() {
+        // १. ॲडमिन पॅनेलमधील M16 (Gemini API Key) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M16").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                let data = doc.data();
+                localStorage.setItem('admin_data_M16', JSON.stringify(data));
+                if(data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx") {
+                    GEMINI_API_KEY = data.m16_1;
+                }
+            }
+        }).catch(e => console.log("Cloud M16 sync error:", e));
+
+        // २. ॲडमिन पॅनेलमधील M25 (प्रीमियम दर) क्लाऊडवरून आणा
+        db.collection("admin_settings").doc("M25").get().then((doc) => {
+            if (doc.exists && doc.data()) {
+                localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
+            }
+        }).catch(e => console.log("Cloud M25 sync error:", e));
+
+        // ३. युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून आणा (डिव्हाईस बदलले तरी प्लॅन चालू राहील)
+        let uMob = localStorage.getItem("current_user_mobile");
+        if (uMob && uMob !== "+91 9XXXX XXXX") {
+            db.collection("users").doc(uMob).get().then((doc) => {
+                if (doc.exists && doc.data() && doc.data().activePlan) {
+                    localStorage.setItem('farmer_active_plan', JSON.stringify(doc.data().activePlan));
+                }
+            }).catch(e => console.log("Cloud plan sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (फोटो ॲनालायझरमध्ये असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            db.collection("users").doc(uMob).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
+                    }
+                }
+            }, (err) => console.log("Cloud user sync error:", err));
+
+            // 🔥 NEW: फोटो ॲनालायझर पेज व्हिजिटचे क्लाऊड लॉगिंग (photo_activity_logs) 🔥
+            let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+            db.collection("photo_activity_logs").add({
+                userName: fName,
+                userMobile: uMob,
+                action: "Visited Photo Analyzer Center",
+                date: new Date().toLocaleDateString('mr-IN'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("Activity logging error:", e));
+        }
     }
 
     // --- 🔥 CHECK PREMIUM ACCESS BEFORE UPLOAD 🔥 ---
@@ -399,7 +491,7 @@
         reader.readAsDataURL(file);
     }
 
-    // Call Google Gemini Vision API (WITH STRICTER ACCURACY PROMPT)
+    // 🔥 HIGH ACCURACY AI VISION CALL USING GEMINI 1.5 PRO 🔥
     async function analyzeImageWithAI(base64Data) {
         let scanner = document.getElementById("scanner");
         let resultBox = document.getElementById("aiResult");
@@ -414,46 +506,47 @@
             return;
         }
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // 🔥 Changed to gemini-1.5-pro for much higher reasoning accuracy 🔥
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
         
-        // 🔥 HIGH ACCURACY PROMPT 🔥
+        // 🔥 STRICT & HIGHLY DETAILED PROMPT 🔥
         const aiPrompt = `
         तू एक अत्यंत तज्ज्ञ आणि अचूक पशुवैद्यक (Veterinarian) आणि दुग्ध व्यवसाय (Dairy Farming) मार्गदर्शक आहेस. 
-        तुला दिलेल्या फोटोचे अतिशय बारकाईने विश्लेषण करायचे आहे. तुझे उत्तर 'फक्त आणि फक्त मराठीत' असले पाहिजे.
-        
-        महत्त्वाचा नियम: तू अंधारात तीर मारायचा नाही. फोटोत जे स्पष्ट दिसत आहे तेच सांगायचे. जर फोटो पूर्णपणे अंधुक असेल किंवा ओळखू येत नसेल, तर तसे स्पष्ट सांग.
+        तुला दिलेल्या फोटोचे अत्यंत बारकाईने (High Accuracy) विश्लेषण करायचे आहे. 
+        महत्त्वाचा नियम: कोणताही चुकीचा अंदाज लावू नकोस. जर फोटो पूर्णपणे अंधुक असेल किंवा ओळखू येत नसेल, तर तसे स्पष्ट सांग. तुझे उत्तर 'फक्त आणि फक्त मराठीत' असले पाहिजे.
 
-        नियम:
-        १. जर फोटोत जनावरांचा चारा (हिरवा चारा, सुका कडबा, पेंड किंवा मुरघास) असेल:
-           - चाऱ्याचे अचूक नाव सांग. (उदा. मका, हत्ती गवत, ज्वारी कडबा, सरकी पेंड इ.)
-           - चाऱ्याची गुणवत्ता (उत्तम/मध्यम/निकृष्ट) सांग.
-           - अंदाजित प्रथिने (CP - Crude Protein) किती टक्के असतील ते सांग.
-           - अंदाजित ड्राय मॅटर (DM - Dry Matter) किती टक्के असेल ते सांग.
-           - आणि शेतकऱ्याला तो चारा कसा खायला द्यावा याबद्दल एक व्यावसायिक सल्ला दे.
+        खालीलपैकी एका कॅटेगरीनुसार फोटोचे विश्लेषण कर:
+
+        १. 🌿 चारा / पशुखाद्य (Fodder/Feed): जर फोटोत चारा असेल, तर:
+           - चाऱ्याचे अचूक नाव ओळखा (उदा. मका मुरघास, ज्वारी कडबा, नेपियर गवत, सरकी पेंड).
+           - चाऱ्याची गुणवत्ता कशी आहे? (उत्तम हिरवीगार / बुरशी लागलेली / जास्त वाळलेली).
+           - अंदाजित प्रथिने (CP %) आणि शुष्क आहार (Dry Matter %) किती असेल ते सांग.
+           - शेतकऱ्याला हा चारा देताना काय काळजी घ्यावी याचा व्यावसायिक सल्ला दे.
            - उत्तराच्या शेवटी "TAG:FODDER" असा टॅग नक्की लाव.
 
-        २. जर फोटोत आजारी जनावर किंवा जनावराची एखादी जखम/त्रास (उदा. कासदाह, गोचीड, खूर, लाळ्या खुरकूत, डोळ्यांचा आजार) असेल:
-           - आजाराचे किंवा जखमेचे नाव अचूक ओळख.
-           - त्याच्यावरील प्राथमिक उपचार आणि सल्ला सांग.
-           - डॉक्टरला केव्हा बोलावावे याची सूचना दे.
+        २. 🐄 जनावरांचा आजार / जखम / शारीरिक स्थिती (Disease/Wound): जर फोटोत जनावर किंवा जखम असेल, तर:
+           - फोटोतील जनावराचा कोणता अवयव दिसत आहे ते ओळखा (उदा. कास, खूर, डोळा, त्वचा).
+           - आजार किंवा जखमेचे नाव अचूक ओळखा (उदा. लम्पी, कासदाह, गोचीड, खूर कुजणे).
+           - आजाराची तीव्रता (Mild/Severe) आणि त्वरित प्राथमिक उपचार (First Aid) सांग. डॉक्टरला केव्हा बोलावावे याची सूचना दे.
            - उत्तराच्या शेवटी "TAG:DISEASE" असा टॅग नक्की लाव.
 
-        ३. जर फोटोत गाईचे शेण (Dung) असेल:
-           - शेणाच्या स्थितीवरून पचनक्रियेचा (Digestion) अंदाज सांग (पचन चांगले आहे, अपचन आहे, फायबरची कमतरता आहे इ.).
-           - त्यावर काय उपाय करावा ते सांग.
+        ३. 💩 शेण (Dung / Manure): जर फोटोत शेण असेल, तर:
+           - शेणाचा पोत (Texture) कसा आहे? (पातळ जुलाब, घट्ट, किंवा सामान्य).
+           - त्यात न पचलेले दाणे (Undigested grains) किंवा रक्त/चिकट स्राव दिसत आहे का?
+           - पचनक्रिया सुधारण्यासाठी काय उपाय करावा ते सांग.
            - उत्तराच्या शेवटी "TAG:DIGESTION" असा टॅग नक्की लाव.
 
-        ४. जर फोटोत 'चारा' किंवा 'आजार/जनावर' यापैकी काहीही नसेल (उदा. गाडी, माणूस, रिकामा रस्ता, घर, झाड इ.):
-           - स्पष्टपणे सांग की "हा फोटो चारा किंवा जनावराच्या आजाराशी संबंधित नाही. कृपया योग्य फोटो अपलोड करा." आणि कोणतेही टॅग लावू नकोस.
+        ४. ❌ इतर (Unrelated):
+           - जर फोटो चारा, जनावर, गोठा किंवा शेतीशी संबंधित नसेल (उदा. गाडी, माणूस, घर, झाड इ.), तर फक्त एवढेच लिही: 
+             "<p style='color:red;'>⚠️ हा फोटो पशुपालन किंवा चाऱ्याशी संबंधित वाटत नाही. कृपया जनावराचा, चाऱ्याचा किंवा शेणाचा स्पष्ट फोटो अपलोड करा.</p>" आणि कोणतेही टॅग लावू नकोस.
 
         तुझे उत्तर फक्त खालील HTML फॉरमॅटमध्येच दे (कोणतेही markdown जसे की \`\`\`html देऊ नकोस आणि इतर कोणतीही अतिरिक्त माहिती देऊ नकोस):
         
-        <p><b>ओळखलेला प्रकार:</b> [येथे नाव]</p>
-        <p><b>अंदाजित गुणवत्ता:</b> <span class="quality-badge">[येथे गुणवत्ता]</span></p>
-        <p><b>अंदाजित प्रथिने (CP):</b> [येथे टक्केवारी / लागू नसल्यास 'लागू नाही']</p>
-        <p><b>अंदाजित ड्राय मॅटर:</b> [येथे टक्केवारी / लागू नसल्यास 'लागू नाही']</p>
+        <p><b>🔍 ओळखलेला प्रकार:</b> [येथे अचूक नाव]</p>
+        <p><b>📊 अंदाजित गुणवत्ता/स्थिती:</b> <span class="quality-badge">[येथे गुणवत्ता/तीव्रता]</span></p>
+        <p><b>🔬 वैज्ञानिक माहिती (CP/DM/लक्षणे):</b> [येथे सविस्तर माहिती]</p>
         <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
-        <p style="font-size: 13px; color: #e65100;"><b>तज्ज्ञांचा सल्ला:</b> [येथे तुझा सविस्तर आणि अचूक सल्ला]</p>
+        <p style="font-size: 13px; color: #e65100; line-height: 1.6;"><b>👨‍⚕️ तज्ज्ञांचा सल्ला:</b> [येथे तुझा सविस्तर आणि अचूक सल्ला]</p>
         `;
 
         const requestBody = {
@@ -518,7 +611,7 @@
                 }
 
                 // Clean up any accidental markdown code blocks and the hidden tags generated by AI
-                aiResponseHTML = aiResponseHTML.replace(/```html/g, "").replace(/```/g, "").replace(/TAG:FODDER/g, "").replace(/TAG:DISEASE/g, "").replace(/TAG:DIGESTION/g, "").trim();
+                aiResponseHTML = aiResponseHTML.replace(/```html/gi, "").replace(/```/g, "").replace(/TAG:FODDER/g, "").replace(/TAG:DISEASE/g, "").replace(/TAG:DIGESTION/g, "").trim();
                 
                 outputContent.innerHTML = aiResponseHTML;
                 
@@ -526,6 +619,18 @@
                 if(targetFilterTag !== "Daily_Ration_Mineral" && !aiResponseHTML.includes("संबंधित नाही")) { 
                      adBox.innerHTML = generateDynamicAd(targetFilterTag, defaultAdHtml, "💡 AI शिफारस (सुचवलेले प्रॉडक्ट)");
                 }
+
+                // 🔥 NEW: फोटो विश्लेषणाचा अहवाल क्लाऊडवर सेव्ह करा (`photo_analysis_logs`) 🔥
+                let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+                let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+                db.collection("photo_analysis_logs").add({
+                    farmerName: fName,
+                    farmerMobile: fMob,
+                    tag: targetFilterTag,
+                    summary: aiResponseHTML.replace(/<[^>]*>?/gm, ' ').substring(0, 150),
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(err => console.error("Error logging photo analysis: ", err));
                 
             } else {
                 outputContent.innerHTML = "<p style='color:red;'>माफ करा, मला हा फोटो स्पष्ट ओळखता आला नाही. कृपया दुसरा फोटो काढा.</p>";

@@ -1,56 +1,45 @@
-// firebase-messaging-sw.js
-// Firebase Cloud Messaging Service Worker for Dugdha Disha AI
-
+// Firebase लायब्ररी इंपोर्ट करणे
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// Initialize the Firebase app in the service worker
-firebase.initializeApp({
-  apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
-  authDomain: "dugdhdishaai.firebaseapp.com",
-  projectId: "dugdhdishaai",
-  storageBucket: "dugdhdishaai.firebasestorage.app",
-  messagingSenderId: "1059551640041",
-  appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
-  measurementId: "G-6TFEJKBVFL"
-});
+// तुमचे Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+    authDomain: "dugdhdishaai.firebaseapp.com",
+    projectId: "dugdhdishaai",
+    storageBucket: "dugdhdishaai.firebasestorage.app",
+    messagingSenderId: "1059551640041",
+    appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+    measurementId: "G-6TFEJKBVFL"
+};
 
+// Firebase Initialize
+firebase.initializeApp(firebaseConfig);
+
+// Messaging सर्विस चालू करणे
 const messaging = firebase.messaging();
 
-// Handle background messages
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Background Message Received: ', payload);
-  
-  const notificationTitle = payload.notification.title || "दुग्ध दिशा AI कडून सूचना";
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/logo-192x192.png', // ✅ CORRECTION: Updated to match your manifest icon
-    badge: '/logo-192x192.png', // ✅ CORRECTION: Updated badge path
-    data: payload.data
-  };
-  
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+// ॲप बंद असताना (Background) येणारे नोटिफिकेशन्स हँडल करणे
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    
+    const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
+    const notificationOptions = {
+        body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
+        icon: 'logo.png',
+        badge: 'logo.png',
+        vibrate: [200, 100, 200, 100, 200], // मोबाईल व्हायब्रेट होण्यासाठी
+        data: payload.data || {}
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Handle Notification Click Event
+// नोटिफिकेशनवर क्लिक केल्यावर ॲप उघडण्यासाठी
 self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-  
-  // Open the app when notification is clicked
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
-      // Check if there is already a window/tab open with the target URL
-      for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i];
-        if (client.url.indexOf(self.registration.scope) !== -1 && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      // If not, then open the target URL in a new window/tab.
-      if (clients.openWindow) {
-        // ✅ CORRECTION: Redirect to index.html on click
-        return clients.openWindow('/index.html');
-      }
-    })
-  );
+    event.notification.close();
+    // जेव्हा युजर नोटिफिकेशनवर क्लिक करेल तेव्हा ॲप (index.html) ओपन होईल
+    event.waitUntil(
+        clients.openWindow('index.html')
+    );
 });

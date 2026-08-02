@@ -289,9 +289,33 @@
         .bottom-action-bar { position: sticky; bottom: 0; background: #1a1a2e; padding: 15px 20px; display: flex; gap: 10px; }
         .btn-quote { flex: 1; background: transparent; border: 2px solid var(--accent); color: var(--accent); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-buy { flex: 2; background: var(--accent); border: none; color: #000; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); color: #333;
+        }
     </style>
 </head>
-<body>
+<body onload="initSupplierShopPage()">
+
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
 
     <!-- हीरो सेक्शन -->
     <div class="hero" id="heroSection">
@@ -384,6 +408,62 @@
         const vendorName = urlParams.get('vendor') || '';
         const vendorMobile = urlParams.get('mobile') || '';
         let currentProduct = null;
+
+        // --- 🔥 NEW: PAGE INIT & CLOUD SECURITY WATCHER 🔥 ---
+        function initSupplierShopPage() {
+            loadSupplierData();
+            syncSupplierShopFromCloud();
+        }
+
+        // --- 🔥 NEW: CLOUD DATABASE SYNC & SINGLE-DEVICE SECURITY WATCHER 🔥 ---
+        function syncSupplierShopFromCloud() {
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+                // १. सिंगल डिव्हाईस सुरक्षा वॉचर (`users` Collection)
+                db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                    if (doc.exists && doc.data()) {
+                        let cloudData = doc.data();
+                        let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                        if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
+                        }
+                    }
+                }, (err) => console.log("Cloud security watcher error:", err));
+
+                // २. 🔥 NEW: डीलर शॉप व्हिजिटचे क्लाऊड लॉगिंग (`supplier_shop_activity_logs`) 🔥
+                let fName = localStorage.getItem("current_user_name") || "वापरकर्ता";
+                db.collection("supplier_shop_activity_logs").add({
+                    userName: fName,
+                    userMobile: userMobile,
+                    visitedVendorName: vendorName || "अज्ञात विक्रेता",
+                    visitedVendorMobile: vendorMobile || "",
+                    action: "Visited Supplier Shop Profile",
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Activity logging error:", e));
+            }
+
+            // ३. क्लाऊडवरून विक्रेत्याची उत्पादने आणा (`vendor_products` Collection)
+            db.collection("vendor_products").get()
+            .then((querySnapshot) => {
+                let cloudProducts = [];
+                querySnapshot.forEach((doc) => {
+                    let pData = doc.data();
+                    pData.id = doc.id;
+                    cloudProducts.push(pData);
+                });
+                if (cloudProducts.length > 0) {
+                    localStorage.setItem('vendor_products', JSON.stringify(cloudProducts));
+                    loadSupplierData();
+                }
+            })
+            .catch(e => console.log("Cloud vendor products sync error:", e));
+        }
 
         function loadSupplierData() {
             const allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
@@ -552,18 +632,54 @@
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
+        // 🔥 UPDATED: कोटेशन रिक्वेस्ट थेट क्लाऊडवर पाठवणे (`quote_requests`) 🔥
         function requestQuote() {
             if (!currentProduct) return;
             const qty = prompt('किती प्रमाणात हवे आहे? (उदा. 50 kg)');
             if (qty) {
-                alert('✅ तुमची विनंती विक्रेत्याला पाठवली गेली. लवकरच संपर्क केला जाईल.');
-                closeProduct();
+                let userName = localStorage.getItem("current_user_name") || "शेतकरी/ग्राहक";
+                let userMobile = localStorage.getItem("current_user_mobile") || "माहिती नाही";
+
+                let quoteData = {
+                    prodName: currentProduct.name,
+                    vendorName: currentProduct.vendorName || vendorName || "विक्रेता",
+                    qty: qty,
+                    userName: userName,
+                    userMobile: userMobile,
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Firebase ला कोटेशन पाठवणे
+                db.collection("quote_requests").add(quoteData)
+                .then(() => {
+                    let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+                    let vendorNotifObj = {
+                        receiver_mobile: currentProduct.vendorName || vendorName || "विक्रेता", 
+                        title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
+                        message: `श्री. ${userName} यांना तुमच्या '${currentProduct.name}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
+                        date: new Date().toLocaleDateString('mr-IN'),
+                        orderId: "#REQ-" + Math.floor(1000 + Math.random() * 9000),
+                        isRead: false
+                    };
+                    appNotifs.push(vendorNotifObj);
+                    localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+
+                    db.collection("app_notifications").add(vendorNotifObj)
+                    .catch(e => console.error("Cloud vendor quote notif error:", e));
+
+                    alert('✅ तुमची विनंती विक्रेत्याला पाठवली गेली. लवकरच संपर्क केला जाईल.');
+                    closeProduct();
+                }).catch(err => {
+                    console.error("Quote save error:", err);
+                    alert('✅ तुमची विनंती विक्रेत्याला पाठवली गेली. लवकरच संपर्क केला जाईल.');
+                    closeProduct();
+                });
             }
         }
 
         function buyNow() {
             if (!currentProduct) return;
-            // येथे कार्ट मध्ये अॅड करून कार्ट पेजवर नेणे शक्य आहे (कृषी मॉल प्रमाणे)
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             cart.push({ id: currentProduct.id, name: currentProduct.name, price: currentProduct.offerPrice, icon: '📦', company: currentProduct.vendorName, category: currentProduct.category, qty: 1 });
             localStorage.setItem('krushi_cart', JSON.stringify(cart));
