@@ -876,14 +876,6 @@
             totalEl.innerText = '₹' + totalBill.toLocaleString('en-IN');
         }
 
-        function removeFromCart(id) {
-            let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
-            cart = cart.filter(i => i.id !== id);
-            localStorage.setItem('krushi_cart', JSON.stringify(cart));
-            updateCartBadge();
-            renderCartItems();
-        }
-
         function openCheckout() {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             if(cart.length === 0) { alert('कार्ट रिकामी आहे! आधी प्रॉडक्ट निवडा.'); return; }
@@ -913,7 +905,9 @@
             } else { deliveryFee = subtotal >= 1000 ? 0 : 50; }
 
             let adminSettings = JSON.parse(localStorage.getItem('admin_data_M33')) || {};
-            let onlineDiscountPercent = parseFloat(adminSettings.m33_online_benefit) || 1;
+            
+            // 🔥 CHANGED `|| 1` TO `|| 0` SO THERE IS NO AUTOMATIC DISCOUNT 🔥
+            let onlineDiscountPercent = parseFloat(adminSettings.m33_online_benefit) || 0; 
             let benefitAmount = subtotal * (onlineDiscountPercent / 100);
             
             window.currentBaseTotal = subtotal + deliveryFee;
@@ -1024,7 +1018,7 @@
             let payeeName = encodeURIComponent(paymentSettings.payee_name); 
             let upiLink = `upi://pay?pa=${merchantUPI}&pn=${payeeName}&am=${window.currentOnlineTotal}&cu=INR`;
             
-            if(confirm(`श्री. ${customerName},\nतुमचे एकूण बिल ₹${window.currentOnlineTotal} आहे. (तुम्ही बचत केली!)\n\nपेमेंट करण्यासाठी तुमच्या मोबाईलवरील (PhonePe/Google Pay) उघडायचे का?`)) {
+            if(confirm(`श्री. ${customerName},\nतुमचे एकूण बिल ₹${window.currentOnlineTotal} आहे.\n\nपेमेंट करण्यासाठी तुमच्या मोबाईलवरील (PhonePe/Google Pay) उघडायचे का?`)) {
                 window.location.href = upiLink;
                 setTimeout(() => {
                     if(confirm("पेमेंट यशस्वी झाले का? (डेमो मोड)")) {
