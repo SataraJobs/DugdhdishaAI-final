@@ -68,6 +68,13 @@
 </head>
 <body onload="initAIVoiceChat()">
 
+<!-- 🔒 सिक्युरिटी चेक -->
+<script>
+    if (!localStorage.getItem("current_logged_in_role")) {
+        window.location.replace("login.html");
+    }
+</script>
+
 <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
 <div id="sessionAlertBox">
     <div class="session-alert-content">
@@ -118,8 +125,8 @@
     }
     const db = firebase.firestore();
 
-    // 🔴 Default Fallback Gemini API Key (Will be overridden by Admin Panel)
-    let GEMINI_API_KEY = "AIzaSyBvBMWLq6_l8Ue7ZebFMA7knrjMejE7bZI"; 
+    // 🔴 रिकामी ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
+    let GEMINI_API_KEY = ""; 
     
     // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
     let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
@@ -137,7 +144,7 @@
     // --- 🔥 NEW: PAGE INIT & CLOUD SECURITY WATCHER 🔥 ---
     function initAIVoiceChat() {
         syncCloudSecurity();
-        initChatbot();
+        initChatbot(); // क्लाऊडवरून API Key लोड करणे
     }
 
     function syncCloudSecurity() {
@@ -161,15 +168,32 @@
         }
     }
 
-    function initChatbot() {
-        // 🔥 ADMIN SYNC: Load API Key and Prompt from Admin Panel (M16 Tab) via LocalStorage
-        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
-        if(adminAiData && adminAiData.m16_1 && adminAiData.m16_1 !== "sk-xxxxxxxxxxxxx") {
-            GEMINI_API_KEY = adminAiData.m16_1;
-        }
-        if(adminAiData && adminAiData.m16_4 && adminAiData.m16_4.trim() !== "") {
-            // जर ॲडमिनने स्वतःचा प्रॉम्प्ट सेट केला असेल तर तो वापरा
-            SYSTEM_PROMPT = adminAiData.m16_4;
+    // 🔥 थेट फायरबेस क्लाऊडवरून (Firestore) API Key फेच करणारे फंक्शन (लोकल स्टोरेज पूर्णपणे बंद) 🔥
+    async function initChatbot() {
+        try {
+            // 1. प्रथम 'admin_settings' च्या M16 डॉक्युमेंटमधून तपासा
+            let docSnap = await db.collection("admin_settings").doc("M16").get();
+            if (docSnap.exists && docSnap.data()) {
+                let data = docSnap.data();
+                if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
+                    GEMINI_API_KEY = data.m16_1.trim();
+                }
+                if (data.m16_4 && data.m16_4.trim() !== "") {
+                    SYSTEM_PROMPT = data.m16_4;
+                }
+            }
+            
+            // 2. जर M16 मध्ये नसेल तर 'ai_config' तपासा
+            if (!GEMINI_API_KEY) {
+                let docSnapAlt = await db.collection("admin_settings").doc("ai_config").get();
+                if (docSnapAlt.exists && docSnapAlt.data()) {
+                    let data = docSnapAlt.data();
+                    if (data.gemini_key) GEMINI_API_KEY = data.gemini_key.trim();
+                    if (data.system_prompt) SYSTEM_PROMPT = data.system_prompt;
+                }
+            }
+        } catch (e) {
+            console.log("Cloud API Key Load Error:", e);
         }
     }
     
@@ -227,6 +251,11 @@
 
     // 2. Send Message to Gemini API
     async function sendMessage() {
+        // अगर API Key लोड झाली नसेल, तर त्वरित क्लाऊडवरून आणा
+        if (!GEMINI_API_KEY) {
+            await initChatbot();
+        }
+
         const text = userInput.value.trim();
         if (!text) return;
 
@@ -242,7 +271,7 @@
 
         if(!apiKey || !apiKey.startsWith("AIzaSy")) {
             typingIndicator.style.display = 'none';
-            addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया M16 सेटिंग्ज तपासा.", 'bot-msg');
+            addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.", 'bot-msg');
             return;
         }
 
