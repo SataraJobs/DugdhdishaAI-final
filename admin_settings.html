@@ -926,7 +926,14 @@
                         <p style="font-size: 11px; color: #666; margin-top: 5px;">एका ऑर्डरवर जास्तीत जास्त किती फी आकारायची? (उदा. ₹500)</p>
                     </div>
 
-                    <button class="btn-prime" style="background:#1976d2;" onclick="savePlatformFeeConfig()">💾 Save Platform Fee Settings</button>
+                    <!-- 🔥 NEW: ONLINE PAYMENT DISCOUNT (BENEFIT) FIELD 🔥 -->
+                    <div class="field" style="margin-top: 20px; background: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #fbc02d;">
+                        <label style="color: #f57f17; font-size: 14px;">⚡ ऑनलाईन पेमेंट डिस्काउंट (Online Payment Benefit %)</label>
+                        <input type="number" id="m33_online_benefit" value="0" step="0.1" placeholder="उदा. 5">
+                        <p style="font-size: 11px; color: #666; margin-top: 5px;">ग्राहकाने ऑनलाईन पेमेंट केल्यास किती टक्के (Discount) द्यायचा ते येथे टाका. (उदा. 5 टाकल्यास 5% सूट मिळेल. 0 ठेवल्यास सूट मिळणार नाही.)</p>
+                    </div>
+
+                    <button class="btn-prime" style="background:#1976d2;" onclick="savePlatformFeeConfig()">💾 Save Settings</button>
                 </div>
             </div>
 
@@ -989,7 +996,7 @@
                         <div id="team_members_container">
                             <!-- Dynamic team member fields येतील -->
                         </div>
-                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()">➕ नवीन सदस्य جوडा</button>
+                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()">➕ नवीन सदस्य जोडा</button>
                     </div>
 
                     <button class="btn-prime" onclick="saveModule('M29')">💾 Publish Page Content</button>
@@ -1443,6 +1450,7 @@
             let p2 = parseFloat(document.getElementById('m33_perc_2').value) || 0;
             let p3 = parseFloat(document.getElementById('m33_perc_3').value) || 0;
             let maxCap = parseFloat(document.getElementById('m33_max_cap').value) || 0;
+            let onlineBenefit = parseFloat(document.getElementById('m33_online_benefit').value) || 0;
 
             if(s2 <= s1 && s2 !== 0) {
                 alert("दुसरा टप्पा पहिल्या टप्प्यापेक्षा मोठा असला पाहिजे.");
@@ -1453,26 +1461,34 @@
                 slab1: s1, perc1: p1,
                 slab2: s2, perc2: p2,
                 perc3: p3,
-                maxCap: maxCap
+                maxCap: maxCap,
+                m33_online_benefit: onlineBenefit
             };
 
+            // Save old format (just in case)
             localStorage.setItem('admin_platform_fee_config', JSON.stringify(feeConfig));
-            // 🔥 FIREBASE CLOUD SAVE 🔥
-            db.collection("admin_settings").doc("platform_fee_config").set(feeConfig, { merge: true })
+            db.collection("admin_settings").doc("platform_fee_config").set(feeConfig, { merge: true });
+
+            // Save new format (M33 structure)
+            localStorage.setItem('admin_data_M33', JSON.stringify(feeConfig));
+            db.collection("admin_settings").doc("M33").set(feeConfig, { merge: true })
             .catch(e => console.error("Error saving fee config to cloud:", e));
 
-            alert("✅ प्लॅटफॉर्म सर्व्हिस फीचे नवीन नियम यशस्वीरीत्या क्लाऊडवर सेव्ह झाले आहेत.");
+            alert("✅ प्लॅटफॉर्म सर्व्हिस फी आणि ऑनलाईन डिस्काउंट यशस्वीरीत्या क्लाऊडवर सेव्ह झाले आहेत.");
         }
 
         function loadPlatformFeeConfig() {
-            let feeConfig = JSON.parse(localStorage.getItem('admin_platform_fee_config'));
+            let feeConfig = JSON.parse(localStorage.getItem('admin_data_M33')) || JSON.parse(localStorage.getItem('admin_platform_fee_config'));
             if(feeConfig) {
-                document.getElementById('m33_slab_1').value = feeConfig.slab1;
-                document.getElementById('m33_perc_1').value = feeConfig.perc1;
-                document.getElementById('m33_slab_2').value = feeConfig.slab2;
-                document.getElementById('m33_perc_2').value = feeConfig.perc2;
-                document.getElementById('m33_perc_3').value = feeConfig.perc3;
-                document.getElementById('m33_max_cap').value = feeConfig.maxCap;
+                document.getElementById('m33_slab_1').value = feeConfig.slab1 !== undefined ? feeConfig.slab1 : '';
+                document.getElementById('m33_perc_1').value = feeConfig.perc1 !== undefined ? feeConfig.perc1 : '';
+                document.getElementById('m33_slab_2').value = feeConfig.slab2 !== undefined ? feeConfig.slab2 : '';
+                document.getElementById('m33_perc_2').value = feeConfig.perc2 !== undefined ? feeConfig.perc2 : '';
+                document.getElementById('m33_perc_3').value = feeConfig.perc3 !== undefined ? feeConfig.perc3 : '';
+                document.getElementById('m33_max_cap').value = feeConfig.maxCap !== undefined ? feeConfig.maxCap : '';
+                if(document.getElementById('m33_online_benefit')) {
+                    document.getElementById('m33_online_benefit').value = feeConfig.m33_online_benefit !== undefined ? feeConfig.m33_online_benefit : 0;
+                }
             }
         }
 
@@ -1592,6 +1608,7 @@
                         }
                     }
                 });
+                loadPlatformFeeConfig(); // Re-load specifically to handle M33 properly
                 console.log("✅ सर्व ॲडमिन सेटिंग्ज आणि दर Firebase Cloud वरून अपडेट झाले!");
             }).catch(e => console.error("Error syncing cloud admin settings:", e));
         }
