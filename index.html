@@ -9,7 +9,7 @@
     
     <!-- 🔥 WhatsApp & Social Media Rich Preview (मुख्य ॲप 'दुग्ध दिशा AI' च्या नावाने व मुख्य लोगोने शेअर होण्यासाठी) 🔥 -->
     <meta property="og:title" content="दुग्ध दिशा AI – स्मार्ट पशुपालन, समृद्ध शेतकरी">
-    <meta property="og:description" content="प्रत्येक दुभत्या जनावरामागील शेतकऱ्याला तंत्रज्ञानाच्या جوरावर आर्थिकदृष्ट्या सक्षम करणारे पहिले AI आधारित डेअरी व पशुपालन प्लॅटफॉर्म!">
+    <meta property="og:description" content="प्रत्येक दुभत्या जनावरामागील शेतकऱ्याला तंत्रज्ञानाच्या जोरावर आर्थिकदृष्ट्या सक्षम करणारे पहिले AI आधारित डेअरी व पशुपालन प्लॅटफॉर्म!">
     <meta property="og:image" content="https://dugdhadisha.com/logo.png">
     <meta property="og:image:secure_url" content="https://dugdhadisha.com/logo.png">
     <meta property="og:image:type" content="image/png">
@@ -371,7 +371,7 @@
             transform: scale(1.15);
         }
 
-        /* 🔥 NEW: VET & JOIN US MODAL STYLES 🔥 */
+        /* 🔥 NEW: VET (पशुवैद्यक) MODAL STYLES 🔥 */
         .vet-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: flex-end; }
         .vet-modal-content { background: #f4f7f6; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; box-sizing: border-box; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -384,39 +384,6 @@
         .btn-wa { flex: 1; background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; display:flex; align-items:center; justify-content:center; gap:5px; transition: 0.2s; text-decoration: none;}
         .btn-book { flex: 1.5; background: linear-gradient(145deg, #f57c00, #e65100); color: white; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 2px 5px rgba(230,81,0,0.3); transition: 0.2s;}
         .close-modal-btn { background: #e0e0e0; color: #333; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; box-sizing: border-box;}
-
-        /* 🔥 NEW: PWA Install Banner Style 🔥 */
-        .pwa-install-banner {
-            display: none;
-            margin: 10px 15px 5px;
-            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
-            border-radius: 12px;
-            padding: 10px 14px;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.3);
-            border: 1px solid #a5d6a7;
-            color: white;
-            animation: slideDown 0.4s ease;
-        }
-        .pwa-install-banner p {
-            margin: 0;
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1.3;
-        }
-        .pwa-install-banner .install-action-btn {
-            background: #ff9800;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-weight: 900;
-            font-size: 11px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            white-space: nowrap;
-        }
 
         /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
         #sessionAlertBox {
@@ -590,18 +557,22 @@
         </div>
     </div>
 
-    <!-- 🔥 NEW: PWA INSTALL BANNER 🔥 -->
-    <div class="pwa-install-banner" id="pwaInstallBanner">
-        <p>📲 दुग्ध दिशा ॲप मोबाईलच्या होम स्क्रीनवर इन्स्टॉल करा!</p>
-        <button class="install-action-btn" id="pwaInstallBtn">इन्स्टॉल करा</button>
+    <!-- 🔥 मोठे आणि आकर्षक 'APP INSTALL' बॅनर 🔥 -->
+    <div id="pwaInstallBanner" style="display: none; background: linear-gradient(145deg, #ff9800, #f57c00); color: white; padding: 20px; border-radius: 15px; margin: 15px; box-shadow: 0 6px 15px rgba(230, 81, 0, 0.4); text-align: center; border: 2px dashed #fff; animation: slideDown 0.5s ease-out; position: relative;">
+        <div style="font-size: 45px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">📲</div>
+        <h3 style="margin: 0 0 8px; font-size: 20px; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">दुग्ध दिशा ॲप इन्स्टॉल करा</h3>
+        <p style="margin: 0; font-size: 13px; font-weight: bold; opacity: 0.95; line-height: 1.4;">दररोज जलद वापरासाठी ॲप तुमच्या मोबाईलच्या होम स्क्रीनवर घ्या!</p>
+        <button id="pwaInstallBtn" style="background: white; color: #e65100; border: none; padding: 14px 24px; border-radius: 30px; font-weight: 900; font-size: 16px; margin-top: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; width: 100%; transition: 0.2s;">
+            ⬇️ ॲप इन्स्टॉल करा (Install Now)
+        </button>
+        <div style="position: absolute; top: 10px; right: 15px; font-size: 22px; cursor: pointer; opacity: 0.9; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);" onclick="document.getElementById('pwaInstallBanner').style.display='none'">✖</div>
     </div>
 
-    <!-- 🔥 AD SLIDER CONTAINER (डेमो स्पॉन्सर्ड स्लाईड काढली) 🔥 -->
+    <!-- 🔥 AD SLIDER CONTAINER 🔥 -->
     <div class="slider-wrapper" id="ad_slider_container">
         <div class="slide active">
             <img src="main_banner.png" alt="दुग्ध दिशा बॅनर" onerror="this.src='https://via.placeholder.com/600x400?text=Banner+Image'">
         </div>
-        <!-- 🌟 डायनॅमिक स्पॉन्सर स्लाईड काढली 🌟 -->
         <div class="slider-dots" id="slider_dots_container">
             <div class="dot active"></div>
             <div class="dot"></div>
@@ -854,7 +825,7 @@
         e.preventDefault();
         deferredPrompt = e;
         if (pwaBanner) {
-            pwaBanner.style.display = 'flex';
+            pwaBanner.style.display = 'block'; // Make the big banner visible
         }
     });
 
