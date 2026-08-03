@@ -557,7 +557,7 @@
         </div>
     </div>
 
-    <!-- 🔥 मोठे आणि आकर्षक 'APP INSTALL' बॅनर 🔥 -->
+    <!-- 🔥 मोठे आणि आकर्षक 'APP INSTALL' बॅनर (५ सेकंदांच्या टायमरसह) 🔥 -->
     <div id="pwaInstallBanner" style="display: none; background: linear-gradient(145deg, #ff9800, #f57c00); color: white; padding: 20px; border-radius: 15px; margin: 15px; box-shadow: 0 6px 15px rgba(230, 81, 0, 0.4); text-align: center; border: 2px dashed #fff; animation: slideDown 0.5s ease-out; position: relative;">
         <div style="font-size: 45px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">📲</div>
         <h3 style="margin: 0 0 8px; font-size: 20px; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">दुग्ध दिशा ॲप इन्स्टॉल करा</h3>
@@ -816,7 +816,7 @@
     }
     const db = firebase.firestore();
 
-    // ========== 📲 PWA INSTALLATION SYSTEM ==========
+    // ========== 📲 PWA INSTALLATION SYSTEM (5 Seconds Delay) ==========
     let deferredPrompt;
     const pwaBanner = document.getElementById('pwaInstallBanner');
     const pwaBtn = document.getElementById('pwaInstallBtn');
@@ -824,9 +824,13 @@
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        if (pwaBanner) {
-            pwaBanner.style.display = 'block'; // Make the big banner visible
-        }
+        
+        // ⏳ ५ सेकंदांनंतर मोठा बॅनर दिसेल
+        setTimeout(() => {
+            if (pwaBanner) {
+                pwaBanner.style.display = 'block'; 
+            }
+        }, 5000);
     });
 
     if (pwaBtn) {
