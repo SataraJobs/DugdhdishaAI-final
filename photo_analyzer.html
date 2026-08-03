@@ -155,6 +155,13 @@
 </head>
 <body onload="initPhotoAnalyzer()">
 
+<!-- 🔒 सिक्युरिटी चेक -->
+<script>
+    if (!localStorage.getItem("current_logged_in_role")) {
+        window.location.replace("login.html");
+    }
+</script>
+
 <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
 <div id="sessionAlertBox">
     <div class="session-alert-content">
@@ -171,13 +178,6 @@
             <p style="margin: 5px 0 0; color: #c8e6c9;">AI द्वारे चारा आणि आजार अचूक ओळखा</p>
         </div>
     </div>
-
-    <!-- 🔒 सिक्युरिटी चेक -->
-    <script>
-        if (!localStorage.getItem("current_logged_in_role")) {
-            window.location.replace("login.html");
-        }
-    </script>
 
     <div class="camera-container">
         <h4 style="margin: 0 0 15px; color: #333;">चाऱ्याचा किंवा आजारी भागाचा फोटो काढा</h4>
@@ -238,15 +238,36 @@
     }
     const db = firebase.firestore();
 
-    // 🔴 Default Fallback Key
-    let GEMINI_API_KEY = "AQ.Ab8RN6JERIjbm4s9Pb0ajCloS90Ow01aC4_Cq3CiNiVa03aCtg"; 
+    // 🔴 सुरुवातीला रिकामे ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
+    let GEMINI_API_KEY = ""; 
+
+    async function fetchGeminiKeyFromCloud() {
+        try {
+            // प्रथम 'admin_settings' च्या M16 डॉक्युमेंटमधून तपासा
+            let docSnap = await db.collection("admin_settings").doc("M16").get();
+            if (docSnap.exists && docSnap.data()) {
+                let data = docSnap.data();
+                if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
+                    GEMINI_API_KEY = data.m16_1.trim();
+                }
+            }
+            
+            // जर M16 मध्ये नसेल तर 'ai_config' तपासा (Backup)
+            if (!GEMINI_API_KEY) {
+                let docSnapAlt = await db.collection("admin_settings").doc("ai_config").get();
+                if (docSnapAlt.exists && docSnapAlt.data()) {
+                    let data = docSnapAlt.data();
+                    if (data.gemini_key) GEMINI_API_KEY = data.gemini_key.trim();
+                }
+            }
+        } catch (e) {
+            console.log("Cloud API Key Fetch Error:", e);
+        }
+    }
 
     function initPhotoAnalyzer() {
-        // Load API Key from Admin Panel (M16 Tab) if available
-        let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
-        if(adminAiData && adminAiData.m16_1 && adminAiData.m16_1 !== "sk-xxxxxxxxxxxxx") {
-            GEMINI_API_KEY = adminAiData.m16_1;
-        }
+        // पेज लोड होताच क्लाऊडवरून की आणून ठेवा
+        fetchGeminiKeyFromCloud(); 
 
         // Load Products for Ads
         db.collection("vendor_products").get().then((querySnapshot) => {
@@ -265,17 +286,6 @@
 
     // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
     function syncPhotoAnalyzerFromCloud() {
-        // १. ॲडमिन पॅनेलमधील M16 (Gemini API Key) क्लाऊडवरून आणा
-        db.collection("admin_settings").doc("M16").get().then((doc) => {
-            if (doc.exists && doc.data()) {
-                let data = doc.data();
-                localStorage.setItem('admin_data_M16', JSON.stringify(data));
-                if(data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx") {
-                    GEMINI_API_KEY = data.m16_1;
-                }
-            }
-        }).catch(e => console.log("Cloud M16 sync error:", e));
-
         // २. ॲडमिन पॅनेलमधील M25 (प्रीमियम दर) क्लाऊडवरून आणा
         db.collection("admin_settings").doc("M25").get().then((doc) => {
             if (doc.exists && doc.data()) {
@@ -493,6 +503,11 @@
 
     // 🔥 HIGH ACCURACY AI VISION CALL USING GEMINI 1.5 PRO 🔥
     async function analyzeImageWithAI(base64Data) {
+        // जर की नसेल तर पुन्हा ढगातून (Cloud) आणा
+        if (!GEMINI_API_KEY) {
+            await fetchGeminiKeyFromCloud();
+        }
+
         let scanner = document.getElementById("scanner");
         let resultBox = document.getElementById("aiResult");
         let outputContent = document.getElementById("aiOutputContent");
