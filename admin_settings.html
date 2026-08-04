@@ -271,7 +271,11 @@
             <!-- M1: DASHBOARD -->
             <div id="m1" class="tab-content active">
                 <div class="grid-2">
-                    <div class="stat-card"><h3 id="stat_users">०</h3><p>Total Registered Users</p></div>
+                    <div class="stat-card">
+                        <h3 id="stat_users">०</h3>
+                        <p>Total Registered Users</p>
+                        <p style="font-size:11px; color:#2e7d32; font-weight:bold; margin-top:5px;">Live / Logged In: <span id="stat_active_users">०</span></p>
+                    </div>
                     <div class="stat-card"><h3 id="stat_orders_count">०</h3><p>Total Orders Received</p></div>
                 </div>
                 <div class="grid-2">
@@ -711,6 +715,8 @@
                             <option>Pending Payments/Commissions</option>
                             <option>Milk Collection History</option>
                             <option>Farmer Feedback Report</option>
+                            <!-- 🔥 NEW REPORT OPTION 🔥 -->
+                            <option>Krushi Bazar Online Orders (Supplier Refund)</option>
                         </select>
                     </div>
                     <div class="grid-2">
@@ -1647,6 +1653,20 @@
             }).catch(e => console.log("Cloud tickets sync:", e));
         }
 
+        // --- 🔥 NEW: SYNC MALL ORDERS FOR REPORT BUILDER 🔥 ---
+        function syncOrdersForReports() {
+            db.collection("mall_orders").get().then(snap => {
+                let allOrders = [];
+                snap.forEach(doc => {
+                    let o = doc.data();
+                    o.id = doc.id;
+                    allOrders.push(o);
+                });
+                // Store in local storage exclusively for instantaneous report generation
+                localStorage.setItem('user_orders', JSON.stringify(allOrders));
+            }).catch(e => console.log("Orders background sync error for report builder:", e));
+        }
+
         function loadAllModules() {
             for(let mod in configMap) {
                 let data = JSON.parse(localStorage.getItem('admin_data_' + mod));
@@ -1724,6 +1744,7 @@
 
         // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
+            syncOrdersForReports(); // 🔥 येथे रिपोर्टसाठी सर्व ऑर्डर्स सिंक होतील
             loadAllModules();
             syncAdminSettingsFromCloud(); // 🔥 येथे क्लाऊड सिंक सुरू होईल
             syncAllPendingApprovalsFromCloud(); // 🔥 येथे सर्व पेंडिंग मंजुरी क्लाऊडवरून येतील
@@ -2078,6 +2099,27 @@
         function loadDashboardStats() {
             let users = JSON.parse(localStorage.getItem('app_users')) || [];
             document.getElementById('stat_users').innerText = users.length; 
+
+            // 🔥 NEW: Total Logged In / Active Users Logic 🔥
+            let activeLogins = users.filter(u => u.status === 'Active' || u.isLoggedIn === true).length;
+            if(document.getElementById('stat_active_users')) {
+                document.getElementById('stat_active_users').innerText = activeLogins > 0 ? activeLogins : users.length;
+            }
+
+            // Realtime Firebase fetch for exact user count
+            db.collection("users").get().then((snap) => {
+                if(!snap.empty) {
+                    document.getElementById('stat_users').innerText = snap.size;
+                    let cloudActive = 0;
+                    snap.forEach(doc => { 
+                        let d = doc.data(); 
+                        if(d.status === 'Active' || d.isLoggedIn) cloudActive++; 
+                    });
+                    if(document.getElementById('stat_active_users')) {
+                        document.getElementById('stat_active_users').innerText = cloudActive;
+                    }
+                }
+            }).catch(e => console.log("Cloud users count sync skip:", e));
 
             let savedAds = JSON.parse(localStorage.getItem('live_admin_ad_images'));
             let activeAdsCount = (savedAds && savedAds.ads && savedAds.ads.length > 0) ? savedAds.ads.length : 0;
@@ -2957,6 +2999,70 @@
                         'Date': t.date
                     }));
                     // Removed dummy fallback
+                    break;
+
+                // 🔥 NEW: Online Order & Supplier Commission/Refund Report Logic 🔥
+                case 'Krushi Bazar Online Orders (Supplier Refund)':
+                    const allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                    const platformFeeConfig = JSON.parse(localStorage.getItem('admin_data_M33')) || { slab1: 1000, perc1: 3, slab2: 10000, perc2: 2, perc3: 1, maxCap: 500 };
+                    
+                    // Filter orders that are Online (Not COD)
+                    const onlineOrders = allOrders.filter(o => {
+                        let method = (o.paymentMethod || '').toUpperCase();
+                        return method !== 'COD' && method !== '';
+                    });
+                    
+                    data = onlineOrders.map(o => {
+                        let totalOrderAmt = parseFloat(o.totalAmount || 0);
+                        let fee = 0;
+                        
+                        let s1 = parseFloat(platformFeeConfig.slab1 || 1000);
+                        let p1 = parseFloat(platformFeeConfig.perc1 !== undefined ? platformFeeConfig.perc1 : 3);
+                        let s2 = parseFloat(platformFeeConfig.slab2 || 10000);
+                        let p2 = parseFloat(platformFeeConfig.perc2 !== undefined ? platformFeeConfig.perc2 : 2);
+                        let p3 = parseFloat(platformFeeConfig.perc3 !== undefined ? platformFeeConfig.perc3 : 1);
+                        let maxCap = parseFloat(platformFeeConfig.maxCap || 500);
+
+                        // Calculate Platform Cut based on M33 Slabs
+                        if (totalOrderAmt <= s1) {
+                            fee = (totalOrderAmt * p1) / 100;
+                        } else if (totalOrderAmt <= s2) {
+                            fee = (totalOrderAmt * p2) / 100;
+                        } else {
+                            fee = (totalOrderAmt * p3) / 100;
+                        }
+                        
+                        if (maxCap > 0 && fee > maxCap) {
+                            fee = maxCap;
+                        }
+                        
+                        let supplierPayable = totalOrderAmt - fee;
+                        
+                        let productsList = (o.items || []).map(i => `${i.name} (x${i.qty})`).join(' | ');
+                        let vendorNames = (o.items || []).map(i => i.vendorName || 'Unknown Vendor').filter((v, i, a) => a.indexOf(v) === i).join(', ');
+
+                        return {
+                            'Order ID': o.id || '-',
+                            'Date': o.date || o.timestamp || '-',
+                            'Customer Name': o.customer?.name || '-',
+                            'Mobile': o.customer?.mobile || '-',
+                            'Products': productsList,
+                            'Supplier Name': vendorNames,
+                            'Payment Mode': o.paymentMethod || 'Online',
+                            'Total Amount (₹)': totalOrderAmt.toFixed(2),
+                            'Platform Cut (₹)': fee.toFixed(2),
+                            'Supplier Refund (₹)': supplierPayable.toFixed(2)
+                        };
+                    });
+                    
+                    // Date Filter
+                    if (startDate && endDate) {
+                        data = data.filter(row => {
+                            if (row['Date'] === '-') return true;
+                            const rowDate = new Date(row['Date']);
+                            return rowDate >= new Date(startDate) && rowDate <= new Date(endDate);
+                        });
+                    }
                     break;
             }
             return data;

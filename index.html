@@ -7,15 +7,15 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
     
-    <!-- 🔥 WhatsApp & Social Media Rich Preview (मुख्य ॲप 'दुग्ध दिशा AI' च्या नावाने व मुख्य लोगोने शेअर होण्यासाठी) 🔥 -->
-    <meta property="og:title" content="दुग्ध दिशा AI – स्मार्ट पशुपालन, समृद्ध शेतकरी">
-    <meta property="og:description" content="प्रत्येक दुभत्या जनावरामागील शेतकऱ्याला तंत्रज्ञानाच्या जोरावर आर्थिकदृष्ट्या सक्षम करणारे पहिले AI आधारित डेअरी व पशुपालन प्लॅटफॉर्म!">
-    <meta property="og:image" content="https://dugdhadisha.com/logo.png">
-    <meta property="og:image:secure_url" content="https://dugdhadisha.com/logo.png">
+    <!-- 🔥 WhatsApp & Social Media Rich Preview (खिलार इमेज आणि मुख्य लिंकसाठी अपडेटेड) 🔥 -->
+    <meta property="og:title" content="चॅम्पियन खिल्लार AI – स्मार्ट पशुपालन">
+    <meta property="og:description" content="शर्यतीच्या बैलांसाठी बनवलेला पहिला AI आधारित Performance Platform.">
+    <meta property="og:image" content="https://satarajobs.github.io/DugdhdishaAI-final/1001167296.png">
+    <meta property="og:image:secure_url" content="https://satarajobs.github.io/DugdhdishaAI-final/1001167296.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:url" content="https://dugdhadisha.com/login.html">
+    <meta property="og:url" content="https://satarajobs.github.io/DugdhdishaAI-final/login.html">
     <meta property="og:type" content="website">
     
     <!-- 🔥 ऑटो-रीडायरेक्ट सिस्टीम आणि सिक्युरिटी लॉक 🔥 -->
@@ -421,6 +421,16 @@
     </div>
     <div class="menu-body">
         
+        <!-- 🔥 ABOUT US MENU ITEM 🔥 -->
+        <a href="about_us.html" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
+            <span class="m-icon">ℹ️</span> आमच्याबद्दल (About Us)
+        </a>
+
+        <!-- 🔥 NEW: SHARE APP MENU ITEM (संपूर्ण ॲप शेअर करण्यासाठी) 🔥 -->
+        <a onclick="shareMainApp(); closeMenu();" class="menu-item" style="background:#e3f2fd; color:#1565c0; font-weight:900; border-bottom: 2px solid #90caf9; cursor:pointer;">
+            <span class="m-icon">🔗</span> ॲप शेअर करा (Share App)
+        </a>
+
         <!-- 🔥 NEW: JOIN WITH US FILTER IN MENU 🔥 -->
         <a onclick="openJoinUsModal(); closeMenu();" class="menu-item" style="background:#e8eaf6; color:#283593; font-weight:900; border-bottom: 2px solid #9fa8da; cursor: pointer;">
             <span class="m-icon">🤝</span> जॉईन विथ अस (Join Us)
@@ -432,11 +442,6 @@
         
         <a onclick="checkAccessAndCall()" class="menu-item" style="background:#ffebee; color:#d32f2f; font-weight:900; border-bottom: 2px solid #ef9a9a; cursor:pointer;">
             <span class="m-icon">📞</span> कंपनी डॉक्टर (सल्ला) <span style="font-size:12px; margin-left:auto;">🔒</span>
-        </a>
-
-        <!-- 🔥 ABOUT US MENU ITEM (लॉगिन/मोडल न उघडता थेट about_us.html पेज उघडेल) 🔥 -->
-        <a href="about_us.html" class="menu-item" style="background:#e8f5e9; color:#1b5e20; font-weight:900; border-bottom: 2px solid #a5d6a7; cursor:pointer;">
-            <span class="m-icon">ℹ️</span> आमच्याबद्दल (About Us)
         </a>
 
         <!-- 🔥 NEW: KHILLAR BULL & RACING SECTION IN HAMBURGER MENU 🔥 -->
@@ -957,6 +962,26 @@
         }, 300);
     }
 
+    // --- 🔥 NEW: संपूर्ण ॲप शेअर करण्याचे लॉजिक (Share Full App) 🔥 ---
+    function shareMainApp() {
+        let shareTitle = "दुग्ध दिशा AI - स्मार्ट पशुपालन ॲप";
+        let shareText = "नमस्कार! 🌾\nमी *'दुग्ध दिशा AI'* ॲप वापरत आहे. दुभत्या जनावरांचे व्यवस्थापन, दूध संकलन, चारा नियोजन आणि मोफत पशुवैद्यकीय सल्ल्यासाठी हे महाराष्ट्रातील नंबर १ ॲप आहे.\n\n👇 *आत्ताच खालील लिंकवर क्लिक करून ॲप डाऊनलोड/इन्स्टॉल करा:*";
+        let shareUrl = "https://satarajobs.github.io/DugdhdishaAI-final/login.html";
+
+        if (navigator.share) {
+            navigator.share({
+                title: shareTitle,
+                text: shareText + "\n\n" + shareUrl
+            }).catch((error) => {
+                let waUrl = `https://wa.me/?text=` + encodeURIComponent(shareText + "\n\n" + shareUrl);
+                window.open(waUrl, '_blank');
+            });
+        } else {
+            let waUrl = `https://wa.me/?text=` + encodeURIComponent(shareText + "\n\n" + shareUrl);
+            window.open(waUrl, '_blank');
+        }
+    }
+
     // --- 🔥 FIX: REPRODUCTION TABS TOGGLE LOGIC 🔥 ---
     function toggleReproTabs() {
         var tabs = document.getElementById("sub_repro_tabs");
@@ -1137,14 +1162,15 @@
         }
         let shareTitle = "🏆 चॅम्पियन खिल्लार AI - शर्यतीच्या बैलांसाठी पहिला AI Performance Platform";
         let shareText = `🏆 *चॅम्पियन खिल्लार AI*\n"शर्यतीच्या बैलांसाठी बनवलेला पहिला AI आधारित Performance Platform."\n\n🐂 तुमच्या शर्यतीच्या बैलाचा स्टॅमिना, ताकद, खुराक नियोजन आणि अस्सल बैल बाजार आता AI सोबत करा!\n\n👉 *आत्ताच खालील लिंकवर क्लिक करा आणि लॉगिन/नोंदणी करा:*`;
-        let shareUrl = `https://dugdhadisha.com/login.html?ref=champion_khillar`;
+        
+        // 🔥 बदल: Localhost ऐवजी थेट मुख्य लाईव्ह (Firebase/Custom) डोमेनची लिंक दिली आहे, जेणेकरून WhatsApp वर लिंक निळी (Clickable) दिसेल. 🔥
+        let shareUrl = `https://satarajobs.github.io/DugdhdishaAI-final/login.html?ref=champion_khillar`;
 
         // Modern Mobile Web Share API (Android/iOS वर उत्तम Rich Preview साठी)
         if (navigator.share) {
             navigator.share({
                 title: shareTitle,
-                text: shareText,
-                url: shareUrl
+                text: shareText + "\n\n" + shareUrl
             }).catch((error) => {
                 // जर युजरने कॅन्सल केले किंवा एरर आला तर WhatsApp डायरेक्ट लिंक उघडा
                 let waUrl = `https://wa.me/?text=` + encodeURIComponent(shareText + "\n\n" + shareUrl);
