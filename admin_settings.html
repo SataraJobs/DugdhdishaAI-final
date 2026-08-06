@@ -236,8 +236,9 @@
             <div class="menu-item" onclick="switchTab('m28')">🛡️ ३६. Audit Log</div>
             <div class="menu-item" onclick="switchTab('m29')">📝 ३७. CMS Editor</div>
             <div class="menu-item" onclick="switchTab('m30')">🔌 ३८. API Manager</div>
-            <!-- 🔥 NEW: M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥 -->
             <div class="menu-item" onclick="switchTab('m_khillar_admin')" style="color: #ff9800; font-weight: 900;">🏆 ३९. शर्यत बैल व खिलार नियंत्रण</div>
+            <!-- 🔥 NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥 -->
+            <div class="menu-item" onclick="switchTab('m_all_market_ads')" style="color: #00bcd4; font-weight: 900;">🐄 ४०. सर्व पशु बाजार नियंत्रण</div>
         </div>
     </div>
 
@@ -1023,7 +1024,7 @@
                 </div>
             </div>
 
-            <!-- 🔥🔥🔥 NEW: M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥🔥🔥 -->
+            <!-- 🔥🔥🔥 M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥🔥🔥 -->
             <div id="m_khillar_admin" class="tab-content">
                 
                 <!-- 1. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Moderation) -->
@@ -1060,6 +1061,34 @@
 
             </div>
 
+            <!-- 🔥🔥🔥 NEW TAB: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥🔥🔥 -->
+            <div id="m_all_market_ads" class="tab-content">
+                <div class="admin-card" style="border-left: 5px solid #00bcd4;">
+                    <h4 style="color:#00838f; border-bottom-color:#b2ebf2;">🐄 सर्व पशु बाजार नियंत्रण (Manage ALL Market Ads)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">शेतकऱ्यांनी पशु बाजारामध्ये (`kharedi_vikri.html`) टाकलेल्या सर्वसाधारण जाहिराती (गाय, म्हैस, शेळी इ.) येथे दिसतील. कोणत्याही जाहिरातीचे व्यवस्थापन किंवा डिलीट तुम्ही येथून करू शकता.</p>
+                    
+                    <!-- Filter/Search for Ads -->
+                    <div class="grid-3" style="background:#e0f7fa; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #b2ebf2;">
+                        <div class="field" style="margin-bottom:0;"><label>Animal Type</label>
+                            <select id="filter_all_market_type" onchange="loadAllMarketAdsAdmin()">
+                                <option value="All">All Types (सर्व)</option>
+                                <option value="गाय">गाय (Cow)</option>
+                                <option value="म्हैस">म्हैस (Buffalo)</option>
+                                <option value="शेळी">शेळी/मेंढी (Goat/Sheep)</option>
+                            </select>
+                        </div>
+                        <div class="field" style="margin-bottom:0;"><label>Farmer Mobile</label>
+                            <input type="text" id="filter_all_market_mobile" placeholder="Search Mobile No..." onkeyup="if(event.key === 'Enter') loadAllMarketAdsAdmin()">
+                        </div>
+                        <div style="display:flex; align-items:flex-end;">
+                            <button class="btn-prime" style="background:#00bcd4; margin-bottom:0;" onclick="loadAllMarketAdsAdmin()">🔍 Search / Refresh</button>
+                        </div>
+                    </div>
+
+                    <div id="admin_all_market_ads_list"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1082,7 +1111,7 @@
         </div>
     </div>
 
-    <!-- 🔥 NEW: DOCUMENT VIEWER MODAL 🔥 -->
+    <!-- 🔥 NEW: VIEW DOCUMENT MODAL 🔥 -->
     <div id="documentViewModal" class="doc-modal-overlay">
         <div class="doc-modal-content">
             <button class="doc-close-btn" onclick="closeDocumentModal()">✕</button>
@@ -1137,6 +1166,9 @@
             }
             if(tabId === 'm_khillar_admin') {
                 initKhillarAdmin();
+            }
+            if(tabId === 'm_all_market_ads') {
+                loadAllMarketAdsAdmin();
             }
             if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('active-mobile'); } 
         }
@@ -1692,6 +1724,26 @@
             }).catch(e => console.log("Orders background sync error for report builder:", e));
         }
 
+        // 🔥 NEW: क्लाऊडवरून सर्व युजर्सची यादी आणून रिपोर्ट बिल्डरसाठी सेव्ह करणे 🔥
+        function syncUsersForAdmin() {
+            db.collection("users").get().then((querySnapshot) => {
+                let cloudUsers = [];
+                querySnapshot.forEach((doc) => {
+                    let u = doc.data();
+                    if(!u.mobile) u.mobile = doc.id; // मोबाईल नंबर की (Key) म्हणून वापरण्यासाठी
+                    cloudUsers.push(u);
+                });
+                if(cloudUsers.length > 0) {
+                    // १. क्लाऊडचा डेटा लोकल मेमरीमध्ये रिपोर्टसाठी सेव्ह करा
+                    localStorage.setItem('app_users', JSON.stringify(cloudUsers));
+                    
+                    // २. युजर मॅनेजमेंट (M2) चे टेबल रिफ्रेश करा
+                    refreshAllUsersTable();
+                    refreshSupplierTable();
+                }
+            }).catch(e => console.log("Cloud users sync error:", e));
+        }
+
         function loadAllModules() {
             for(let mod in configMap) {
                 let data = JSON.parse(localStorage.getItem('admin_data_' + mod));
@@ -1769,10 +1821,11 @@
 
         // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
-            syncOrdersForReports(); // 🔥 येथे रिपोर्टसाठी सर्व ऑर्डर्स सिंक होतील
+            syncUsersForAdmin(); // 🔥 ही नवीन लाईन इथे ॲड केली (रिपोर्टसाठी युजर्स सिंक होतील)
+            syncOrdersForReports(); 
             loadAllModules();
-            syncAdminSettingsFromCloud(); // 🔥 येथे क्लाऊड सिंक सुरू होईल
-            syncAllPendingApprovalsFromCloud(); // 🔥 येथे सर्व पेंडिंग मंजुरी क्लाऊडवरून येतील
+            syncAdminSettingsFromCloud(); 
+            syncAllPendingApprovalsFromCloud(); 
             loadPlatformFeeConfig(); 
             loadDashboardStats(); 
             loadDeliveryRates();
@@ -1788,7 +1841,76 @@
             refreshSupplierTable();
             refreshAllProductsTable();
             toggleCmsSection();
-            initKhillarAdmin(); // 🔥 येथे नवीन शर्यत बैल आणि खिलार मॉड्यूल लोड होईल
+            initKhillarAdmin(); 
+        }
+
+        // --- 🔥 NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥 ---
+        function loadAllMarketAdsAdmin() {
+            let container = document.getElementById('admin_all_market_ads_list');
+            if(!container) return;
+            
+            let filterType = document.getElementById('filter_all_market_type').value;
+            let filterMobile = document.getElementById('filter_all_market_mobile').value.trim();
+            
+            container.innerHTML = '<p style="color:#666; text-align:center;">⏳ सर्व जाहिराती लोड होत आहेत...</p>';
+
+            function renderAllMarketTable(animalsList) {
+                if (animalsList.length === 0) {
+                    container.innerHTML = '<p style="color:#888; text-align:center;">कोणतीही जाहिरात सापडली नाही.</p>';
+                    return;
+                }
+                let html = '<table class="report-table"><thead><tr><th>ID</th><th>प्रकार / जात</th><th>किंमत</th><th>मालक / मोबाईल</th><th>जाहिरात दिनांक</th><th>कृती</th></tr></thead><tbody>';
+                animalsList.forEach(a => {
+                    let isUrgent = a.isUrgent ? ' <span style="background:#d32f2f; color:white; padding:2px 5px; border-radius:4px; font-size:9px;">URGENT</span>' : '';
+                    let isSold = a.status === 'sold' ? ' <span style="background:#ff9800; color:white; padding:2px 5px; border-radius:4px; font-size:9px;">SOLD</span>' : '';
+                    
+                    html += `<tr>
+                        <td><span style="font-size:10px; color:#555;">${a.firebaseDocId || a.id || 'N/A'}</span></td>
+                        <td><b>${a.type || 'N/A'}</b><br><span style="font-size:11px; color:#666;">${a.breed || ''}</span>${isUrgent}${isSold}</td>
+                        <td style="color:#2e7d32; font-weight:bold;">₹${a.price || 0}</td>
+                        <td>${a.farmerName || 'मालक'}<br><span style="font-size:11px; color:#1565c0; font-weight:bold;">${a.mobile || '-'}</span></td>
+                        <td><span style="font-size:11px;">${a.timestamp ? new Date(a.timestamp).toLocaleDateString('mr-IN') : 'N/A'}</span></td>
+                        <td><button class="btn-danger" style="padding:5px 10px; font-size:11px; width:auto; margin:0;" onclick="deleteAllMarketAdAdmin('${a.firebaseDocId || a.id}')">🗑️ Delete Ad</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            // Fetch from Firebase
+            let query = db.collection("market_animals").orderBy("timestamp", "desc");
+            query.get()
+            .then((querySnapshot) => {
+                let allAnimals = [];
+                querySnapshot.forEach((doc) => {
+                    let animal = doc.data();
+                    animal.firebaseDocId = doc.id;
+                    
+                    // Apply Filters
+                    let matchType = filterType === 'All' || animal.type === filterType;
+                    let matchMobile = filterMobile === '' || (animal.mobile && animal.mobile.includes(filterMobile));
+                    
+                    if(matchType && matchMobile) {
+                        allAnimals.push(animal);
+                    }
+                });
+                renderAllMarketTable(allAnimals);
+            })
+            .catch(e => {
+                console.error("Error fetching market ads:", e);
+                container.innerHTML = `<p style="color:#d32f2f; text-align:center;">❌ एरर: इंटरनेट कनेक्शन तपासा. (${e.message})</p>`;
+            });
+        }
+
+        function deleteAllMarketAdAdmin(id) {
+            if(confirm("ही जाहिरात पशु बाजारातून (Market) कायमची डिलीट करायची आहे का?\n\nही कृती पूर्ववत (Undo) करता येणार नाही.")) {
+                db.collection("market_animals").doc(id).delete()
+                .then(() => {
+                    alert("✅ जाहिरात यशस्वीरीत्या डिलीट केली.");
+                    loadAllMarketAdsAdmin(); // Refresh list
+                })
+                .catch(e => alert("❌ एरर: जाहिरात डिलीट करता आली नाही. " + e));
+            }
         }
 
         // --- 🔥 NEW: M_KHILLAR_ADMIN - MASTER KHILLAR & RACING BULL CONTROLS 🔥 ---
@@ -2489,6 +2611,10 @@
                 let users = JSON.parse(localStorage.getItem('app_users')) || [];
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
+                
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
+                db.collection("users").doc(mobile).delete().catch(e => console.log(e));
+
                 alert("🗑️ युजर डिलीट केला!");
                 document.getElementById('search_user_mobile').value = '';
                 document.getElementById('user_edit_section').style.display = 'none';
@@ -2512,10 +2638,14 @@
         }
 
         function deleteAnyUser(mobile) {
-            if(confirm(`${mobile} डिलीट करायचा?`)) {
+            if(confirm(`${mobile} हा युजर कायमचा डिलीट करायचा का? (फायरबेसवरून सुद्धा उडवला जाईल)`)) {
                 let users = JSON.parse(localStorage.getItem('app_users')) || [];
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
+                
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
+                db.collection("users").doc(mobile).delete().catch(e => console.log(e));
+
                 refreshAllUsersTable();
                 refreshSupplierTable();
                 loadDashboardStats();
@@ -2537,10 +2667,14 @@
         }
 
         function deleteSupplier(mobile) {
-            if(confirm(`सप्लायर ${mobile} काढायचा?`)) {
+            if(confirm(`सप्लायर ${mobile} कायमचा काढायचा का? (फायरबेसवरून सुद्धा उडवला जाईल)`)) {
                 let users = JSON.parse(localStorage.getItem('app_users')) || [];
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
+                
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
+                db.collection("users").doc(mobile).delete().catch(e => console.log(e));
+
                 refreshSupplierTable();
                 refreshAllUsersTable();
                 loadDashboardStats();
