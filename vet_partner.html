@@ -339,11 +339,11 @@
         }
     }
 
-    // --- 🔥 NEW: SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+    // --- 🔥 NEW: SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD ACROSS DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
     function syncVetProfileFromCloud(doc) {
         if(doc && doc.mobile) {
-            db.collection("vet_partners").doc(doc.mobile).get()
-            .then(cloudDoc => {
+            // 🔥 REAL-TIME SNAPSHOT FOR VET PROFILE UPDATE 🔥
+            db.collection("vet_partners").doc(doc.mobile).onSnapshot(cloudDoc => {
                 if(cloudDoc.exists && cloudDoc.data()) {
                     let updatedDoc = cloudDoc.data();
                     localStorage.setItem("current_logged_in_doc", JSON.stringify(updatedDoc));
@@ -356,8 +356,7 @@
                     
                     loadDashboardAppointments();
                 }
-            })
-            .catch(e => console.log("Cloud vet profile sync error: ", e));
+            }, e => console.log("Cloud vet profile sync error: ", e));
 
             // 🔥 SINGLE DEVICE SESSION WATCHER (`users` Collection) 🔥
             db.collection("users").doc(doc.mobile).onSnapshot((userDoc) => {
@@ -375,7 +374,7 @@
                 }
             }, (err) => console.log("Cloud security watcher error:", err));
 
-            // 🔥 NEW: व्हेटर्नरी पार्टनर पेज व्हिजिटचे क्लाऊड लॉगिंग (`vet_partner_activity_logs`) 🔥
+            // 🔥 व्हेटर्नरी पार्टनर पेज व्हिजिटचे क्लाऊड लॉगिंग (`vet_partner_activity_logs`) 🔥
             let fName = localStorage.getItem("current_user_name") || doc.name || "डॉक्टर";
             db.collection("vet_partner_activity_logs").add({
                 userName: fName,
@@ -550,10 +549,9 @@
         listContainer.innerHTML = html;
     }
 
-    // --- 🔥 NEW: SYNC APPOINTMENTS FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
+    // --- 🔥 NEW: SYNC APPOINTMENTS FROM FIREBASE CLOUD ACROSS DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
     function syncAppointmentsFromCloud(docId) {
-        db.collection("vet_appointments").where("docId", "==", docId).get()
-        .then(querySnapshot => {
+        db.collection("vet_appointments").where("docId", "==", docId).onSnapshot(querySnapshot => {
             let cloudApts = [];
             querySnapshot.forEach(doc => {
                 let d = doc.data();
@@ -569,9 +567,9 @@
                     else allApts.push(cApt);
                 });
                 localStorage.setItem("live_appointments", JSON.stringify(allApts));
+                loadDashboardAppointments(); // Update UI in real-time
             }
-        })
-        .catch(e => console.log("Cloud appointments sync error: ", e));
+        }, e => console.log("Cloud appointments sync error: ", e));
     }
 
     function updateAppointmentStatus(aptId, newStatus) {

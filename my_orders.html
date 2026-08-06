@@ -183,15 +183,14 @@
             syncUserNotificationsFromCloud();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE ORDERS SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+        // --- 🔥 CLOUD DATABASE ORDERS SYNC ACROSS ALL DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
         function syncMyOrdersFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
                 // १. customerMobile फील्डने शोधा
                 db.collection("mall_orders")
                 .where("customerMobile", "==", userMobile)
-                .get()
-                .then((querySnapshot) => {
+                .onSnapshot((querySnapshot) => {
                     let cloudOrders = [];
                     querySnapshot.forEach((doc) => {
                         let data = doc.data();
@@ -212,22 +211,20 @@
                         }
                         loadMyOrders(activeTab);
                     }
-                })
-                .catch(e => {
+                }, e => {
                     // २. जर customer.mobile फील्डमध्ये सेव्ह केले असेल तर त्या पद्धतीने शोधा
                     db.collection("mall_orders")
                     .where("customer.mobile", "==", userMobile)
-                    .get()
-                    .then((querySnapshot) => {
-                        let cloudOrders = [];
-                        querySnapshot.forEach((doc) => {
+                    .onSnapshot((querySnapshot2) => {
+                        let cloudOrders2 = [];
+                        querySnapshot2.forEach((doc) => {
                             let data = doc.data();
                             data.firebaseDocId = doc.id;
-                            cloudOrders.push(data);
+                            cloudOrders2.push(data);
                         });
-                        if (cloudOrders.length > 0) {
-                            cloudOrders.sort((a, b) => b.id - a.id);
-                            localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+                        if (cloudOrders2.length > 0) {
+                            cloudOrders2.sort((a, b) => b.id - a.id);
+                            localStorage.setItem('user_orders', JSON.stringify(cloudOrders2));
                             loadMyOrders('all');
                         }
                     });
@@ -250,14 +247,13 @@
             }
         }
 
-        // --- 🔥 NEW: CLOUD USER NOTIFICATIONS SYNC ACROSS ALL DEVICES 🔥 ---
+        // --- 🔥 CLOUD USER NOTIFICATIONS SYNC ACROSS ALL DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
         function syncUserNotificationsFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
                 db.collection("app_notifications")
                 .where("receiver_mobile", "==", userMobile)
-                .get()
-                .then((querySnapshot) => {
+                .onSnapshot((querySnapshot) => {
                     let cloudNotifs = [];
                     querySnapshot.forEach((doc) => {
                         let n = doc.data();
@@ -268,8 +264,7 @@
                         localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
                         loadNotifications('farmer');
                     }
-                })
-                .catch(e => console.log("Error syncing notifications from cloud:", e));
+                }, e => console.log("Error syncing notifications from cloud:", e));
             }
         }
 

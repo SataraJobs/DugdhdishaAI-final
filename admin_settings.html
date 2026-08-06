@@ -302,7 +302,7 @@
             <div id="m34" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #00e676;">
                     <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;">💬 WhatsApp ब्रॉडकास्ट आणि CRM</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">येथून तुम्ही व्यापाऱ्यांना त्यांच्या दिवसाच्या ऑर्डर्सची लिस्ट पाठवू शकता किंवा कमिशन भरण्यासाठी रिमाइंडर मेसेज देऊ शकता.</p>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">येथून तुम्ही व्यापाऱ्यांन त्यांच्या दिवसाच्या ऑर्डर्सची लिस्ट पाठवू शकता किंवा कमिशन भरण्यासाठी रिमाइंडर मेसेज देऊ शकता.</p>
                     
                     <div class="grid-2">
                         <div class="field">
@@ -1319,6 +1319,7 @@
             }
         }
 
+        // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 🔥🔥🔥
         function publishAdImages() {
             let adBlocks = document.querySelectorAll('.ad-block');
             let allAds = [];
@@ -1339,20 +1340,44 @@
             
             let adData = { ads: allAds, active: true, place: adPlace };
             localStorage.setItem("live_admin_ad_images", JSON.stringify(adData));
+            
             // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("live_admin_ad_images").set(adData, { merge: true })
             .catch(e => console.error("Cloud ad sync error:", e));
+
+            // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 🔥🔥🔥
+            if(adPlace === 'Home Slider') {
+                allAds.forEach((ad, index) => {
+                    db.collection("homepage_banners").doc("banner_" + index).set({
+                        imageUrl: (ad.images && ad.images.length > 0) ? ad.images[0] : '', 
+                        link: ad.url || '',
+                        status: "Approved",
+                        title: ad.text || ''
+                    });
+                });
+                // जुने शिल्लक राहिलेले बॅनर्स डिलीट करा (१० पर्यंत)
+                for(let i = allAds.length; i < 10; i++) {
+                    db.collection("homepage_banners").doc("banner_" + i).delete().catch(e=>{});
+                }
+            }
 
             alert(`✅ ${allAds.length} जाहिराती ॲपवर यशस्वीरीत्या लाईव्ह झाल्या आहेत!`);
             loadDashboardStats();
             loadSavedAds(); 
         }
 
+        // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 🔥🔥🔥
         function removeAds() {
             if(confirm("तुम्हाला नक्की सर्व जाहिराती कायमच्या काढून टाकायच्या आहेत का?")) {
                 localStorage.removeItem("live_admin_ad_images");
                 // 🔥 FIREBASE CLOUD UPDATE 🔥
                 db.collection("admin_settings").doc("live_admin_ad_images").set({ ads: [], active: false }, { merge: true });
+                
+                // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 🔥🔥🔥
+                for(let i = 0; i < 10; i++) {
+                    db.collection("homepage_banners").doc("banner_" + i).delete().catch(e=>{});
+                }
+
                 document.getElementById('dynamic_ads_container').innerHTML = '';
                 addNewAdBlock(); 
                 alert("🗑️ सर्व जाहिराती काढून टाकल्या आहेत.");
@@ -2787,6 +2812,7 @@
             container.innerHTML = html;
         }
 
+        // 🔥🔥🔥 नवीन बदल: पेंडिंग जाहिरात मंजूर केल्यावर ती होमपेज बॅनर कलेक्शनमध्ये जाण्यासाठी 🔥🔥🔥
         function approveAd(adId) {
             if(confirm("तुम्ही बँक खात्यात पेमेंट तपासले आहे का? ही जाहिरात 'लाईव्ह' करायची का?")) {
                 let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
@@ -2806,6 +2832,15 @@
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
                     // 🔥 FIREBASE CLOUD SAVE 🔥
                     db.collection("admin_settings").doc("live_admin_ad_images").set(liveAds, { merge: true });
+
+                    // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये नवीन ॲड जोडणे 🔥🔥🔥
+                    let newIndex = liveAds.ads.length - 1;
+                    db.collection("homepage_banners").doc("banner_" + newIndex).set({
+                        imageUrl: (ad.images && ad.images.length > 0) ? ad.images[0] : '', 
+                        link: ad.url || '',
+                        status: "Approved",
+                        title: ad.title || ''
+                    });
                 }
                 
                 alert(`✅ जाहिरात ${adId} मंजूर करून होमपेजवर लाईव्ह केली!`);

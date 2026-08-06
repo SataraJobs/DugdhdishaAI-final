@@ -225,13 +225,12 @@
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
             
-            // १. दुधाच्या नोंदी क्लाऊडवरून आणा
+            // १. दुधाच्या नोंदी क्लाऊडवरून आणा (REAL-TIME SNAPSHOT)
             db.collection("milk_records")
             .where("farmerMobile", "==", userMobile)
             .orderBy("timestamp", "desc")
             .limit(10) // फक्त शेवटच्या १० नोंदी
-            .get()
-            .then((querySnapshot) => {
+            .onSnapshot((querySnapshot) => {
                 let cloudRecords = [];
                 querySnapshot.forEach((doc) => {
                     cloudRecords.push(doc.data());
@@ -241,8 +240,7 @@
                     localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
                     loadHistory();
                 }
-            })
-            .catch(e => console.log("Error syncing milk records from cloud: ", e));
+            }, (e) => console.log("Error syncing milk records from cloud: ", e));
 
             // २. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
             db.collection("users").doc(userMobile).onSnapshot((doc) => {

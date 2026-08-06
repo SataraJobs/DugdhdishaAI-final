@@ -244,9 +244,9 @@
         });
     }
 
-    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS (REAL-TIME SNAPSHOT) 🔥
     function syncProducts() {
-        db.collection("vendor_products").get().then((querySnapshot) => {
+        db.collection("vendor_products").onSnapshot((querySnapshot) => {
             let products = [];
             querySnapshot.forEach((doc) => {
                 let p = doc.data();
@@ -254,13 +254,48 @@
                 products.push(p);
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
-        }).catch(e => console.error("Error fetching live products:", e));
+        }, e => console.error("Error fetching live products:", e));
+    }
+
+    // --- 🔥 CLOUD DATABASE CATTLE SYNC (REAL-TIME SNAPSHOT) 🔥 ---
+    function syncCattleFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            // शेतकऱ्याची सर्व जनावरे (गाई, म्हशी, वासरे)
+            db.collection("farmer_animals").where("farmerMobile", "==", userMobile).onSnapshot((querySnapshot) => {
+                let hasData = false;
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    let keyPrefix = (data.type === 'calf' || data.isCalf) ? "calf_" : "cow_";
+                    let key = keyPrefix + (data.tag || doc.id);
+                    localStorage.setItem(key, JSON.stringify(data));
+                    hasData = true;
+                });
+                if(hasData) loadAnimalsIntoDropdown();
+            }, e => console.log("Error syncing cattle from cloud: ", e));
+            
+            // शेतकऱ्याचे शर्यत खोंड / वळू
+            db.collection("khond_profiles").where("farmerMobile", "==", userMobile).onSnapshot(querySnapshot => {
+                let cloudKhonds = [];
+                querySnapshot.forEach(doc => {
+                    let kData = doc.data();
+                    kData.id = doc.id;
+                    cloudKhonds.push(kData);
+                });
+                if (cloudKhonds.length > 0) {
+                    localStorage.setItem("my_khond_profiles", JSON.stringify(cloudKhonds));
+                    loadAnimalsIntoDropdown();
+                }
+            }, e => console.log("Cloud khond sync error:", e));
+        }
     }
 
     function initPage() {
         syncProducts();
         loadAnimalsIntoDropdown();
         syncUserSessionFromCloud(); // 🔥 NEW: रियल-टाईम सुरक्षा वॉचर सुरू
+        syncCattleFromCloud(); // 🔥 NEW: जनावरांची यादी क्लाऊडवरून लाईव्ह सिंक करा
     }
 
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥

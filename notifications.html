@@ -156,7 +156,7 @@
             loadNotificationsPage();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE SYNC & SINGLE-DEVICE SECURITY 🔥 ---
+        // --- 🔥 NEW: CLOUD DATABASE SYNC (REAL-TIME SNAPSHOT) & SINGLE-DEVICE SECURITY 🔥 ---
         function syncNotificationsFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
@@ -178,9 +178,8 @@
                 }
             }, (err) => console.log("Cloud user sync error:", err));
 
-            // २. क्लाऊडवरून 'Broadcast' नोटिफिकेशन्स आणा (`broadcast_notifications`)
-            db.collection("broadcast_notifications").get()
-            .then((querySnapshot) => {
+            // २. क्लाऊडवरून 'Broadcast' नोटिफिकेशन्स आणा (`broadcast_notifications` - REAL-TIME)
+            db.collection("broadcast_notifications").onSnapshot((querySnapshot) => {
                 let cloudNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
                 querySnapshot.forEach((doc) => {
                     let cData = doc.data();
@@ -193,13 +192,12 @@
                 });
                 localStorage.setItem('system_notifications', JSON.stringify(cloudNotifs));
                 loadNotificationsPage();
-            }).catch(e => console.log("Cloud broadcast sync error:", e));
+            }, e => console.log("Cloud broadcast sync error:", e));
 
-            // ३. क्लाऊडवरून 'Personal' नोटिफिकेशन्स आणा (`app_notifications`)
+            // ३. क्लाऊडवरून 'Personal' नोटिफिकेशन्स आणा (`app_notifications` - REAL-TIME)
             db.collection("app_notifications")
             .where("receiver_mobile", "==", userMobile)
-            .get()
-            .then((querySnapshot) => {
+            .onSnapshot((querySnapshot) => {
                 let cloudNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
                 querySnapshot.forEach((doc) => {
                     let cData = doc.data();
@@ -210,7 +208,7 @@
                 });
                 localStorage.setItem('system_notifications', JSON.stringify(cloudNotifs));
                 loadNotificationsPage();
-            }).catch(e => console.log("Cloud private notifications sync error:", e));
+            }, e => console.log("Cloud private notifications sync error:", e));
         }
 
         // 8 दिवस जुन्या नोटिफिकेशन्स आपोआप हटवा आणि उरलेली दाखवा

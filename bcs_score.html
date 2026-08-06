@@ -229,9 +229,9 @@
         }
     }
 
-    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS (REAL-TIME SNAPSHOT) 🔥
     function syncProducts() {
-        db.collection("vendor_products").get().then((querySnapshot) => {
+        db.collection("vendor_products").onSnapshot((querySnapshot) => {
             let products = [];
             querySnapshot.forEach((doc) => {
                 let p = doc.data();
@@ -239,7 +239,7 @@
                 products.push(p);
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
-        }).catch(e => console.error("Error fetching live products:", e));
+        }, e => console.error("Error fetching live products:", e));
     }
 
     // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥

@@ -780,7 +780,7 @@
                     <h4>🗺️ जाहिरात कशी लावायची? (Roadmap)</h4>
                     <div class="roadmap-container">
                         <div class="roadmap-step"><div class="step-circle">1</div><div class="step-text">जाहिरात निवडा</div></div>
-                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंक جوडा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंक जोडा</div></div>
                         <div class="roadmap-step"><div class="step-circle">3</div><div class="step-text">बजेट ठरवा</div></div>
                         <div class="roadmap-step"><div class="step-circle">4</div><div class="step-text">पेमेंट पूर्ण करा</div></div>
                         <div class="roadmap-step"><div class="step-circle">5</div><div class="step-text">ऑटो ॲप्रूव्हल</div></div>
@@ -954,7 +954,7 @@
             <div id="b_info" class="tab-content">
                 <div class="biz-card" style="border-left: 5px solid #ff9800;">
                     <h3 style="margin: 0 0 10px; color: #e65100;">ℹ️ दुग्ध दिशा Business Hub विषयी माहिती</h3>
-                    <p style="font-size: 13px; color: #555; margin-bottom: 20px;">हा डॅशबोर्ड व्यापारी, कंपन्या आणि वितरकांना थेट शेतकऱ्यांपर्यंत पोहोचण्यासाठी डिझाईन केला आहे. खालील माहिती वाचून तुम्ही या ॲपचा जास्तीत जास्त फायदा कसा घ्यायचा ते समजू शकता.</p>
+                    <p style="font-size: 13px; color: #555; margin-bottom: 20px;">हा डॅशबोर्ड व्यापारी, कंप ভাগে कंपन्या आणि वितरकांना थेट शेतकऱ्यांपर्यंत पोहोचण्यासाठी डिझाईन केला आहे. खालील माहिती वाचून तुम्ही या ॲपचा जास्तीत जास्त फायदा कसा घ्यायचा ते समजू शकता.</p>
 
                     <div class="info-accordion" onclick="this.classList.toggle('open')">
                         <div class="info-accordion-header">१. Dashboard & Analytics <span>▼</span></div>
@@ -1422,6 +1422,8 @@
                 refreshMyProducts();
                 loadVendorProductsForAd();
             }).catch(e => console.log("Cloud vendor products sync error:", e));
+
+            refreshMyAds(); // जाहिराती सुद्धा रिफ्रेश करा
         }
 
         // --- 🔥 NEW: CLOUD SYNC FOR PLATFORM FEE CONFIG (M33) 🔥 ---
@@ -1546,32 +1548,65 @@
         }
 
         function refreshMyAds() {
-            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let myAds = pendingAds.filter(ad => ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url));
             let container = document.getElementById('my_ads_container');
             if (!container) return;
-            if (myAds.length === 0) {
-                container.innerHTML = '<p>तुमची कोणतीही जाहिरात पेंडिंग नाही.</p>';
-                return;
-            }
-            let html = '';
-            myAds.forEach(ad => {
-                html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                    <span><b>${ad.type}</b> - ${ad.title} (Budget: ₹${ad.budget})</span>
-                    <button class="btn-action" style="background:#c62828; padding:4px 8px; font-size:11px; width:auto;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
-                </div>`;
+
+            db.collection("admin_pending_ad_approvals").get().then((querySnapshot) => {
+                let myAds = [];
+                querySnapshot.forEach((doc) => {
+                    let ad = doc.data();
+                    if (ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile)))) {
+                        myAds.push(ad);
+                    }
+                });
+
+                if (myAds.length === 0) {
+                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
+                    return;
+                }
+                let html = '';
+                myAds.forEach(ad => {
+                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
+                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }).catch(e => {
+                console.log("Cloud fetch error fallback", e);
+                // Fallback to local storage
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+                let myAds = pendingAds.filter(ad => ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
+                if (myAds.length === 0) {
+                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
+                    return;
+                }
+                let html = '';
+                myAds.forEach(ad => {
+                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
+                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
             });
-            container.innerHTML = html;
         }
 
+        // 🔥🔥🔥 NEWLY ADDED CLOUD AD DELETE LOGIC 🔥🔥🔥
         function deleteMyAd(adId) {
             if (confirm('ही जाहिरात रद्द करायची?')) {
                 let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
                 pendingAds = pendingAds.filter(a => a.id !== adId);
                 localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
+
+                // 🔥 FIREBASE CLOUD DELETE 🔥
+                db.collection("admin_pending_ad_approvals").doc(adId).delete().catch(e => console.log("Cloud ad delete error:", e));
+                db.collection("homepage_banners").doc(adId).delete().catch(e => console.log("Cloud banner delete error:", e));
+
                 refreshMyAds();
+                alert('🗑️ जाहिरात यशस्वीरीत्या डिलीट केली.');
             }
         }
 
@@ -2853,6 +2888,7 @@
             }
         }
 
+        // 🔥🔥🔥 NEW: PAYMENT AND AD CLOUD SUBMISSION LOGIC 🔥🔥🔥
         function initiatePayment() {
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
@@ -2928,6 +2964,16 @@
                 // 🔥 FIREBASE CLOUD SAVE FOR AD CAMPAIGN 🔥
                 db.collection("admin_pending_ad_approvals").doc(newAdId).set(adObj)
                 .catch(e => console.error("Cloud ad save error:", e));
+
+                // 🔥🔥🔥 HOMEPAGE BANNER SYNC 🔥🔥🔥 (डायरेक्ट होमपेजला दिसेल)
+                if (campaignType === 'Home Banner' || campaignType === 'Generic_Promotion') {
+                    db.collection("homepage_banners").doc(newAdId).set({
+                        imageUrl: (images && images.length > 0) ? images[0] : '',
+                        link: url || '',
+                        status: "Approved",
+                        title: title || ''
+                    }).catch(e => console.error("Cloud banner save error:", e));
+                }
 
                 alert(`🎉 पेमेंट यशस्वी!\n\nतुमची जाहिरात स्वयंचलितपणे (Automatically) ॲपवर लाईव्ह झाली आहे.`);
                 

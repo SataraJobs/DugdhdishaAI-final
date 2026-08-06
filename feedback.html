@@ -124,7 +124,7 @@
             db.collection("users").doc(userMobile).onSnapshot((doc) => {
                 if (doc.exists && doc.data()) {
                     let cloudData = doc.data();
-                    let localSessionId = localStorage.getItem("current_session_id");
+                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
                     let cloudSessionId = cloudData.currentSessionId;
                     if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
                         alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");

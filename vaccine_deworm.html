@@ -168,9 +168,9 @@
     }
     const db = firebase.firestore();
 
-    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
+    // 🔥 SYNC LIVE PRODUCTS FOR ADS (REAL-TIME SNAPSHOT) 🔥
     function syncProducts() {
-        db.collection("vendor_products").get().then((querySnapshot) => {
+        db.collection("vendor_products").onSnapshot((querySnapshot) => {
             let products = [];
             querySnapshot.forEach((doc) => {
                 let p = doc.data();
@@ -178,19 +178,17 @@
                 products.push(p);
             });
             localStorage.setItem('vendor_products', JSON.stringify(products));
-        }).catch(e => console.error("Error fetching live products:", e));
+        }, e => console.error("Error fetching live products:", e));
     }
 
-    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION WATCHER) 🔥 ---
+    // --- 🔥 CLOUD DATABASE SYNC ACROSS ALL DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
     function syncVaccineRulesFromCloud() {
-        // M8 Data Sync
-        db.collection("admin_settings").doc("M8").get()
-        .then((doc) => {
+        // M8 Data Sync (Admin Rules) - LIVE
+        db.collection("admin_settings").doc("M8").onSnapshot((doc) => {
             if (doc.exists && doc.data()) {
                 localStorage.setItem('admin_data_M8', JSON.stringify(doc.data()));
             }
-        })
-        .catch(e => console.log("Error syncing M8 vaccine rules from cloud: ", e));
+        }, e => console.log("Error syncing M8 vaccine rules from cloud: ", e));
 
         // Session Watcher Logic
         let userMobile = localStorage.getItem("current_user_mobile");
@@ -211,7 +209,7 @@
                 }
             }, (err) => console.log("Cloud session sync error:", err));
 
-            // 🔥 NEW: लसीकरण ट्रॅकर पेज व्हिजिटचे क्लाऊड लॉगिंग (`vaccine_activity_logs`) 🔥
+            // 🔥 लसीकरण ट्रॅकर पेज व्हिजिटचे क्लाऊड लॉगिंग (`vaccine_activity_logs`) 🔥
             let fName = localStorage.getItem("current_user_name") || "शेतकरी";
             db.collection("vaccine_activity_logs").add({
                 userName: fName,

@@ -1216,94 +1216,76 @@
 
         renderMallSlider('offers_slider_container', offers);
 
-        // --- 🔥 2. ROLLING AD LOGIC: फक्त "Home Slider" प्लेसमेंटची एक जाहिरात रोलिंग पद्धतीने ---
+        // --- 🔥 2. ROLLING AD LOGIC (FIREBASE REAL-TIME SYNC) 🔥 ---
         let sliderContainer = document.getElementById('ad_slider_container');
         let dotsContainer = document.getElementById('slider_dots_container');
-        let totalSlides = 1; // मुख्य बॅनर स्लाईड
+        let sliderInterval; // जुना टायमर क्लिअर करण्यासाठी
 
-        // --- A. ॲडमिनची सिंगल जाहिरात (live_admin_ad) ---
-        let adminAd = JSON.parse(localStorage.getItem('live_admin_ad'));
-        if(adminAd && adminAd.active) {
-            let newSlide = document.createElement('div');
-            newSlide.className = 'slide';
-            let bgColor = adminAd.color === 'red' ? 'linear-gradient(145deg, #d32f2f, #b71c1c)' : 'linear-gradient(145deg, #1976d2, #1565c0)';
+        // A. सुरुवातीला फक्त मुख्य (डिफॉल्ट) बॅनर ठेवा
+        sliderContainer.innerHTML = `
+            <div class="slide active">
+                <img src="main_banner.png" alt="दुग्ध दिशा बॅनर" onerror="this.src='https://via.placeholder.com/600x400?text=Banner+Image'">
+            </div>
+        `;
+        dotsContainer.innerHTML = '<div class="dot active"></div>';
+
+        // B. फायरबेसवरून रिअल-टाईम जाहिराती (homepage_banners) आणणे
+        db.collection("homepage_banners").where("status", "==", "Approved").onSnapshot((snapshot) => {
             
-            newSlide.innerHTML = `
-                <div class="ad-badge" style="background:#d32f2f; color:white;">🔥 Special Offer</div>
-                <div style="width:100%; height:100%; background: ${bgColor}; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; font-weight:bold; text-align:center; padding:20px; box-sizing:border-box; cursor:pointer;" onclick="window.location.href='krushi_mall.html'">
-                    ${adminAd.text}
+            // नवीन डेटा आल्यास आधीचे डायनॅमिक बॅनर्स पुसून टाका (डिफॉल्ट सोडून)
+            let defaultSlide = `
+                <div class="slide active">
+                    <img src="main_banner.png" alt="दुग्ध दिशा बॅनर" onerror="this.src='https://via.placeholder.com/600x400?text=Banner+Image'">
                 </div>
             `;
-            sliderContainer.insertBefore(newSlide, sliderContainer.children[totalSlides]);
-            totalSlides++;
-        }
+            sliderContainer.innerHTML = defaultSlide;
+            dotsContainer.innerHTML = '<div class="dot active"></div>';
+            
+            let totalSlides = 1;
 
-        // --- B. "Home Slider" प्लेसमेंटच्या जाहिरातींमधून एक निवड (रोलिंग) ---
-        let vendorAdsData = JSON.parse(localStorage.getItem('live_admin_ad_images'));
-        let selectedAd = null;
-        if(vendorAdsData && vendorAdsData.ads && vendorAdsData.ads.length > 0 && vendorAdsData.place === "Home Slider") {
-            let allAds = vendorAdsData.ads;
-            // --- रोलिंग लॉजिक ---
-            let counterKey = "ad_rotation_home_counter";
-            let currentCounter = parseInt(localStorage.getItem(counterKey) || "0");
-            if (isNaN(currentCounter)) currentCounter = 0;
-            // निवडक जाहिरात
-            selectedAd = allAds[currentCounter % allAds.length];
-            // पुढील वेळेसाठी काउंटर वाढवा
-            localStorage.setItem(counterKey, (currentCounter + 1) % allAds.length);
-        }
-
-        if (selectedAd) {
-            let ad = selectedAd;
-            if(ad.text || (ad.images && ad.images.length > 0)) {
-                let newSlide = document.createElement('div');
-                newSlide.className = 'slide';
+            snapshot.forEach((doc) => {
+                let ad = doc.data();
                 
-                if (ad.images && ad.images.length > 0 && ad.images[0]) {
+                // फोटोची लिंक (imageUrl किंवा banner_image) असल्यास स्लाईड तयार करा
+                if (ad.imageUrl || ad.banner_image) {
+                    let imgUrl = ad.imageUrl || ad.banner_image; 
+                    let newSlide = document.createElement('div');
+                    newSlide.className = 'slide';
+                    
                     newSlide.innerHTML = `
-                        <div class="ad-badge" style="background:#e65100; color:white;">📢 ${ad.text || 'Sponsored'}</div>
-                        <img src="${ad.images[0]}" alt="${ad.text || 'जाहिरात'}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.location.href='${ad.url || 'krushi_mall.html'}'">
+                        <div class="ad-badge" style="background:rgba(0,0,0,0.7); color:#ffeb3b; border: 1px solid #ffeb3b;">📢 Sponsored</div>
+                        <img src="${imgUrl}" alt="जाहिरात" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.location.href='${ad.link || 'krushi_mall.html'}'">
                     `;
-                } else {
-                    let bgColor = '#1976d2';
-                    newSlide.innerHTML = `
-                        <div class="ad-badge" style="background:#e65100; color:white;">📢 Sponsored</div>
-                        <div style="width:100%; height:100%; background: ${bgColor}; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; font-weight:bold; text-align:center; padding:20px; box-sizing:border-box; cursor:pointer;" onclick="window.location.href='${ad.url || 'krushi_mall.html'}'">
-                            ${ad.text}
-                        </div>
-                    `;
+                    sliderContainer.appendChild(newSlide);
+                    
+                    let dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dotsContainer.appendChild(dot);
+                    
+                    totalSlides++;
                 }
-                sliderContainer.insertBefore(newSlide, sliderContainer.children[totalSlides]);
-                totalSlides++;
+            });
+
+            // C. Slider Rotation Logic (बॅनर आपोआप फिरवणे) सुरू करा
+            clearInterval(sliderInterval);
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            if(slides.length > 1) {
+                sliderInterval = setInterval(() => {
+                    slides.forEach(s => s.classList.remove('active'));
+                    dots.forEach(d => d.classList.remove('active'));
+                    
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    
+                    if(slides[currentSlide]) slides[currentSlide].classList.add('active');
+                    if(dots[currentSlide]) dots[currentSlide].classList.add('active');
+                }, 3500);
             }
-        }
-
-        // --- 3. DOTS अपडेट ---
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < totalSlides; i++) {
-            let dot = document.createElement('div');
-            dot.className = 'dot' + (i === 0 ? ' active' : '');
-            dotsContainer.appendChild(dot);
-        }
-
-        // --- 4. Slider Rotation ---
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot');
-        
-        function showSlide(index) {
-            slides.forEach(s => s.classList.remove('active'));
-            dots.forEach(d => d.classList.remove('active'));
-            if(slides[index]) slides[index].classList.add('active');
-            if(dots[index]) dots[index].classList.add('active');
-        }
-
-        if(slides.length > 1) {
-            setInterval(() => {
-                currentSlide = (currentSlide + 1) % slides.length;
-                showSlide(currentSlide);
-            }, 3500);
-        }
+        }, (error) => {
+            console.error("Firebase Banner Fetch Error:", error);
+        });
 
         // --- 5. ADVANCED CALF vs COW LOGIC ---
         let cowCount = 0;
@@ -1357,48 +1339,39 @@
         let userMobile = localStorage.getItem("current_user_mobile");
         if (!userMobile || userMobile === "+91 9XXXX XXXX") return;
 
-        // १. क्लाऊडवरून जनावरांची संख्या आणा (`farmer_animals`)
-        db.collection("farmer_animals").where("farmerMobile", "==", userMobile).get()
-        .then(querySnapshot => {
+        // १. क्लाऊडवरून जनावरांची संख्या आणा (REAL-TIME SNAPSHOT)
+        db.collection("farmer_animals").where("farmerMobile", "==", userMobile).onSnapshot(querySnapshot => {
             let cloudCattleCount = querySnapshot.size;
             if (cloudCattleCount > 0) {
                 document.getElementById("total_animals_display").innerText = cloudCattleCount;
             }
-        }).catch(e => console.log("Cloud cattle count sync error: ", e));
+        }, e => console.log("Cloud cattle count sync error: ", e));
 
-        // २. क्लाऊडवरून आजचे दूध संकलन आणा (`milk_records`)
+        // २. क्लाऊडवरून आजचे दूध संकलन आणा (REAL-TIME SNAPSHOT)
         let todayStr = new Date().toISOString().split("T")[0];
         db.collection("milk_records")
         .where("farmerMobile", "==", userMobile)
-        .where("date", "==", todayStr)
-        .get()
-        .then(querySnapshot => {
+        .onSnapshot(querySnapshot => {
             let cloudMilkToday = 0;
             querySnapshot.forEach(doc => {
                 let data = doc.data();
-                cloudMilkToday += parseFloat(data.liters || 0);
+                if(data.date === todayStr || data.date === new Date().toLocaleDateString('mr-IN')) {
+                    cloudMilkToday += parseFloat(data.liters || 0);
+                }
             });
             if(cloudMilkToday > 0) {
                 document.getElementById("total_milk").innerText = `${cloudMilkToday.toFixed(1)} L`;
+            } else {
+                document.getElementById("total_milk").innerText = `0.0 L`;
             }
-        }).catch(e => console.log("Cloud milk today sync error: ", e));
+        }, e => console.log("Cloud milk today sync error: ", e));
 
-        // ३. क्लाऊडवरून युजरचा ॲक्टिव्ह प्लॅन तपासा (`users/activePlan`)
-        db.collection("users").doc(userMobile).get()
-        .then(doc => {
-            if (doc.exists && doc.data() && doc.data().activePlan) {
-                let cloudPlan = doc.data().activePlan;
-                localStorage.setItem("farmer_active_plan", JSON.stringify(cloudPlan));
-            }
-        }).catch(e => console.log("Cloud plan status sync error: ", e));
-
-        // ४. 🔥 क्लाऊडवरून ॲडमिनचे लेटेस्ट प्राईसिंग (M25) आणा (जेणेकरून 0 रुपये आल्यावर मोफत होईल) 🔥
-        db.collection("admin_settings").doc("M25").get()
-        .then(doc => {
+        // ४. 🔥 क्लाऊडवरून ॲडमिनचे लेटेस्ट प्राईसिंग (M25) आणा (REAL-TIME SNAPSHOT) 🔥
+        db.collection("admin_settings").doc("M25").onSnapshot(doc => {
             if (doc.exists && doc.data()) {
                 localStorage.setItem("admin_data_M25", JSON.stringify(doc.data()));
             }
-        }).catch(e => console.log("Cloud pricing sync error: ", e));
+        }, e => console.log("Cloud pricing sync error: ", e));
 
         // ५. 🔥 SINGLE DEVICE SESSION WATCHER & REAL-TIME PLAN SYNC (ऑन-स्नॅपशॉट लाईव्ह ट्रॅकिंग) 🔥
         db.collection("users").doc(userMobile).onSnapshot((doc) => {
@@ -1435,6 +1408,41 @@
         }, (error) => {
             console.log("Real-time session sync error:", error);
         });
+
+        // ७. 🔥 REAL-TIME NOTIFICATIONS SYNC (Broadcast & App Notifications) 🔥
+        db.collection("broadcast_notifications").onSnapshot(querySnapshot => {
+            let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let changed = false;
+            querySnapshot.forEach(doc => {
+                let cData = doc.data();
+                let exists = notifications.some(n => n.message === cData.message && n.title === cData.title);
+                if (!exists) {
+                    notifications.push(cData);
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('system_notifications', JSON.stringify(notifications));
+                loadNotifications(CURRENT_ROLE);
+            }
+        }, e => console.log("Broadcast sync error:", e));
+
+        db.collection("app_notifications").where("receiver_mobile", "==", userMobile).onSnapshot(querySnapshot => {
+            let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+            let changed = false;
+            querySnapshot.forEach(doc => {
+                let cData = doc.data();
+                let exists = notifications.some(n => n.message === cData.message && n.title === cData.title);
+                if (!exists) {
+                    notifications.push(cData);
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('system_notifications', JSON.stringify(notifications));
+                loadNotifications(CURRENT_ROLE);
+            }
+        }, e => console.log("App notifications sync error:", e));
 
         // ६. 🔥 NEW: डॅशबोर्ड व्हिजिटचे क्लाऊड लॉगिंग (dashboard_activity_logs) 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
