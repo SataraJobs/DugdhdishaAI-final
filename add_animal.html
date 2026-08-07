@@ -74,12 +74,36 @@
         .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 13px; display: flex; align-items: center; gap: 5px; }
         .ai-recommendation-box p { margin: 0; font-size: 12px; color: #333; line-height: 1.4; font-weight: bold; }
         .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; color: #333; margin-top: 6px; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
+    
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initAddAnimalPage()">
 
 <div class="app-container">
     
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
+
     <div class="top-dashboard" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
         <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
         <div class="header-titles" style="margin-top: 15px;">
@@ -237,9 +261,12 @@
                     let localSessionId = localStorage.getItem("current_session_id");
                     let cloudSessionId = cloudData.currentSessionId;
                     if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                        localStorage.clear();
-                        window.location.replace("login.html");
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if(alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
                     }
                 }
             }, (err) => console.log("Cloud session sync error:", err));
@@ -319,6 +346,7 @@
         alert("२१ दिवसांचा अलगीकरण टायमर सुरू झाला आहे. ॲप तुम्हाला रोज रिमाइंडर देईल.");
     }
 
+    // 🔥 FIXED: FIREBASE CLOUD SAVE (WITH PROPER DOCUMENT ID) 🔥
     function saveAnimalData() {
         let nameTag = document.getElementById('animal_name').value.trim();
         let type = document.getElementById('animal_type').value;
@@ -339,17 +367,17 @@
         saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
         saveBtn.disabled = true;
 
-        let uniqueId = Date.now();
+        let uniqueId = Date.now().toString(); // Create standard unique ID
         let storageKey = (type === 'calf' ? "calf_" : "cow_") + uniqueId;
         let defaultDate = new Date().toISOString().split('T')[0];
 
-        // शेतकरी माहिती (Current User - Cloud Data preferred)
+        // शेतकरी माहिती
         let farmerName = (globalFarmerData && globalFarmerData.name) ? globalFarmerData.name : (localStorage.getItem("current_user_name") || "अज्ञात शेतकरी");
         let farmerMobile = localStorage.getItem("current_user_mobile") || "अज्ञात नंबर";
         let farmerDistrict = (globalFarmerData && globalFarmerData.district) ? globalFarmerData.district : (localStorage.getItem("current_user_district") || "N/A");
 
         let animalData = {
-            id: uniqueId,
+            id: storageKey, // Use this same ID for Cloud and Local Storage
             tag: nameTag,
             type: type,
             breed: breed || "अज्ञात",
@@ -368,8 +396,9 @@
         // १. लोकल स्टोरेजमध्ये सेव्ह करा (Faster offline access)
         localStorage.setItem(storageKey, JSON.stringify(animalData));
 
-        // २. Firebase मध्ये 'farmer_animals' या कलेक्शनमध्ये सेव्ह करा (Live tracking for Admin)
-        db.collection("farmer_animals").add(animalData)
+        // २. Firebase मध्ये 'farmer_animals' या कलेक्शनमध्ये सेव्ह करा
+        // 🔥 FIX: Directly setting Doc ID to match local storage key 🔥
+        db.collection("farmer_animals").doc(storageKey).set(animalData)
         .then(() => {
             alert('✅ जनावराची नोंदणी यशस्वी झाली!');
             window.location.href = 'cattle_profile.html';

@@ -383,6 +383,9 @@
                 date: new Date().toLocaleDateString('mr-IN'),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(e => console.error("Activity logging error:", e));
+
+            // 🔥 START LISTENING TO APPOINTMENTS AFTER SYNCING PROFILE 🔥
+            syncAppointmentsFromCloud(doc.id);
         }
     }
 
@@ -505,9 +508,6 @@
             badge.innerText = "⏳ KYC Pending";
         }
 
-        // 🔥 FIREBASE CLOUD SYNC: डॉक्टरांच्या सर्व अपॉइंटमेंट्स क्लाऊडवरून आणा 🔥
-        syncAppointmentsFromCloud(doc.id);
-
         let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
         let myApts = allApts.filter(a => a.docId === doc.id);
         
@@ -567,7 +567,7 @@
                     else allApts.push(cApt);
                 });
                 localStorage.setItem("live_appointments", JSON.stringify(allApts));
-                loadDashboardAppointments(); // Update UI in real-time
+                loadDashboardAppointments(); // Update UI in real-time without reloading
             }
         }, e => console.log("Cloud appointments sync error: ", e));
     }

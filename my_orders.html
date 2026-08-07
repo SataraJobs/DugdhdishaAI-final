@@ -183,13 +183,17 @@
             syncUserNotificationsFromCloud();
         }
 
-        // --- 🔥 CLOUD DATABASE ORDERS SYNC ACROSS ALL DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
+        // --- 🔥 FIXED: CLOUD DATABASE ORDERS SYNC (PROPER NESTED QUERY & SORTING) 🔥 ---
         function syncMyOrdersFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-                // १. customerMobile फील्डने शोधा
+                let cleanMobile = userMobile.replace("+91 ", "").replace("+91", "").trim();
+                let mobileVariants = [userMobile, cleanMobile, "+91" + cleanMobile, "+91 " + cleanMobile];
+                mobileVariants = [...new Set(mobileVariants)]; // डुप्लिकेट्स काढा
+
+                // अचूक फिल्ड: "customer.mobile" ने शोधा
                 db.collection("mall_orders")
-                .where("customerMobile", "==", userMobile)
+                .where("customer.mobile", "in", mobileVariants)
                 .onSnapshot((querySnapshot) => {
                     let cloudOrders = [];
                     querySnapshot.forEach((doc) => {
@@ -197,37 +201,27 @@
                         data.firebaseDocId = doc.id;
                         cloudOrders.push(data);
                     });
-                    if (cloudOrders.length > 0) {
-                        cloudOrders.sort((a, b) => b.id - a.id);
-                        localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
-                        let activeBtn = document.querySelector('.tab-btn.active');
-                        let activeTab = 'all';
-                        if (activeBtn) {
-                            let text = activeBtn.innerText;
-                            if (text.includes('प्रलंबित')) activeTab = 'pending';
-                            else if (text.includes('वाटेत')) activeTab = 'shipped';
-                            else if (text.includes('पोहोचले')) activeTab = 'delivered';
-                            else if (text.includes('रद्द')) activeTab = 'cancelled';
-                        }
-                        loadMyOrders(activeTab);
-                    }
-                }, e => {
-                    // २. जर customer.mobile फील्डमध्ये सेव्ह केले असेल तर त्या पद्धतीने शोधा
-                    db.collection("mall_orders")
-                    .where("customer.mobile", "==", userMobile)
-                    .onSnapshot((querySnapshot2) => {
-                        let cloudOrders2 = [];
-                        querySnapshot2.forEach((doc) => {
-                            let data = doc.data();
-                            data.firebaseDocId = doc.id;
-                            cloudOrders2.push(data);
-                        });
-                        if (cloudOrders2.length > 0) {
-                            cloudOrders2.sort((a, b) => b.id - a.id);
-                            localStorage.setItem('user_orders', JSON.stringify(cloudOrders2));
-                            loadMyOrders('all');
-                        }
+                    
+                    // नवीन ऑर्डर्स सर्वात वर दिसाव्यात यासाठी सॉर्टिंग
+                    cloudOrders.sort((a, b) => {
+                        let numA = parseInt(a.id.replace(/\\D/g, '')) || 0;
+                        let numB = parseInt(b.id.replace(/\\D/g, '')) || 0;
+                        return numB - numA;
                     });
+
+                    localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+                    
+                    let activeBtn = document.querySelector('.tab-btn.active');
+                    let activeTab = 'all';
+                    if (activeBtn) {
+                        let text = activeBtn.innerText;
+                        if (text.includes('प्रलंबित')) activeTab = 'pending';
+                        else if (text.includes('वाटेत')) activeTab = 'shipped';
+                        else if (text.includes('पोहोचले')) activeTab = 'delivered';
+                        else if (text.includes('रद्द')) activeTab = 'cancelled';
+                    }
+                    loadMyOrders(activeTab);
+                }, e => {
                     console.log("Error syncing orders from cloud: ", e);
                 });
 
@@ -238,9 +232,12 @@
                         let localSessionId = localStorage.getItem("current_session_id");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                            localStorage.clear();
-                            window.location.replace("login.html");
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
                         }
                     }
                 }, (err) => console.log("Cloud user sync error:", err));

@@ -102,9 +102,33 @@
         .submit-btn:disabled {
             background: #9e9e9e; cursor: not-allowed; box-shadow: none;
         }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initAddAnimalPage()">
+
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
 
     <div class="app-bar">
         <a href="kharedi_vikri.html" class="back-btn">⬅</a>
@@ -126,12 +150,12 @@
                 <div class="input-grid">
                     <div class="form-group">
                         <label>जनावराचा प्रकार</label>
-                        <select class="form-control" id="animalType">
+                        <select class="form-control" id="animalType" onchange="checkKhillarCategory()">
                             <option value="">निवडा...</option>
                             <option value="गाय">गाय</option>
                             <option value="म्हैस">म्हैस</option>
                             <option value="शेळी">शेळी</option>
-                            <option value="बैल">बैल</option>
+                            <option value="शर्यतीचा बैल">शर्यतीचा बैल</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -208,7 +232,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // 🔥 तुमचा FIREBASE CONFIG CODE 🔥
+        // 🔥 FIREBASE INITIALIZATION 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
             authDomain: "dugdhdishaai.firebaseapp.com",
@@ -253,12 +277,23 @@
                         let localSessionId = localStorage.getItem("current_session_id");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                            localStorage.clear();
-                            window.location.replace("login.html");
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
                         }
                     }
                 }, (err) => console.log("Cloud session sync error:", err));
+            }
+        }
+
+        function checkKhillarCategory() {
+            let type = document.getElementById('animalType').value;
+            if (type === 'शर्यतीचा बैल') {
+                alert("सूचना: शर्यतीच्या बैलाची किंवा खिल्लार खोंडाची जाहिरात देण्यासाठी कृपया 'चॅम्पियन खिल्लार AI' डॅशबोर्डवरील 'शर्यत बैल बाजार' या पेजचा वापर करा.");
+                document.getElementById('animalType').value = '';
             }
         }
 
@@ -393,7 +428,7 @@
             event.target.value = "";
         }
 
-        // 🔥 सबमिट हाताळण्यासाठी स्वतंत्र फंक्शन (FIREBASE सह)
+        // 🔥 सबमिट हाताळण्यासाठी स्वतंत्र फंक्शन (FIREBASE सह - FIXED DOCUMENT ID) 🔥
         function submitAnimalForm() {
             // पूर्ण मॅन्युअल व्हॅलिडेशन
             const animalType = document.getElementById('animalType').value.trim();
@@ -424,8 +459,9 @@
             let farmerDistrict = (globalFarmerData && globalFarmerData.district) ? globalFarmerData.district : (localStorage.getItem("current_user_district") || "N/A");
 
             // डेटाबेसमध्ये पाठवण्यासाठी ऑब्जेक्ट तयार करणे
+            let uniqueId = Date.now().toString(); // 🔥 FIXED: String ID
             const newAnimal = {
-                id: Date.now(), 
+                id: uniqueId, 
                 type: animalType,
                 breed: animalBreed,
                 milk: animalMilk || '',
@@ -447,12 +483,13 @@
             submitBtn.innerHTML = "⏳ ढगात (Database) सेव्ह होत आहे...";
             submitBtn.disabled = true;
 
-            // 🔥 FIREBASE मध्ये डेटा सेव्ह करणे 🔥
-            db.collection("market_animals").add(newAnimal)
-            .then((docRef) => {
+            // 🔥 FIREBASE मध्ये डेटा सेव्ह करणे (USING EXACT LOCAL ID AS DOCUMENT ID) 🔥
+            db.collection("market_animals").doc(uniqueId).set(newAnimal)
+            .then(() => {
                 // बॅकअप म्हणून LocalStorage मध्ये सुद्धा सेव्ह ठेवणे (ऑफलाईनसाठी)
                 let currentAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
-                newAnimal.firebaseId = docRef.id;
+                newAnimal.firebaseId = uniqueId; // Also update this for backward compatibility
+                newAnimal.firebaseDocId = uniqueId;
                 currentAnimals.unshift(newAnimal); 
                 localStorage.setItem('market_animals', JSON.stringify(currentAnimals));
 

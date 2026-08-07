@@ -80,12 +80,36 @@
         .knowledge-box:hover { background: #c5cae9; }
         .knowledge-box h4 { margin: 0 0 5px; font-size: 13px; color: #1a237e; }
         .knowledge-box p { margin: 0; font-size: 11.5px; color: #333; line-height: 1.4; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
+
     <div class="top-dashboard">
         <a href="index.html">⬅️ मुख्य डॅशबोर्ड</a>
         <div class="header-titles">
@@ -168,7 +192,6 @@
             </div>
             <div class="input-col">
                 <label>दूध दर (₹) *</label>
-                <!-- Automatic Rate Removed. User manually types the rate according to their local dairy -->
                 <input type="number" id="milk_rate" placeholder="उदा. 35.50" step="0.1" oninput="calculateTotal()">
             </div>
         </div>
@@ -233,7 +256,9 @@
             .onSnapshot((querySnapshot) => {
                 let cloudRecords = [];
                 querySnapshot.forEach((doc) => {
-                    cloudRecords.push(doc.data());
+                    let data = doc.data();
+                    data.firebaseDocId = doc.id; // 🔥 ADD DOC ID
+                    cloudRecords.push(data);
                 });
                 
                 if (cloudRecords.length > 0) {
@@ -249,9 +274,12 @@
                     let localSessionId = localStorage.getItem("current_session_id");
                     let cloudSessionId = cloudData.currentSessionId;
                     if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                        localStorage.clear();
-                        window.location.replace("login.html");
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if(alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
                     }
                 }
             }, (err) => console.log("Cloud session sync error:", err));
@@ -332,7 +360,7 @@
                     </div>
                 </div>`;
 
-            let dynamicAdHtml = generateFatBoosterAd("Milk_Fat_SNF", defaultFatAdHtml);
+            let dynamicAdHtml = generateFatBoosterAd("Fat_SNF", defaultFatAdHtml); // 🔥 FIXED THE TAG VALUE TO MATCH VENDOR AD
 
             adContainer.innerHTML = `
                 <h4 style="margin:0 0 5px; color:#e65100; display:flex; align-items:center; gap:5px;">⚠️ AI अलर्ट: फॅट / SNF कमी आहे!</h4>
@@ -432,6 +460,7 @@
         document.getElementById('milk_total').value = total.toFixed(2);
     }
 
+    // 🔥 FIXED: SAVE MILK RECORD (WITH UNIQUE DOC ID TO PREVENT OVERWRITES) 🔥
     function saveMilkRecord() {
         let date = document.getElementById('milk_date').value;
         let shift = document.getElementById('milk_shift').value;
@@ -454,8 +483,10 @@
         saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
         saveBtn.disabled = true;
 
+        let uniqueId = "MILK_" + Date.now(); // String unique ID
+
         let newRecord = {
-            id: Date.now(),
+            id: uniqueId,
             date: date,
             shift: shift,
             animalId: animalId,
@@ -467,12 +498,11 @@
             total: parseFloat(total)
         };
 
-        // 1. Save locally
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
         records.unshift(newRecord);
         localStorage.setItem('milk_history', JSON.stringify(records));
 
-        // 2. 🔥 Save to Firebase Live Database 🔥
+        // 2. 🔥 Save to Firebase Live Database with Specific Document ID 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
         
@@ -483,7 +513,7 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        db.collection("milk_records").add(firebaseData)
+        db.collection("milk_records").doc(uniqueId).set(firebaseData)
         .then(() => {
             alert("✅ दूध संकलनाची नोंद यशस्वीरित्या सेव्ह झाली!");
         })
@@ -551,7 +581,7 @@
     window.addEventListener("DOMContentLoaded", () => {
         loadAnimalsIntoDropdown();
         loadHistory();
-        syncMilkDataFromCloud(); // 🔥 PAGE LOAD HOTACH CLOUD SYNC SURU KARA
+        syncMilkDataFromCloud(); 
     });
 </script>
 

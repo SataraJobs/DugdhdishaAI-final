@@ -52,13 +52,38 @@
         /* Submit Button */
         .btn-submit { background: linear-gradient(145deg, #f57c00, #e65100); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #bf360c; transition: 0.3s; }
         .btn-submit:active { top: 4px; box-shadow: 0 0 0 #bf360c; position: relative; }
+        .btn-submit:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
         /* Success Message */
         .success-msg { display: none; background: #e8f5e9; color: #2e7d32; border: 1px solid #81c784; padding: 20px; margin: 30px 20px; border-radius: 12px; text-align: center; font-weight: bold; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .success-icon { font-size: 50px; margin-bottom: 10px; }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initPage()">
+
+<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
     
@@ -84,7 +109,7 @@
 
         <textarea id="feedback_comment" class="comment-box" placeholder="तुमच्या सूचना किंवा ॲपचा अनुभव येथे लिहा... (Optional)"></textarea>
 
-        <button class="btn-submit" onclick="submitFeedback()">🚀 अभिप्राय सबमिट करा</button>
+        <button class="btn-submit" id="btn_submit" onclick="submitFeedback()">🚀 अभिप्राय सबमिट करा</button>
     </div>
 
     <div class="success-msg" id="success_msg">
@@ -127,9 +152,12 @@
                     let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
                     let cloudSessionId = cloudData.currentSessionId;
                     if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                        localStorage.clear();
-                        window.location.replace("login.html");
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
                     }
                 }
             }, (err) => console.log("Cloud session sync error:", err));
@@ -160,10 +188,14 @@
         let fName = localStorage.getItem("current_user_name") || "अज्ञात शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
 
+        const submitBtn = document.getElementById('btn_submit');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = "⏳ सबमिट करत आहे...";
+        submitBtn.disabled = true;
+
         // Create data object
         let feedbackData = {
-            id: Date.now(),
-            rating: selectedRating,
+            rating: parseInt(selectedRating),
             comment: comment,
             farmerName: fName,
             farmerMobile: fMob,
@@ -171,22 +203,29 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // 1. Save data to localStorage (For local reference)
-        let allFeedbacks = JSON.parse(localStorage.getItem('app_feedbacks')) || [];
-        allFeedbacks.push(feedbackData);
-        localStorage.setItem('app_feedbacks', JSON.stringify(allFeedbacks));
-
-        // 2. 🔥 Save data to Firebase Live Database 🔥
+        // 1. 🔥 Save data to Firebase Live Database 🔥
         db.collection("app_feedbacks").add(feedbackData)
-        .catch(err => console.error("Error saving feedback to Firebase: ", err));
+        .then((docRef) => {
+            // 2. Save data to localStorage (For local reference using real ID)
+            feedbackData.id = docRef.id;
+            let allFeedbacks = JSON.parse(localStorage.getItem('app_feedbacks')) || [];
+            allFeedbacks.push(feedbackData);
+            localStorage.setItem('app_feedbacks', JSON.stringify(allFeedbacks));
 
-        // Hide form and show success animation
-        document.getElementById('feedback_form').style.display = "none";
-        let successBox = document.getElementById('success_msg');
-        successBox.style.display = "block";
-        
-        // Smooth scroll to success message
-        successBox.scrollIntoView({behavior: "smooth"});
+            // Hide form and show success animation
+            document.getElementById('feedback_form').style.display = "none";
+            let successBox = document.getElementById('success_msg');
+            successBox.style.display = "block";
+            
+            // Smooth scroll to success message
+            successBox.scrollIntoView({behavior: "smooth"});
+        })
+        .catch(err => {
+            console.error("Error saving feedback to Firebase: ", err);
+            alert("❌ इंटरनेट एरर! अभिप्राय सबमिट होऊ शकला नाही. कृपया पुन्हा प्रयत्न करा.");
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
     }
 </script>
 

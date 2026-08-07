@@ -108,9 +108,32 @@
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initializeMarketPage()">
+
+<div id="sessionAlertBox">
+    <div class="session-alert-content">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+    </div>
+</div>
 
 <div class="app-container">
 
@@ -201,7 +224,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-    // 🔥 तुमचा FIREBASE CONFIG CODE 🔥
+    // 🔥 FIREBASE CONFIG CODE 🔥
     const firebaseConfig = {
         apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
         authDomain: "dugdhdishaai.firebaseapp.com",
@@ -212,7 +235,6 @@
         measurementId: "G-6TFEJKBVFL"
     };
 
-    // Initialize Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -224,7 +246,6 @@
     let pendingPlanType = "Monthly";
 
     function initializeMarketPage() {
-        // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
         syncMarketDataFromCloud();
     }
 
@@ -233,7 +254,7 @@
         db.collection("admin_settings").doc("M25").get().then((doc) => {
             if(doc.exists && doc.data()) {
                 localStorage.setItem('admin_data_M25', JSON.stringify(doc.data()));
-                checkActivePlanOnLoad(); // Update price UI immediately
+                checkActivePlanOnLoad(); 
             }
         }).catch(e => console.log("Cloud price sync error:", e));
 
@@ -254,9 +275,12 @@
                     let localSessionId = localStorage.getItem("current_session_id");
                     let cloudSessionId = cloudData.currentSessionId;
                     if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                        localStorage.clear();
-                        window.location.replace("login.html");
+                        let alertBox = document.getElementById("sessionAlertBox");
+                        if (alertBox) alertBox.style.display = "flex";
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace("login.html");
+                        }, 3000);
                     }
                 }
             }, (err) => console.log("Cloud user sync error:", err));
@@ -330,7 +354,6 @@
             // "माझ्या जाहिराती" टॅबमध्ये फक्त स्वतःच्या जाहिराती दाखवा
             if(currentTab === 'my-ads') {
                 let isMyAd = false;
-                // Format check - standardize mobile numbers to compare safely
                 let adMob = (animal.mobile || animal.phone || "").toString().replace("+91", "").trim();
                 let myMob = (currentUserMobile || "").toString().replace("+91 ", "").replace("+91", "").trim();
                 
@@ -349,6 +372,7 @@
 
             let actionButtons = '';
             if(currentTab === 'my-ads' && !isSold) {
+                // 🔥 FIXED: PASSED identifier (docId) CORRECTLY 🔥
                 actionButtons = `
                 <div class="action-btns">
                     <button class="sold-btn" onclick="markAsSold('${identifier}')">✅ विकले (Sold)</button>
@@ -361,7 +385,6 @@
             let soldOverlay = isSold ? `<div class="sold-overlay"><div class="sold-stamp">SOLD</div></div>` : '';
             let callButton = !isSold ? `<a href="tel:+91${animal.mobile || animal.phone}" class="call-btn">📞 मालकाला कॉल करा</a>` : '';
 
-            // Handle Khillar specific data representation
             let categoryText = animal.category ? animal.category : animal.type;
             let typeLabel = animal.type === "शर्यतीचा बैल" ? "🐂 शर्यत बैल" : animal.type;
             let locationDisplay = animal.location || animal.district || "N/A";
@@ -427,19 +450,22 @@
         document.getElementById('imageViewerModal').style.display = 'none';
     }
 
-    // --- Actions Logic (Firebase सपोर्टसह) ---
-    function markAsSold(identifier) {
+    // --- 🔥 Actions Logic (Firebase सपोर्टसह - FIXED) 🔥 ---
+    function markAsSold(docId) {
         if(confirm('हे जनावर नक्की विकले गेले आहे का?')) {
-            db.collection("market_animals").doc(identifier).update({
+            // 🔥 थेट क्लाऊडवर अपडेट करा
+            db.collection("market_animals").doc(docId).update({
                 status: 'sold'
             })
             .then(() => {
+                alert("✅ अभिनंदन! तुमच्या जनावराची नोंद 'विकले' म्हणून झाली आहे.");
                 loadRealMarketAnimals();
             })
             .catch((error) => {
-                // जर हा Local ID असेल तर LocalStorage मधून अपडेट करणे
+                console.error("Error updating document: ", error);
+                // जर इंटरनेट नसेल किंवा एरर आला तर लोकल स्टोरेजमध्ये अपडेट करा
                 let animals = JSON.parse(localStorage.getItem('market_animals')) || [];
-                let index = animals.findIndex(a => a.id == identifier || a.firebaseDocId == identifier);
+                let index = animals.findIndex(a => a.firebaseDocId === docId || a.id === docId);
                 if(index !== -1) {
                     animals[index].status = 'sold';
                     localStorage.setItem('market_animals', JSON.stringify(animals));
@@ -449,16 +475,19 @@
         }
     }
 
-    function deleteAd(identifier) {
+    function deleteAd(docId) {
         if(confirm('तुम्हाला ही जाहिरात कायमची डिलीट करायची आहे का?')) {
-            db.collection("market_animals").doc(identifier).delete()
+            // 🔥 थेट क्लाऊडवरून डिलीट करा
+            db.collection("market_animals").doc(docId).delete()
             .then(() => {
+                alert("🗑️ जाहिरात यशस्वीरीत्या डिलीट केली आहे.");
                 loadRealMarketAnimals();
             })
             .catch((error) => {
-                // जर हा Local ID असेल तर LocalStorage मधून डिलीट करणे
+                console.error("Error removing document: ", error);
+                // जर इंटरनेट नसेल किंवा एरर आला तर लोकल स्टोरेजमधून डिलीट करा
                 let animals = JSON.parse(localStorage.getItem('market_animals')) || [];
-                animals = animals.filter(a => a.id != identifier && a.firebaseDocId != identifier);
+                animals = animals.filter(a => a.firebaseDocId !== docId && a.id !== docId);
                 localStorage.setItem('market_animals', JSON.stringify(animals));
                 loadRealMarketAnimals();
             });
@@ -469,14 +498,12 @@
     function getSilverPlanPrice() {
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         let val = adminPrices.m25_f_silver;
-        // 🔥 FIX: ॲडमिन डेटा नसेल तर बाय डीफॉल्ट ₹९९ किंमत घ्या (0 ठेवू नका)
         if (val === undefined || val === null || val === '') return 99; 
         let parsedPrice = parseInt(val);
         if (isNaN(parsedPrice) || parsedPrice <= 0) return 0; // IF 0 then it's free!
         return parsedPrice;
     }
 
-    // 🔥 UNIVERSAL ACCESS CHECK FUNCTION 🔥
     function isPlanActive() {
         let currentPrice = getSilverPlanPrice();
         if (currentPrice === 0) return true; // It's free
@@ -508,7 +535,7 @@
             }
         }
 
-        return false; // User does not have any active qualifying plan
+        return false; 
     }
 
     function checkActivePlanOnLoad() {
@@ -530,8 +557,6 @@
             window.location.href = "add_animal_form.html"; 
             return;
         }
-
-        // If not active, show the paywall modal
         openAddAnimalModal();
     }
 
@@ -556,7 +581,6 @@
 
         let userMobile = localStorage.getItem('current_user_mobile') || "9999999999";
         let userName = localStorage.getItem('current_user_name') || "शेतकरी मित्र";
-
         let amountInPaise = numAmount * 100;
 
         var options = {

@@ -221,8 +221,10 @@
             </div>
             <div class="plan-price-action">
                 <div class="plan-price" style="color: #e65100;"><span class="plan-price-symbol">₹</span><span id="disp_khond_adv">४९</span></div>
-                <span class="plan-duration">/ १ महिना</span>
-                <button id="btn_khond_adv" class="buy-btn" style="background: #ff6f00;" onclick="openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, 'Monthly')">खरेदी करा</button>
+                <!-- 🔥 FIXED: TEXT CHANGED FROM '/ 1 महिना' to '/ 24 तास' 🔥 -->
+                <span class="plan-duration">/ २४ तास (24h)</span>
+                <!-- 🔥 FIXED: TYPE CHANGED FROM 'Monthly' to '24h' 🔥 -->
+                <button id="btn_khond_adv" class="buy-btn" style="background: #ff6f00;" onclick="openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, '24h')">खरेदी करा</button>
             </div>
         </div>
 
@@ -397,7 +399,10 @@
         document.getElementById('btn_plat1').setAttribute('onclick', `openPayment('प्लॅटिनम (१ महिना)', document.getElementById('disp_plat1').innerText, 'Monthly')`);
         document.getElementById('btn_gold').setAttribute('onclick', `openPayment('दिशा प्राईम (Gold)', document.getElementById('disp_gold').innerText, 'Monthly')`);
         document.getElementById('btn_silver').setAttribute('onclick', `openPayment('सिल्व्हर पॅक', document.getElementById('disp_silver').innerText, 'Monthly')`);
-        document.getElementById('btn_khond_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, 'Monthly')`);
+        
+        // 🔥 FIXED: PASSED '24h' TYPE FOR ADVANCE KHILLAR RATION INSTEAD OF 'Monthly' 🔥
+        document.getElementById('btn_khond_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स शर्यत रेशन (Advance Ration)', document.getElementById('disp_khond_adv').innerText, '24h')`);
+        
         document.getElementById('btn_bazar_ad').setAttribute('onclick', `openPayment('शर्यत बैल बाजार जाहिरात + 1 महिना फ्री रेशन', document.getElementById('disp_bazar_ad').innerText, 'Monthly')`);
         document.getElementById('btn_adv').setAttribute('onclick', `openPayment('ॲडव्हान्स बॅलन्सर (24h)', document.getElementById('disp_adv').innerText, '24h')`);
         document.getElementById('btn_pro').setAttribute('onclick', `openPayment('प्रो रेशन बॅलन्सर (24h)', document.getElementById('disp_pro').innerText, '24h')`);

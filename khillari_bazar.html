@@ -761,52 +761,120 @@
         }
 
         let html = "";
+        let currentUserMobile = localStorage.getItem("current_user_mobile");
+
         list.forEach(item => {
+            let identifier = item.firebaseDocId || item.id;
+            let isSold = (item.status === 'sold');
+            
+            // "बाजार" टॅबमध्ये विकलेली जनावरे दाखवायची नाहीत
+            if(currentTab === 'buy' && isSold) return;
+
+            // "माझ्या जाहिराती" टॅबमध्ये फक्त स्वतःच्या जाहिराती दाखवा
+            if(currentTab === 'my-ads') {
+                let isMyAd = false;
+                let adMob = (item.mobile || item.phone || "").toString().replace("+91", "").trim();
+                let myMob = (currentUserMobile || "").toString().replace("+91 ", "").replace("+91", "").trim();
+                
+                if (adMob === myMob || item.farmerMobile === currentUserMobile) {
+                    isMyAd = true;
+                }
+                
+                if(!isMyAd) return; // Skip if not my ad
+            }
+
             let formattedPrice = new Intl.NumberFormat('en-IN').format(item.price);
             let wpMsg = `नमस्कार ${item.owner}, मी 'दुग्ध दिशा AI' ॲपवर तुमच्या '${item.name}' (किंमत: ₹${formattedPrice}) ची जाहिरात पाहिली. मला खरेदी करायचा आहे.`;
             let wpUrl = `https://wa.me/${item.phone.replace("+", "")}?text=${encodeURIComponent(wpMsg)}`;
 
+            let actionButtons = '';
+            if(currentTab === 'my-ads' && !isSold) {
+                actionButtons = `
+                <div class="action-btns">
+                    <button class="sold-btn" onclick="markAsSold('${identifier}')">✅ विकले (Sold)</button>
+                    <button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ डिलीट (Delete)</button>
+                </div>`;
+            } else if (currentTab === 'my-ads' && isSold) {
+                actionButtons = `<div class="action-btns"><button class="delete-btn" onclick="deleteAd('${identifier}')">🗑️ कायमचे डिलीट करा</button></div>`;
+            }
+
+            let soldOverlay = isSold ? `<div class="sold-overlay"><div class="sold-stamp">SOLD</div></div>` : '';
+            let callButton = !isSold ? `<a href="tel:+91${item.phone || item.mobile}" class="call-btn">📞 कॉल करा</a>` : '';
+
+            let extraDetails = "";
+            if (item.bloodline) {
+                extraDetails = `
+                <div class="detail-item" style="grid-column: span 2; background:#fff3e0; color:#d84315; border-color:#ffe0b2;">
+                    वंशावळ: <strong>${item.bloodline}</strong>
+                </div>
+                <div class="detail-item">वय: <strong>${item.age || '-'}</strong></div>
+                <div class="detail-item">मालक: <strong>${item.owner || '-'}</strong></div>
+                `;
+            } else {
+                extraDetails = `
+                <div class="detail-item">दूध: <strong>${item.milk || '-'} लिटर</strong></div>
+                <div class="detail-item">वेत: <strong>${item.lactation || '-'}</strong></div>
+                <div class="detail-item">दात: <strong>${item.teeth || '-'}</strong></div>
+                <div class="detail-item">गाभण: <strong>${item.pregnant || '-'}</strong></div>
+                `;
+            }
+
             html += `
             <div class="bazar-card">
                 <div class="bazar-img-placeholder">
+                    ${soldOverlay}
                     <span>🐂</span>
                     <div class="price-badge">₹ ${formattedPrice} /-</div>
                 </div>
 
                 <div class="bazar-card-header">
                     <div>
-                        <div class="bazar-bull-name">${item.name}</div>
-                        <span style="font-size:11px; color:#666; font-weight:700;">प्रकार: ${item.category} • जिल्हा: ${item.district}</span>
+                        <div class="bazar-bull-name">${item.name || item.breed}</div>
+                        <span style="font-size:11px; color:#666; font-weight:700;">प्रकार: ${item.category || item.type} • जिल्हा: ${item.district}</span>
                     </div>
                 </div>
 
-                <div class="bazar-pedigree-tag">🏆 वंशावळ: ${item.bloodline}</div>
+                <div class="bazar-pedigree-tag">🏆 वंशावळ: ${item.bloodline || 'माहिती नाही'}</div>
 
                 <div class="bazar-specs-row">
                     <div class="spec-pill">
-                        <div class="val" style="color:#2e7d32;">${item.age}</div>
+                        <div class="val" style="color:#2e7d32;">${item.age || '-'}</div>
                         <div class="lbl">वय (Age)</div>
                     </div>
                     <div class="spec-pill">
-                        <div class="val" style="color:#e65100;">${item.district}</div>
+                        <div class="val" style="color:#e65100;">${item.district || '-'}</div>
                         <div class="lbl">जिल्हा</div>
                     </div>
                     <div class="spec-pill">
-                        <div class="val" style="color:#1565c0;">${item.owner}</div>
+                        <div class="val" style="color:#1565c0;">${item.owner || '-'}</div>
                         <div class="lbl">मालक</div>
                     </div>
                 </div>
 
-                <div class="bazar-desc">${item.desc}</div>
+                <div class="bazar-desc">${item.desc || 'उत्तम जनावर'}</div>
 
                 <div class="bazar-actions">
-                    <a href="tel:${item.phone}" class="btn-call">📞 कॉल करा</a>
-                    <a href="${wpUrl}" target="_blank" class="btn-wp">💬 WhatsApp</a>
+                    ${callButton}
+                    ${!isSold ? `<a href="${wpUrl}" target="_blank" class="btn-wp">💬 WhatsApp</a>` : ''}
                 </div>
+                ${actionButtons}
             </div>`;
         });
 
-        container.innerHTML = html;
+        container.innerHTML = html === '' ? `<div class="empty-state"><div style="font-size: 52px; margin-bottom: 12px;">🐂</div><h4 style="color:#111; margin-bottom:6px; font-size:16px;">सध्या जाहिराती नाहीत!</h4></div>` : html;
+    }
+
+    function switchTab(tabName) {
+        currentTab = tabName;
+        document.getElementById('tab-buy').classList.remove('active');
+        document.getElementById('tab-my-ads').classList.remove('active');
+        
+        if (tabName === 'buy') {
+            document.getElementById('tab-buy').classList.add('active');
+        } else {
+            document.getElementById('tab-my-ads').classList.add('active');
+        }
+        renderBazarListings(allBazarListings);
     }
 
     // 4. FILTER LISTINGS
@@ -816,7 +884,7 @@
 
         let filtered = allBazarListings.filter(item => {
             let matchDist = (selectedDist === "all") || (item.district === selectedDist);
-            let matchCat = (selectedCat === "all") || (item.category === selectedCat);
+            let matchCat = (selectedCat === "all") || (item.category === selectedCat || item.type === selectedCat);
             return matchDist && matchCat;
         });
 
@@ -840,7 +908,6 @@
         let notice = document.getElementById("ad_pricing_notice");
         let btnText = document.getElementById("btn_submit_text");
 
-        // १. ॲडमिनचे ताजे दर तपासा (जर किंमत 0 असेल तर थेट मोफत प्रवेश द्या)
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         let khillarPrimePrice = (adminPrices.m25_f_khillar_prime !== undefined && adminPrices.m25_f_khillar_prime !== "") ? parseInt(adminPrices.m25_f_khillar_prime) : 99;
 
@@ -885,18 +952,16 @@
             owner: owner,
             phone: formattedPhone,
             desc: desc,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            status: "live"
         };
 
-        // १. ॲडमिनचे ताजे दर तपासा
         let adminPrices = JSON.parse(localStorage.getItem('admin_data_M25')) || {};
         let khillarPrimePrice = (adminPrices.m25_f_khillar_prime !== undefined && adminPrices.m25_f_khillar_prime !== "") ? parseInt(adminPrices.m25_f_khillar_prime) : 99;
 
-        // जर शर्यतीचा बैल असेल आणि दर > 0 असेल तर पेमेंट घ्या
         if (category === "शर्यतीचा बैल" && khillarPrimePrice > 0) {
             triggerRacingBullPayment(newAdObj, khillarPrimePrice);
         } else {
-            // इतर प्रकारांसाठी किंवा दर 0 असल्यास मोफत जाहिरात पोस्ट करा
             publishAdToDatabase(newAdObj, category === "शर्यतीचा बैल");
         }
     }
@@ -926,7 +991,6 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.log("Firebase log error", e));
 
-                // जाहिरात पब्लिश करा आणि ॲडव्हान्स रेशन १ महिन्यासाठी मोफत अनलॉक करा
                 publishAdToDatabase(adObj, true);
             },
             "prefill": {
@@ -943,16 +1007,15 @@
         rzp1.open();
     }
 
-    // 8. PUBLISH AD & UNLOCK 1 MONTH FREE ADVANCE RATION (NOW CONNECTED TO FIREBASE CLOUD)
+    // 8. PUBLISH AD & UNLOCK 1 MONTH FREE ADVANCE RATION
     function publishAdToDatabase(newAd, isPaidRacingBull) {
         allBazarListings.unshift(newAd);
         localStorage.setItem("khillar_bazar_ads", JSON.stringify(allBazarListings));
 
-        // Save to Firebase Cloud (`khillar_bazar_ads` आणि `market_animals` दोन्ही ठिकाणी सेव्ह करा)
+        // Save to Firebase Cloud
         db.collection("khillar_bazar_ads").doc(newAd.id).set(newAd)
         .catch(e => console.error("Cloud khillar bazar ad save error:", e));
 
-        // ॲडमिन पॅनेलच्या M_KHILLAR_ADMIN आणि पशु बाजारात दिसण्यासाठी
         let marketAnimalObj = {
             ...newAd,
             breed: newAd.bloodline,
@@ -964,11 +1027,10 @@
         db.collection("market_animals").doc(newAd.id).set(marketAnimalObj)
         .catch(e => console.error("Cloud market animals save error:", e));
 
-        // जर ₹९९ भरले असतील तर 'ॲडव्हान्स रेशन बॅलन्सर' पूर्ण १ महिन्यासाठी मोफत अनलॉक करा
         if (isPaidRacingBull) {
             let now = new Date();
             let expiryDate = new Date();
-            expiryDate.setMonth(expiryDate.getMonth() + 1); // Exact 1 Month Validity
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
 
             let freeAdvancePlan = {
                 name: "Advance Racing Ration (1 Month Free with Bull Ad)",
@@ -978,7 +1040,6 @@
             };
             localStorage.setItem('farmer_active_plan', JSON.stringify(freeAdvancePlan));
 
-            // 🔥 FIREBASE CLOUD SAVE: प्लॅन खरेदी झाल्यावर तो थेट क्लाऊड प्रोफाईलला जोडा 🔥
             let uMob = localStorage.getItem("current_user_mobile");
             if(uMob) {
                 db.collection("users").doc(uMob).set({
@@ -991,7 +1052,6 @@
             alert(`🎉 अभिनंदन! '${newAd.name}' ची मोफत जाहिरात यशस्वीरीत्या प्रसिद्ध झाली आहे!`);
         }
 
-        // Reset form & hide
         document.getElementById("ad_name").value = "";
         document.getElementById("ad_price").value = "";
         document.getElementById("ad_bloodline").value = "";
@@ -1001,18 +1061,19 @@
         renderBazarListings(allBazarListings);
     }
 
-    // 9. LOAD FROM FIREBASE CLOUD (NO DEMOS)
+    // 9. LOAD FROM FIREBASE CLOUD
     function loadBazarAdsFromCloud() {
         let localAds = JSON.parse(localStorage.getItem("khillar_bazar_ads")) || [];
         allBazarListings = localAds;
         renderBazarListings(allBazarListings);
 
-        // Fetch latest real ads from Cloud
         db.collection("khillar_bazar_ads").orderBy("createdAt", "desc").get()
         .then(querySnapshot => {
             let cloudAds = [];
             querySnapshot.forEach(doc => {
-                cloudAds.push(doc.data());
+                let data = doc.data();
+                data.firebaseDocId = doc.id;
+                cloudAds.push(data);
             });
 
             if (cloudAds.length > 0) {
@@ -1021,7 +1082,56 @@
                 renderBazarListings(allBazarListings);
             }
         })
-        .catch(e => console.log("Cloud Bazar fetch error:", e));
+        .catch(e => {
+            console.log("Cloud Bazar fetch error:", e);
+            // Fallback to market_animals if khillar_bazar_ads is empty
+            loadRealMarketAnimals(); 
+        });
+    }
+
+    // --- 🔥 NEW FIREBASE ACTIONS (MARK SOLD / DELETE) 🔥 ---
+    function markAsSold(docId) {
+        if(confirm('हे जनावर नक्की विकले गेले आहे का?')) {
+            // Update in market_animals
+            db.collection("market_animals").doc(docId).update({ status: 'sold' })
+            .catch(e => console.log(e));
+            
+            // Update in khillar_bazar_ads
+            db.collection("khillar_bazar_ads").doc(docId).update({ status: 'sold' })
+            .then(() => {
+                alert("✅ अभिनंदन! तुमच्या जनावराची नोंद 'विकले' म्हणून झाली आहे.");
+                loadBazarAdsFromCloud();
+            })
+            .catch((error) => {
+                console.error("Error updating document: ", error);
+                let index = allBazarListings.findIndex(a => a.firebaseDocId === docId || a.id === docId);
+                if(index !== -1) {
+                    allBazarListings[index].status = 'sold';
+                    localStorage.setItem('khillar_bazar_ads', JSON.stringify(allBazarListings));
+                    renderBazarListings(allBazarListings);
+                }
+            });
+        }
+    }
+
+    function deleteAd(docId) {
+        if(confirm('तुम्हाला ही जाहिरात कायमची डिलीट करायची आहे का?')) {
+            // Delete from market_animals
+            db.collection("market_animals").doc(docId).delete().catch(e=>console.log(e));
+
+            // Delete from khillar_bazar_ads
+            db.collection("khillar_bazar_ads").doc(docId).delete()
+            .then(() => {
+                alert("🗑️ जाहिरात यशस्वीरीत्या डिलीट केली आहे.");
+                loadBazarAdsFromCloud();
+            })
+            .catch((error) => {
+                console.error("Error removing document: ", error);
+                allBazarListings = allBazarListings.filter(a => a.firebaseDocId !== docId && a.id !== docId);
+                localStorage.setItem('khillar_bazar_ads', JSON.stringify(allBazarListings));
+                renderBazarListings(allBazarListings);
+            });
+        }
     }
 </script>
 

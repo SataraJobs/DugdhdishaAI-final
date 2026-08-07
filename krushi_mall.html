@@ -516,6 +516,13 @@
                 }
             }).catch(e => console.log("Cloud payment settings sync error:", e));
 
+            // ४. 🔥 जाहिराती (Ads) सिंक करा (FIXED: NOW CLOUD ADS WILL SHOW IMMEDIATELY) 🔥
+            db.collection("admin_settings").doc("live_admin_ad_images").get().then((doc) => {
+                if (doc.exists && doc.data()) {
+                    localStorage.setItem('live_admin_ad_images', JSON.stringify(doc.data()));
+                }
+            }).catch(e => console.log("Cloud ads sync error:", e));
+
             // 🔥 SINGLE DEVICE SESSION WATCHER (कृषी मॉलमध्ये असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
@@ -525,9 +532,12 @@
                         let localSessionId = localStorage.getItem("current_session_id");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                            localStorage.clear();
-                            window.location.replace("login.html");
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
                         }
                     }
                 }, (err) => console.log("Cloud user sync error:", err));
@@ -866,7 +876,7 @@
                         </div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                        <button onclick="removeFromCart('${item.id}')" style="background:transparent; color:#c62828; border:none; padding:4px 0; font-size:14px; cursor:pointer;">🗑️</button>
+                        <button onclick="updateQty('${item.id}', -9999)" style="background:transparent; color:#c62828; border:none; padding:4px 0; font-size:14px; cursor:pointer;">🗑️</button>
                         <div style="font-size:15px; font-weight:900; color:#d32f2f; margin-top:auto;">₹${item.price * item.qty}</div>
                     </div>
                 </div>`;
@@ -1151,7 +1161,7 @@
             if (dropdown) {
                 dropdown.style.display = dropdown.style.display === "none" || dropdown.style.display === "" ? "block" : "none";
                 if(dropdown.style.display === "block") {
-                    loadNotifications();
+                    loadNotifications('farmer');
                 }
             }
         }
@@ -1173,7 +1183,7 @@
             });
             
             localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-            loadNotifications();
+            loadNotifications('farmer');
         }
 
         document.addEventListener('click', function(event) {
