@@ -954,7 +954,7 @@
             <div id="b_info" class="tab-content">
                 <div class="biz-card" style="border-left: 5px solid #ff9800;">
                     <h3 style="margin: 0 0 10px; color: #e65100;">ℹ️ दुग्ध दिशा Business Hub विषयी माहिती</h3>
-                    <p style="font-size: 13px; color: #555; margin-bottom: 20px;">हा डॅशबोर्ड व्यापारी, कंप ভাগে कंपन्या आणि वितरकांना थेट शेतकऱ्यांपर्यंत पोहोचण्यासाठी डिझाईन केला आहे. खालील माहिती वाचून तुम्ही या ॲपचा जास्तीत जास्त फायदा कसा घ्यायचा ते समजू शकता.</p>
+                    <p style="font-size: 13px; color: #555; margin-bottom: 20px;">हा डॅशबोर्ड व्यापारी, कंपन्या आणि वितरकांना थेट शेतकऱ्यांपर्यंत पोहोचण्यासाठी डिझाईन केला आहे. खालील माहिती वाचून तुम्ही या ॲपचा जास्तीत जास्त फायदा कसा घ्यायचा ते समजू शकता.</p>
 
                     <div class="info-accordion" onclick="this.classList.toggle('open')">
                         <div class="info-accordion-header">१. Dashboard & Analytics <span>▼</span></div>
@@ -1178,7 +1178,7 @@
 
         function buildVendorNotificationDropdown() {
             let systemNotifs = loadNotificationsForRole();
-            let vendorAlertsHtml = getVendorAlertsHtml(); // existing vendor alerts
+            let vendorAlertsHtml = getVendorAlertsHtml(); 
             let html = `<h4 style="margin: 0 0 10px 0; font-size: 13px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 8px;">महत्त्वाच्या सूचना (Alerts)</h4>`;
             
             // System notifications section
@@ -1198,7 +1198,7 @@
                 html += `</div>`;
             }
 
-            // Add existing vendor alerts (non-system)
+            // Add existing vendor alerts
             html += vendorAlertsHtml;
             
             document.getElementById('vendor_notif_list').innerHTML = html;
@@ -1321,26 +1321,27 @@
             checkBusinessExpiriesOnLoad(); 
             loadSupportTickets();
 
-            // 🔥 FIREBASE CLOUD SYNC: ऑर्डर्स, प्रॉडक्ट्स आणि फी सेटिंग्ज सिंक करा 🔥
+            // 🔥 FIREBASE CLOUD SYNC: ऑर्डर्स, प्रॉडक्ट्स आणि फी सेटिंग्ज रिअल टाईम सिंक करा 🔥
             syncBusinessDashboardFromCloud();
             syncMyProductsAndAdsFromCloud();
             syncPlatformFeeConfigFromCloud();
+            syncSupportTickets();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC (REAL-TIME SNAPSHOT) 🔥 ---
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
 
-            db.collection("mall_orders").orderBy("timestamp", "desc").get()
-            .then(querySnapshot => {
+            // 1. Orders Sync (Real-time Snapshot)
+            db.collection("mall_orders").orderBy("timestamp", "desc").onSnapshot(querySnapshot => {
                 let cloudOrders = [];
                 let activeOrdersCount = 0;
                 let totalSales = 0;
 
                 querySnapshot.forEach(doc => {
                     let order = doc.data();
-                    order.firebaseDocId = doc.id;
+                    order.firebaseDocId = doc.id; // Store exact document ID
                     let belongsToMe = (order.items || []).some(i => i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
@@ -1354,33 +1355,17 @@
                     }
                 });
 
-                if (cloudOrders.length > 0) {
-                    localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
-                    document.getElementById('dash_orders').innerText = activeOrdersCount;
-                    document.getElementById('dash_sales').innerText = Math.round(totalSales).toLocaleString('en-IN');
-                    loadDealerOrdersDashboard();
-                }
-            })
-            .catch(e => {
-                db.collection("mall_orders").get().then(querySnapshot => {
-                    let cloudOrders = [];
-                    querySnapshot.forEach(doc => {
-                        let order = doc.data();
-                        order.firebaseDocId = doc.id;
-                        if ((order.items || []).some(i => i.company === myName || i.company === myMobile)) {
-                            cloudOrders.push(order);
-                        }
-                    });
-                    if (cloudOrders.length > 0) {
-                        localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
-                        loadDealerOrdersDashboard();
-                    }
-                });
-                console.log("Cloud business orders sync error: ", e);
-            });
+                localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+                let elOrders = document.getElementById('dash_orders');
+                if(elOrders) elOrders.innerText = activeOrdersCount;
+                let elSales = document.getElementById('dash_sales');
+                if(elSales) elSales.innerText = Math.round(totalSales).toLocaleString('en-IN');
+                
+                loadDealerOrdersDashboard(); // Refresh UI instantly
+            }, e => console.log("Cloud business orders sync error: ", e));
 
-            db.collection("quote_requests").get()
-            .then(querySnapshot => {
+            // 2. Leads Sync (Real-time Snapshot)
+            db.collection("quote_requests").onSnapshot(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
                     let q = doc.data();
@@ -1388,30 +1373,34 @@
                         myLeads++;
                     }
                 });
-                document.getElementById('dash_leads').innerText = myLeads;
-            }).catch(e => console.log("Cloud leads sync error:", e));
+                let elLeads = document.getElementById('dash_leads');
+                if(elLeads) elLeads.innerText = myLeads;
+            }, e => console.log("Cloud leads sync error:", e));
 
-            // 🔥 SINGLE DEVICE SESSION WATCHER (व्यापारी डॅशबोर्डवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            // 3. SINGLE DEVICE SESSION WATCHER (व्यापारी डॅशबोर्डवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट)
             if (myMobile && myMobile !== "+91 9XXXX XXXX") {
                 db.collection("users").doc(myMobile).onSnapshot((doc) => {
                     if (doc.exists && doc.data()) {
                         let cloudData = doc.data();
-                        let localSessionId = localStorage.getItem("current_session_id");
+                        let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
-                            localStorage.clear();
-                            window.location.replace("login.html");
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
                         }
                     }
                 }, (err) => console.log("Cloud user sync error:", err));
             }
         }
 
-        // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS 🔥 ---
+        // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS (REAL-TIME SNAPSHOT) 🔥 ---
         function syncMyProductsAndAdsFromCloud() {
-            db.collection("vendor_products").get()
-            .then(querySnapshot => {
+            // 1. Vendor Products
+            db.collection("vendor_products").onSnapshot(querySnapshot => {
                 let allProducts = [];
                 querySnapshot.forEach(doc => {
                     let p = doc.data();
@@ -1421,12 +1410,36 @@
                 localStorage.setItem('vendor_products', JSON.stringify(allProducts));
                 refreshMyProducts();
                 loadVendorProductsForAd();
-            }).catch(e => console.log("Cloud vendor products sync error:", e));
+            }, e => console.log("Cloud vendor products sync error:", e));
 
-            refreshMyAds(); // जाहिराती सुद्धा रिफ्रेश करा
+            // 2. Vendor Ads
+            db.collection("admin_pending_ad_approvals").onSnapshot(querySnapshot => {
+                let allAds = [];
+                querySnapshot.forEach(doc => {
+                    let ad = doc.data();
+                    ad.id = doc.id;
+                    allAds.push(ad);
+                });
+                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(allAds));
+                refreshMyAdsUI(); // Use UI rendering function
+            }, e => console.log("Cloud ads sync error:", e));
         }
 
-        // --- 🔥 NEW: CLOUD SYNC FOR PLATFORM FEE CONFIG (M33) 🔥 ---
+        // --- 🔥 NEW: SYNC SUPPORT TICKETS (REAL-TIME SNAPSHOT) 🔥 ---
+        function syncSupportTickets() {
+            let myMobile = localStorage.getItem("current_user_mobile") || "Unknown";
+            db.collection("support_tickets").where("mobile", "==", myMobile).onSnapshot(querySnapshot => {
+                let tickets = [];
+                querySnapshot.forEach(doc => {
+                    let t = doc.data();
+                    t.id = doc.id;
+                    tickets.push(t);
+                });
+                localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
+                loadSupportTickets(); // Refresh chat UI
+            });
+        }
+
         function syncPlatformFeeConfigFromCloud() {
             db.collection("admin_settings").doc("platform_fee_config").get()
             .then(doc => {
@@ -1452,7 +1465,7 @@
             let amountInPaise = numAmount * 100;
 
             var options = {
-                "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
+                "key": "rzp_live_TIkGEzUM5ygyd6", 
                 "amount": amountInPaise, 
                 "currency": "INR",
                 "name": "दुग्ध दिशा AI",
@@ -1534,78 +1547,48 @@
 
         function deleteMyProduct(prodId) {
             if (confirm('हे प्रॉडक्ट कायमचे डिलीट करायचे?')) {
-                let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-                products = products.filter(p => p.id !== prodId);
-                localStorage.setItem('vendor_products', JSON.stringify(products));
-                
                 // 🔥 FIREBASE CLOUD DELETE FOR VENDOR PRODUCT 🔥
+                // onSnapshot will handle the local storage update instantly.
                 db.collection("vendor_products").doc(prodId).delete()
+                .then(() => alert('🗑️ प्रॉडक्ट डिलीट केले.'))
                 .catch(e => console.log("Cloud product delete error:", e));
-
-                refreshMyProducts();
-                loadVendorProductsForAd();
             }
         }
 
-        function refreshMyAds() {
+        // Just rendering UI. State is handled by onSnapshot
+        function refreshMyAdsUI() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
             let container = document.getElementById('my_ads_container');
             if (!container) return;
 
-            db.collection("admin_pending_ad_approvals").get().then((querySnapshot) => {
-                let myAds = [];
-                querySnapshot.forEach((doc) => {
-                    let ad = doc.data();
-                    if (ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile)))) {
-                        myAds.push(ad);
-                    }
-                });
-
-                if (myAds.length === 0) {
-                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
-                    return;
-                }
-                let html = '';
-                myAds.forEach(ad => {
-                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
-                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
-                    </div>`;
-                });
-                container.innerHTML = html;
-            }).catch(e => {
-                console.log("Cloud fetch error fallback", e);
-                // Fallback to local storage
-                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-                let myAds = pendingAds.filter(ad => ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
-                if (myAds.length === 0) {
-                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
-                    return;
-                }
-                let html = '';
-                myAds.forEach(ad => {
-                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
-                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
-                    </div>`;
-                });
-                container.innerHTML = html;
+            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+            let myAds = pendingAds.filter(ad => ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
+            
+            if (myAds.length === 0) {
+                container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
+                return;
+            }
+            let html = '';
+            myAds.forEach(ad => {
+                html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
+                    <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                </div>`;
             });
+            container.innerHTML = html;
+        }
+        
+        function refreshMyAds() {
+            refreshMyAdsUI(); 
         }
 
-        // 🔥🔥🔥 NEWLY ADDED CLOUD AD DELETE LOGIC 🔥🔥🔥
+        // 🔥 FIREBASE CLOUD AD DELETE LOGIC 🔥
         function deleteMyAd(adId) {
             if (confirm('ही जाहिरात रद्द करायची?')) {
-                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-                pendingAds = pendingAds.filter(a => a.id !== adId);
-                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
-
                 // 🔥 FIREBASE CLOUD DELETE 🔥
                 db.collection("admin_pending_ad_approvals").doc(adId).delete().catch(e => console.log("Cloud ad delete error:", e));
                 db.collection("homepage_banners").doc(adId).delete().catch(e => console.log("Cloud banner delete error:", e));
-
-                refreshMyAds();
                 alert('🗑️ जाहिरात यशस्वीरीत्या डिलीट केली.');
             }
         }
@@ -1774,35 +1757,28 @@
                 dateAdded: new Date().toISOString()
             };
 
-            let allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            allProducts.unshift(newProduct);
-            localStorage.setItem('vendor_products', JSON.stringify(allProducts));
-
             // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
+            .then(() => {
+                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
+                document.getElementById('vp_name').value = '';
+                document.getElementById('vp_brand').value = '';
+                document.getElementById('vp_mrp').value = '';
+                document.getElementById('vp_offer').value = '';
+                document.getElementById('vp_weight').value = '';
+                document.getElementById('vp_delivery_time').value = '';
+                document.getElementById('vp_min_qty').value = '';
+                document.getElementById('vp_benefits').value = '';
+                document.getElementById('vp_desc').value = '';
+                document.getElementById('vp_other_use').value = '';
+                document.getElementById('vp_category').value = 'पशुखाद्य (Feed)';
+                document.getElementById('vp_category_other').style.display = 'none';
+                document.getElementById('vp_category_other').value = '';
+                document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.getElementById('image_preview_container').innerHTML = '';
+                document.getElementById('live_margin_calculator').style.display = 'none';
+            })
             .catch(e => console.error("Cloud vendor product save error:", e));
-
-            alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
-            
-            document.getElementById('vp_name').value = '';
-            document.getElementById('vp_brand').value = '';
-            document.getElementById('vp_mrp').value = '';
-            document.getElementById('vp_offer').value = '';
-            document.getElementById('vp_weight').value = '';
-            document.getElementById('vp_delivery_time').value = '';
-            document.getElementById('vp_min_qty').value = '';
-            document.getElementById('vp_benefits').value = '';
-            document.getElementById('vp_desc').value = '';
-            document.getElementById('vp_other_use').value = '';
-            document.getElementById('vp_category').value = 'पशुखाद्य (Feed)';
-            document.getElementById('vp_category_other').style.display = 'none';
-            document.getElementById('vp_category_other').value = '';
-            document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]').forEach(cb => cb.checked = false);
-            document.getElementById('image_preview_container').innerHTML = '';
-            document.getElementById('live_margin_calculator').style.display = 'none';
-            
-            loadVendorProductsForAd();
-            refreshMyProducts();
         }
 
         function applyRoleModules() {
@@ -1878,8 +1854,6 @@
             
             if(!msgText) return;
 
-            let tickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
-            
             let newTicket = {
                 id: "TKT" + Math.floor(Math.random() * 90000),
                 senderName: localStorage.getItem("current_user_name") || "व्यापारी",
@@ -1890,17 +1864,13 @@
                 date: new Date().toLocaleString()
             };
             
-            tickets.push(newTicket);
-            localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
-            
             // 🔥 FIREBASE CLOUD SAVE FOR SUPPORT TICKETS 🔥
             db.collection("support_tickets").doc(newTicket.id).set(newTicket)
+            .then(() => {
+                msgInput.value = '';
+                alert("✅ तुमचा मेसेज ॲडमिन टीमला मिळाला आहे. कृपया उत्तराची (Reply) प्रतीक्षा करा.");
+            })
             .catch(e => console.error("Cloud ticket save error:", e));
-
-            msgInput.value = '';
-            loadSupportTickets();
-            
-            alert("✅ तुमचा मेसेज ॲडमिन टीमला मिळाला आहे. कृपया उत्तराची (Reply) प्रतीक्षा करा.");
         }
 
         function openCropModal(event, containerId) {
@@ -2432,11 +2402,10 @@
             }
             
             if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्यেলি आहे.");
                 return;
             }
 
-            let pendingKyc = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
             let newKycReq = {
                 vendorName: localStorage.getItem("current_user_name") || "Unknown Vendor",
                 mobile: localStorage.getItem("current_user_mobile") || "Unknown",
@@ -2444,30 +2413,24 @@
                 date: new Date().toLocaleString(),
                 status: "Pending"
             };
-            pendingKyc.push(newKycReq);
-            localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKyc));
             
             // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST 🔥
             db.collection("admin_pending_kyc").add(newKycReq)
+            .then(() => {
+                alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
+                document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
+                checkVendorNotifications(); 
+            })
             .catch(e => console.error("Cloud KYC save error:", e));
-
-            alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
-            document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
-            checkVendorNotifications(); 
         }
 
-        function payCommissionForOrder(orderId, amount) {
-            processRazorpayPayment(amount, "COD Commission", "Comm_" + orderId, () => {
-                let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                let orderIndex = orders.findIndex(o => o.id === orderId);
-                
-                if(orderIndex > -1) {
-                    orders[orderIndex].commissionPaid = true;
-                    localStorage.setItem('user_orders', JSON.stringify(orders));
-                }
-                
-                alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
-                loadDealerOrdersDashboard();
+        function payCommissionForOrder(docId, amount) {
+            processRazorpayPayment(amount, "COD Commission", "Comm_" + docId, () => {
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
+                db.collection("mall_orders").doc(docId).update({ commissionPaid: true })
+                .then(() => {
+                    alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
+                }).catch(e => console.log(e));
             });
         }
 
@@ -2487,43 +2450,50 @@
                 let myName = localStorage.getItem("current_user_name");
                 let myMobile = localStorage.getItem("current_user_mobile");
                 
+                let batch = db.batch();
+                let hasUpdates = false;
+
                 orders.forEach(o => {
-                    if(o.paymentMethod === 'COD' && o.items.some(item => item.company === myName || item.company === myMobile)) {
-                        o.commissionPaid = true;
+                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.company === myName || item.company === myMobile)) {
+                        if (o.firebaseDocId) {
+                            let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
+                            batch.update(orderRef, { commissionPaid: true });
+                            hasUpdates = true;
+                        }
                     }
                 });
-                localStorage.setItem('user_orders', JSON.stringify(orders));
-                
-                isAccountLocked = false; 
-                document.getElementById('strict_lock_modal').style.display = 'none';
-                
-                alert("🎉 तुमचे संपूर्ण बाकीचे पेमेंट यशस्वी झाले आहे.\n\nतुमचे खाते आता पूर्णपणे निरंक (Clear) झाले आहे!");
-                loadDealerOrdersDashboard();
+
+                if(hasUpdates) {
+                    batch.commit().then(() => {
+                        isAccountLocked = false; 
+                        document.getElementById('strict_lock_modal').style.display = 'none';
+                        alert("🎉 तुमचे संपूर्ण बाकीचे पेमेंट यशस्वी झाले आहे.\n\nतुमचे खाते आता पूर्णपणे निरंक (Clear) झाले आहे!");
+                    }).catch(e => console.log("Batch update error:", e));
+                } else {
+                    isAccountLocked = false; 
+                    document.getElementById('strict_lock_modal').style.display = 'none';
+                    alert("🎉 तुमचे पेमेंट यशस्वी झाले!");
+                }
             });
         }
 
-        function markOrderShipped(orderId) {
-            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let orderIndex = orders.findIndex(o => o.id === orderId);
-            
-            if(orderIndex > -1) {
-                orders[orderIndex].status = 'shipped';
-                localStorage.setItem('user_orders', JSON.stringify(orders));
-
-                let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-                appNotifs.unshift({
+        function markOrderShipped(docId, customerMobile) {
+            // 🔥 FIREBASE CLOUD UPDATE 🔥
+            db.collection("mall_orders").doc(docId).update({ status: 'shipped' })
+            .then(() => {
+                // Send cloud notification to customer
+                db.collection("app_notifications").add({
                     id: Date.now(),
                     type: 'order',
                     title: '📦 ऑर्डर वाटेत आहे! (Shipped)',
-                    message: `तुमची ऑर्डर #${orderId} विक्रेत्याने पाठवली आहे. लवकरच तुमच्यापर्यंत पोहोचेल.`,
+                    message: `तुमची ऑर्डर #${docId} विक्रेत्याने पाठवली आहे. लवकरच तुमच्यापर्यंत पोहोचेल.`,
                     date: new Date().toLocaleDateString(),
-                    receiver_mobile: orders[orderIndex].customer.mobile
-                });
-                localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+                    receiver_mobile: customerMobile,
+                    isRead: false
+                }).catch(e => console.log(e));
 
                 alert('ऑर्डर Shipped मार्क केली आणि ग्राहकाला नोटिफिकेशन पाठवले!');
-                loadDealerOrdersDashboard();
-            }
+            }).catch(e => console.log(e));
         }
 
         function loadDealerOrdersDashboard() {
@@ -2532,7 +2502,7 @@
             let myMobile = localStorage.getItem("current_user_mobile");
             
             let myOrders = orders.filter(o => {
-                return o.items.some(item => item.company === myName || item.company === myMobile);
+                return o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
             });
 
             let container = document.getElementById('dealer_orders_container');
@@ -2557,7 +2527,7 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    if(item.company === myName || item.company === myMobile) {
+                    if(item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
                         let itemTotal = item.price * item.qty;
@@ -2593,16 +2563,18 @@
                 if(order.paymentMethod === 'COD' && !isCommissionPaid) {
                     actionButtons = `<div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
                         <p style="font-size: 11px; color: #d32f2f; margin: 0 0 5px 0;">⚠️ ही COD ऑर्डर आहे. ग्राहकाचा संपर्क क्रमांक पाहण्यासाठी आणि ऑर्डर पूर्ण करण्यासाठी आधी प्लॅटफॉर्म फी (₹${Math.ceil(totalCommission)}) भरा.</p>
-                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.id}', ${Math.ceil(totalCommission)})">💳 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
+                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.firebaseDocId || order.id}', ${Math.ceil(totalCommission)})">💳 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
                     </div>`;
                     
                     ledgerTotalDues += totalCommission;
                     ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Pending COD)</td><td style="text-align: right; color:#c62828; font-weight:bold;">₹${Math.ceil(totalCommission)}</td></tr>`;
 
                 } else {
-                    actionButtons = `<div style="display:flex; gap:10px;">
-                        <button class="status-btn btn-ship" onclick="markOrderShipped('${order.id}')">📦 Mark as Shipped</button>
-                    </div>`;
+                    if (order.status !== 'shipped' && order.status !== 'delivered') {
+                        actionButtons = `<div style="display:flex; gap:10px;">
+                            <button class="status-btn btn-ship" onclick="markOrderShipped('${order.firebaseDocId || order.id}', '${order.customer.mobile}')">📦 Mark as Shipped</button>
+                        </div>`;
+                    }
                     
                     ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Cleared)</td><td style="text-align: right; color:#2e7d32;">₹0</td></tr>`;
                 }
@@ -2726,16 +2698,17 @@
                 number: num,
                 status: "Pending"
             };
-            localStorage.setItem("vendor_submitted_cc", JSON.stringify(vendorData));
+            
             // 🔥 FIREBASE CLOUD SAVE FOR DOCTOR NUMBER REQUEST 🔥
             db.collection("vendor_submitted_cc").add(vendorData)
+            .then(() => {
+                let msg = document.getElementById("cc_status_msg");
+                if(msg) {
+                    msg.innerText = "⏳ तुमचा नंबर ॲडमिनकडे पडताळणीसाठी पाठवला आहे. लवकरच ॲक्टिव्हेट होईल.";
+                    msg.style.color = "#f57c00";
+                }
+            })
             .catch(e => console.error("Cloud doctor req error:", e));
-            
-            let msg = document.getElementById("cc_status_msg");
-            if(msg) {
-                msg.innerText = "⏳ तुमचा नंबर ॲडमिनकडे पडताळणीसाठी पाठवला आहे. लवकरच ॲक्टिव्हेट होईल.";
-                msg.style.color = "#f57c00";
-            }
         }
 
         function generateCoupon() {
@@ -2748,17 +2721,14 @@
                 return;
             }
             
-            let coupons = JSON.parse(localStorage.getItem('vendor_coupons')) || [];
-            coupons.push({ type: type, code: code, value: val, date: new Date().toLocaleDateString() });
-            localStorage.setItem('vendor_coupons', JSON.stringify(coupons));
-            
             // 🔥 FIREBASE CLOUD SAVE FOR COUPON 🔥
             db.collection("vendor_coupons").add({ type: type, code: code, value: val, date: new Date().toLocaleDateString() })
+            .then(() => {
+                alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
+                document.getElementById('coupon_code').value = '';
+                document.getElementById('coupon_val').value = '';
+            })
             .catch(e => console.error("Cloud coupon save error:", e));
-
-            alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
-            document.getElementById('coupon_code').value = '';
-            document.getElementById('coupon_val').value = '';
         }
 
         function approveDealer() {
@@ -2771,9 +2741,12 @@
                 return;
             }
             
-            alert(`✅ ${dealer} यांना '${territory}' विभागासाठी यशस्वीरीत्या अप्रूव्ह केले आहे!`);
-            document.getElementById('dealer_territory').value = '';
-            document.getElementById('dealer_map').value = '';
+            db.collection("dealer_network").add({dealer: dealer, territory: territory, map: map, date: new Date().toISOString()})
+            .then(() => {
+                alert(`✅ ${dealer} यांना '${territory}' विभागासाठी यशस्वीरीत्या अप्रूव्ह केले आहे!`);
+                document.getElementById('dealer_territory').value = '';
+                document.getElementById('dealer_map').value = '';
+            });
         }
 
         function updateSupplyLedger() {
@@ -2786,14 +2759,13 @@
                 return;
             }
             
-            let supplies = JSON.parse(localStorage.getItem('supplier_ledger')) || [];
-            supplies.push({ item: item, price: price, transport: transport, date: new Date().toLocaleDateString() });
-            localStorage.setItem('supplier_ledger', JSON.stringify(supplies));
-            
-            alert(`✅ '${item}' ची माहिती सप्लाय लेजरमध्ये अपडेट केली आहे!`);
-            document.getElementById('supply_item').value = '';
-            document.getElementById('supply_price').value = '';
-            document.getElementById('supply_transport').value = '';
+            db.collection("supplier_ledger").add({ item: item, price: price, transport: transport, date: new Date().toLocaleDateString() })
+            .then(() => {
+                alert(`✅ '${item}' ची माहिती सप्लाय लेजरमध्ये अपडेट केली आहे!`);
+                document.getElementById('supply_item').value = '';
+                document.getElementById('supply_price').value = '';
+                document.getElementById('supply_transport').value = '';
+            });
         }
 
         function postFranchiseJob() {
@@ -2805,12 +2777,11 @@
                 return;
             }
             
-            let jobs = JSON.parse(localStorage.getItem('vendor_jobs')) || [];
-            jobs.push({ role: jobType, req: requirement, date: new Date().toLocaleDateString() });
-            localStorage.setItem('vendor_jobs', JSON.stringify(jobs));
-            
-            alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
-            document.getElementById('franchise_req_input').value = '';
+            db.collection("vendor_jobs").add({ role: jobType, req: requirement, date: new Date().toLocaleDateString() })
+            .then(() => {
+                alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
+                document.getElementById('franchise_req_input').value = '';
+            });
         }
 
         function promoteTrainingEvent() {
@@ -2822,73 +2793,15 @@
                 return;
             }
             
-            let events = JSON.parse(localStorage.getItem('vendor_events')) || [];
-            events.push({ type: eventType, date: eventDate, createdOn: new Date().toLocaleDateString() });
-            localStorage.setItem('vendor_events', JSON.stringify(events));
-            
-            let d = new Date(eventDate);
-            let formattedDate = d.toLocaleString('mr-IN');
-            
-            alert(`🎉 तुमचा '${eventType}' इव्हेंट ${formattedDate} या वेळेसाठी यशस्वीरीत्या शेड्युल झाला आहे. शेतकऱ्यांना लवकरच याची नोटिफिकेशन मिळेल!`);
-            document.getElementById('training_event_date').value = '';
+            db.collection("vendor_events").add({ type: eventType, date: eventDate, createdOn: new Date().toLocaleDateString() })
+            .then(() => {
+                let d = new Date(eventDate);
+                let formattedDate = d.toLocaleString('mr-IN');
+                alert(`🎉 तुमचा '${eventType}' इव्हेंट ${formattedDate} या वेळेसाठी यशस्वीरीत्या शेड्युल झाला आहे. शेतकऱ्यांना लवकरच याची नोटिफिकेशन मिळेल!`);
+                document.getElementById('training_event_date').value = '';
+            });
         }
 
-        function calculateAdEstimation() {
-            let modelSelect = document.getElementById('campaign_model');
-            let adTypeSelect = document.getElementById('campaign_type');
-            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
-            let budgetInput = document.getElementById('campaign_budget').value;
-            let estText = document.getElementById('ad_estimation_text');
-            
-            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
-
-            let adminPrices = JSON.parse(localStorage.getItem('admin_business_prices')) || {};
-            
-            let fixedRate = 499; 
-            
-            if(adTypeSelect.value === 'Target_Khillar_Racing') fixedRate = adminPrices.ad_khillar || 499;
-            else if(adTypeSelect.value === 'Target_Ration') fixedRate = adminPrices.ad_ration || 499;
-            else if(adTypeSelect.value === 'Target_Disease') fixedRate = adminPrices.ad_disease || 299;
-            else if(adTypeSelect.value === 'Target_Calf') fixedRate = adminPrices.ad_calf || 399;
-            else if(adTypeSelect.value === 'Target_Reproduction') fixedRate = adminPrices.ad_repro || 499;
-            else if(adTypeSelect.value === 'Target_Weather') fixedRate = adminPrices.ad_weather || 299;
-            else if(adTypeSelect.value === 'Target_BCS') fixedRate = adminPrices.ad_bcs || 399;
-            else if(adTypeSelect.value === 'Target_Vaccine') fixedRate = adminPrices.ad_vaccine || 299;
-            else if(adTypeSelect.value === 'Target_PoisonDiet') fixedRate = adminPrices.ad_poison || 299;
-            else if(adTypeSelect.value === 'Target_Milking') fixedRate = adminPrices.ad_milk || 499;
-            
-            else if(adTypeSelect.value === 'Home Banner') fixedRate = adminPrices.ad_banner || 2000;
-            else if(adTypeSelect.value === 'Sponsored Product') fixedRate = adminPrices.ad_sponsored || 500;
-            else if(adTypeSelect.value === 'Push Notification') fixedRate = adminPrices.ad_push || 300;
-            else if(adTypeSelect.value === 'District Targeted') fixedRate = adminPrices.ad_district || 1000;
-            else if(adTypeSelect.value === 'Generic_Promotion') fixedRate = 999; 
-
-            modelSelect.innerHTML = `<option value="Fixed">Fixed Rate (₹${fixedRate})</option>`;
-            
-            if(budgetInput && budgetInput > 0) {
-                estText.style.display = 'block';
-                if(budgetInput < fixedRate) {
-                    estText.innerHTML = `⚠️ <b>चेतावणी:</b> या जाहिरातीसाठी किमान बजेट <b>₹${fixedRate}</b> असणे आवश्यक आहे.`;
-                    estText.style.color = '#c62828';
-                    estText.style.background = '#ffebee';
-                    estText.style.borderColor = '#ffcdd2';
-                } else {
-                    let duration = "१ महिना";
-                    if(adTypeSelect.value === 'Target_Ration' || adTypeSelect.value === 'Target_Khillar_Racing') duration = "१५ दिवस";
-                    else if(adTypeSelect.value === 'Sponsored Product') duration = "१ आठवडा";
-                    else if(adTypeSelect.value === 'Push Notification') duration = "१ कॅम्पिंग (एकदा)";
-                    
-                    estText.innerHTML = `✅ <b>उत्तम!</b> तुमचे बजेट योग्य आहे. तुमची <b>'${isGenericAd ? 'Generic Branding' : adType}'</b> जाहिरात <b>${duration}</b> ॲपमध्ये सक्रिय राहील.`;
-                    estText.style.color = '#1b5e20';
-                    estText.style.background = '#e8f5e9';
-                    estText.style.borderColor = '#c8e6c9';
-                }
-            } else {
-                estText.style.display = 'none';
-            }
-        }
-
-        // 🔥🔥🔥 NEW: PAYMENT AND AD CLOUD SUBMISSION LOGIC 🔥🔥🔥
         function initiatePayment() {
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
@@ -2940,7 +2853,6 @@
                 liveAds.active = true;
                 localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
 
-                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
                 let newAdId = "AD" + Math.floor(Math.random() * 90000);
                 let adObj = {
                     id: newAdId,
@@ -2958,14 +2870,12 @@
                     vendorName: localStorage.getItem("current_user_name") || "",
                     isGeneric: isGenericAd
                 };
-                pendingAds.push(adObj);
-                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
 
                 // 🔥 FIREBASE CLOUD SAVE FOR AD CAMPAIGN 🔥
                 db.collection("admin_pending_ad_approvals").doc(newAdId).set(adObj)
                 .catch(e => console.error("Cloud ad save error:", e));
 
-                // 🔥🔥🔥 HOMEPAGE BANNER SYNC 🔥🔥🔥 (डायरेक्ट होमपेजला दिसेल)
+                // 🔥🔥🔥 HOMEPAGE BANNER SYNC 🔥🔥🔥
                 if (campaignType === 'Home Banner' || campaignType === 'Generic_Promotion') {
                     db.collection("homepage_banners").doc(newAdId).set({
                         imageUrl: (images && images.length > 0) ? images[0] : '',
@@ -2982,8 +2892,6 @@
                 document.getElementById('campaign_budget').value = '';
                 document.getElementById('ad_image_preview_container').innerHTML = '';
                 document.getElementById('ad_estimation_text').style.display = 'none';
-
-                refreshMyAds();
             });
         }
     </script>
