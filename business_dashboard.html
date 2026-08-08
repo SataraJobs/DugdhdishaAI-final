@@ -1377,11 +1377,28 @@
                 if(elLeads) elLeads.innerText = myLeads;
             }, e => console.log("Cloud leads sync error:", e));
 
-            // 3. SINGLE DEVICE SESSION WATCHER (व्यापारी डॅशबोर्डवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट)
+            // 3. SINGLE DEVICE SESSION WATCHER & STATUS SYNC
             if (myMobile && myMobile !== "+91 9XXXX XXXX") {
                 db.collection("users").doc(myMobile).onSnapshot((doc) => {
                     if (doc.exists && doc.data()) {
                         let cloudData = doc.data();
+                        
+                        // 🔥 NEW: Sync KYC Status in Real-time 🔥
+                        let badgeBox = document.getElementById('user_profile_badge');
+                        let userName = cloudData.name || localStorage.getItem("current_user_name") || "व्यापारी";
+                        
+                        if(cloudData.kyc_status === 'approved' || cloudData.isVerified === true) {
+                            localStorage.setItem("vendor_verified", "true");
+                            localStorage.setItem("current_logged_in_role", "dealer");
+                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#2e7d32; font-size: 11px; font-weight: 900;">✅ Verified Seller</span>`;
+                        } else if(cloudData.kyc_status === 'rejected') {
+                            localStorage.setItem("vendor_verified", "false");
+                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#d32f2f; font-size: 10px;">❌ KYC Rejected</span>`;
+                        } else if(cloudData.kyc_status === 'pending') {
+                            localStorage.setItem("vendor_verified", "false");
+                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#ff9800; font-size: 10px;">⏳ Pending Approval</span>`;
+                        }
+
                         let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
@@ -2402,26 +2419,41 @@
             }
             
             if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्यেলি आहे.");
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
                 return;
             }
 
-            let newKycReq = {
-                vendorName: localStorage.getItem("current_user_name") || "Unknown Vendor",
-                mobile: localStorage.getItem("current_user_mobile") || "Unknown",
+            let mobile = localStorage.getItem("current_user_mobile");
+            if (!mobile) {
+                alert("मोबाईल नंबर सापडला नाही. कृपया ॲप बंद करून पुन्हा लॉगिन करा.");
+                return;
+            }
+
+            let vendorName = localStorage.getItem("current_user_name") || "Unknown Vendor";
+
+            let kycUpdateData = {
+                vendorName: vendorName,
                 gst: gstVal || "Not Provided",
-                date: new Date().toLocaleString(),
-                status: "Pending"
+                kyc_date: new Date().toLocaleDateString('mr-IN'),
+                kyc_status: "pending",
+                isVerified: false
             };
             
-            // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST 🔥
-            db.collection("admin_pending_kyc").add(newKycReq)
+            // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST (CORRECTED) 🔥
+            // We update the "users" collection so the Admin Panel can fetch it correctly.
+            db.collection("users").doc(mobile).set(kycUpdateData, { merge: true })
             .then(() => {
                 alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
                 document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
-                checkVendorNotifications(); 
+                
+                // Update local UI
+                let badgeBox = document.getElementById('user_profile_badge');
+                if(badgeBox) badgeBox.innerHTML = `${vendorName} <br><span style="color:#ff9800; font-size: 10px;">⏳ Pending Approval</span>`;
             })
-            .catch(e => console.error("Cloud KYC save error:", e));
+            .catch(e => {
+                console.error("Cloud KYC save error:", e);
+                alert("इंटरनेट एरर आला. कृपया पुन्हा प्रयत्न करा.");
+            });
         }
 
         function payCommissionForOrder(docId, amount) {
