@@ -1708,6 +1708,28 @@
                     loadAdminNotifications();
                 }
             }).catch(e => console.log("Cloud tickets sync:", e));
+			
+			// --- ३. सप्लायर KYC रिक्वेस्ट्स क्लाऊडवरून सिंक ---
+			db.collection("users").where("kyc_status", "==", "pending").get()
+			.then(querySnapshot => {
+				let cloudKyc = [];
+				querySnapshot.forEach(doc => {
+					let u = doc.data();
+					cloudKyc.push({
+						vendorName: u.name || u.vendorName || "Unknown Vendor",
+						mobile: u.mobile || doc.id,
+						date: u.kyc_date || new Date().toLocaleDateString('mr-IN'),
+						gst: u.gst || "",
+						panUrl: u.panUrl || "",
+						shopActUrl: u.shopActUrl || ""
+					});
+				});
+				if(cloudKyc.length > 0) {
+					localStorage.setItem('admin_pending_kyc', JSON.stringify(cloudKyc));
+					loadPendingKyc();
+					loadAdminNotifications();
+				}
+			}).catch(e => console.log("Cloud KYC sync error:", e));
         }
 
         // --- 🔥 NEW: SYNC MALL ORDERS FOR REPORT BUILDER 🔥 ---
@@ -2759,7 +2781,7 @@
                     </div>
                     <div class="approval-actions">
                         <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveKyc('${kyc.mobile}', ${index})">✅ Approve Seller</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index})">❌ Reject</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index}, '${kyc.mobile}')">❌ Reject</button>
                     </div>
                 </div>`;
             });
@@ -2768,34 +2790,55 @@
 
         function approveKyc(mobile, index) {
             if(confirm("या व्यापाऱ्याचे डॉक्युमेंट्स बरोबर आहेत का? याला ॲपवर 'Verified Seller' बनवायचे का?")) {
-                let users = JSON.parse(localStorage.getItem('app_users')) || [];
-                let userIndex = users.findIndex(u => u.mobile === mobile);
-                if(userIndex > -1) {
-                    users[userIndex].isVerified = true;
-                    users[userIndex].role = 'dealer'; 
-                    users[userIndex].kyc_status = 'approved';
-                    localStorage.setItem('app_users', JSON.stringify(users));
-                }
+                
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
+                db.collection("users").doc(mobile).update({
+                    isVerified: true,
+                    role: 'dealer',
+                    kyc_status: 'approved'
+                }).then(() => {
+                    // LocalStorage Update
+                    let users = JSON.parse(localStorage.getItem('app_users')) || [];
+                    let userIndex = users.findIndex(u => u.mobile === mobile);
+                    if(userIndex > -1) {
+                        users[userIndex].isVerified = true;
+                        users[userIndex].role = 'dealer'; 
+                        users[userIndex].kyc_status = 'approved';
+                        localStorage.setItem('app_users', JSON.stringify(users));
+                    }
 
-                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                pendingKycList.splice(index, 1);
-                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
+                    let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                    pendingKycList.splice(index, 1);
+                    localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
 
-                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
-                loadPendingKyc(); 
-                loadAdminNotifications(); 
-                refreshSupplierTable();
+                    alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
+                    loadPendingKyc(); 
+                    loadAdminNotifications(); 
+                    refreshSupplierTable();
+                }).catch(error => {
+                    console.error("Error approving KYC: ", error);
+                    alert("❌ इंटरनेट एरर आला, कृपया पुन्हा प्रयत्न करा.");
+                });
             }
         }
 
-        function rejectKyc(index) {
+        function rejectKyc(index, mobile) { 
             if(confirm("या व्यापाऱ्याची पडताळणी नाकारायची (Reject) आहे का?")) {
-                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                pendingKycList.splice(index, 1);
-                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-                alert("❌ विक्रेत्याचा अर्ज नाकारला.");
-                loadPendingKyc(); 
-                loadAdminNotifications(); 
+                
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
+                db.collection("users").doc(mobile).update({
+                    kyc_status: 'rejected'
+                }).then(() => {
+                    let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                    pendingKycList.splice(index, 1);
+                    localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
+                    
+                    alert("❌ विक्रेत्याचा अर्ज नाकारला.");
+                    loadPendingKyc(); 
+                    loadAdminNotifications(); 
+                }).catch(error => {
+                    console.error("Error rejecting KYC: ", error);
+                });
             }
         }
 
