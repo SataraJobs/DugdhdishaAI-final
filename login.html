@@ -150,8 +150,8 @@
     <!-- 📝 REGISTER FORM -->
     <div id="form_register" style="display: none;">
         <div class="input-group">
-            <label>तुमचे पूर्ण नाव किंवा कंपनीचे नाव *</label>
-            <input type="text" id="reg_name" placeholder="उदा. रामराव पाटील किंवा कंपनीचे नाव">
+            <label>तुमचे पूर्ण नाव *</label>
+            <input type="text" id="reg_name" placeholder="उदा. रामराव पाटील">
         </div>
         <div class="input-group">
             <label>मोबाईल नंबर *</label>
@@ -508,8 +508,6 @@
         if(mobile === "9579535290" && (pass === "210890" || otp === "1234")) {
             setTimeout(() => {
                 localStorage.setItem("current_logged_in_role", "admin");
-                localStorage.setItem("current_user_name", "Super Admin");
-                localStorage.setItem("current_user_mobile", "9579535290");
                 localStorage.setItem("is_logged_in", "true");
                 alert("सुपर ॲडमिन लॉगिन यशस्वी! 👑");
                 window.location.href = "admin_settings.html"; 
@@ -575,10 +573,10 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.error("Login logging error:", e));
 
-                processSuccessfulLogin(fbUser, newSessionId, mobile);
+                processSuccessfulLogin(fbUser, newSessionId);
             }).catch((error) => {
                 console.warn("Session Save Error:", error);
-                processSuccessfulLogin(fbUser, newSessionId, mobile);
+                processSuccessfulLogin(fbUser, newSessionId);
             });
 
         }).catch((error) => {
@@ -588,29 +586,15 @@
         });
     }
 
-    // --- 📍 ROUTING FUNCTION (STRICT OVERRIDE FOR EXACT VENDOR NAME) ---
-    function processSuccessfulLogin(foundUser, sessionId, inputMobile) {
-        // 🔥 १. जुना कॅश केलेला 'हिंदुस्तान फिड्स' किंवा दुसरा डेमो डेटा पूर्णपणे पुसून टाका 🔥
-        localStorage.removeItem("current_user_name");
-        localStorage.removeItem("current_user_mobile");
-        localStorage.removeItem("vendor_verified");
-        
-        // 🔥 २. फायरबेसमधून आलेले 'खरे' नाव आणि नंबर सेट करा 🔥
-        let realName = foundUser.name || "अज्ञात वापरकर्ता";
-        let realMobile = foundUser.mobile || inputMobile;
-        
-        localStorage.setItem("current_logged_in_role", foundUser.role || "farmer");
-        localStorage.setItem("current_user_name", realName);
-        localStorage.setItem("current_user_mobile", realMobile); 
-        
-        // KYC Status चेक करा
-        let isVerified = (foundUser.isVerified === true || foundUser.isVerified === 'true');
-        if (foundUser.kyc_status === 'approved') isVerified = true;
-        localStorage.setItem("vendor_verified", isVerified ? "true" : "false");
-        
+    // --- 📍 ROUTING FUNCTION (UPDATED WITH SINGLE DEVICE SESSION ID) ---
+    function processSuccessfulLogin(foundUser, sessionId) {
+        localStorage.setItem("current_logged_in_role", foundUser.role);
+        localStorage.setItem("current_user_name", foundUser.name);
+        localStorage.setItem("current_user_mobile", foundUser.mobile); 
+        localStorage.setItem("vendor_verified", foundUser.isVerified);
         localStorage.setItem("is_logged_in", "true"); 
         
-        // 🔥 सेव्ह केलेला नवीन सेशन आयडी लोकल स्टोरेजला द्या 🔥
+        // 🔥 सेव्ह केलेला नवीन सेशन आयडी लोकल स्टोरेजला पण द्या 🔥
         if (sessionId) {
             localStorage.setItem("current_session_id", sessionId);
             localStorage.setItem("currentSessionId", sessionId);
@@ -623,6 +607,7 @@
             localStorage.setItem("farmer_lon", foundUser.lon);
         }
 
+        // 🔥 FIREBASE CLOUD PLAN SYNC: लॉगिन होताच युजरचा ॲक्टिव्ह प्लॅन क्लाऊडवरून लोकल मेमरीमध्ये सिंक करा 🔥
         if(foundUser.activePlan) {
             localStorage.setItem("farmer_active_plan", JSON.stringify(foundUser.activePlan));
         } else {
@@ -632,13 +617,14 @@
             localStorage.setItem("current_business_plan_details", JSON.stringify(foundUser.businessPlan));
         }
 
-        alert(`स्वागत आहे, ${realName}! ☁️`);
+        alert(`डॅशबोर्ड मध्ये स्वागत आहे, ${foundUser.name}! ☁️`);
         
         let userRole = foundUser.role;
+        let isUserVerified = foundUser.isVerified === 'true' || foundUser.isVerified === true;
 
-        if ((userRole === 'dealer' || userRole === 'company' || userRole === 'supplier') && isVerified) {
+        if ((userRole === 'dealer' || userRole === 'company' || userRole === 'supplier') && isUserVerified) {
             window.location.replace("business_dashboard.html");
-        } else if (userRole === 'vet' && isVerified) {
+        } else if (userRole === 'vet' && isUserVerified) {
             window.location.replace("vet_dashboard.html");
         } else {
             window.location.replace("index.html");
