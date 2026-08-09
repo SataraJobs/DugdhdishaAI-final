@@ -1159,7 +1159,8 @@
 
         function loadNotificationsForRole() {
             let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            let myNotifications = notifications.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+            // 🟢 बदललेला भाग: लोकल स्टोरेजमधील जुन्या ऑर्डर्सच्या नोटिफिकेशन्स काढून टाकल्या, जेणेकरून क्लाउडवरून लाईव्ह नोटिफिकेशन्स दिसतील.
+            let myNotifications = notifications.filter(n => (n.target === CURRENT_ROLE || n.target === 'all') && (!n.title || !n.title.includes('नवीन ऑर्डर')));
             return myNotifications;
         }
 
@@ -1215,7 +1216,6 @@
 
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
             
-            // 🟢 बदललेला भाग: 'receiver_mobile' मध्ये सप्लायरचे नाव किंवा नंबर असेल तरच दाखवा
             let unreadAppNotifs = appNotifs.filter(n => 
                 (n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead
             );
@@ -1231,10 +1231,17 @@
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
-            
-            if(myPendingOrders > 0) {
-                html += `<div style="padding:8px 0; cursor:pointer;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">📦 <b>${myPendingOrders}</b> नवीन ऑर्डर्स प्रलंबित आहेत.</div>`;
+            // 🟢 बदललेला भाग: फक्त प्रलंबित (Pending/Processing) ऑर्डर्ससाठी नोटिफिकेशन दाखवा आणि ते थेट क्लाउडच्या डेटामधून घ्या.
+            let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
+
+            if(myPendingOrdersList.length > 0) {
+                myPendingOrdersList.forEach(order => {
+                    let customerName = (order.customer && order.customer.name) ? order.customer.name : "ग्राहक";
+                    html += `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:#fff8e1;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">
+                                <b style="color:#d32f2f; font-size:12px;">📦 नवीन ऑर्डर प्राप्त!</b><br>
+                                <span style="font-size:11px; color:#444;">तुम्हाला कृषी मॉलवरून श्री. ${customerName} यांची नवीन ऑर्डर आली आहे.</span>
+                            </div>`;
+                });
             }
             
             return html;
@@ -1278,7 +1285,8 @@
             let myMobile = localStorage.getItem("current_user_mobile");
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
+            // 🟢 बदललेला भाग: बॅज काऊंटसाठी फक्त delivered किंवा shipped नसलेल्या ऑर्डर्स मोजा
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
             totalCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
@@ -1360,7 +1368,6 @@
                     let order = doc.data();
                     order.firebaseDocId = doc.id; 
                     
-                    // 🟢 बदललेला भाग: 'vendorName' किंवा 'company' तपासतो
                     let belongsToMe = (order.items || []).some(i => i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
@@ -1432,7 +1439,7 @@
                 }, (err) => console.log("Cloud user sync error:", err));
             }
 
-            // 4. Notifications Sync (Real-time Snapshot) 🟢 बदललेला भाग
+            // 4. Notifications Sync (Real-time Snapshot)
             db.collection("app_notifications").onSnapshot(querySnapshot => {
                 let cloudNotifs = [];
                 querySnapshot.forEach(doc => {
@@ -1599,15 +1606,12 @@
 
         function deleteMyProduct(prodId) {
             if (confirm('हे प्रॉडक्ट कायमचे डिलीट करायचे?')) {
-                // 🔥 FIREBASE CLOUD DELETE FOR VENDOR PRODUCT 🔥
-                // onSnapshot will handle the local storage update instantly.
                 db.collection("vendor_products").doc(prodId).delete()
                 .then(() => alert('🗑️ प्रॉडक्ट डिलीट केले.'))
                 .catch(e => console.log("Cloud product delete error:", e));
             }
         }
 
-        // Just rendering UI. State is handled by onSnapshot
         function refreshMyAdsUI() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
@@ -1635,10 +1639,8 @@
             refreshMyAdsUI(); 
         }
 
-        // 🔥 FIREBASE CLOUD AD DELETE LOGIC 🔥
         function deleteMyAd(adId) {
             if (confirm('ही जाहिरात रद्द करायची?')) {
-                // 🔥 FIREBASE CLOUD DELETE 🔥
                 db.collection("admin_pending_ad_approvals").doc(adId).delete().catch(e => console.log("Cloud ad delete error:", e));
                 db.collection("homepage_banners").doc(adId).delete().catch(e => console.log("Cloud banner delete error:", e));
                 alert('🗑️ जाहिरात यशस्वीरीत्या डिलीट केली.');
@@ -1809,7 +1811,6 @@
                 dateAdded: new Date().toISOString()
             };
 
-            // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
             .then(() => {
                 alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
@@ -1916,7 +1917,6 @@
                 date: new Date().toLocaleString()
             };
             
-            // 🔥 FIREBASE CLOUD SAVE FOR SUPPORT TICKETS 🔥
             db.collection("support_tickets").doc(newTicket.id).set(newTicket)
             .then(() => {
                 msgInput.value = '';
@@ -2474,14 +2474,11 @@
                 isVerified: false
             };
             
-            // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST (CORRECTED) 🔥
-            // We update the "users" collection so the Admin Panel can fetch it correctly.
             db.collection("users").doc(mobile).set(kycUpdateData, { merge: true })
             .then(() => {
                 alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
                 document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
                 
-                // Update local UI
                 let badgeBox = document.getElementById('user_profile_badge');
                 if(badgeBox) badgeBox.innerHTML = `${vendorName} <br><span style="color:#ff9800; font-size: 10px;">⏳ Pending Approval</span>`;
             })
@@ -2493,7 +2490,6 @@
 
         function payCommissionForOrder(docId, amount) {
             processRazorpayPayment(amount, "COD Commission", "Comm_" + docId, () => {
-                // 🔥 FIREBASE CLOUD UPDATE 🔥
                 db.collection("mall_orders").doc(docId).update({ commissionPaid: true })
                 .then(() => {
                     alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
@@ -2545,10 +2541,8 @@
         }
 
         function markOrderShipped(docId, customerMobile) {
-            // 🔥 FIREBASE CLOUD UPDATE 🔥
             db.collection("mall_orders").doc(docId).update({ status: 'shipped' })
             .then(() => {
-                // Send cloud notification to customer
                 db.collection("app_notifications").add({
                     id: Date.now(),
                     type: 'order',
@@ -2766,7 +2760,6 @@
                 status: "Pending"
             };
             
-            // 🔥 FIREBASE CLOUD SAVE FOR DOCTOR NUMBER REQUEST 🔥
             db.collection("vendor_submitted_cc").add(vendorData)
             .then(() => {
                 let msg = document.getElementById("cc_status_msg");
@@ -2788,7 +2781,6 @@
                 return;
             }
             
-            // 🔥 FIREBASE CLOUD SAVE FOR COUPON 🔥
             db.collection("vendor_coupons").add({ type: type, code: code, value: val, date: new Date().toLocaleDateString() })
             .then(() => {
                 alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
@@ -2938,11 +2930,9 @@
                     isGeneric: isGenericAd
                 };
 
-                // 🔥 FIREBASE CLOUD SAVE FOR AD CAMPAIGN 🔥
                 db.collection("admin_pending_ad_approvals").doc(newAdId).set(adObj)
                 .catch(e => console.error("Cloud ad save error:", e));
 
-                // 🔥🔥🔥 HOMEPAGE BANNER SYNC 🔥🔥🔥
                 if (campaignType === 'Home Banner' || campaignType === 'Generic_Promotion') {
                     db.collection("homepage_banners").doc(newAdId).set({
                         imageUrl: (images && images.length > 0) ? images[0] : '',
