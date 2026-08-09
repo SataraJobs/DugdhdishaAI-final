@@ -369,7 +369,7 @@
             <div id="m_doctor_approve" class="tab-content">
                 <div class="admin-card">
                     <h4 style="color:#1976d2; border-bottom-color:#bbdefb;">📞 कंपनी डॉक्टर नंबर मंजुरी (Call Routing Approvals)</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी 'Brand Partner' मधून टाकलेले नंबर तपासा. 'Approve' केल्यावर हे नंबर 'Round-Robin' सिस्टीममध्ये ॲड होतील आणि शेतकऱ्यांचे कॉल्स इथे लागतील.</p>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापारींनी 'Brand Partner' मधून टाकलेले नंबर तपासा. 'Approve' केल्यावर हे नंबर 'Round-Robin' सिस्टीममध्ये ॲड होतील आणि शेतकऱ्यांचे कॉल्स इथे लागतील.</p>
                     <div id="doctor_numbers_container"></div>
                 </div>
             </div>
@@ -1843,7 +1843,7 @@
 
         // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
-            syncUsersForAdmin(); // 🔥 ही नवीन लाईन इथे ॲड केली (रिपोर्टसाठी युजर्स सिंक होतील)
+            syncUsersForAdmin(); 
             syncOrdersForReports(); 
             loadAllModules();
             syncAdminSettingsFromCloud(); 
@@ -2788,6 +2788,7 @@
             container.innerHTML = html;
         }
 
+        // 🔥 बदल: ॲडमिनकडून KYC ॲप्रूव्ह झाल्यावर सप्लायरला नोटिफिकेशन पाठवण्याचे लॉजिक ॲड केले.
         function approveKyc(mobile, index) {
             if(confirm("या व्यापाऱ्याचे डॉक्युमेंट्स बरोबर आहेत का? याला ॲपवर 'Verified Seller' बनवायचे का?")) {
                 
@@ -2797,6 +2798,24 @@
                     role: 'dealer',
                     kyc_status: 'approved'
                 }).then(() => {
+                    
+                    // 🔥 बदल: सप्लायरला 'Approve' झाल्याचे नोटिफिकेशन (Push) पाठवणे
+                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
+                    let notifObj = {
+                        receiver_mobile: mobile,
+                        type: 'system',
+                        title: "🎉 अभिनंदन! तुमचे खाते Approve झाले आहे.",
+                        message: `तुमचे विक्रेता (Seller) खाते ॲडमिनने प्रमाणित केले आहे. आता तुम्ही कृषी मॉलवर प्रॉडक्ट्स विकू शकता!`,
+                        date: new Date().toLocaleDateString('mr-IN'),
+                        isRead: false,
+                        firebaseDocId: notifId,
+                        timestampStr: new Date().toISOString(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    db.collection("app_notifications").doc(notifId).set(notifObj)
+                    .catch(e => console.error("Cloud KYC notif error:", e));
+                    
                     // LocalStorage Update
                     let users = JSON.parse(localStorage.getItem('app_users')) || [];
                     let userIndex = users.findIndex(u => u.mobile === mobile);
@@ -2822,6 +2841,7 @@
             }
         }
 
+        // 🔥 बदल: ॲडमिनकडून KYC रिजेक्ट झाल्यावर सप्लायरला नोटिफिकेशन पाठवण्याचे लॉजिक ॲड केले.
         function rejectKyc(index, mobile) { 
             if(confirm("या व्यापाऱ्याची पडताळणी नाकारायची (Reject) आहे का?")) {
                 
@@ -2829,6 +2849,24 @@
                 db.collection("users").doc(mobile).update({
                     kyc_status: 'rejected'
                 }).then(() => {
+                    
+                    // 🔥 बदल: सप्लायरला 'Reject' झाल्याचे नोटिफिकेशन (Push) पाठवणे
+                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
+                    let notifObj = {
+                        receiver_mobile: mobile,
+                        type: 'system',
+                        title: "⚠️ खाते पडताळणी अयशस्वी (Rejected)",
+                        message: `तुमची अपलोड केलेली कागदपत्रे चुकीची किंवा अस्पष्ट आहेत. कृपया पुन्हा योग्य कागदपत्रे अपलोड करा.`,
+                        date: new Date().toLocaleDateString('mr-IN'),
+                        isRead: false,
+                        firebaseDocId: notifId,
+                        timestampStr: new Date().toISOString(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    db.collection("app_notifications").doc(notifId).set(notifObj)
+                    .catch(e => console.error("Cloud KYC reject notif error:", e));
+                    
                     let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
                     pendingKycList.splice(index, 1);
                     localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
