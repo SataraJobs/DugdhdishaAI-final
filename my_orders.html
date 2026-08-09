@@ -131,7 +131,7 @@
             <div style="background: linear-gradient(145deg, #e3f2fd, #bbdefb); padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px dashed #1976d2; cursor: pointer;" onclick="window.location.href='krushi_mall.html'">
                 <span style="background:#1976d2; color:white; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:bold;">First Order Offer</span>
                 <h4 style="margin: 8px 0 5px; color:#0d47a1;">स्पेशल १५% डिस्काउंट!</h4>
-                <p style="font-size: 12px; margin: 0; color: #333; font-weight: bold;">तुमच्या पहिल्या खरेदीवर 'हिंदुस्तान फिड्स' च्या पेंडीवर मिळवा खास सवलत. आजच खरेदी करा!</p>
+                <p style="font-size: 12px; margin: 0; color: #333; font-weight: bold;">तुमच्या पहिल्या खरेदीवर खास सवलत. आजच खरेदी करा!</p>
             </div>
             
             <button class="btn-shop" style="margin-top: 20px; width: 100%; box-shadow: 0 4px 0 #0d3b11;" onclick="window.location.href='krushi_mall.html'">🛒 कृषी मॉलमध्ये जा</button>
@@ -182,7 +182,7 @@
             syncUserNotificationsFromCloud();
         }
 
-        // --- 🔥 FIXED: CLOUD DATABASE ORDERS SYNC ( BULLETPROOF MOBILE PARSING ) 🔥 ---
+        // --- 🔥 FIXED: CLOUD DATABASE ORDERS SYNC (PROPER NESTED QUERY & SORTING) 🔥 ---
         function syncMyOrdersFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (!userMobile || userMobile === "+91 9XXXX XXXX") {
@@ -231,7 +231,7 @@
                 processOrders(JSON.parse(localStorage.getItem('user_orders')) || []);
             });
 
-            // 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            // 🔥 SINGLE DEVICE SESSION WATCHER (माझी खरेदी पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
             db.collection("users").doc(userMobile).onSnapshot((doc) => {
                 if (doc.exists && doc.data()) {
                     let cloudData = doc.data();
@@ -242,7 +242,7 @@
                         window.location.replace("login.html");
                     }
                 }
-            });
+            }, (err) => console.log("Cloud user sync error:", err));
         }
 
         // प्रोसेसिंग आणि UI लोडिंग
@@ -295,14 +295,25 @@
                 let orderIndex = orders.findIndex(o => o.id === orderId);
                 
                 if(orderIndex > -1) {
+                    // Update Locally
                     orders[orderIndex].status = 'cancelled';
                     localStorage.setItem('user_orders', JSON.stringify(orders));
                     
+                    // Update in Firebase (If it exists)
                     let order = orders[orderIndex];
                     if (order.firebaseDocId) {
                         db.collection("mall_orders").doc(order.firebaseDocId).update({
                             status: "cancelled"
                         }).catch(err => console.error("Error updating firebase order status: ", err));
+                    } else {
+                        db.collection("mall_orders").where("id", "==", orderId).get()
+                        .then(querySnapshot => {
+                            querySnapshot.forEach(doc => {
+                                db.collection("mall_orders").doc(doc.id).update({
+                                    status: "cancelled"
+                                }).catch(err => console.error("Error updating firebase order status: ", err));
+                            });
+                        }).catch(err => console.error("Error finding order in firebase: ", err));
                     }
 
                     alert("ऑर्डर यशस्वीरीत्या रद्द करण्यात आली आहे.");
@@ -323,6 +334,8 @@
             
             if(order) {
                 let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
+                
+                // Add old items back to current cart
                 order.items.forEach(item => {
                     let existing = cart.find(i => i.id === item.id);
                     if(existing) existing.qty += item.qty;
@@ -448,6 +461,7 @@
                         </div>`;
                     });
 
+                    // 🔥 ACTIVATE: Dynamic Action Buttons based on Status
                     let actionButtonsHtml = '';
                     if(order.status === 'pending') {
                         actionButtonsHtml = `
@@ -506,6 +520,7 @@
             loadMyOrders(status);
         }
 
+        // --- 🔔 CLOUD-FIRST INLINE NOTIFICATIONS LOGIC 🔔 ---
         function loadNotifications(userRole) {
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
             let currentUserMobile = localStorage.getItem("current_user_mobile");
