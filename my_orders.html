@@ -202,14 +202,21 @@
             ];
             mobileVariants = [...new Set(mobileVariants)]; // डुप्लिकेट्स काढा
 
-            db.collection("mall_orders")
-            .where("customer.mobile", "in", mobileVariants)
-            .onSnapshot((querySnapshot) => {
+            // 🟢 बदललेला भाग: Firebase मधून डेटा आणण्याची सोपी पद्धत
+            db.collection("mall_orders").onSnapshot((querySnapshot) => {
                 let cloudOrders = [];
                 querySnapshot.forEach((doc) => {
                     let data = doc.data();
                     data.firebaseDocId = doc.id;
-                    cloudOrders.push(data);
+                    
+                    // डेटाबेसमध्ये मोबाईल नंबर 'customer.mobile' मध्ये असो किंवा कुठेही असो, तो शोधला जाईल
+                    let dataString = JSON.stringify(data);
+                    let isMyOrder = mobileVariants.some(variant => dataString.includes(variant));
+                    
+                    if (isMyOrder) {
+                        if (!data.status) data.status = "pending"; 
+                        cloudOrders.push(data);
+                    }
                 });
                 
                 // जर 'String' ऐवजी 'Number' म्हणून डेटाबेसमध्ये सेव्ह झाला असेल, तर बॅकअप क्वेरी
@@ -248,8 +255,8 @@
         // प्रोसेसिंग आणि UI लोडिंग
         function processOrders(cloudOrders) {
             cloudOrders.sort((a, b) => {
-                let numA = parseInt(a.id.replace(/\D/g, '')) || 0;
-                let numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+                let numA = a.id ? parseInt(a.id.toString().replace(/\D/g, '')) : 0;
+                let numB = b.id ? parseInt(b.id.toString().replace(/\D/g, '')) : 0;
                 return numB - numA; // नवीन ऑर्डर्स सर्वात वर
             });
 
@@ -332,7 +339,7 @@
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
             let order = orders.find(o => o.id === orderId);
             
-            if(order) {
+            if(order && order.items) {
                 let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
                 
                 // Add old items back to current cart
@@ -450,7 +457,8 @@
                     let paymentCheck = order.paymentMethod === 'Online Paid' ? ' ✅' : '';
 
                     let productsHtml = '';
-                    order.items.forEach(item => {
+                    // 🟢 बदललेला भाग: जर items नसतील तर एरर येऊ नये यासाठी (order.items || []) जोडले आहे
+                    (order.items || []).forEach(item => {
                         productsHtml += `
                         <div class="product-list">
                             <div class="prod-icon">${item.icon}</div>
@@ -460,6 +468,9 @@
                             </div>
                         </div>`;
                     });
+                    
+                    // जर totalAmount नसेल तर 0 दाखवण्यासाठी
+                    let displayTotal = order.totalAmount ? order.totalAmount.toLocaleString('en-IN') : "0";
 
                     // 🔥 ACTIVATE: Dynamic Action Buttons based on Status
                     let actionButtonsHtml = '';
@@ -499,7 +510,7 @@
                         <div class="order-footer">
                             <div>
                                 <span style="font-size:10px; color:#666;">${paymentText}</span><br>
-                                <span class="order-total" style="${paymentStyle}">₹${order.totalAmount.toLocaleString('en-IN')}${paymentCheck}</span>
+                                <span class="order-total" style="${paymentStyle}">₹${displayTotal}${paymentCheck}</span>
                             </div>
                             <div style="display: flex; gap: 8px;">
                                 ${actionButtonsHtml}
