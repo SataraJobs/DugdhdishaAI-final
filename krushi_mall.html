@@ -907,16 +907,19 @@
             // कार्ट मधील प्रत्येक प्रॉडक्टच्या खऱ्या मालकाचे नाव (Vendor) काढा
             let uniqueVendors = [...new Set(cart.map(item => item.company))];
 
+            // मोबाईल नंबर कोणत्याही स्वरूपात असला तरी तो 10 अंकी फॉरमॅटमध्ये सेव्ह करणे (शोधासाठी सोपे)
+            let cleanCustomerMobile = mobile.replace(/\D/g, '').slice(-10);
+
             let newOrder = {
                 id: orderId, 
                 date: dateStr, 
-                customer: { name, mobile, address, pincode, district },
+                customer: { name, mobile: cleanCustomerMobile, address, pincode, district }, // Clean Mobile
                 items: cart, 
                 totalAmount: finalAmount, 
                 paymentMethod: paymentType, 
                 status: "pending", 
                 commissionPaid: false,
-                vendorNames: uniqueVendors, // सोप्या सर्चिंगसाठी 
+                vendorNames: uniqueVendors, 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
