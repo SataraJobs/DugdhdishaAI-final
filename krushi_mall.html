@@ -341,12 +341,12 @@
         </div>
         
         <div class="checkout-actions">
-            <button class="btn-action-large" style="background:#ff9800; box-shadow: 0 4px 0 #e65100;" onclick="processCOD()">
+            <button class="btn-action-large" id="cod_btn" style="background:#ff9800; box-shadow: 0 4px 0 #e65100;" onclick="processCOD()">
                 🏠 कॅश ऑन डिलिव्हरी (COD) <br>
                 <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_cod" style="font-weight:bold; font-size:14px;">₹0</span></span>
             </button>
             <div style="text-align:center; font-size:12px; color:#888; font-weight:bold; margin: 2px 0;">-- किंवा --</div>
-            <button class="btn-action-large" style="background:linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #0d3b11;" onclick="processPayment()">
+            <button class="btn-action-large" id="online_btn" style="background:linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #0d3b11;" onclick="processPayment()">
                 ⚡ ऑनलाईन पेमेंट (Online UPI) <br>
                 <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_online" style="font-weight:bold; font-size:14px;">₹0</span></span>
                 <div id="btn_save_text" style="font-size:11px; background:#c8e6c9; color:#1b5e20; padding:2px 8px; border-radius:4px; display:inline-block; margin-top:5px; font-weight:bold;">तुमची बचत: ₹0</div>
@@ -889,10 +889,10 @@
             return name;
         }
 
-        // 🔥 FIREBASE: ऑर्डर सेव्ह करणे (अचूक नोटिफिकेशन राऊटिंगसह) 🔥
+        // 🔥 FIREBASE: ऑर्डर सेव्ह करणे (रेस कंडिशन सोडवली आहे) 🔥
         function saveOrderToHistory(paymentType, finalAmount) {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
-            if(cart.length === 0) return;
+            if(cart.length === 0) return Promise.reject("Cart is empty");
 
             let name = document.getElementById('chk_name').value;
             let mobile = document.getElementById('chk_mobile').value;
@@ -907,13 +907,13 @@
             // कार्ट मधील प्रत्येक प्रॉडक्टच्या खऱ्या मालकाचे नाव (Vendor) काढा
             let uniqueVendors = [...new Set(cart.map(item => item.company))];
 
-            // मोबाईल नंबर कोणत्याही स्वरूपात असला तरी तो 10 अंकी फॉरमॅटमध्ये सेव्ह करणे (शोधासाठी सोपे)
+            // मोबाईल नंबर कोणत्याही स्वरूपात असला तरी तो 10 अंकी फॉरमॅटमध्ये सेव्ह करणे
             let cleanCustomerMobile = mobile.replace(/\D/g, '').slice(-10);
 
             let newOrder = {
                 id: orderId, 
                 date: dateStr, 
-                customer: { name, mobile: cleanCustomerMobile, address, pincode, district }, // Clean Mobile
+                customer: { name: name, mobile: cleanCustomerMobile, address: address, pincode: pincode, district: district }, 
                 items: cart, 
                 totalAmount: finalAmount, 
                 paymentMethod: paymentType, 
@@ -923,8 +923,8 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Firebase ला पाठवा
-            db.collection("mall_orders").add(newOrder)
+            // Firebase ला पाठवा (return Promise)
+            return db.collection("mall_orders").add(newOrder)
             .then(docRef => {
                 // ऑर्डर सेव्ह झाल्यावर प्रत्येक संबंधित व्यापाऱ्याला स्वतंत्र नोटिफिकेशन पाठवा
                 let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
@@ -947,29 +947,45 @@
                     .catch(e => console.error("Cloud vendor notif error:", e));
                 });
                 localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-            })
-            .catch(err => console.error(err));
 
-            // लोकल स्टोअरेजमध्ये सेव्ह करा
-            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            allOrders.unshift(newOrder); 
-            localStorage.setItem('user_orders', JSON.stringify(allOrders));
+                // लोकल स्टोअरेजमध्ये सेव्ह करा
+                let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                newOrder.firebaseDocId = docRef.id;
+                allOrders.unshift(newOrder); 
+                localStorage.setItem('user_orders', JSON.stringify(allOrders));
+                
+                return docRef;
+            });
         }
 
+        // 🔥 COD पेमेंट लॉजिक (अपडेटेड: Firebase च्या यशाची वाट बघण्यासाठी)
         function processCOD() {
             let customerName = validateAddress();
             if(!customerName) return;
 
             if(confirm(`श्री. ${customerName},\nतुमची ₹${window.currentBaseTotal} ची ऑर्डर कॅश ऑन डिलिव्हरी (COD) वर कन्फर्म करायची आहे का?`)) {
-                saveOrderToHistory('COD', window.currentBaseTotal); 
-                localStorage.removeItem('krushi_cart');
-                updateCartBadge();
-                closeCheckout();
-                alert("🎉 तुमची COD ऑर्डर यशस्वीरीत्या नोंदवली गेली आहे!\n\nमाल तुमच्या पत्त्यावर पोहोचल्यावर ₹" + window.currentBaseTotal + " रोख द्यावे लागतील.");
-                window.location.href = "my_orders.html";
+                
+                let btn = document.getElementById('cod_btn');
+                let oldText = btn.innerHTML;
+                btn.innerHTML = "⏳ ऑर्डर कन्फर्म होत आहे...";
+                document.body.style.cursor = 'wait';
+
+                saveOrderToHistory('COD', window.currentBaseTotal).then(() => {
+                    document.body.style.cursor = 'default';
+                    localStorage.removeItem('krushi_cart');
+                    updateCartBadge();
+                    closeCheckout();
+                    alert("🎉 तुमची COD ऑर्डर यशस्वीरीत्या नोंदवली गेली आहे!\n\nमाल तुमच्या पत्त्यावर पोहोचल्यावर ₹" + window.currentBaseTotal + " रोख द्यावे लागतील.");
+                    window.location.href = "my_orders.html";
+                }).catch((err) => {
+                    btn.innerHTML = oldText;
+                    document.body.style.cursor = 'default';
+                    alert("ऑर्डर नोंदवताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा.");
+                });
             }
         }
 
+        // 🔥 Online पेमेंट लॉजिक (अपडेटेड: Firebase च्या यशाची वाट बघण्यासाठी)
         function processPayment() {
             let customerName = validateAddress();
             if(!customerName) return;
@@ -983,17 +999,29 @@
                 window.location.href = upiLink;
                 setTimeout(() => {
                     if(confirm("पेमेंट यशस्वी झाले का? (डेमो मोड)")) {
-                        saveOrderToHistory('Online Paid', window.currentOnlineTotal); 
-                        let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                        if(allOrders.length > 0) {
-                            allOrders[0].commissionPaid = true;
-                            localStorage.setItem('user_orders', JSON.stringify(allOrders));
-                        }
-                        localStorage.removeItem('krushi_cart');
-                        updateCartBadge();
-                        closeCheckout();
-                        alert("🎉 पेमेंट यशस्वी! तुमची ऑर्डर नोंदवली गेली आहे. लवकरच माल तुमच्या पत्त्यावर पोहोचेल.");
-                        window.location.href = "my_orders.html";
+                        
+                        let btn = document.getElementById('online_btn');
+                        let oldText = btn.innerHTML;
+                        btn.innerHTML = "⏳ ऑर्डर कन्फर्म होत आहे...";
+                        document.body.style.cursor = 'wait';
+
+                        saveOrderToHistory('Online Paid', window.currentOnlineTotal).then(() => {
+                            document.body.style.cursor = 'default';
+                            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                            if(allOrders.length > 0) {
+                                allOrders[0].commissionPaid = true;
+                                localStorage.setItem('user_orders', JSON.stringify(allOrders));
+                            }
+                            localStorage.removeItem('krushi_cart');
+                            updateCartBadge();
+                            closeCheckout();
+                            alert("🎉 पेमेंट यशस्वी! तुमची ऑर्डर नोंदवली गेली आहे. लवकरच माल तुमच्या पत्त्यावर पोहोचेल.");
+                            window.location.href = "my_orders.html";
+                        }).catch(err => {
+                            btn.innerHTML = oldText;
+                            document.body.style.cursor = 'default';
+                            alert("ऑर्डर नोंदवताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा.");
+                        });
                     }
                 }, 3000);
             }
