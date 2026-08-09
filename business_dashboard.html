@@ -1159,7 +1159,6 @@
 
         function loadNotificationsForRole() {
             let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            // 🟢 बदललेला भाग: लोकल स्टोरेजमधील जुन्या ऑर्डर्सच्या नोटिफिकेशन्स काढून टाकल्या, जेणेकरून क्लाउडवरून लाईव्ह नोटिफिकेशन्स दिसतील.
             let myNotifications = notifications.filter(n => (n.target === CURRENT_ROLE || n.target === 'all') && (!n.title || !n.title.includes('नवीन ऑर्डर')));
             return myNotifications;
         }
@@ -1179,7 +1178,6 @@
             let vendorAlertsHtml = getVendorAlertsHtml(); 
             let html = `<h4 style="margin: 0 0 10px 0; font-size: 13px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 8px;">महत्त्वाच्या सूचना (Alerts)</h4>`;
             
-            // System notifications section
             if (systemNotifs.length > 0) {
                 html += `<div style="margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
                             <strong style="color: #e65100;">📢 ॲडमिन मेसेजेस</strong>`;
@@ -1196,14 +1194,11 @@
                 html += `</div>`;
             }
 
-            // Add existing vendor alerts
             html += vendorAlertsHtml;
-            
             document.getElementById('vendor_notif_list').innerHTML = html;
             updateNotificationBadge(systemNotifs);
         }
 
-        // 🔥 FIXED: GET VENDOR ALERTS HTML (NOW CHECKS BOTH NAME AND MOBILE) 🔥
         function getVendorAlertsHtml() {
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
             let myName = localStorage.getItem("current_user_name");
@@ -1231,8 +1226,8 @@
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🟢 बदललेला भाग: फक्त प्रलंबित (Pending/Processing) ऑर्डर्ससाठी नोटिफिकेशन दाखवा आणि ते थेट क्लाउडच्या डेटामधून घ्या.
-            let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
+            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+            let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
 
             if(myPendingOrdersList.length > 0) {
                 myPendingOrdersList.forEach(order => {
@@ -1247,7 +1242,6 @@
             return html;
         }
 
-        // 🔥 FIXED: MARK NOTIFICATION AS READ 🔥
         function markNotifRead(docId) {
             if(!docId) return;
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
@@ -1275,7 +1269,6 @@
             document.getElementById('kyc_gatekeeper_modal').style.display = 'flex';
         }
 
-        // 🔥 FIXED: UPDATE NOTIFICATION BADGE 🔥
         function updateNotificationBadge(systemNotifs) {
             let totalCount = systemNotifs.length;
             
@@ -1285,8 +1278,8 @@
             let myMobile = localStorage.getItem("current_user_mobile");
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🟢 बदललेला भाग: बॅज काऊंटसाठी फक्त delivered किंवा shipped नसलेल्या ऑर्डर्स मोजा
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
+            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
             totalCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
@@ -1317,7 +1310,6 @@
         let ledgerTotalDues = 0;
         let isAccountLocked = false;
 
-        // CROPPER GLOBALS
         let cropper = null;
         let currentTargetContainerId = '';
         let uploadedImagesCount = 0;
@@ -1346,19 +1338,16 @@
             checkBusinessExpiriesOnLoad(); 
             loadSupportTickets();
 
-            // 🔥 FIREBASE CLOUD SYNC: ऑर्डर्स, प्रॉडक्ट्स आणि फी सेटिंग्ज रिअल टाईम सिंक करा 🔥
             syncBusinessDashboardFromCloud();
             syncMyProductsAndAdsFromCloud();
             syncPlatformFeeConfigFromCloud();
             syncSupportTickets();
         }
 
-        // --- 🔥 FIXED: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC 🔥 ---
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
 
-            // 1. Orders Sync (Real-time Snapshot)
             db.collection("mall_orders").orderBy("timestamp", "desc").onSnapshot(querySnapshot => {
                 let cloudOrders = [];
                 let activeOrdersCount = 0;
@@ -1368,7 +1357,8 @@
                     let order = doc.data();
                     order.firebaseDocId = doc.id; 
                     
-                    let belongsToMe = (order.items || []).some(i => i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
+                    // 🔥 बदल: मोबाईल नंबरवरून ओळखण्याची अचूक पद्धत
+                    let belongsToMe = (order.vendorMobiles && order.vendorMobiles.includes(myMobile)) || (order.items || []).some(i => i.vendorMobile === myMobile || i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
                         cloudOrders.push(order);
@@ -1387,10 +1377,9 @@
                 let elSales = document.getElementById('dash_sales');
                 if(elSales) elSales.innerText = Math.round(totalSales).toLocaleString('en-IN');
                 
-                loadDealerOrdersDashboard(); // Refresh UI instantly
+                loadDealerOrdersDashboard(); 
             }, e => console.log("Cloud business orders sync error: ", e));
 
-            // 2. Leads Sync (Real-time Snapshot)
             db.collection("quote_requests").onSnapshot(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
@@ -1403,13 +1392,11 @@
                 if(elLeads) elLeads.innerText = myLeads;
             }, e => console.log("Cloud leads sync error:", e));
 
-            // 3. SINGLE DEVICE SESSION WATCHER & STATUS SYNC
             if (myMobile && myMobile !== "+91 9XXXX XXXX") {
                 db.collection("users").doc(myMobile).onSnapshot((doc) => {
                     if (doc.exists && doc.data()) {
                         let cloudData = doc.data();
                         
-                        // 🔥 NEW: Sync KYC Status in Real-time 🔥
                         let badgeBox = document.getElementById('user_profile_badge');
                         let userName = cloudData.name || localStorage.getItem("current_user_name") || "व्यापारी";
                         
@@ -1439,7 +1426,6 @@
                 }, (err) => console.log("Cloud user sync error:", err));
             }
 
-            // 4. Notifications Sync (Real-time Snapshot)
             db.collection("app_notifications").onSnapshot(querySnapshot => {
                 let cloudNotifs = [];
                 querySnapshot.forEach(doc => {
@@ -1456,9 +1442,7 @@
             }, e => console.log("Cloud notif sync error:", e));
         }
 
-        // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS (REAL-TIME SNAPSHOT) 🔥 ---
         function syncMyProductsAndAdsFromCloud() {
-            // 1. Vendor Products
             db.collection("vendor_products").onSnapshot(querySnapshot => {
                 let allProducts = [];
                 querySnapshot.forEach(doc => {
@@ -1471,7 +1455,6 @@
                 loadVendorProductsForAd();
             }, e => console.log("Cloud vendor products sync error:", e));
 
-            // 2. Vendor Ads
             db.collection("admin_pending_ad_approvals").onSnapshot(querySnapshot => {
                 let allAds = [];
                 querySnapshot.forEach(doc => {
@@ -1480,11 +1463,10 @@
                     allAds.push(ad);
                 });
                 localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(allAds));
-                refreshMyAdsUI(); // Use UI rendering function
+                refreshMyAdsUI(); 
             }, e => console.log("Cloud ads sync error:", e));
         }
 
-        // --- 🔥 NEW: SYNC SUPPORT TICKETS (REAL-TIME SNAPSHOT) 🔥 ---
         function syncSupportTickets() {
             let myMobile = localStorage.getItem("current_user_mobile") || "Unknown";
             db.collection("support_tickets").where("mobile", "==", myMobile).onSnapshot(querySnapshot => {
@@ -1495,7 +1477,7 @@
                     tickets.push(t);
                 });
                 localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
-                loadSupportTickets(); // Refresh chat UI
+                loadSupportTickets(); 
             });
         }
 
@@ -1589,7 +1571,7 @@
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
             let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile);
+            let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile || p.vendorMobile === myMobile);
             let container = document.getElementById('my_products_container');
             if (!container) return;
             if (myProducts.length === 0) {
@@ -1808,6 +1790,7 @@
                 description: pDesc,
                 images: images,
                 vendorName: localStorage.getItem("current_user_name") || pBrand, 
+                vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
                 dateAdded: new Date().toISOString()
             };
 
@@ -2517,7 +2500,8 @@
                 let hasUpdates = false;
 
                 orders.forEach(o => {
-                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.company === myName || item.company === myMobile)) {
+                    // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile)) {
                         if (o.firebaseDocId) {
                             let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
                             batch.update(orderRef, { commissionPaid: true });
@@ -2562,8 +2546,9 @@
             let myName = localStorage.getItem("current_user_name");
             let myMobile = localStorage.getItem("current_user_mobile");
             
+            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
             let myOrders = orders.filter(o => {
-                return o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
+                return (o.vendorMobiles && o.vendorMobiles.includes(myMobile)) || o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
             });
 
             let container = document.getElementById('dealer_orders_container');
@@ -2588,7 +2573,8 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    if(item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
+                    // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+                    if(item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
                         let itemTotal = item.price * item.qty;
