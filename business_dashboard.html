@@ -255,7 +255,7 @@
     <div id="sessionAlertBox">
         <div class="session-alert-content">
             <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत মাঠে...</p>
         </div>
     </div>
 
@@ -1226,7 +1226,7 @@
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+            // 🔥 बदल: मोबाईल नंबर जोडला 
             let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
 
             if(myPendingOrdersList.length > 0) {
@@ -1278,7 +1278,7 @@
             let myMobile = localStorage.getItem("current_user_mobile");
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+            // 🔥 बदल: मोबाईल नंबर जोडला
             let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
             totalCount += myPendingOrders;
             
@@ -1357,7 +1357,7 @@
                     let order = doc.data();
                     order.firebaseDocId = doc.id; 
                     
-                    // 🔥 बदल: मोबाईल नंबरवरून ओळखण्याची अचूक पद्धत
+                    // 🔥 बदल: मोबाईल नंबर जोडला
                     let belongsToMe = (order.vendorMobiles && order.vendorMobiles.includes(myMobile)) || (order.items || []).some(i => i.vendorMobile === myMobile || i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
@@ -1384,7 +1384,8 @@
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
                     let q = doc.data();
-                    if (q.vendorName === myName || q.vendorName === myMobile || q.vendorName === "Unknown") {
+                    // 🔥 बदल: मोबाईल नंबर जोडला
+                    if (q.vendorMobile === myMobile || q.userMobile === myMobile || q.vendorName === myName || q.vendorName === myMobile || q.vendorName === "Unknown") {
                         myLeads++;
                     }
                 });
@@ -1571,6 +1572,7 @@
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
             let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            // 🔥 बदल: मोबाईल नंबर जोडला
             let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile || p.vendorMobile === myMobile);
             let container = document.getElementById('my_products_container');
             if (!container) return;
@@ -1601,7 +1603,8 @@
             if (!container) return;
 
             let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            let myAds = pendingAds.filter(ad => ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
+            // 🔥 बदल: मोबाईल नंबर जोडला
+            let myAds = pendingAds.filter(ad => ad.vendorMobile === myMobile || ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
             
             if (myAds.length === 0) {
                 container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
@@ -2500,7 +2503,7 @@
                 let hasUpdates = false;
 
                 orders.forEach(o => {
-                    // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+                    // 🔥 बदल: मोबाईल नंबर जोडला
                     if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile)) {
                         if (o.firebaseDocId) {
                             let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
@@ -2546,7 +2549,7 @@
             let myName = localStorage.getItem("current_user_name");
             let myMobile = localStorage.getItem("current_user_mobile");
             
-            // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+            // 🔥 बदल: मोबाईल नंबर जोडला
             let myOrders = orders.filter(o => {
                 return (o.vendorMobiles && o.vendorMobiles.includes(myMobile)) || o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
             });
@@ -2573,7 +2576,7 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    // 🔥 बदल: मोबाईल नंबर तपासणी जोडली
+                    // 🔥 बदल: मोबाईल नंबर जोडला
                     if(item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
@@ -2742,6 +2745,7 @@
             
             let vendorData = {
                 vendorName: localStorage.getItem("current_user_name") || "व्यापारी",
+                vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
                 number: num,
                 status: "Pending"
             };
@@ -2822,7 +2826,12 @@
                 return;
             }
             
-            db.collection("vendor_jobs").add({ role: jobType, req: requirement, date: new Date().toLocaleDateString() })
+            db.collection("vendor_jobs").add({ 
+                role: jobType, 
+                req: requirement, 
+                date: new Date().toLocaleDateString(),
+                vendorMobile: localStorage.getItem("current_user_mobile") || "" // 🔥 बदल: मोबाईल नंबर जोडला
+            })
             .then(() => {
                 alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
                 document.getElementById('franchise_req_input').value = '';
@@ -2838,7 +2847,12 @@
                 return;
             }
             
-            db.collection("vendor_events").add({ type: eventType, date: eventDate, createdOn: new Date().toLocaleDateString() })
+            db.collection("vendor_events").add({ 
+                type: eventType, 
+                date: eventDate, 
+                createdOn: new Date().toLocaleDateString(),
+                vendorMobile: localStorage.getItem("current_user_mobile") || "" // 🔥 बदल: मोबाईल नंबर जोडला
+            })
             .then(() => {
                 let d = new Date(eventDate);
                 let formattedDate = d.toLocaleString('mr-IN');
@@ -2913,6 +2927,7 @@
                     status: "Approved & Live",
                     date: new Date().toLocaleDateString(),
                     vendorName: localStorage.getItem("current_user_name") || "",
+                    vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
                     isGeneric: isGenericAd
                 };
 
