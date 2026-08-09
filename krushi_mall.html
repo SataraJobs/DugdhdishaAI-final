@@ -45,7 +45,7 @@
         .banner { width: 100%; height: 100px; background: linear-gradient(145deg, #1565c0, #0d47a1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .banner-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #ffeb3b; border: 1px solid #ffeb3b;}
 
-        /* 4. AI Smart Shopping Feature (Hidden by default until dynamic) */
+        /* 4. AI Smart Shopping Feature */
         .ai-recommendation { background: linear-gradient(145deg, #fff3e0, #ffe0b2); margin: 0 20px 20px; padding: 15px; border-radius: 16px; border: 1px solid #ffcc80; box-shadow: 0 6px 15px rgba(255, 152, 0, 0.15); position: relative; display: none; }
         .ai-title { font-size: 14px; font-weight: 900; color: #e65100; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .ai-text { font-size: 12.5px; color: #555; font-weight: bold; line-height: 1.4; margin-bottom: 12px; }
@@ -91,7 +91,6 @@
         .btn-cart:active { top: 2px; position: relative; box-shadow: none; }
         .btn-icon { background: #f0f0f0; color: #555; border: none; padding: 8px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 
-        /* NEW: Shop button */
         .btn-shop { margin-top: 6px; background: #1565c0; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; width: 100%; box-shadow: 0 2px 0 #0d47a1; }
         .btn-shop:active { top: 2px; position: relative; box-shadow: none; }
 
@@ -564,7 +563,10 @@
                         discount = Math.round(((prod.mrp - prod.offerPrice) / prod.mrp) * 100);
                     }
 
-                    let prodJsonStr = encodeURIComponent(JSON.stringify(prod));
+                    // Replace single quotes with encoded version to avoid breaking HTML
+                    let safeProdJson = encodeURIComponent(JSON.stringify(prod).replace(/'/g, "%27"));
+                    let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
+                    let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
                     
                     let isPaidPlan = (prod.vendorPlan === 'Silver Seller' || prod.vendorPlan === 'Corporate Partner');
                     let shopLinkHtml = '';
@@ -578,12 +580,12 @@
                         <div class="card-badges">
                             ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
                         </div>
-                        <div class="card-img" style="background:${bgGradient}; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="openDynamicProduct('${prodJsonStr}')">
+                        <div class="card-img" style="background:${bgGradient}; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="openDynamicProduct('${safeProdJson}')">
                             ${mainImgHtml}
                         </div>
                         <div class="card-body">
                             <div class="company-name">दुग्ध दिशा प्रमाणित विक्रेता <span style="color:#1976d2; margin-left:4px;">✅</span></div>
-                            <h4 class="prod-title" onclick="openDynamicProduct('${prodJsonStr}')">${prod.name}</h4>
+                            <h4 class="prod-title" onclick="openDynamicProduct('${safeProdJson}')">${prod.name}</h4>
                             <div class="prod-weight">${prod.category}</div>
                             
                             <div class="price-row">
@@ -593,7 +595,7 @@
                             <div class="rating-row"><span class="stars">★★★★★</span> ४.५ (नवीन)</div>
                             
                             <div class="card-actions">
-                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${prod.name}', ${prod.offerPrice}, '📦', '${prod.vendorName}', '${prod.category}')">🛒 Add</button>
+                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${safeName}', ${prod.offerPrice}, '📦', '${safeVendor}', '${prod.category}')">🛒 Add</button>
                                 <button class="btn-icon">❤️</button>
                             </div>
                             ${shopLinkHtml}
@@ -606,7 +608,7 @@
         }
 
         function openDynamicProduct(prodJsonStr) {
-            let prod = JSON.parse(decodeURIComponent(prodJsonStr));
+            let prod = JSON.parse(decodeURIComponent(prodJsonStr).replace(/%27/g, "'"));
             
             document.getElementById('detail_title').innerText = prod.name;
             document.getElementById('detail_company').innerHTML = `दुग्ध दिशा प्रमाणित विक्रेता`;
@@ -686,17 +688,20 @@
                 mainImageArea.style.background = 'linear-gradient(to bottom, #e3f2fd, #bbdefb)';
             }
 
+            let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
+            let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
+
             let buyBtn = document.getElementById('detail_buy_btn');
             buyBtn.innerText = `🛒 Buy Now (₹${prod.offerPrice})`;
             buyBtn.onclick = function() {
-                addToCart(prod.id, prod.name, prod.offerPrice, '📦', prod.vendorName, prod.category);
+                addToCart(prod.id, safeName, prod.offerPrice, '📦', safeVendor, prod.category);
                 closeProduct();
                 openCart();
             };
 
             let quoteBtn = document.getElementById('detail_quote_btn');
             quoteBtn.onclick = function() {
-                requestQuote(prod.name, prod.vendorName);
+                requestQuote(safeName, safeVendor);
             };
 
             document.getElementById('productModal').style.display = 'block';
@@ -799,6 +804,7 @@
             let totalBill = 0;
             
             cart.forEach((item) => {
+                let safeName = item.name ? item.name.replace(/'/g, "\\'") : '';
                 totalBill += (item.price * item.qty);
                 html += `
                 <div style="display:flex; align-items:center; gap:12px; background:white; padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
@@ -889,7 +895,7 @@
             return name;
         }
 
-        // 🔥 FIREBASE: ऑर्डर सेव्ह करणे (रेस कंडिशन सोडवली आहे) 🔥
+        // 🔥 FIREBASE: सुधारित ऑर्डर सेव्हिंग आणि नोटिफिकेशन लॉजिक (BUG FIX) 🔥
         function saveOrderToHistory(paymentType, finalAmount) {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             if(cart.length === 0) return Promise.reject("Cart is empty");
@@ -904,13 +910,11 @@
             let today = new Date();
             let dateStr = today.toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + " • " + today.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
 
-            // कार्ट मधील प्रत्येक प्रॉडक्टच्या खऱ्या मालकाचे नाव (Vendor) काढा
             let uniqueVendors = [...new Set(cart.map(item => item.company))];
-
-            // मोबाईल नंबर कोणत्याही स्वरूपात असला तरी तो 10 अंकी फॉरमॅटमध्ये सेव्ह करणे
             let cleanCustomerMobile = mobile.replace(/\D/g, '').slice(-10);
 
-            let newOrder = {
+            // 1. लोकल स्टोरेजमध्ये सेव्ह करण्यासाठीचा डेटा (serverTimestamp शिवाय)
+            let newOrderLocal = {
                 id: orderId, 
                 date: dateStr, 
                 customer: { name: name, mobile: cleanCustomerMobile, address: address, pincode: pincode, district: district }, 
@@ -920,45 +924,62 @@
                 status: "pending", 
                 commissionPaid: false,
                 vendorNames: uniqueVendors, 
+                timestampStr: new Date().toISOString()
+            };
+
+            // 2. Firebase क्लाउडवर पाठवण्यासाठीचा डेटा
+            let newOrderCloud = {
+                ...newOrderLocal,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Firebase ला पाठवा (return Promise)
-            return db.collection("mall_orders").add(newOrder)
+            // Firebase ला पाठवा
+            return db.collection("mall_orders").add(newOrderCloud)
             .then(docRef => {
-                // ऑर्डर सेव्ह झाल्यावर प्रत्येक संबंधित व्यापाऱ्याला स्वतंत्र नोटिफिकेशन पाठवा
                 let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
                 
                 uniqueVendors.forEach(vendorName => {
-                    let notifObj = {
-                        receiver_mobile: vendorName, // फक्त याच व्यापाऱ्याला मेसेज दिसेल
+                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
+                    
+                    // लोकल नोटिफिकेशन्स
+                    let notifObjLocal = {
+                        receiver_mobile: vendorName,
                         type: 'order',
                         title: "📦 नवीन ऑर्डर प्राप्त!",
                         message: `तुम्हाला कृषी मॉलवरून श्री. ${name} यांची नवीन ऑर्डर आली आहे.`,
                         date: new Date().toLocaleDateString('mr-IN'), 
                         orderId: orderId, 
                         isRead: false,
+                        firebaseDocId: notifId,
+                        timestampStr: new Date().toISOString()
+                    };
+                    
+                    // Firebase नोटिफिकेशन्स
+                    let notifObjCloud = {
+                        ...notifObjLocal,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     };
-                    appNotifs.push(notifObj);
+
+                    appNotifs.push(notifObjLocal);
                     
                     // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDORS 🔥
-                    db.collection("app_notifications").add(notifObj)
+                    db.collection("app_notifications").doc(notifId).set(notifObjCloud)
                     .catch(e => console.error("Cloud vendor notif error:", e));
                 });
+                
+                // लोकल स्टोअरेज अपडेट
                 localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-
-                // लोकल स्टोअरेजमध्ये सेव्ह करा
+                
                 let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                newOrder.firebaseDocId = docRef.id;
-                allOrders.unshift(newOrder); 
+                newOrderLocal.firebaseDocId = docRef.id;
+                allOrders.unshift(newOrderLocal); 
                 localStorage.setItem('user_orders', JSON.stringify(allOrders));
                 
                 return docRef;
             });
         }
 
-        // 🔥 COD पेमेंट लॉजिक (अपडेटेड: Firebase च्या यशाची वाट बघण्यासाठी)
+        // 🔥 COD पेमेंट लॉजिक
         function processCOD() {
             let customerName = validateAddress();
             if(!customerName) return;
@@ -985,7 +1006,7 @@
             }
         }
 
-        // 🔥 Online पेमेंट लॉजिक (अपडेटेड: Firebase च्या यशाची वाट बघण्यासाठी)
+        // 🔥 Online पेमेंट लॉजिक
         function processPayment() {
             let customerName = validateAddress();
             if(!customerName) return;
@@ -1047,7 +1068,7 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // 🔥 FIREBASE: कोटेशन रिक्वेस्ट सेव्ह करणे (अचूक नोटिफिकेशन राऊटिंगसह) 🔥
+        // 🔥 FIREBASE: कोटेशन रिक्वेस्ट सेव्ह करणे आणि सप्लायरला नोटिफिकेशन पाठवणे 🔥
         function requestQuote(prodName, vendorName) {
             let qty = prompt(prodName + "\n\nतुम्हाला किती किलो/नग (Quantity) हवे आहेत? (उदा. 500 kg, 100 bags):");
             
@@ -1055,7 +1076,6 @@
                 let userName = localStorage.getItem("current_user_name") || "शेतकरी/ग्राहक";
                 let userMobile = localStorage.getItem("current_user_mobile") || "माहिती नाही";
 
-                // Firebase ला कोटेशन पाठवणे
                 let quoteData = {
                     prodName: prodName,
                     vendorName: vendorName || "Unknown",
@@ -1078,21 +1098,30 @@
 
                     if (vendorName && vendorName !== "Unknown") {
                         let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-                        let vendorNotifObj = {
-                            receiver_mobile: vendorName, // फक्त संबंधित व्यापाऱ्यालाच मेसेज जाईल
+                        let notifId = "REQ-" + Math.floor(1000 + Math.random() * 9000);
+                        
+                        let vendorNotifObjLocal = {
+                            receiver_mobile: vendorName,
                             type: 'lead',
                             title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
                             message: `श्री. ${userName} यांना तुमच्या '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
                             date: new Date().toLocaleDateString('mr-IN'),
-                            orderId: "#REQ-" + Math.floor(1000 + Math.random() * 9000),
+                            orderId: notifId,
                             isRead: false,
+                            firebaseDocId: notifId,
+                            timestampStr: new Date().toISOString()
+                        };
+
+                        let vendorNotifObjCloud = {
+                            ...vendorNotifObjLocal,
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         };
-                        appNotifs.push(vendorNotifObj);
+
+                        appNotifs.push(vendorNotifObjLocal);
                         localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
 
                         // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDOR QUOTE REQUEST 🔥
-                        db.collection("app_notifications").add(vendorNotifObj)
+                        db.collection("app_notifications").doc(notifId).set(vendorNotifObjCloud)
                         .catch(e => console.error("Cloud vendor quote notif error:", e));
                     }
                 })
