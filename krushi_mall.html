@@ -567,7 +567,8 @@
                     let safeProdJson = encodeURIComponent(JSON.stringify(prod).replace(/'/g, "%27"));
                     let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
                     let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
-                    
+                    let safeVendorMobile = prod.vendorMobile || prod.vendorName; // 🔥 बदल: सप्लायरचा मोबाईल नंबर घेतला
+
                     let isPaidPlan = (prod.vendorPlan === 'Silver Seller' || prod.vendorPlan === 'Corporate Partner');
                     let shopLinkHtml = '';
                     if (isPaidPlan) {
@@ -595,7 +596,7 @@
                             <div class="rating-row"><span class="stars">★★★★★</span> ४.५ (नवीन)</div>
                             
                             <div class="card-actions">
-                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${safeName}', ${prod.offerPrice}, '📦', '${safeVendor}', '${prod.category}')">🛒 Add</button>
+                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${safeName}', ${prod.offerPrice}, '📦', '${safeVendor}', '${safeVendorMobile}', '${prod.category}')">🛒 Add</button>
                                 <button class="btn-icon">❤️</button>
                             </div>
                             ${shopLinkHtml}
@@ -690,18 +691,21 @@
 
             let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
             let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
+            let safeVendorMobile = prod.vendorMobile || prod.vendorName; // 🔥 बदल: मोबाईल नंबर घेतला
 
             let buyBtn = document.getElementById('detail_buy_btn');
             buyBtn.innerText = `🛒 Buy Now (₹${prod.offerPrice})`;
             buyBtn.onclick = function() {
-                addToCart(prod.id, safeName, prod.offerPrice, '📦', safeVendor, prod.category);
+                // 🔥 बदल: vendorMobile पास केला
+                addToCart(prod.id, safeName, prod.offerPrice, '📦', safeVendor, safeVendorMobile, prod.category);
                 closeProduct();
                 openCart();
             };
 
             let quoteBtn = document.getElementById('detail_quote_btn');
             quoteBtn.onclick = function() {
-                requestQuote(safeName, safeVendor);
+                // 🔥 बदल: vendorMobile पास केला
+                requestQuote(safeName, safeVendor, safeVendorMobile);
             };
 
             document.getElementById('productModal').style.display = 'block';
@@ -746,12 +750,13 @@
             closeCropModal();
         }
 
-        function addToCart(id, name, price, icon, company, category = 'Feed') {
+        // 🔥 बदल: vendorMobile पॅरामीटर ॲड केला
+        function addToCart(id, name, price, icon, company, vendorMobile, category = 'Feed') {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             let existingItem = cart.find(i => i.id === id);
             
             if(existingItem) { existingItem.qty += 1; } 
-            else { cart.push({id, name, price, icon, company, category, qty: 1}); }
+            else { cart.push({id, name, price, icon, company, vendorMobile, category, qty: 1}); } // 🔥 बदल: कार्टमध्ये सेव्ह केला
             
             localStorage.setItem('krushi_cart', JSON.stringify(cart));
             updateCartBadge();
@@ -895,7 +900,6 @@
             return name;
         }
 
-        // 🔥 FIREBASE: सुधारित ऑर्डर सेव्हिंग आणि नोटिफिकेशन लॉजिक (BUG FIX) 🔥
         function saveOrderToHistory(paymentType, finalAmount) {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             if(cart.length === 0) return Promise.reject("Cart is empty");
@@ -911,9 +915,10 @@
             let dateStr = today.toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + " • " + today.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
 
             let uniqueVendors = [...new Set(cart.map(item => item.company))];
+            let uniqueVendorMobiles = [...new Set(cart.map(item => item.vendorMobile || item.company))]; // 🔥 बदल: व्यापाऱ्यांचे मोबाईल नंबर काढले
             let cleanCustomerMobile = mobile.replace(/\D/g, '').slice(-10);
 
-            // 1. लोकल स्टोरेजमध्ये सेव्ह करण्यासाठीचा डेटा (serverTimestamp शिवाय)
+            // 1. लोकल स्टोरेजमध्ये सेव्ह करण्यासाठीचा डेटा
             let newOrderLocal = {
                 id: orderId, 
                 date: dateStr, 
@@ -924,10 +929,10 @@
                 status: "pending", 
                 commissionPaid: false,
                 vendorNames: uniqueVendors, 
+                vendorMobiles: uniqueVendorMobiles, // 🔥 बदल: डेटाबेसमध्ये सेव्ह केले
                 timestampStr: new Date().toISOString()
             };
 
-            // 2. Firebase क्लाउडवर पाठवण्यासाठीचा डेटा
             let newOrderCloud = {
                 ...newOrderLocal,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -938,12 +943,12 @@
             .then(docRef => {
                 let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
                 
-                uniqueVendors.forEach(vendorName => {
+                // 🔥 बदल: नावाऐवजी मोबाईल नंबरवर नोटिफिकेशन पाठवले
+                uniqueVendorMobiles.forEach(vMobile => {
                     let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
                     
-                    // लोकल नोटिफिकेशन्स
                     let notifObjLocal = {
-                        receiver_mobile: vendorName,
+                        receiver_mobile: vMobile, // 🔥 बदल: अचूक मोबाईल नंबर
                         type: 'order',
                         title: "📦 नवीन ऑर्डर प्राप्त!",
                         message: `तुम्हाला कृषी मॉलवरून श्री. ${name} यांची नवीन ऑर्डर आली आहे.`,
@@ -954,7 +959,6 @@
                         timestampStr: new Date().toISOString()
                     };
                     
-                    // Firebase नोटिफिकेशन्स
                     let notifObjCloud = {
                         ...notifObjLocal,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -962,12 +966,10 @@
 
                     appNotifs.push(notifObjLocal);
                     
-                    // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDORS 🔥
                     db.collection("app_notifications").doc(notifId).set(notifObjCloud)
                     .catch(e => console.error("Cloud vendor notif error:", e));
                 });
                 
-                // लोकल स्टोअरेज अपडेट
                 localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
                 
                 let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
@@ -979,7 +981,6 @@
             });
         }
 
-        // 🔥 COD पेमेंट लॉजिक
         function processCOD() {
             let customerName = validateAddress();
             if(!customerName) return;
@@ -1006,7 +1007,6 @@
             }
         }
 
-        // 🔥 Online पेमेंट लॉजिक
         function processPayment() {
             let customerName = validateAddress();
             if(!customerName) return;
@@ -1068,8 +1068,8 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // 🔥 FIREBASE: कोटेशन रिक्वेस्ट सेव्ह करणे आणि सप्लायरला नोटिफिकेशन पाठवणे 🔥
-        function requestQuote(prodName, vendorName) {
+        // 🔥 बदल: vendorMobile पॅरामीटर जोडला
+        function requestQuote(prodName, vendorName, vendorMobile) {
             let qty = prompt(prodName + "\n\nतुम्हाला किती किलो/नग (Quantity) हवे आहेत? (उदा. 500 kg, 100 bags):");
             
             if(qty) {
@@ -1096,12 +1096,12 @@
                     });
                     localStorage.setItem("admin_notifications", JSON.stringify(adminNotifs));
 
-                    if (vendorName && vendorName !== "Unknown") {
+                    if (vendorMobile && vendorMobile !== "Unknown") { // 🔥 बदल: नंबर वापरला
                         let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
                         let notifId = "REQ-" + Math.floor(1000 + Math.random() * 9000);
                         
                         let vendorNotifObjLocal = {
-                            receiver_mobile: vendorName,
+                            receiver_mobile: vendorMobile, // 🔥 बदल: अचूक मोबाईल नंबर
                             type: 'lead',
                             title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
                             message: `श्री. ${userName} यांना तुमच्या '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
@@ -1120,7 +1120,6 @@
                         appNotifs.push(vendorNotifObjLocal);
                         localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
 
-                        // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDOR QUOTE REQUEST 🔥
                         db.collection("app_notifications").doc(notifId).set(vendorNotifObjCloud)
                         .catch(e => console.error("Cloud vendor quote notif error:", e));
                     }
@@ -1187,7 +1186,6 @@
                 let currentId = n.orderId || idx;
                 if (n.receiver_mobile === currentUserMobile && currentId.toString() === id.toString()) {
                     n.isRead = true;
-                    // 🔥 UPDATE ON FIREBASE CLOUD IF DOC ID EXISTS
                     if (n.firebaseDocId) {
                         db.collection("app_notifications").doc(n.firebaseDocId).update({ isRead: true })
                         .catch(e => console.log("Cloud notif read update error:", e));
