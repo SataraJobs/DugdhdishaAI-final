@@ -46,7 +46,7 @@
         .status-pending { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
         .status-shipped { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
         .status-delivered { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .status-cancelled { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; } /* New Cancelled Style */
+        .status-cancelled { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; } 
 
         .product-list { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
         .prod-icon { width: 50px; height: 50px; background: #f4f7f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #eee; }
@@ -176,72 +176,95 @@
 
         function initializeOrders() {
             loadNotifications('farmer');
-            loadMyOrders('all');
             
             // 🔥 FIREBASE CLOUD SYNC: पेज उघडताच ऑर्डर्स क्लाऊडवरून आणा 🔥
             syncMyOrdersFromCloud();
             syncUserNotificationsFromCloud();
         }
 
-        // --- 🔥 FIXED: CLOUD DATABASE ORDERS SYNC (PROPER NESTED QUERY & SORTING) 🔥 ---
+        // --- 🔥 FIXED: CLOUD DATABASE ORDERS SYNC ( BULLETPROOF MOBILE PARSING ) 🔥 ---
         function syncMyOrdersFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
-            if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-                let cleanMobile = userMobile.replace("+91 ", "").replace("+91", "").trim();
-                let mobileVariants = [userMobile, cleanMobile, "+91" + cleanMobile, "+91 " + cleanMobile];
-                mobileVariants = [...new Set(mobileVariants)]; // डुप्लिकेट्स काढा
-
-                // अचूक फिल्ड: "customer.mobile" ने शोधा
-                db.collection("mall_orders")
-                .where("customer.mobile", "in", mobileVariants)
-                .onSnapshot((querySnapshot) => {
-                    let cloudOrders = [];
-                    querySnapshot.forEach((doc) => {
-                        let data = doc.data();
-                        data.firebaseDocId = doc.id;
-                        cloudOrders.push(data);
-                    });
-                    
-                    // नवीन ऑर्डर्स सर्वात वर दिसाव्यात यासाठी सॉर्टिंग
-                    cloudOrders.sort((a, b) => {
-                        let numA = parseInt(a.id.replace(/\\D/g, '')) || 0;
-                        let numB = parseInt(b.id.replace(/\\D/g, '')) || 0;
-                        return numB - numA;
-                    });
-
-                    localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
-                    
-                    let activeBtn = document.querySelector('.tab-btn.active');
-                    let activeTab = 'all';
-                    if (activeBtn) {
-                        let text = activeBtn.innerText;
-                        if (text.includes('प्रलंबित')) activeTab = 'pending';
-                        else if (text.includes('वाटेत')) activeTab = 'shipped';
-                        else if (text.includes('पोहोचले')) activeTab = 'delivered';
-                        else if (text.includes('रद्द')) activeTab = 'cancelled';
-                    }
-                    loadMyOrders(activeTab);
-                }, e => {
-                    console.log("Error syncing orders from cloud: ", e);
-                });
-
-                // 🔥 SINGLE DEVICE SESSION WATCHER (माझी खरेदी पेजवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
-                db.collection("users").doc(userMobile).onSnapshot((doc) => {
-                    if (doc.exists && doc.data()) {
-                        let cloudData = doc.data();
-                        let localSessionId = localStorage.getItem("current_session_id");
-                        let cloudSessionId = cloudData.currentSessionId;
-                        if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            let alertBox = document.getElementById("sessionAlertBox");
-                            if (alertBox) alertBox.style.display = "flex";
-                            setTimeout(() => {
-                                localStorage.clear();
-                                window.location.replace("login.html");
-                            }, 3000);
-                        }
-                    }
-                }, (err) => console.log("Cloud user sync error:", err));
+            if (!userMobile || userMobile === "+91 9XXXX XXXX") {
+                processOrders([]);
+                return;
             }
+
+            // मोबाईल नंबर कोणत्याही स्वरूपात असू शकतो (उदा. 9876543210 किंवा +919876543210)
+            let cleanMobile = userMobile.replace(/\D/g, '').slice(-10); // फक्त शेवटचे १० अंक काढा
+            
+            let mobileVariants = [
+                cleanMobile,
+                "+91" + cleanMobile,
+                "+91 " + cleanMobile,
+                "91" + cleanMobile,
+                userMobile
+            ];
+            mobileVariants = [...new Set(mobileVariants)]; // डुप्लिकेट्स काढा
+
+            db.collection("mall_orders")
+            .where("customer.mobile", "in", mobileVariants)
+            .onSnapshot((querySnapshot) => {
+                let cloudOrders = [];
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    data.firebaseDocId = doc.id;
+                    cloudOrders.push(data);
+                });
+                
+                // जर 'String' ऐवजी 'Number' म्हणून डेटाबेसमध्ये सेव्ह झाला असेल, तर बॅकअप क्वेरी
+                if(cloudOrders.length === 0 && cleanMobile.length === 10) {
+                    db.collection("mall_orders")
+                    .where("customer.mobile", "==", Number(cleanMobile))
+                    .get().then(snap => {
+                         snap.forEach(doc => {
+                             let d = doc.data(); d.firebaseDocId = doc.id;
+                             cloudOrders.push(d);
+                         });
+                         processOrders(cloudOrders);
+                    });
+                } else {
+                    processOrders(cloudOrders);
+                }
+            }, e => {
+                console.log("Error syncing orders from cloud: ", e);
+                processOrders(JSON.parse(localStorage.getItem('user_orders')) || []);
+            });
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER 🔥
+            db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    let cloudData = doc.data();
+                    let localSessionId = localStorage.getItem("current_session_id");
+                    let cloudSessionId = cloudData.currentSessionId;
+                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                        localStorage.clear();
+                        window.location.replace("login.html");
+                    }
+                }
+            });
+        }
+
+        // प्रोसेसिंग आणि UI लोडिंग
+        function processOrders(cloudOrders) {
+            cloudOrders.sort((a, b) => {
+                let numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+                let numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+                return numB - numA; // नवीन ऑर्डर्स सर्वात वर
+            });
+
+            localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+            
+            let activeBtn = document.querySelector('.tab-btn.active');
+            let activeTab = 'all';
+            if (activeBtn) {
+                let text = activeBtn.innerText;
+                if (text.includes('प्रलंबित')) activeTab = 'pending';
+                else if (text.includes('वाटेत')) activeTab = 'shipped';
+                else if (text.includes('पोहोचले')) activeTab = 'delivered';
+                else if (text.includes('रद्द')) activeTab = 'cancelled';
+            }
+            loadMyOrders(activeTab);
         }
 
         // --- 🔥 CLOUD USER NOTIFICATIONS SYNC ACROSS ALL DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
@@ -272,25 +295,14 @@
                 let orderIndex = orders.findIndex(o => o.id === orderId);
                 
                 if(orderIndex > -1) {
-                    // Update Locally
                     orders[orderIndex].status = 'cancelled';
                     localStorage.setItem('user_orders', JSON.stringify(orders));
                     
-                    // Update in Firebase (If it exists)
                     let order = orders[orderIndex];
                     if (order.firebaseDocId) {
                         db.collection("mall_orders").doc(order.firebaseDocId).update({
                             status: "cancelled"
                         }).catch(err => console.error("Error updating firebase order status: ", err));
-                    } else {
-                        db.collection("mall_orders").where("id", "==", orderId).get()
-                        .then(querySnapshot => {
-                            querySnapshot.forEach(doc => {
-                                db.collection("mall_orders").doc(doc.id).update({
-                                    status: "cancelled"
-                                }).catch(err => console.error("Error updating firebase order status: ", err));
-                            });
-                        }).catch(err => console.error("Error finding order in firebase: ", err));
                     }
 
                     alert("ऑर्डर यशस्वीरीत्या रद्द करण्यात आली आहे.");
@@ -311,8 +323,6 @@
             
             if(order) {
                 let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
-                
-                // Add old items back to current cart
                 order.items.forEach(item => {
                     let existing = cart.find(i => i.id === item.id);
                     if(existing) existing.qty += item.qty;
@@ -438,7 +448,6 @@
                         </div>`;
                     });
 
-                    // 🔥 ACTIVATE: Dynamic Action Buttons based on Status
                     let actionButtonsHtml = '';
                     if(order.status === 'pending') {
                         actionButtonsHtml = `
@@ -497,7 +506,6 @@
             loadMyOrders(status);
         }
 
-        // --- 🔔 CLOUD-FIRST INLINE NOTIFICATIONS LOGIC 🔔 ---
         function loadNotifications(userRole) {
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
             let currentUserMobile = localStorage.getItem("current_user_mobile");
