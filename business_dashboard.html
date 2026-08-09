@@ -780,7 +780,7 @@
                     <h4>🗺️ जाहिरात कशी लावायची? (Roadmap)</h4>
                     <div class="roadmap-container">
                         <div class="roadmap-step"><div class="step-circle">1</div><div class="step-text">जाहिरात निवडा</div></div>
-                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंक जोडा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंकOuter जोडा</div></div>
                         <div class="roadmap-step"><div class="step-circle">3</div><div class="step-text">बजेट ठरवा</div></div>
                         <div class="roadmap-step"><div class="step-circle">4</div><div class="step-text">पेमेंट पूर्ण करा</div></div>
                         <div class="roadmap-step"><div class="step-circle">5</div><div class="step-text">ऑटो ॲप्रूव्हल</div></div>
@@ -1205,6 +1205,7 @@
             updateNotificationBadge(systemNotifs);
         }
 
+        // 🔥 FIXED: GET VENDOR ALERTS HTML (NOW CHECKS BOTH NAME AND MOBILE) 🔥
         function getVendorAlertsHtml() {
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
             let myName = localStorage.getItem("current_user_name");
@@ -1216,13 +1217,25 @@
             }
 
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile);
-            if(myLeads.length > 0) {
-                html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('b7'); document.getElementById('vendorNotificationDropdown').style.display='none';">📩 <b>${myLeads.length}</b> नवीन लीड्स उपलब्ध आहेत.</div>`;
+            
+            // 🟢 बदललेला भाग: 'receiver_mobile' मध्ये सप्लायरचे नाव किंवा नंबर असेल तरच दाखवा
+            let unreadAppNotifs = appNotifs.filter(n => 
+                (n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead
+            );
+
+            if(unreadAppNotifs.length > 0) {
+                unreadAppNotifs.forEach(n => {
+                    let actionTab = n.type === 'lead' ? 'b7' : 'b3';
+                    html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer; background:#fff8e1;" onclick="markNotifRead('${n.firebaseDocId}'); switchTab('${actionTab}'); document.getElementById('vendorNotificationDropdown').style.display='none';">
+                        <b style="color:#d32f2f; font-size:11px;">${n.title}</b><br>
+                        <span style="font-size:10px;">${n.message}</span>
+                    </div>`;
+                });
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
+            
             if(myPendingOrders > 0) {
                 html += `<div style="padding:8px 0; cursor:pointer;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">📦 <b>${myPendingOrders}</b> नवीन ऑर्डर्स प्रलंबित आहेत.</div>`;
             }
@@ -1230,27 +1243,36 @@
             return html;
         }
 
+        // 🔥 FIXED: MARK NOTIFICATION AS READ 🔥
+        function markNotifRead(docId) {
+            if(!docId) return;
+            db.collection("app_notifications").doc(docId).update({ isRead: true }).catch(e => console.log(e));
+        }
+
         function openKYCModalFromNotification() {
             document.getElementById('vendorNotificationDropdown').style.display = 'none';
             document.getElementById('kyc_gatekeeper_modal').style.display = 'flex';
         }
 
+        // 🔥 FIXED: UPDATE NOTIFICATION BADGE 🔥
         function updateNotificationBadge(systemNotifs) {
             let totalCount = systemNotifs.length;
-            let vendorAlertCount = 0;
-            if (localStorage.getItem("vendor_verified") !== 'true') vendorAlertCount++;
             
-            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            if (localStorage.getItem("vendor_verified") !== 'true') totalCount++;
+            
             let myName = localStorage.getItem("current_user_name");
             let myMobile = localStorage.getItem("current_user_mobile");
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
-            vendorAlertCount += myPendingOrders;
+            
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
+            totalCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
-            vendorAlertCount += myLeads;
+            let unreadAppNotifs = appNotifs.filter(n => 
+                (n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead
+            ).length;
             
-            totalCount += vendorAlertCount;
+            totalCount += unreadAppNotifs;
             
             let badge = document.getElementById('vendor_notif_badge');
             if (totalCount > 0) {
@@ -1263,26 +1285,7 @@
 
         function checkVendorNotifications() {
             let systemNotifs = loadNotificationsForRole();
-            let total = systemNotifs.length;
-            if (localStorage.getItem("vendor_verified") !== 'true') total++;
-            
-            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myName = localStorage.getItem("current_user_name");
-            let myMobile = localStorage.getItem("current_user_mobile");
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
-            total += myPendingOrders;
-            
-            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
-            total += myLeads;
-            
-            let badge = document.getElementById('vendor_notif_badge');
-            if (total > 0) {
-                badge.style.display = 'block';
-                badge.innerText = total;
-            } else {
-                badge.style.display = 'none';
-            }
+            updateNotificationBadge(systemNotifs);
         }
 
         autoClearOldNotifications();
@@ -1328,7 +1331,7 @@
             syncSupportTickets();
         }
 
-        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC (REAL-TIME SNAPSHOT) 🔥 ---
+        // --- 🔥 FIXED: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC 🔥 ---
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
@@ -1341,7 +1344,9 @@
 
                 querySnapshot.forEach(doc => {
                     let order = doc.data();
-                    order.firebaseDocId = doc.id; // Store exact document ID
+                    order.firebaseDocId = doc.id; 
+                    
+                    // 🟢 बदललेला भाग: 'vendorName' किंवा 'company' तपासतो
                     let belongsToMe = (order.items || []).some(i => i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
@@ -1412,6 +1417,22 @@
                     }
                 }, (err) => console.log("Cloud user sync error:", err));
             }
+
+            // 4. Notifications Sync (Real-time Snapshot) 🟢 बदललेला भाग
+            db.collection("app_notifications").onSnapshot(querySnapshot => {
+                let cloudNotifs = [];
+                querySnapshot.forEach(doc => {
+                    let n = doc.data();
+                    n.firebaseDocId = doc.id;
+                    cloudNotifs.push(n);
+                });
+                localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
+                checkVendorNotifications();
+                let dropdown = document.getElementById('vendorNotificationDropdown');
+                if(dropdown && dropdown.style.display === 'block') {
+                    buildVendorNotificationDropdown();
+                }
+            }, e => console.log("Cloud notif sync error:", e));
         }
 
         // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS (REAL-TIME SNAPSHOT) 🔥 ---
@@ -1777,7 +1798,7 @@
             // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
             .then(() => {
-                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
+                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला internal आहे!`);
                 document.getElementById('vp_name').value = '';
                 document.getElementById('vp_brand').value = '';
                 document.getElementById('vp_mrp').value = '';
@@ -2419,7 +2440,7 @@
             }
             
             if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य ঘন आहे.");
                 return;
             }
 
