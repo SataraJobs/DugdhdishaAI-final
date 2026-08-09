@@ -296,7 +296,6 @@
             <div class="menu-item" onclick="switchTab('b12')" data-roles="company,service">📊 १२. Farmer Database</div>
             <div class="menu-item" onclick="switchTab('b_ledger')" data-roles="company,dealer,supplier" style="color:#ffca28;">💰 १३. Billing & Ledger</div>
             <div class="menu-item" onclick="switchTab('b_info')" data-roles="all" style="color:#ff9800;">ℹ️ १४. About Business Hub</div>
-            <!-- 🔥 NEW SHOP PREVIEW TAB (only visible to all roles but access controlled) -->
             <div class="menu-item" onclick="switchTab('b_shop')" data-roles="company,dealer,supplier,service" style="color:#00f2fe;">🏪 १५. माझं दुकान (Shop Preview)</div>
         </div>
     </div>
@@ -375,7 +374,6 @@
                                 <li><span class="icon-check">✔</span> ३ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
                                 <li><span class="icon-check">✔</span> कृषी मॉलच्या स्क्रोलमध्ये १ ॲड हाईलाईट</li>
                                 <li><span class="icon-check">✔</span> शेतकऱ्यांच्या थेट ऑर्डर्स (Direct Leads)</li>
-                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> ॲडव्हान्स रेशन बॅलन्सर</li>
                             </ul>
@@ -390,7 +388,6 @@
                                 <li><span class="icon-check">✔</span> रेशन बॅलन्सरमध्ये (Top) प्राधान्याने ॲड</li>
                                 <li><span class="icon-check">✔</span> महिन्यातून २ मोफत पुश नोटिफिकेशन्स</li>
                                 <li><span class="icon-check">✔</span> ॲपमध्ये सर्वत्र ब्रँड 'Top Sponsored' दिसेल</li>
-                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> मार्केटिंग स्टाफला मोफत ॲप + डॉक्टर लिंकिंग</li>
                             </ul>
@@ -780,7 +777,7 @@
                     <h4>🗺️ जाहिरात कशी लावायची? (Roadmap)</h4>
                     <div class="roadmap-container">
                         <div class="roadmap-step"><div class="step-circle">1</div><div class="step-text">जाहिरात निवडा</div></div>
-                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंकOuter जोडा</div></div>
+                        <div class="roadmap-step"><div class="step-circle">2</div><div class="step-text">फोटो व लिंक जोडा</div></div>
                         <div class="roadmap-step"><div class="step-circle">3</div><div class="step-text">बजेट ठरवा</div></div>
                         <div class="roadmap-step"><div class="step-circle">4</div><div class="step-text">पेमेंट पूर्ण करा</div></div>
                         <div class="roadmap-step"><div class="step-circle">5</div><div class="step-text">ऑटो ॲप्रूव्हल</div></div>
@@ -1246,7 +1243,24 @@
         // 🔥 FIXED: MARK NOTIFICATION AS READ 🔥
         function markNotifRead(docId) {
             if(!docId) return;
-            db.collection("app_notifications").doc(docId).update({ isRead: true }).catch(e => console.log(e));
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+
+            appNotifs.forEach((n) => {
+                if ((n.receiver_mobile === myName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
+                    n.isRead = true;
+                    db.collection("app_notifications").doc(docId).update({ isRead: true })
+                    .catch(e => console.log("Cloud notif read update error:", e));
+                }
+            });
+
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
+            checkVendorNotifications();
+            let dropdown = document.getElementById('vendorNotificationDropdown');
+            if(dropdown && dropdown.style.display === 'block') {
+                buildVendorNotificationDropdown();
+            }
         }
 
         function openKYCModalFromNotification() {
@@ -1798,7 +1812,7 @@
             // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
             .then(() => {
-                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला internal आहे!`);
+                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
                 document.getElementById('vp_name').value = '';
                 document.getElementById('vp_brand').value = '';
                 document.getElementById('vp_mrp').value = '';
@@ -2440,7 +2454,7 @@
             }
             
             if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य ঘন आहे.");
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
                 return;
             }
 
