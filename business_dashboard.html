@@ -296,6 +296,7 @@
             <div class="menu-item" onclick="switchTab('b12')" data-roles="company,service">📊 १२. Farmer Database</div>
             <div class="menu-item" onclick="switchTab('b_ledger')" data-roles="company,dealer,supplier" style="color:#ffca28;">💰 १३. Billing & Ledger</div>
             <div class="menu-item" onclick="switchTab('b_info')" data-roles="all" style="color:#ff9800;">ℹ️ १४. About Business Hub</div>
+            <!-- 🔥 NEW SHOP PREVIEW TAB (only visible to all roles but access controlled) -->
             <div class="menu-item" onclick="switchTab('b_shop')" data-roles="company,dealer,supplier,service" style="color:#00f2fe;">🏪 १५. माझं दुकान (Shop Preview)</div>
         </div>
     </div>
@@ -361,7 +362,7 @@
                                 <li><span class="icon-check">✔</span> ग्राहकांचे थेट कॉल मिळवा</li>
                                 <li><span class="icon-check">✔</span> १ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
                                 <li><span class="icon-cross">✖</span> कृषी मॉलमध्ये पहिल्या पानावर ॲड नाही</li>
-                                <li class="farmer-bonus">🎁 <b>बोनस:</b> मोफत प्रो रेशन बॅलन्सर (शेतकऱ्यांसाठी)</li>
+                                <li class="farmer-bonus">🎁 <b>बोनस:</b> मोफत प्रो रेशन बॅलन्सर (शेतऱ्यांसाठी)</li>
                             </ul>
                             <button class="buy-btn-new btn-outline" onclick="buyPlan('Starter', 'pro_ration')">प्लॅन निवडा</button>
                         </div>
@@ -374,6 +375,7 @@
                                 <li><span class="icon-check">✔</span> ३ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
                                 <li><span class="icon-check">✔</span> कृषी मॉलच्या स्क्रोलमध्ये १ ॲड हाईलाईट</li>
                                 <li><span class="icon-check">✔</span> शेतकऱ्यांच्या थेट ऑर्डर्स (Direct Leads)</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> ॲडव्हान्स रेशन बॅलन्सर</li>
                             </ul>
@@ -388,6 +390,7 @@
                                 <li><span class="icon-check">✔</span> रेशन बॅलन्सरमध्ये (Top) प्राधान्याने ॲड</li>
                                 <li><span class="icon-check">✔</span> महिन्यातून २ मोफत पुश नोटिफिकेशन्स</li>
                                 <li><span class="icon-check">✔</span> ॲपमध्ये सर्वत्र ब्रँड 'Top Sponsored' दिसेल</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> मार्केटिंग स्टाफला मोफत ॲप + डॉक्टर लिंकिंग</li>
                             </ul>
@@ -958,7 +961,7 @@
                         <div class="info-accordion-body">
                             <b>उपयोग:</b> तुमच्या व्यवसायाचे लाईव्ह आकडे (Views, Orders, Sales) पाहण्यासाठी.<br>
                             <b>फायदा:</b> तुम्हाला समजेल की तुमची उत्पादने किती शेतकऱ्यांनी पहिली आणि किती नफा झाला.<br>
-                            <b>रिफ्लेक्ट कुठे होणार?:</b> हा तुमचा स्वतःचा (Private) रिपोर्ट आहे.
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> हा फक्त तुमचा स्वतःचा (Private) रिपोर्ट आहे.
                         </div>
                     </div>
 
@@ -1010,7 +1013,7 @@
                     <div class="info-accordion" onclick="this.classList.toggle('open')">
                         <div class="info-accordion-header">१२. Farmer Database <span>▼</span></div>
                         <div class="info-accordion-body">
-                            <b>उपयोग:</b> तुमच्या परिसरातील (जिल्ह्यातील) शेतकरी कोणता चारा किंवा खाद्य वापरत आहे याची ढोबळ माहिती पाहण्यासाठी.<br>
+                            <b>उपयोग:</b> तुमच्या परिसरातील (जिल्ह्यातील) शेतकरी कोणता चारा किंवा खाद्य वापरत सास याची ढोबळ माहिती पाहण्यासाठी.<br>
                             <b>फायदा:</b> शेतकऱ्यांच्या गरजा ओळखून तुम्ही नवीन प्रॉडक्ट्स बाजारात आणू शकता.<br>
                             <b>रिफ्लेक्ट कुठे होणार?:</b> ही फक्त तुमच्या माहितीसाठी (Analytics) आहे.
                         </div>
@@ -1159,7 +1162,7 @@
 
         function loadNotificationsForRole() {
             let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            let myNotifications = notifications.filter(n => (n.target === CURRENT_ROLE || n.target === 'all') && (!n.title || !n.title.includes('नवीन ऑर्डर')));
+            let myNotifications = notifications.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
             return myNotifications;
         }
 
@@ -1175,9 +1178,10 @@
 
         function buildVendorNotificationDropdown() {
             let systemNotifs = loadNotificationsForRole();
-            let vendorAlertsHtml = getVendorAlertsHtml(); 
+            let vendorAlertsHtml = getVendorAlertsHtml(); // existing vendor alerts
             let html = `<h4 style="margin: 0 0 10px 0; font-size: 13px; color: #0d47a1; border-bottom: 1px solid #eee; padding-bottom: 8px;">महत्त्वाच्या सूचना (Alerts)</h4>`;
             
+            // System notifications section
             if (systemNotifs.length > 0) {
                 html += `<div style="margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
                             <strong style="color: #e65100;">📢 ॲडमिन मेसेजेस</strong>`;
@@ -1194,16 +1198,17 @@
                 html += `</div>`;
             }
 
+            // Add existing vendor alerts (non-system)
             html += vendorAlertsHtml;
+            
             document.getElementById('vendor_notif_list').innerHTML = html;
             updateNotificationBadge(systemNotifs);
         }
 
         function getVendorAlertsHtml() {
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
-            let myName = localStorage.getItem("current_user_name") || "";
-            let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
             let html = '';
             
             if(!isVerified) {
@@ -1211,77 +1216,18 @@
             }
 
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            
-            let unreadAppNotifs = appNotifs.filter(n => {
-                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
-                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
-                return (matchMob || matchName || n.receiver_mobile === myMobile) && !n.isRead;
-            });
-
-            if(unreadAppNotifs.length > 0) {
-                unreadAppNotifs.forEach(n => {
-                    let actionTab = n.type === 'lead' ? 'b7' : 'b3';
-                    html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer; background:#fff8e1;" onclick="markNotifRead('${n.firebaseDocId}'); switchTab('${actionTab}'); document.getElementById('vendorNotificationDropdown').style.display='none';">
-                        <b style="color:#d32f2f; font-size:11px;">${n.title}</b><br>
-                        <span style="font-size:10px;">${n.message}</span>
-                    </div>`;
-                });
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile);
+            if(myLeads.length > 0) {
+                html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('b7'); document.getElementById('vendorNotificationDropdown').style.display='none';">📩 <b>${myLeads.length}</b> नवीन लीड्स उपलब्ध आहेत.</div>`;
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrdersList = orders.filter(o => {
-                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
-                let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
-                let matchItm = (o.items || []).some(item => {
-                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
-                           (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
-                           (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
-                });
-                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
-
-                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm || matchGlobalCompany);
-            });
-
-            if(myPendingOrdersList.length > 0) {
-                myPendingOrdersList.forEach(order => {
-                    let customerName = (order.customer && order.customer.name) ? order.customer.name : "ग्राहक";
-                    html += `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:#fff8e1;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">
-                                <b style="color:#d32f2f; font-size:12px;">📦 नवीन ऑर्डर प्राप्त!</b><br>
-                                <span style="font-size:11px; color:#444;">तुम्हाला कृषी मॉलवरून श्री. ${customerName} यांची नवीन ऑर्डर आली आहे.</span>
-                            </div>`;
-                });
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            if(myPendingOrders > 0) {
+                html += `<div style="padding:8px 0; cursor:pointer;" onclick="switchTab('b3'); document.getElementById('vendorNotificationDropdown').style.display='none';">📦 <b>${myPendingOrders}</b> नवीन ऑर्डर्स प्रलंबित आहेत.</div>`;
             }
             
             return html;
-        }
-
-        function markNotifRead(docId) {
-            if(!docId) return;
-            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let myName = localStorage.getItem("current_user_name") || "";
-            let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
-
-            appNotifs.forEach((n) => {
-                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
-                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
-
-                if ((matchMob || matchName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
-                    n.isRead = true;
-                    db.collection("app_notifications").doc(docId).update({ isRead: true })
-                    .catch(e => console.log("Cloud notif read update error:", e));
-                }
-            });
-
-            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-            checkVendorNotifications();
-            let dropdown = document.getElementById('vendorNotificationDropdown');
-            if(dropdown && dropdown.style.display === 'block') {
-                buildVendorNotificationDropdown();
-            }
         }
 
         function openKYCModalFromNotification() {
@@ -1291,38 +1237,20 @@
 
         function updateNotificationBadge(systemNotifs) {
             let totalCount = systemNotifs.length;
-            
-            if (localStorage.getItem("vendor_verified") !== 'true') totalCount++;
-            
-            let myName = localStorage.getItem("current_user_name") || "";
-            let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
+            let vendorAlertCount = 0;
+            if (localStorage.getItem("vendor_verified") !== 'true') vendorAlertCount++;
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrders = orders.filter(o => {
-                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
-                let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
-                let matchItm = (o.items || []).some(item => {
-                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
-                           (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
-                           (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
-                });
-                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
-
-                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm || matchGlobalCompany);
-            }).length;
-            totalCount += myPendingOrders;
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            vendorAlertCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let unreadAppNotifs = appNotifs.filter(n => {
-                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
-                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
-                return (matchMob || matchName || n.receiver_mobile === myMobile) && !n.isRead;
-            }).length;
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
+            vendorAlertCount += myLeads;
             
-            totalCount += unreadAppNotifs;
+            totalCount += vendorAlertCount;
             
             let badge = document.getElementById('vendor_notif_badge');
             if (totalCount > 0) {
@@ -1335,7 +1263,26 @@
 
         function checkVendorNotifications() {
             let systemNotifs = loadNotificationsForRole();
-            updateNotificationBadge(systemNotifs);
+            let total = systemNotifs.length;
+            if (localStorage.getItem("vendor_verified") !== 'true') total++;
+            
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
+            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.items.some(item => item.company === myName || item.company === myMobile)).length;
+            total += myPendingOrders;
+            
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let myLeads = appNotifs.filter(n => n.receiver_mobile === myName || n.receiver_mobile === myMobile).length;
+            total += myLeads;
+            
+            let badge = document.getElementById('vendor_notif_badge');
+            if (total > 0) {
+                badge.style.display = 'block';
+                badge.innerText = total;
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         autoClearOldNotifications();
@@ -1345,6 +1292,7 @@
         let ledgerTotalDues = 0;
         let isAccountLocked = false;
 
+        // CROPPER GLOBALS
         let cropper = null;
         let currentTargetContainerId = '';
         let uploadedImagesCount = 0;
@@ -1373,39 +1321,97 @@
             checkBusinessExpiriesOnLoad(); 
             loadSupportTickets();
 
+            // 🔥 FIREBASE CLOUD SYNC: ऑर्डर्स, प्रॉडक्ट्स आणि फी सेटिंग्ज सिंक करा 🔥
             syncBusinessDashboardFromCloud();
             syncMyProductsAndAdsFromCloud();
             syncPlatformFeeConfigFromCloud();
-            syncSupportTickets();
+
+            // 🔥 NEW: Real-time KYC status listener 🔥
+            listenForKycApproval();
         }
 
-        // 🔥 अत्यंत मजबूत आणि अपडेटेड फंक्शन: दुसऱ्या मोबाईलवरून आलेल्या ऑर्डर्स आणि नोटिफिकेशन 100% दाखवण्यासाठी
+        // --- 🔥 NEW: LIVE KYC APPROVAL LISTENER 🔥 ---
+        function listenForKycApproval() {
+            let myMobile = localStorage.getItem("current_user_mobile");
+            if(myMobile && myMobile !== "Unknown") {
+                db.collection("users").doc(myMobile).onSnapshot(doc => {
+                    if(doc.exists) {
+                        let data = doc.data();
+                        if(data.isVerified === true && data.kyc_status === 'approved') {
+                            // Update Local Storage
+                            localStorage.setItem("vendor_verified", "true");
+                            
+                            // Update UI Badge dynamically
+                            let userName = localStorage.getItem("current_user_name") || "Guest Seller";
+                            let badgeBox = document.getElementById('user_profile_badge');
+                            if (badgeBox) {
+                                badgeBox.innerHTML = `${userName} <br><span style="color:#2e7d32; font-size: 11px; font-weight: 900;">✅ Verified Seller</span>`;
+                            }
+                            
+                            // Close KYC Modal if open and switch to intended tab
+                            let kycModal = document.getElementById('kyc_gatekeeper_modal');
+                            if(kycModal && (kycModal.style.display === 'flex' || kycModal.style.display === 'block')) {
+                                kycModal.style.display = 'none';
+                                alert("🎉 अभिनंदन! ॲडमिनने तुमचे डॉक्युमेंट्स मंजूर (Approve) केले आहेत. आता तुम्ही सर्व्हिसेस वापरू शकता.");
+                                if(currentIntendedTab) {
+                                    switchTab(currentIntendedTab);
+                                    currentIntendedTab = null;
+                                }
+                            }
+                            
+                            checkVendorNotifications();
+                        }
+                    }
+                }, err => {
+                    console.log("Error listening to KYC status:", err);
+                });
+            }
+        }
+
+        // --- 🔥 NEW: HELPER FOR CLOUDINARY UPLOAD 🔥 ---
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                if(!file) { resolve(null); return; }
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "DugdhdishaAI"); 
+                
+                const cloudinaryUrl = "https://api.cloudinary.com/v1_1/csahcejo/image/upload"; 
+
+                fetch(cloudinaryUrl, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        resolve(null);
+                    }
+                })
+                .catch(error => {
+                    console.error("Cloudinary upload error:", error);
+                    resolve(null);
+                });
+            });
+        }
+
+        // --- 🔥 NEW: CLOUD DATABASE BUSINESS ORDERS & SALES SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
 
-            // १. मॉल ऑर्डर्स सिंक करणे
-            db.collection("mall_orders").orderBy("timestamp", "desc").onSnapshot(querySnapshot => {
+            db.collection("mall_orders").orderBy("timestamp", "desc").get()
+            .then(querySnapshot => {
                 let cloudOrders = [];
                 let activeOrdersCount = 0;
                 let totalSales = 0;
 
                 querySnapshot.forEach(doc => {
                     let order = doc.data();
-                    order.firebaseDocId = doc.id; 
-                    
-                    let orderVendorMobiles = (order.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
-                    let matchMobile = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
-
-                    let belongsToMe = matchMobile || 
-                                      (order.items || []).some(i => {
-                                          let itemMob = (i.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                                          return (cleanMyMobile && itemMob === cleanMyMobile) || 
-                                                 (i.company && i.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
-                                                 (i.vendorName && i.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
-                                      }) ||
-                                      (order.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
+                    order.firebaseDocId = doc.id;
+                    let belongsToMe = (order.items || []).some(i => i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
                         cloudOrders.push(order);
@@ -1418,92 +1424,64 @@
                     }
                 });
 
-                localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
-                let elOrders = document.getElementById('dash_orders');
-                if(elOrders) elOrders.innerText = activeOrdersCount;
-                let elSales = document.getElementById('dash_sales');
-                if(elSales) elSales.innerText = Math.round(totalSales).toLocaleString('en-IN');
-                
-                loadDealerOrdersDashboard(); 
-                checkVendorNotifications(); 
-            }, e => console.log("Cloud business orders sync error: ", e));
+                if (cloudOrders.length > 0) {
+                    localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+                    document.getElementById('dash_orders').innerText = activeOrdersCount;
+                    document.getElementById('dash_sales').innerText = Math.round(totalSales).toLocaleString('en-IN');
+                    loadDealerOrdersDashboard();
+                }
+            })
+            .catch(e => {
+                db.collection("mall_orders").get().then(querySnapshot => {
+                    let cloudOrders = [];
+                    querySnapshot.forEach(doc => {
+                        let order = doc.data();
+                        order.firebaseDocId = doc.id;
+                        if ((order.items || []).some(i => i.company === myName || i.company === myMobile)) {
+                            cloudOrders.push(order);
+                        }
+                    });
+                    if (cloudOrders.length > 0) {
+                        localStorage.setItem('user_orders', JSON.stringify(cloudOrders));
+                        loadDealerOrdersDashboard();
+                    }
+                });
+                console.log("Cloud business orders sync error: ", e);
+            });
 
-            // २. लीड्स सिंक करणे
-            db.collection("quote_requests").onSnapshot(querySnapshot => {
+            db.collection("quote_requests").get()
+            .then(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
                     let q = doc.data();
-                    let qMobile = (q.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                    let uMobile = (q.userMobile || "").replace(/\D/g, '').slice(-10);
-                    if ((cleanMyMobile && (qMobile === cleanMyMobile || uMobile === cleanMyMobile)) || q.vendorName === myName || q.vendorName === "Unknown") {
+                    if (q.vendorName === myName || q.vendorName === myMobile || q.vendorName === "Unknown") {
                         myLeads++;
                     }
                 });
-                let elLeads = document.getElementById('dash_leads');
-                if(elLeads) elLeads.innerText = myLeads;
-            }, e => console.log("Cloud leads sync error:", e));
+                document.getElementById('dash_leads').innerText = myLeads;
+            }).catch(e => console.log("Cloud leads sync error:", e));
 
-            // ३. युजर/KYC सिंक करणे
+            // 🔥 SINGLE DEVICE SESSION WATCHER (व्यापारी डॅशबोर्डवर असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
             if (myMobile && myMobile !== "+91 9XXXX XXXX") {
                 db.collection("users").doc(myMobile).onSnapshot((doc) => {
                     if (doc.exists && doc.data()) {
                         let cloudData = doc.data();
-                        
-                        let badgeBox = document.getElementById('user_profile_badge');
-                        let userName = cloudData.name || localStorage.getItem("current_user_name") || "व्यापारी";
-                        
-                        if(cloudData.kyc_status === 'approved' || cloudData.isVerified === true) {
-                            localStorage.setItem("vendor_verified", "true");
-                            localStorage.setItem("current_logged_in_role", "dealer");
-                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#2e7d32; font-size: 11px; font-weight: 900;">✅ Verified Seller</span>`;
-                        } else if(cloudData.kyc_status === 'rejected') {
-                            localStorage.setItem("vendor_verified", "false");
-                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#d32f2f; font-size: 10px;">❌ KYC Rejected</span>`;
-                        } else if(cloudData.kyc_status === 'pending') {
-                            localStorage.setItem("vendor_verified", "false");
-                            if(badgeBox) badgeBox.innerHTML = `${userName} <br><span style="color:#ff9800; font-size: 10px;">⏳ Pending Approval</span>`;
-                        }
-
-                        let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
+                        let localSessionId = localStorage.getItem("current_session_id");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            let alertBox = document.getElementById("sessionAlertBox");
-                            if (alertBox) alertBox.style.display = "flex";
-                            setTimeout(() => {
-                                localStorage.clear();
-                                window.location.replace("login.html");
-                            }, 3000);
+                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                            localStorage.clear();
+                            window.location.replace("login.html");
                         }
                     }
                 }, (err) => console.log("Cloud user sync error:", err));
             }
-
-            // ४. नोटिफिकेशन सिंक करणे (मोबाईल नंबर किंवा नाव दोन्ही मॅच करणारे क्लायंट साईड फिल्टरिंग)
-            db.collection("app_notifications").orderBy("timestamp", "desc").limit(50).onSnapshot(querySnapshot => {
-                let cloudNotifs = [];
-                querySnapshot.forEach(doc => {
-                    let n = doc.data();
-                    n.firebaseDocId = doc.id;
-                    
-                    let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                    let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
-                    let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
-
-                    if (matchMob || matchName || n.receiver_mobile === myMobile) {
-                        cloudNotifs.push(n);
-                    }
-                });
-                localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
-                checkVendorNotifications();
-                let dropdown = document.getElementById('vendorNotificationDropdown');
-                if(dropdown && dropdown.style.display === 'block') {
-                    buildVendorNotificationDropdown();
-                }
-            }, e => console.log("Cloud notif sync error:", e));
         }
 
+        // --- 🔥 NEW: CLOUD SYNC FOR VENDOR PRODUCTS & ADS 🔥 ---
         function syncMyProductsAndAdsFromCloud() {
-            db.collection("vendor_products").onSnapshot(querySnapshot => {
+            db.collection("vendor_products").get()
+            .then(querySnapshot => {
                 let allProducts = [];
                 querySnapshot.forEach(doc => {
                     let p = doc.data();
@@ -1513,34 +1491,12 @@
                 localStorage.setItem('vendor_products', JSON.stringify(allProducts));
                 refreshMyProducts();
                 loadVendorProductsForAd();
-            }, e => console.log("Cloud vendor products sync error:", e));
+            }).catch(e => console.log("Cloud vendor products sync error:", e));
 
-            db.collection("admin_pending_ad_approvals").onSnapshot(querySnapshot => {
-                let allAds = [];
-                querySnapshot.forEach(doc => {
-                    let ad = doc.data();
-                    ad.id = doc.id;
-                    allAds.push(ad);
-                });
-                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(allAds));
-                refreshMyAdsUI(); 
-            }, e => console.log("Cloud ads sync error:", e));
+            refreshMyAds(); // जाहिराती सुद्धा रिफ्रेश करा
         }
 
-        function syncSupportTickets() {
-            let myMobile = localStorage.getItem("current_user_mobile") || "Unknown";
-            db.collection("support_tickets").where("mobile", "==", myMobile).onSnapshot(querySnapshot => {
-                let tickets = [];
-                querySnapshot.forEach(doc => {
-                    let t = doc.data();
-                    t.id = doc.id;
-                    tickets.push(t);
-                });
-                localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
-                loadSupportTickets(); 
-            });
-        }
-
+        // --- 🔥 NEW: CLOUD SYNC FOR PLATFORM FEE CONFIG (M33) 🔥 ---
         function syncPlatformFeeConfigFromCloud() {
             db.collection("admin_settings").doc("platform_fee_config").get()
             .then(doc => {
@@ -1566,7 +1522,7 @@
             let amountInPaise = numAmount * 100;
 
             var options = {
-                "key": "rzp_live_TIkGEzUM5ygyd6", 
+                "key": "rzp_live_TIkGEzUM5ygyd6", // Live Key
                 "amount": amountInPaise, 
                 "currency": "INR",
                 "name": "दुग्ध दिशा AI",
@@ -1630,14 +1586,8 @@
         function refreshMyProducts() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            
-            let myProducts = products.filter(p => {
-                let pMob = (p.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                return (cleanMyMobile && pMob === cleanMyMobile) || p.vendorName === myName || p.vendorName === myMobile;
-            });
-
+            let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile);
             let container = document.getElementById('my_products_container');
             if (!container) return;
             if (myProducts.length === 0) {
@@ -1654,47 +1604,78 @@
 
         function deleteMyProduct(prodId) {
             if (confirm('हे प्रॉडक्ट कायमचे डिलीट करायचे?')) {
+                let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
+                products = products.filter(p => p.id !== prodId);
+                localStorage.setItem('vendor_products', JSON.stringify(products));
+                
+                // 🔥 FIREBASE CLOUD DELETE FOR VENDOR PRODUCT 🔥
                 db.collection("vendor_products").doc(prodId).delete()
-                .then(() => alert('🗑️ प्रॉडक्ट डिलीट केले.'))
                 .catch(e => console.log("Cloud product delete error:", e));
+
+                refreshMyProducts();
+                loadVendorProductsForAd();
             }
         }
 
-        function refreshMyAdsUI() {
+        function refreshMyAds() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             let container = document.getElementById('my_ads_container');
             if (!container) return;
 
-            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            let myAds = pendingAds.filter(ad => {
-                let adMob = (ad.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                return (cleanMyMobile && adMob === cleanMyMobile) || ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.url));
+            db.collection("admin_pending_ad_approvals").get().then((querySnapshot) => {
+                let myAds = [];
+                querySnapshot.forEach((doc) => {
+                    let ad = doc.data();
+                    if (ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile)))) {
+                        myAds.push(ad);
+                    }
+                });
+
+                if (myAds.length === 0) {
+                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
+                    return;
+                }
+                let html = '';
+                myAds.forEach(ad => {
+                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
+                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }).catch(e => {
+                console.log("Cloud fetch error fallback", e);
+                // Fallback to local storage
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+                let myAds = pendingAds.filter(ad => ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
+                if (myAds.length === 0) {
+                    container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
+                    return;
+                }
+                let html = '';
+                myAds.forEach(ad => {
+                    html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
+                        <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
             });
-            
-            if (myAds.length === 0) {
-                container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
-                return;
-            }
-            let html = '';
-            myAds.forEach(ad => {
-                html += `<div style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-                    <span><b>${ad.type}</b> - ${ad.title} <br><span style="color:#e65100; font-size:11px;">(Budget: ₹${ad.budget})</span></span>
-                    <button class="btn-action" style="background:#c62828; padding:6px 12px; font-size:11px; width:auto; box-shadow:none;" onclick="deleteMyAd('${ad.id}')">🗑️ Delete</button>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-        
-        function refreshMyAds() {
-            refreshMyAdsUI(); 
         }
 
+        // 🔥🔥🔥 NEWLY ADDED CLOUD AD DELETE LOGIC 🔥🔥🔥
         function deleteMyAd(adId) {
             if (confirm('ही जाहिरात रद्द करायची?')) {
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
+                pendingAds = pendingAds.filter(a => a.id !== adId);
+                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
+
+                // 🔥 FIREBASE CLOUD DELETE 🔥
                 db.collection("admin_pending_ad_approvals").doc(adId).delete().catch(e => console.log("Cloud ad delete error:", e));
                 db.collection("homepage_banners").doc(adId).delete().catch(e => console.log("Cloud banner delete error:", e));
+
+                refreshMyAds();
                 alert('🗑️ जाहिरात यशस्वीरीत्या डिलीट केली.');
             }
         }
@@ -1860,31 +1841,38 @@
                 description: pDesc,
                 images: images,
                 vendorName: localStorage.getItem("current_user_name") || pBrand, 
-                vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                 dateAdded: new Date().toISOString()
             };
 
+            let allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
+            allProducts.unshift(newProduct);
+            localStorage.setItem('vendor_products', JSON.stringify(allProducts));
+
+            // 🔥 FIREBASE CLOUD SAVE: नवीन प्रॉडक्ट थेट क्लाऊड डेटाबेसला जोडा 🔥
             db.collection("vendor_products").doc(newProduct.id).set(newProduct)
-            .then(() => {
-                alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
-                document.getElementById('vp_name').value = '';
-                document.getElementById('vp_brand').value = '';
-                document.getElementById('vp_mrp').value = '';
-                document.getElementById('vp_offer').value = '';
-                document.getElementById('vp_weight').value = '';
-                document.getElementById('vp_delivery_time').value = '';
-                document.getElementById('vp_min_qty').value = '';
-                document.getElementById('vp_benefits').value = '';
-                document.getElementById('vp_desc').value = '';
-                document.getElementById('vp_other_use').value = '';
-                document.getElementById('vp_category').value = 'पशुखाद्य (Feed)';
-                document.getElementById('vp_category_other').style.display = 'none';
-                document.getElementById('vp_category_other').value = '';
-                document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]').forEach(cb => cb.checked = false);
-                document.getElementById('image_preview_container').innerHTML = '';
-                document.getElementById('live_margin_calculator').style.display = 'none';
-            })
             .catch(e => console.error("Cloud vendor product save error:", e));
+
+            alert(`✅ '${pName}' हा प्रॉडक्ट यशस्वीरीत्या कृषी मॉलमध्ये सेव्ह झाला आहे!`);
+            
+            document.getElementById('vp_name').value = '';
+            document.getElementById('vp_brand').value = '';
+            document.getElementById('vp_mrp').value = '';
+            document.getElementById('vp_offer').value = '';
+            document.getElementById('vp_weight').value = '';
+            document.getElementById('vp_delivery_time').value = '';
+            document.getElementById('vp_min_qty').value = '';
+            document.getElementById('vp_benefits').value = '';
+            document.getElementById('vp_desc').value = '';
+            document.getElementById('vp_other_use').value = '';
+            document.getElementById('vp_category').value = 'पशुखाद्य (Feed)';
+            document.getElementById('vp_category_other').style.display = 'none';
+            document.getElementById('vp_category_other').value = '';
+            document.querySelectorAll('#vp_ai_filter_grid input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('image_preview_container').innerHTML = '';
+            document.getElementById('live_margin_calculator').style.display = 'none';
+            
+            loadVendorProductsForAd();
+            refreshMyProducts();
         }
 
         function applyRoleModules() {
@@ -1960,6 +1948,8 @@
             
             if(!msgText) return;
 
+            let tickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
+            
             let newTicket = {
                 id: "TKT" + Math.floor(Math.random() * 90000),
                 senderName: localStorage.getItem("current_user_name") || "व्यापारी",
@@ -1970,12 +1960,17 @@
                 date: new Date().toLocaleString()
             };
             
+            tickets.push(newTicket);
+            localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
+            
+            // 🔥 FIREBASE CLOUD SAVE FOR SUPPORT TICKETS 🔥
             db.collection("support_tickets").doc(newTicket.id).set(newTicket)
-            .then(() => {
-                msgInput.value = '';
-                alert("✅ तुमचा मेसेज ॲडमिन टीमला मिळाला आहे. कृपया उत्तराची (Reply) प्रतीक्षा करा.");
-            })
             .catch(e => console.error("Cloud ticket save error:", e));
+
+            msgInput.value = '';
+            loadSupportTickets();
+            
+            alert("✅ तुमचा मेसेज ॲडमिन टीमला मिळाला आहे. कृपया उत्तराची (Reply) प्रतीक्षा करा.");
         }
 
         function openCropModal(event, containerId) {
@@ -2085,6 +2080,94 @@
                     saveBtn.disabled = false;
                 });
             }, 'image/jpeg', 0.8);
+        }
+
+        // --- 🔥 NEW: KYC IMAGE UPLOAD & SAVE LOGIC 🔥 ---
+        async function submitKYCDetails() {
+            let gstVal = document.getElementById('kyc_gst') ? document.getElementById('kyc_gst').value.trim() : '';
+            let aadhaarInput = document.getElementById('kyc_aadhaar');
+            let shopInput = document.getElementById('kyc_shop_proof');
+            let isChecked = document.getElementById('kyc_legal_check').checked;
+
+            if(gstVal.length !== 15) {
+                if(aadhaarInput.files.length === 0 || shopInput.files.length === 0) {
+                    alert("कृपया एकतर १५ अंकी GST नंबर टाका, किंवा आधार कार्ड आणि दुकानाचा फोटो अपलोड करा.");
+                    return;
+                }
+            }
+            
+            if(!isChecked) {
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
+                return;
+            }
+
+            // UI Button feedback to let the user know upload is working
+            let submitBtn = document.querySelector('#kyc_gatekeeper_modal .btn-action');
+            let originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = "⏳ डॉक्युमेंट्स अपलोड होत आहेत. कृपया थांबा...";
+            submitBtn.disabled = true;
+
+            try {
+                let aadhaarUrl = null;
+                let shopUrl = null;
+
+                // Only upload if GST is not provided properly
+                if (gstVal.length !== 15) {
+                    aadhaarUrl = await uploadToCloudinary(aadhaarInput.files[0]);
+                    shopUrl = await uploadToCloudinary(shopInput.files[0]);
+                    
+                    if(!aadhaarUrl || !shopUrl) {
+                        alert("❌ डॉक्युमेंट्स अपलोड करताना इंटरनेट एरर आला. कृपया पुन्हा प्रयत्न करा.");
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                let myMobile = localStorage.getItem("current_user_mobile") || "Unknown";
+
+                let newKycReq = {
+                    vendorName: localStorage.getItem("current_user_name") || "Unknown Vendor",
+                    mobile: myMobile,
+                    gst: gstVal || "Not Provided",
+                    aadhaarUrl: aadhaarUrl || "",   // <-- Saved to Firebase
+                    shopProofUrl: shopUrl || "",    // <-- Saved to Firebase
+                    date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: "Pending"
+                };
+
+                // Saving into Local Storage
+                let pendingKyc = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                pendingKyc.push(newKycReq);
+                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKyc));
+                
+                // 🔥 FIREBASE CLOUD SAVE FOR KYC REQUEST 🔥
+                await db.collection("admin_pending_kyc").add(newKycReq);
+
+                alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
+                document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
+                checkVendorNotifications(); 
+
+            } catch(e) {
+                console.error("KYC Submission error:", e);
+                alert("❌ काहीतरी चूक झाली. पुन्हा प्रयत्न करा.");
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function checkGatekeeperGst(val) {
+            let manualDocs = document.getElementById('kyc_manual_docs');
+            let successMsg = document.getElementById('kyc_gst_success');
+            if(val.length === 15) {
+                manualDocs.style.display = 'none';
+                successMsg.style.display = 'block';
+            } else {
+                manualDocs.style.display = 'block';
+                successMsg.style.display = 'none';
+            }
         }
 
         function checkBusinessExpiriesOnLoad() {
@@ -2219,13 +2302,9 @@
 
             const vendorName = localStorage.getItem("current_user_name") || "अज्ञात विक्रेता";
             const vendorMobile = localStorage.getItem("current_user_mobile") || "";
-            const cleanVendorMobile = (vendorMobile || "").replace(/\D/g, '').slice(-10);
 
             const allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            const myProducts = allProducts.filter(p => {
-                let pMob = (p.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                return (cleanVendorMobile && pMob === cleanVendorMobile) || p.vendorName === vendorName || p.vendorName === vendorMobile;
-            });
+            const myProducts = allProducts.filter(p => p.vendorName === vendorName || p.vendorName === vendorMobile);
 
             const shopHTML = `<!DOCTYPE html>
 <html lang="mr">
@@ -2485,72 +2564,18 @@
             }
         }
 
-        function checkGatekeeperGst(val) {
-            let manualDocs = document.getElementById('kyc_manual_docs');
-            let successMsg = document.getElementById('kyc_gst_success');
-            if(val.length === 15) {
-                manualDocs.style.display = 'none';
-                successMsg.style.display = 'block';
-            } else {
-                manualDocs.style.display = 'block';
-                successMsg.style.display = 'none';
-            }
-        }
-
-        function submitKYCDetails() {
-            let gstVal = document.getElementById('kyc_gst') ? document.getElementById('kyc_gst').value.trim() : '';
-            let aadhaar = document.getElementById('kyc_aadhaar').files.length;
-            let shop = document.getElementById('kyc_shop_proof').files.length;
-            let isChecked = document.getElementById('kyc_legal_check').checked;
-
-            if(gstVal.length !== 15) {
-                if(aadhaar === 0 || shop === 0) {
-                    alert("कृपया एकतर १५ अंकी GST नंबर टाका, किंवा आधार कार्ड आणि दुकानाचा फोटो अपलोड करा.");
-                    return;
-                }
-            }
-            
-            if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
-                return;
-            }
-
-            let mobile = localStorage.getItem("current_user_mobile");
-            if (!mobile) {
-                alert("मोबाईल नंबर सापडला नाही. कृपया ॲप बंद करून पुन्हा लॉगिन करा.");
-                return;
-            }
-
-            let vendorName = localStorage.getItem("current_user_name") || "Unknown Vendor";
-
-            let kycUpdateData = {
-                vendorName: vendorName,
-                gst: gstVal || "Not Provided",
-                kyc_date: new Date().toLocaleDateString('mr-IN'),
-                kyc_status: "pending",
-                isVerified: false
-            };
-            
-            db.collection("users").doc(mobile).set(kycUpdateData, { merge: true })
-            .then(() => {
-                alert("✅ तुमची कागदपत्रे/माहिती ॲडमिनकडे पडताळणीसाठी पाठवली आहे. मंजुरी (Approval) मिळाल्यानंतर तुमचे हे फिचर चालू होईल.");
-                document.getElementById('kyc_gatekeeper_modal').style.display = 'none';
+        function payCommissionForOrder(orderId, amount) {
+            processRazorpayPayment(amount, "COD Commission", "Comm_" + orderId, () => {
+                let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                let orderIndex = orders.findIndex(o => o.id === orderId);
                 
-                let badgeBox = document.getElementById('user_profile_badge');
-                if(badgeBox) badgeBox.innerHTML = `${vendorName} <br><span style="color:#ff9800; font-size: 10px;">⏳ Pending Approval</span>`;
-            })
-            .catch(e => {
-                console.error("Cloud KYC save error:", e);
-                alert("इंटरनेट एरर आला. कृपया पुन्हा प्रयत्न करा.");
-            });
-        }
-
-        function payCommissionForOrder(docId, amount) {
-            processRazorpayPayment(amount, "COD Commission", "Comm_" + docId, () => {
-                db.collection("mall_orders").doc(docId).update({ commissionPaid: true })
-                .then(() => {
-                    alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
-                }).catch(e => console.log(e));
+                if(orderIndex > -1) {
+                    orders[orderIndex].commissionPaid = true;
+                    localStorage.setItem('user_orders', JSON.stringify(orders));
+                }
+                
+                alert("✅ पेमेंट यशस्वी! ऑर्डर अनलॉक झाली आहे, आता तुम्ही ग्राहकाचा संपर्क क्रमांक पाहू शकता.");
+                loadDealerOrdersDashboard();
             });
         }
 
@@ -2567,82 +2592,55 @@
             }
             processRazorpayPayment(ledgerTotalDues, "Clear Ledger Dues", "All_Dues_Clearance", () => {
                 let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                let myName = localStorage.getItem("current_user_name") || "";
-                let myMobile = localStorage.getItem("current_user_mobile") || "";
-                let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
+                let myName = localStorage.getItem("current_user_name");
+                let myMobile = localStorage.getItem("current_user_mobile");
                 
-                let batch = db.batch();
-                let hasUpdates = false;
-
                 orders.forEach(o => {
-                    let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
-                    let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
-                    let matchItm = (o.items || []).some(item => {
-                        let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                        return (cleanMyMobile && itemMob === cleanMyMobile) || 
-                               (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase());
-                    });
-
-                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && (matchMob || matchItm)) {
-                        if (o.firebaseDocId) {
-                            let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
-                            batch.update(orderRef, { commissionPaid: true });
-                            hasUpdates = true;
-                        }
+                    if(o.paymentMethod === 'COD' && o.items.some(item => item.company === myName || item.company === myMobile)) {
+                        o.commissionPaid = true;
                     }
                 });
-
-                if(hasUpdates) {
-                    batch.commit().then(() => {
-                        isAccountLocked = false; 
-                        document.getElementById('strict_lock_modal').style.display = 'none';
-                        alert("🎉 तुमचे संपूर्ण बाकीचे पेमेंट यशस्वी झाले आहे.\n\nतुमचे खाते आता पूर्णपणे निरंक (Clear) झाले आहे!");
-                    }).catch(e => console.log("Batch update error:", e));
-                } else {
-                    isAccountLocked = false; 
-                    document.getElementById('strict_lock_modal').style.display = 'none';
-                    alert("🎉 तुमचे पेमेंट यशस्वी झाले!");
-                }
+                localStorage.setItem('user_orders', JSON.stringify(orders));
+                
+                isAccountLocked = false; 
+                document.getElementById('strict_lock_modal').style.display = 'none';
+                
+                alert("🎉 तुमचे संपूर्ण बाकीचे पेमेंट यशस्वी झाले आहे.\n\nतुमचे खाते आता पूर्णपणे निरंक (Clear) झाले आहे!");
+                loadDealerOrdersDashboard();
             });
         }
 
-        function markOrderShipped(docId, customerMobile) {
-            db.collection("mall_orders").doc(docId).update({ status: 'shipped' })
-            .then(() => {
-                db.collection("app_notifications").add({
+        function markOrderShipped(orderId) {
+            let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            let orderIndex = orders.findIndex(o => o.id === orderId);
+            
+            if(orderIndex > -1) {
+                orders[orderIndex].status = 'shipped';
+                localStorage.setItem('user_orders', JSON.stringify(orders));
+
+                let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+                appNotifs.unshift({
                     id: Date.now(),
                     type: 'order',
                     title: '📦 ऑर्डर वाटेत आहे! (Shipped)',
-                    message: `तुमची ऑर्डर #${docId} विक्रेत्याने पाठवली आहे. लवकरच तुमच्यापर्यंत पोहोचेल.`,
+                    message: `तुमची ऑर्डर #${orderId} विक्रेत्याने पाठवली आहे. लवकरच तुमच्यापर्यंत पोहोचेल.`,
                     date: new Date().toLocaleDateString(),
-                    receiver_mobile: customerMobile,
-                    isRead: false
-                }).catch(e => console.log(e));
+                    receiver_mobile: orders[orderIndex].customer.mobile
+                });
+                localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
 
                 alert('ऑर्डर Shipped मार्क केली आणि ग्राहकाला नोटिफिकेशन पाठवले!');
-            }).catch(e => console.log(e));
+                loadDealerOrdersDashboard();
+            }
         }
 
         function loadDealerOrdersDashboard() {
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myName = localStorage.getItem("current_user_name") || "";
-            let myMobile = localStorage.getItem("current_user_mobile") || "";
-            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
+            let myName = localStorage.getItem("current_user_name");
+            let myMobile = localStorage.getItem("current_user_mobile");
             
             let myOrders = orders.filter(o => {
-                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
-                let matchMobile = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
-                
-                let matchItem = (o.items || []).some(item => {
-                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
-                           (item.company && item.company.trim().toLowerCase() === (myName || "").trim().toLowerCase()) || 
-                           (item.vendorName && item.vendorName.trim().toLowerCase() === (myName || "").trim().toLowerCase());
-                });
-
-                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === (myName || "").trim().toLowerCase());
-
-                return matchMobile || matchItem || matchGlobalCompany;
+                return o.items.some(item => item.company === myName || item.company === myMobile);
             });
 
             let container = document.getElementById('dealer_orders_container');
@@ -2667,11 +2665,7 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
-                    let matchItmMobile = cleanMyMobile && itemMob === cleanMyMobile;
-                    let matchItmName = (item.company && item.company.trim().toLowerCase() === (myName || "").trim().toLowerCase()) || (item.vendorName && item.vendorName.trim().toLowerCase() === (myName || "").trim().toLowerCase());
-
-                    if(matchItmMobile || matchItmName) {
+                    if(item.company === myName || item.company === myMobile) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
                         let itemTotal = item.price * item.qty;
@@ -2707,18 +2701,16 @@
                 if(order.paymentMethod === 'COD' && !isCommissionPaid) {
                     actionButtons = `<div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
                         <p style="font-size: 11px; color: #d32f2f; margin: 0 0 5px 0;">⚠️ ही COD ऑर्डर आहे. ग्राहकाचा संपर्क क्रमांक पाहण्यासाठी आणि ऑर्डर पूर्ण करण्यासाठी आधी प्लॅटफॉर्म फी (₹${Math.ceil(totalCommission)}) भरा.</p>
-                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.firebaseDocId || order.id}', ${Math.ceil(totalCommission)})">💳 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
+                        <button class="btn-action" style="background:#ff9800; color:white; width: auto;" onclick="payCommissionForOrder('${order.id}', ${Math.ceil(totalCommission)})">💳 Pay ₹${Math.ceil(totalCommission)} & Unlock</button>
                     </div>`;
                     
                     ledgerTotalDues += totalCommission;
                     ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Pending COD)</td><td style="text-align: right; color:#c62828; font-weight:bold;">₹${Math.ceil(totalCommission)}</td></tr>`;
 
                 } else {
-                    if (order.status !== 'shipped' && order.status !== 'delivered') {
-                        actionButtons = `<div style="display:flex; gap:10px;">
-                            <button class="status-btn btn-ship" onclick="markOrderShipped('${order.firebaseDocId || order.id}', '${order.customer.mobile}')">📦 Mark as Shipped</button>
-                        </div>`;
-                    }
+                    actionButtons = `<div style="display:flex; gap:10px;">
+                        <button class="status-btn btn-ship" onclick="markOrderShipped('${order.id}')">📦 Mark as Shipped</button>
+                    </div>`;
                     
                     ledgerHtml += `<tr><td>${order.date}</td><td>Order: ${order.id} (Cleared)</td><td style="text-align: right; color:#2e7d32;">₹0</td></tr>`;
                 }
@@ -2839,20 +2831,19 @@
             
             let vendorData = {
                 vendorName: localStorage.getItem("current_user_name") || "व्यापारी",
-                vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                 number: num,
                 status: "Pending"
             };
-            
+            localStorage.setItem("vendor_submitted_cc", JSON.stringify(vendorData));
+            // 🔥 FIREBASE CLOUD SAVE FOR DOCTOR NUMBER REQUEST 🔥
             db.collection("vendor_submitted_cc").add(vendorData)
-            .then(() => {
-                let msg = document.getElementById("cc_status_msg");
-                if(msg) {
-                    msg.innerText = "⏳ तुमचा नंबर ॲडमिनकडे पडताळणीसाठी पाठवला आहे. लवकरच ॲक्टिव्हेट होईल.";
-                    msg.style.color = "#f57c00";
-                }
-            })
             .catch(e => console.error("Cloud doctor req error:", e));
+            
+            let msg = document.getElementById("cc_status_msg");
+            if(msg) {
+                msg.innerText = "⏳ तुमचा नंबर ॲडमिनकडे पडताळणीसाठी पाठवला आहे. लवकरच ॲक्टिव्हेट होईल.";
+                msg.style.color = "#f57c00";
+            }
         }
 
         function generateCoupon() {
@@ -2865,13 +2856,17 @@
                 return;
             }
             
+            let coupons = JSON.parse(localStorage.getItem('vendor_coupons')) || [];
+            coupons.push({ type: type, code: code, value: val, date: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_coupons', JSON.stringify(coupons));
+            
+            // 🔥 FIREBASE CLOUD SAVE FOR COUPON 🔥
             db.collection("vendor_coupons").add({ type: type, code: code, value: val, date: new Date().toLocaleDateString() })
-            .then(() => {
-                alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
-                document.getElementById('coupon_code').value = '';
-                document.getElementById('coupon_val').value = '';
-            })
             .catch(e => console.error("Cloud coupon save error:", e));
+
+            alert(`✅ तुमचा '${code}' हा कूपन कोड यशस्वीरीत्या तयार झाला आहे!`);
+            document.getElementById('coupon_code').value = '';
+            document.getElementById('coupon_val').value = '';
         }
 
         function approveDealer() {
@@ -2884,12 +2879,9 @@
                 return;
             }
             
-            db.collection("dealer_network").add({dealer: dealer, territory: territory, map: map, date: new Date().toISOString()})
-            .then(() => {
-                alert(`✅ ${dealer} यांना '${territory}' विभागासाठी यशस्वीरीत्या अप्रूव्ह केले आहे!`);
-                document.getElementById('dealer_territory').value = '';
-                document.getElementById('dealer_map').value = '';
-            });
+            alert(`✅ ${dealer} यांना '${territory}' विभागासाठी यशस्वीरीत्या अप्रूव्ह केले आहे!`);
+            document.getElementById('dealer_territory').value = '';
+            document.getElementById('dealer_map').value = '';
         }
 
         function updateSupplyLedger() {
@@ -2902,13 +2894,14 @@
                 return;
             }
             
-            db.collection("supplier_ledger").add({ item: item, price: price, transport: transport, date: new Date().toLocaleDateString() })
-            .then(() => {
-                alert(`✅ '${item}' ची माहिती सप्लाय लेजरमध्ये अपडेट केली आहे!`);
-                document.getElementById('supply_item').value = '';
-                document.getElementById('supply_price').value = '';
-                document.getElementById('supply_transport').value = '';
-            });
+            let supplies = JSON.parse(localStorage.getItem('supplier_ledger')) || [];
+            supplies.push({ item: item, price: price, transport: transport, date: new Date().toLocaleDateString() });
+            localStorage.setItem('supplier_ledger', JSON.stringify(supplies));
+            
+            alert(`✅ '${item}' ची माहिती सप्लाय लेजरमध्ये अपडेट केली आहे!`);
+            document.getElementById('supply_item').value = '';
+            document.getElementById('supply_price').value = '';
+            document.getElementById('supply_transport').value = '';
         }
 
         function postFranchiseJob() {
@@ -2920,16 +2913,12 @@
                 return;
             }
             
-            db.collection("vendor_jobs").add({ 
-                role: jobType, 
-                req: requirement, 
-                date: new Date().toLocaleDateString(),
-                vendorMobile: localStorage.getItem("current_user_mobile") || "" 
-            })
-            .then(() => {
-                alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
-                document.getElementById('franchise_req_input').value = '';
-            });
+            let jobs = JSON.parse(localStorage.getItem('vendor_jobs')) || [];
+            jobs.push({ role: jobType, req: requirement, date: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_jobs', JSON.stringify(jobs));
+            
+            alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
+            document.getElementById('franchise_req_input').value = '';
         }
 
         function promoteTrainingEvent() {
@@ -2941,20 +2930,73 @@
                 return;
             }
             
-            db.collection("vendor_events").add({ 
-                type: eventType, 
-                date: eventDate, 
-                createdOn: new Date().toLocaleDateString(),
-                vendorMobile: localStorage.getItem("current_user_mobile") || "" 
-            })
-            .then(() => {
-                let d = new Date(eventDate);
-                let formattedDate = d.toLocaleString('mr-IN');
-                alert(`🎉 तुमचा '${eventType}' इव्हेंट ${formattedDate} या वेळेसाठी यशस्वीरीत्या शेड्युल झाला आहे. शेतकऱ्यांना लवकरच याची नोटिफिकेशन मिळेल!`);
-                document.getElementById('training_event_date').value = '';
-            });
+            let events = JSON.parse(localStorage.getItem('vendor_events')) || [];
+            events.push({ type: eventType, date: eventDate, createdOn: new Date().toLocaleDateString() });
+            localStorage.setItem('vendor_events', JSON.stringify(events));
+            
+            let d = new Date(eventDate);
+            let formattedDate = d.toLocaleString('mr-IN');
+            
+            alert(`🎉 तुमचा '${eventType}' इव्हेंट ${formattedDate} या वेळेसाठी यशस्वीरीत्या शेड्युल झाला आहे. शेतकऱ्यांना लवकरच याची नोटिफिकेशन मिळेल!`);
+            document.getElementById('training_event_date').value = '';
         }
 
+        function calculateAdEstimation() {
+            let modelSelect = document.getElementById('campaign_model');
+            let adTypeSelect = document.getElementById('campaign_type');
+            let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
+            let budgetInput = document.getElementById('campaign_budget').value;
+            let estText = document.getElementById('ad_estimation_text');
+            
+            let isGenericAd = document.getElementById('product_select_field').style.display === 'none';
+
+            let adminPrices = JSON.parse(localStorage.getItem('admin_business_prices')) || {};
+            
+            let fixedRate = 499; 
+            
+            if(adTypeSelect.value === 'Target_Khillar_Racing') fixedRate = adminPrices.ad_khillar || 499;
+            else if(adTypeSelect.value === 'Target_Ration') fixedRate = adminPrices.ad_ration || 499;
+            else if(adTypeSelect.value === 'Target_Disease') fixedRate = adminPrices.ad_disease || 299;
+            else if(adTypeSelect.value === 'Target_Calf') fixedRate = adminPrices.ad_calf || 399;
+            else if(adTypeSelect.value === 'Target_Reproduction') fixedRate = adminPrices.ad_repro || 499;
+            else if(adTypeSelect.value === 'Target_Weather') fixedRate = adminPrices.ad_weather || 299;
+            else if(adTypeSelect.value === 'Target_BCS') fixedRate = adminPrices.ad_bcs || 399;
+            else if(adTypeSelect.value === 'Target_Vaccine') fixedRate = adminPrices.ad_vaccine || 299;
+            else if(adTypeSelect.value === 'Target_PoisonDiet') fixedRate = adminPrices.ad_poison || 299;
+            else if(adTypeSelect.value === 'Target_Milking') fixedRate = adminPrices.ad_milk || 499;
+            
+            else if(adTypeSelect.value === 'Home Banner') fixedRate = adminPrices.ad_banner || 2000;
+            else if(adTypeSelect.value === 'Sponsored Product') fixedRate = adminPrices.ad_sponsored || 500;
+            else if(adTypeSelect.value === 'Push Notification') fixedRate = adminPrices.ad_push || 300;
+            else if(adTypeSelect.value === 'District Targeted') fixedRate = adminPrices.ad_district || 1000;
+            else if(adTypeSelect.value === 'Generic_Promotion') fixedRate = 999; 
+
+            modelSelect.innerHTML = `<option value="Fixed">Fixed Rate (₹${fixedRate})</option>`;
+            
+            if(budgetInput && budgetInput > 0) {
+                estText.style.display = 'block';
+                if(budgetInput < fixedRate) {
+                    estText.innerHTML = `⚠️ <b>चेतावणी:</b> या जाहिरातीसाठी किमान बजेट <b>₹${fixedRate}</b> असणे आवश्यक आहे.`;
+                    estText.style.color = '#c62828';
+                    estText.style.background = '#ffebee';
+                    estText.style.borderColor = '#ffcdd2';
+                } else {
+                    let duration = "१ महिना";
+                    if(adTypeSelect.value === 'Target_Ration' || adTypeSelect.value === 'Target_Khillar_Racing') duration = "१५ दिवस";
+                    else if(adTypeSelect.value === 'Sponsored Product') duration = "१ आठवडा";
+                    else if(adTypeSelect.value === 'Push Notification') duration = "१ कॅम्पिंग (एकदा)";
+                    
+                    estText.innerHTML = `✅ <b>उत्तम!</b> तुमचे बजेट योग्य आहे. तुमची <b>'${isGenericAd ? 'Generic Branding' : adType}'</b> जाहिरात <b>${duration}</b> ॲपमध्ये सक्रिय राहील.`;
+                    estText.style.color = '#1b5e20';
+                    estText.style.background = '#e8f5e9';
+                    estText.style.borderColor = '#c8e6c9';
+                }
+            } else {
+                estText.style.display = 'none';
+            }
+        }
+
+        // 🔥🔥🔥 NEW: PAYMENT AND AD CLOUD SUBMISSION LOGIC 🔥🔥🔥
         function initiatePayment() {
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
@@ -3006,6 +3048,7 @@
                 liveAds.active = true;
                 localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
 
+                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
                 let newAdId = "AD" + Math.floor(Math.random() * 90000);
                 let adObj = {
                     id: newAdId,
@@ -3021,13 +3064,16 @@
                     status: "Approved & Live",
                     date: new Date().toLocaleDateString(),
                     vendorName: localStorage.getItem("current_user_name") || "",
-                    vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                     isGeneric: isGenericAd
                 };
+                pendingAds.push(adObj);
+                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
 
+                // 🔥 FIREBASE CLOUD SAVE FOR AD CAMPAIGN 🔥
                 db.collection("admin_pending_ad_approvals").doc(newAdId).set(adObj)
                 .catch(e => console.error("Cloud ad save error:", e));
 
+                // 🔥🔥🔥 HOMEPAGE BANNER SYNC 🔥🔥🔥 (डायरेक्ट होमपेजला दिसेल)
                 if (campaignType === 'Home Banner' || campaignType === 'Generic_Promotion') {
                     db.collection("homepage_banners").doc(newAdId).set({
                         imageUrl: (images && images.length > 0) ? images[0] : '',
@@ -3044,6 +3090,8 @@
                 document.getElementById('campaign_budget').value = '';
                 document.getElementById('ad_image_preview_container').innerHTML = '';
                 document.getElementById('ad_estimation_text').style.display = 'none';
+
+                refreshMyAds();
             });
         }
     </script>
