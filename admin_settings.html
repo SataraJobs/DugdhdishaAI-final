@@ -339,7 +339,7 @@
 आयटम: मका भरडा (50Kg) x 2
 ग्राहक: रामराव पाटील (+91 ******4321)
 पत्ता: सातारा, 415001
-[पेमेंट: COD - कमिशन भरणे बाकी bag बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]
+[पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]
                         </p>
                     </div>
 
@@ -369,7 +369,7 @@
             <div id="m_doctor_approve" class="tab-content">
                 <div class="admin-card">
                     <h4 style="color:#1976d2; border-bottom-color:#bbdefb;">📞 कंपनी डॉक्टर नंबर मंजुरी (Call Routing Approvals)</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापारींनी 'Brand Partner' मधून टाकलेले नंबर तपासा. 'Approve' केल्यावर हे नंबर 'Round-Robin' सिस्टीममध्ये ॲड होतील आणि शेतकऱ्यांचे कॉल्स इथे लागतील.</p>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी 'Brand Partner' मधून टाकलेले नंबर तपासा. 'Approve' केल्यावर हे नंबर 'Round-Robin' सिस्टीममध्ये ॲड होतील आणि शेतकऱ्यांचे कॉल्स इथे लागतील.</p>
                     <div id="doctor_numbers_container"></div>
                 </div>
             </div>
@@ -1708,28 +1708,20 @@
                     loadAdminNotifications();
                 }
             }).catch(e => console.log("Cloud tickets sync:", e));
-			
-			// --- ३. सप्लायर KYC रिक्वेस्ट्स क्लाऊडवरून सिंक ---
-			db.collection("users").where("kyc_status", "==", "pending").get()
-			.then(querySnapshot => {
-				let cloudKyc = [];
-				querySnapshot.forEach(doc => {
-					let u = doc.data();
-					cloudKyc.push({
-						vendorName: u.name || u.vendorName || "Unknown Vendor",
-						mobile: u.mobile || doc.id,
-						date: u.kyc_date || new Date().toLocaleDateString('mr-IN'),
-						gst: u.gst || "",
-						panUrl: u.panUrl || "",
-						shopActUrl: u.shopActUrl || ""
-					});
-				});
-				if(cloudKyc.length > 0) {
-					localStorage.setItem('admin_pending_kyc', JSON.stringify(cloudKyc));
-					loadPendingKyc();
-					loadAdminNotifications();
-				}
-			}).catch(e => console.log("Cloud KYC sync error:", e));
+
+            // ३. विक्रेता KYC अर्ज क्लाऊडवरून सिंक (🔥 NEW KYC SYNC 🔥)
+            db.collection("admin_pending_kyc").get()
+            .then(querySnapshot => {
+                let cloudKyc = [];
+                querySnapshot.forEach(doc => {
+                    let d = doc.data();
+                    d.firebaseDocId = doc.id; // Delete करण्यासाठी ID ठेवत आहोत
+                    cloudKyc.push(d);
+                });
+                localStorage.setItem('admin_pending_kyc', JSON.stringify(cloudKyc));
+                loadPendingKyc();
+                loadAdminNotifications();
+            }).catch(e => console.log("Cloud KYC sync error:", e));
         }
 
         // --- 🔥 NEW: SYNC MALL ORDERS FOR REPORT BUILDER 🔥 ---
@@ -1843,7 +1835,7 @@
 
         // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
-            syncUsersForAdmin(); 
+            syncUsersForAdmin(); // 🔥 ही नवीन लाईन इथे ॲड केली (रिपोर्टसाठी युजर्स सिंक होतील)
             syncOrdersForReports(); 
             loadAllModules();
             syncAdminSettingsFromCloud(); 
@@ -2348,7 +2340,7 @@
 आयटम: मका भरडा (50Kg) x 2
 ग्राहक: रामराव पाटील (+91 ******4321)
 पत्ता: सातारा, 415001
-[पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
+[पेमेंट: COD - कमिशन भरणे बाकी ছুটি आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
             } else if (msgType === 'dues') {
                 dateSection.style.display = 'none';
                 previewBox.innerText = `*दुग्ध दिशा AI - पेमेंट रिमाइंडर*
@@ -2755,8 +2747,9 @@
 
             let html = '';
             pendingKycList.forEach((kyc, index) => {
-                let panImageLink = kyc.panUrl || 'https://www.w3schools.com/html/pic_trulli.jpg'; 
-                let shopImageLink = kyc.shopActUrl || 'https://www.w3schools.com/html/img_girl.jpg';
+                // 🔥 Updated Logic to fetch Real Firebase uploaded Image URLs
+                let panImageLink = kyc.aadhaarUrl || kyc.panUrl || 'https://www.w3schools.com/html/pic_trulli.jpg'; 
+                let shopImageLink = kyc.shopProofUrl || kyc.shopActUrl || 'https://www.w3schools.com/html/img_girl.jpg';
                 
                 html += `
                 <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
@@ -2769,114 +2762,78 @@
                         <b>GST No:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold;">${kyc.gst || 'Not Provided'}</span> <br>
                         
                         <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
-                            <button onclick="openDocumentModal('${panImageLink}', 'पॅन कार्ड - ${kyc.vendorName}')" 
+                            <button onclick="openDocumentModal('${panImageLink}', 'आधार / पॅन कार्ड - ${kyc.vendorName}')" 
                                     style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                👁️ पॅन कार्ड पहा
+                                👁️ आधार/पॅन पहा
                             </button>
-                            <button onclick="openDocumentModal('${shopImageLink}', 'शॉप ॲक्ट - ${kyc.vendorName}')" 
+                            <button onclick="openDocumentModal('${shopImageLink}', 'शॉप ॲक्ट / दुकानाचा पुरावा - ${kyc.vendorName}')" 
                                     style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                👁️ शॉप ॲक्ट पहा
+                                👁️ शॉप ॲक्ट/दुकान पहा
                             </button>
                         </div>
                     </div>
                     <div class="approval-actions">
                         <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveKyc('${kyc.mobile}', ${index})">✅ Approve Seller</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index}, '${kyc.mobile}')">❌ Reject</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index})">❌ Reject</button>
                     </div>
                 </div>`;
             });
             container.innerHTML = html;
         }
 
-        // 🔥 बदल: ॲडमिनकडून KYC ॲप्रूव्ह झाल्यावर सप्लायरला नोटिफिकेशन पाठवण्याचे लॉजिक ॲड केले.
         function approveKyc(mobile, index) {
             if(confirm("या व्यापाऱ्याचे डॉक्युमेंट्स बरोबर आहेत का? याला ॲपवर 'Verified Seller' बनवायचे का?")) {
+                let users = JSON.parse(localStorage.getItem('app_users')) || [];
+                let userIndex = users.findIndex(u => u.mobile === mobile);
+                if(userIndex > -1) {
+                    users[userIndex].isVerified = true;
+                    users[userIndex].role = 'dealer'; 
+                    users[userIndex].kyc_status = 'approved';
+                    localStorage.setItem('app_users', JSON.stringify(users));
+                }
+
+                // 🔥 FIREBASE UPDATE (Real-time sync to vendor's app) 🔥
+                if(mobile) {
+                    db.collection("users").doc(mobile).set({
+                        isVerified: true,
+                        role: 'dealer',
+                        kyc_status: 'approved'
+                    }, { merge: true }).catch(e => console.log("User KYC update error:", e));
+                }
+
+                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                let kycDoc = pendingKycList[index];
                 
-                // 🔥 FIREBASE CLOUD UPDATE 🔥
-                db.collection("users").doc(mobile).update({
-                    isVerified: true,
-                    role: 'dealer',
-                    kyc_status: 'approved'
-                }).then(() => {
-                    
-                    // 🔥 बदल: सप्लायरला 'Approve' झाल्याचे नोटिफिकेशन (Push) पाठवणे
-                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
-                    let notifObj = {
-                        receiver_mobile: mobile,
-                        type: 'system',
-                        title: "🎉 अभिनंदन! तुमचे खाते Approve झाले आहे.",
-                        message: `तुमचे विक्रेता (Seller) खाते ॲडमिनने प्रमाणित केले आहे. आता तुम्ही कृषी मॉलवर प्रॉडक्ट्स विकू शकता!`,
-                        date: new Date().toLocaleDateString('mr-IN'),
-                        isRead: false,
-                        firebaseDocId: notifId,
-                        timestampStr: new Date().toISOString(),
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    };
+                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
+                if(kycDoc && kycDoc.firebaseDocId) {
+                    db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
+                }
 
-                    db.collection("app_notifications").doc(notifId).set(notifObj)
-                    .catch(e => console.error("Cloud KYC notif error:", e));
-                    
-                    // LocalStorage Update
-                    let users = JSON.parse(localStorage.getItem('app_users')) || [];
-                    let userIndex = users.findIndex(u => u.mobile === mobile);
-                    if(userIndex > -1) {
-                        users[userIndex].isVerified = true;
-                        users[userIndex].role = 'dealer'; 
-                        users[userIndex].kyc_status = 'approved';
-                        localStorage.setItem('app_users', JSON.stringify(users));
-                    }
+                pendingKycList.splice(index, 1);
+                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
 
-                    let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                    pendingKycList.splice(index, 1);
-                    localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-
-                    alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
-                    loadPendingKyc(); 
-                    loadAdminNotifications(); 
-                    refreshSupplierTable();
-                }).catch(error => {
-                    console.error("Error approving KYC: ", error);
-                    alert("❌ इंटरनेट एरर आला, कृपया पुन्हा प्रयत्न करा.");
-                });
+                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
+                loadPendingKyc(); 
+                loadAdminNotifications(); 
+                refreshSupplierTable();
             }
         }
 
-        // 🔥 बदल: ॲडमिनकडून KYC रिजेक्ट झाल्यावर सप्लायरला नोटिफिकेशन पाठवण्याचे लॉजिक ॲड केले.
-        function rejectKyc(index, mobile) { 
+        function rejectKyc(index) {
             if(confirm("या व्यापाऱ्याची पडताळणी नाकारायची (Reject) आहे का?")) {
+                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                let kycDoc = pendingKycList[index];
                 
-                // 🔥 FIREBASE CLOUD UPDATE 🔥
-                db.collection("users").doc(mobile).update({
-                    kyc_status: 'rejected'
-                }).then(() => {
-                    
-                    // 🔥 बदल: सप्लायरला 'Reject' झाल्याचे नोटिफिकेशन (Push) पाठवणे
-                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
-                    let notifObj = {
-                        receiver_mobile: mobile,
-                        type: 'system',
-                        title: "⚠️ खाते पडताळणी अयशस्वी (Rejected)",
-                        message: `तुमची अपलोड केलेली कागदपत्रे चुकीची किंवा अस्पष्ट आहेत. कृपया पुन्हा योग्य कागदपत्रे अपलोड करा.`,
-                        date: new Date().toLocaleDateString('mr-IN'),
-                        isRead: false,
-                        firebaseDocId: notifId,
-                        timestampStr: new Date().toISOString(),
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    };
+                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
+                if(kycDoc && kycDoc.firebaseDocId) {
+                    db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
+                }
 
-                    db.collection("app_notifications").doc(notifId).set(notifObj)
-                    .catch(e => console.error("Cloud KYC reject notif error:", e));
-                    
-                    let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                    pendingKycList.splice(index, 1);
-                    localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-                    
-                    alert("❌ विक्रेत्याचा अर्ज नाकारला.");
-                    loadPendingKyc(); 
-                    loadAdminNotifications(); 
-                }).catch(error => {
-                    console.error("Error rejecting KYC: ", error);
-                });
+                pendingKycList.splice(index, 1);
+                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
+                alert("❌ विक्रेत्याचा अर्ज नाकारला.");
+                loadPendingKyc(); 
+                loadAdminNotifications(); 
             }
         }
 
@@ -3079,7 +3036,7 @@
         // --- 🛡️ M28: AUDIT LOG ---
         function clearLogs() {
             if(confirm("सर्व ऑडिट लॉग्स क्लिअर करायचे आहेत का?")) {
-                document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत आहे...</span>";
+                document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत Option...</span>";
                 alert("लॉग्स यशस्वीरीत्या डिलीट झाले.");
             }
         }
