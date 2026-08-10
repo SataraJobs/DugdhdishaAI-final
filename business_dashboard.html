@@ -1201,8 +1201,9 @@
 
         function getVendorAlertsHtml() {
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
-            let myName = localStorage.getItem("current_user_name");
-            let myMobile = localStorage.getItem("current_user_mobile");
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             let html = '';
             
             if(!isVerified) {
@@ -1211,9 +1212,10 @@
 
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
             
-            let unreadAppNotifs = appNotifs.filter(n => 
-                (n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead
-            );
+            let unreadAppNotifs = appNotifs.filter(n => {
+                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
+                return ((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead;
+            });
 
             if(unreadAppNotifs.length > 0) {
                 unreadAppNotifs.forEach(n => {
@@ -1226,7 +1228,17 @@
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
+            let myPendingOrdersList = orders.filter(o => {
+                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
+                let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
+                let matchItm = (o.items || []).some(item => {
+                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
+                           (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
+                           (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
+                });
+                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm);
+            });
 
             if(myPendingOrdersList.length > 0) {
                 myPendingOrdersList.forEach(order => {
@@ -1244,11 +1256,13 @@
         function markNotifRead(docId) {
             if(!docId) return;
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let myName = localStorage.getItem("current_user_name");
-            let myMobile = localStorage.getItem("current_user_mobile");
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
 
             appNotifs.forEach((n) => {
-                if ((n.receiver_mobile === myName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
+                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
+                if (((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
                     n.isRead = true;
                     db.collection("app_notifications").doc(docId).update({ isRead: true })
                     .catch(e => console.log("Cloud notif read update error:", e));
@@ -1273,17 +1287,29 @@
             
             if (localStorage.getItem("vendor_verified") !== 'true') totalCount++;
             
-            let myName = localStorage.getItem("current_user_name");
-            let myMobile = localStorage.getItem("current_user_mobile");
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
+            let myPendingOrders = orders.filter(o => {
+                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
+                let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
+                let matchItm = (o.items || []).some(item => {
+                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
+                           (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
+                           (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
+                });
+                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm);
+            }).length;
             totalCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-            let unreadAppNotifs = appNotifs.filter(n => 
-                (n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead
-            ).length;
+            let unreadAppNotifs = appNotifs.filter(n => {
+                let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
+                return ((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead;
+            }).length;
             
             totalCount += unreadAppNotifs;
             
@@ -1342,10 +1368,11 @@
             syncSupportTickets();
         }
 
-        // 🔥 अपडेट केलेले फंक्शन: नवीन ऑर्डर येताच बेल आयकॉन रिअल-टाइम अपडेट होईल
+        // 🔥 मजबूत आणि अपडेट केलेले फंक्शन: दुसऱ्या मोबाईलवरील ऑर्डर्स आणि नंबर मॅचिंगसाठी (10 Digits Clean)
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
 
             db.collection("mall_orders").orderBy("timestamp", "desc").onSnapshot(querySnapshot => {
                 let cloudOrders = [];
@@ -1356,7 +1383,17 @@
                     let order = doc.data();
                     order.firebaseDocId = doc.id; 
                     
-                    let belongsToMe = (order.vendorMobiles && order.vendorMobiles.includes(myMobile)) || (order.items || []).some(i => i.vendorMobile === myMobile || i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
+                    let orderVendorMobiles = (order.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
+                    let matchMobile = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
+
+                    let belongsToMe = matchMobile || 
+                                      (order.items || []).some(i => {
+                                          let itemMob = (i.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                                          return (cleanMyMobile && itemMob === cleanMyMobile) || 
+                                                 (i.company && i.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
+                                                 (i.vendorName && i.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
+                                      }) ||
+                                      (order.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
                     
                     if (belongsToMe) {
                         cloudOrders.push(order);
@@ -1376,14 +1413,16 @@
                 if(elSales) elSales.innerText = Math.round(totalSales).toLocaleString('en-IN');
                 
                 loadDealerOrdersDashboard(); 
-                checkVendorNotifications(); // 🔔 सप्लायरचा बेल आयकॉन रिअल-टाइम अपडेट करण्यासाठी
+                checkVendorNotifications(); 
             }, e => console.log("Cloud business orders sync error: ", e));
 
             db.collection("quote_requests").onSnapshot(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
                     let q = doc.data();
-                    if (q.vendorMobile === myMobile || q.userMobile === myMobile || q.vendorName === myName || q.vendorName === myMobile || q.vendorName === "Unknown") {
+                    let qMobile = (q.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                    let uMobile = (q.userMobile || "").replace(/\D/g, '').slice(-10);
+                    if ((cleanMyMobile && (qMobile === cleanMyMobile || uMobile === cleanMyMobile)) || q.vendorName === myName || q.vendorName === "Unknown") {
                         myLeads++;
                     }
                 });
@@ -1573,8 +1612,14 @@
         function refreshMyProducts() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile || p.vendorMobile === myMobile);
+            
+            let myProducts = products.filter(p => {
+                let pMob = (p.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                return (cleanMyMobile && pMob === cleanMyMobile) || p.vendorName === myName || p.vendorName === myMobile;
+            });
+
             let container = document.getElementById('my_products_container');
             if (!container) return;
             if (myProducts.length === 0) {
@@ -1600,11 +1645,15 @@
         function refreshMyAdsUI() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             let container = document.getElementById('my_ads_container');
             if (!container) return;
 
             let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            let myAds = pendingAds.filter(ad => ad.vendorMobile === myMobile || ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
+            let myAds = pendingAds.filter(ad => {
+                let adMob = (ad.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                return (cleanMyMobile && adMob === cleanMyMobile) || ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.url));
+            });
             
             if (myAds.length === 0) {
                 container.innerHTML = '<p>तुमची कोणतीही जाहिरात नाही.</p>';
@@ -2152,9 +2201,13 @@
 
             const vendorName = localStorage.getItem("current_user_name") || "अज्ञात विक्रेता";
             const vendorMobile = localStorage.getItem("current_user_mobile") || "";
+            const cleanVendorMobile = (vendorMobile || "").replace(/\D/g, '').slice(-10);
 
             const allProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            const myProducts = allProducts.filter(p => p.vendorName === vendorName || p.vendorName === vendorMobile);
+            const myProducts = allProducts.filter(p => {
+                let pMob = (p.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                return (cleanVendorMobile && pMob === cleanVendorMobile) || p.vendorName === vendorName || p.vendorName === vendorMobile;
+            });
 
             const shopHTML = `<!DOCTYPE html>
 <html lang="mr">
@@ -2496,14 +2549,23 @@
             }
             processRazorpayPayment(ledgerTotalDues, "Clear Ledger Dues", "All_Dues_Clearance", () => {
                 let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                let myName = localStorage.getItem("current_user_name");
-                let myMobile = localStorage.getItem("current_user_mobile");
+                let myName = localStorage.getItem("current_user_name") || "";
+                let myMobile = localStorage.getItem("current_user_mobile") || "";
+                let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
                 
                 let batch = db.batch();
                 let hasUpdates = false;
 
                 orders.forEach(o => {
-                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile)) {
+                    let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
+                    let matchMob = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
+                    let matchItm = (o.items || []).some(item => {
+                        let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                        return (cleanMyMobile && itemMob === cleanMyMobile) || 
+                               (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase());
+                    });
+
+                    if(o.paymentMethod === 'COD' && o.commissionPaid !== true && (matchMob || matchItm)) {
                         if (o.firebaseDocId) {
                             let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
                             batch.update(orderRef, { commissionPaid: true });
@@ -2543,13 +2605,27 @@
             }).catch(e => console.log(e));
         }
 
+        // 🔥 अपडेट केलेले फंक्शन: दुसऱ्या मोबाईलवरून आलेल्या ऑर्डर्स अचूक शोधण्यासाठी (10 Digits Number Matching)
         function loadDealerOrdersDashboard() {
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            let myName = localStorage.getItem("current_user_name");
-            let myMobile = localStorage.getItem("current_user_mobile");
+            let myName = localStorage.getItem("current_user_name") || "";
+            let myMobile = localStorage.getItem("current_user_mobile") || "";
+            let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
             
             let myOrders = orders.filter(o => {
-                return (o.vendorMobiles && o.vendorMobiles.includes(myMobile)) || o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
+                let orderVendorMobiles = (o.vendorMobiles || []).map(m => (m || "").replace(/\D/g, '').slice(-10));
+                let matchMobile = cleanMyMobile && orderVendorMobiles.includes(cleanMyMobile);
+                
+                let matchItem = (o.items || []).some(item => {
+                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                    return (cleanMyMobile && itemMob === cleanMyMobile) || 
+                           (item.company && item.company.trim().toLowerCase() === (myName || "").trim().toLowerCase()) || 
+                           (item.vendorName && item.vendorName.trim().toLowerCase() === (myName || "").trim().toLowerCase());
+                });
+
+                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === (myName || "").trim().toLowerCase());
+
+                return matchMobile || matchItem || matchGlobalCompany;
             });
 
             let container = document.getElementById('dealer_orders_container');
@@ -2574,7 +2650,11 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    if(item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
+                    let itemMob = (item.vendorMobile || "").replace(/\D/g, '').slice(-10);
+                    let matchItmMobile = cleanMyMobile && itemMob === cleanMyMobile;
+                    let matchItmName = (item.company && item.company.trim().toLowerCase() === (myName || "").trim().toLowerCase()) || (item.vendorName && item.vendorName.trim().toLowerCase() === (myName || "").trim().toLowerCase());
+
+                    if(matchItmMobile || matchItmName) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
                         let itemTotal = item.price * item.qty;
