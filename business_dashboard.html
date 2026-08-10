@@ -1214,7 +1214,9 @@
             
             let unreadAppNotifs = appNotifs.filter(n => {
                 let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                return ((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead;
+                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
+                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
+                return (matchMob || matchName || n.receiver_mobile === myMobile) && !n.isRead;
             });
 
             if(unreadAppNotifs.length > 0) {
@@ -1237,7 +1239,9 @@
                            (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
                            (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
                 });
-                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm);
+                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
+
+                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm || matchGlobalCompany);
             });
 
             if(myPendingOrdersList.length > 0) {
@@ -1262,7 +1266,10 @@
 
             appNotifs.forEach((n) => {
                 let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                if (((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
+                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
+                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
+
+                if ((matchMob || matchName || n.receiver_mobile === myMobile) && n.firebaseDocId === docId) {
                     n.isRead = true;
                     db.collection("app_notifications").doc(docId).update({ isRead: true })
                     .catch(e => console.log("Cloud notif read update error:", e));
@@ -1301,14 +1308,18 @@
                            (item.company && item.company.trim().toLowerCase() === myName.trim().toLowerCase()) || 
                            (item.vendorName && item.vendorName.trim().toLowerCase() === myName.trim().toLowerCase());
                 });
-                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm);
+                let matchGlobalCompany = (o.vendorNames || []).some(v => v && v.trim().toLowerCase() === myName.trim().toLowerCase());
+
+                return o.status !== 'delivered' && o.status !== 'shipped' && (matchMob || matchItm || matchGlobalCompany);
             }).length;
             totalCount += myPendingOrders;
             
             let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
             let unreadAppNotifs = appNotifs.filter(n => {
                 let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
-                return ((cleanMyMobile && nMobile === cleanMyMobile) || n.receiver_mobile === myName || n.receiver_mobile === myMobile) && !n.isRead;
+                let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
+                let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
+                return (matchMob || matchName || n.receiver_mobile === myMobile) && !n.isRead;
             }).length;
             
             totalCount += unreadAppNotifs;
@@ -1368,12 +1379,13 @@
             syncSupportTickets();
         }
 
-        // 🔥 मजबूत आणि अपडेट केलेले फंक्शन: दुसऱ्या मोबाईलवरील ऑर्डर्स आणि नंबर मॅचिंगसाठी (10 Digits Clean)
+        // 🔥 अत्यंत मजबूत आणि अपडेटेड फंक्शन: दुसऱ्या मोबाईलवरून आलेल्या ऑर्डर्स आणि नोटिफिकेशन 100% दाखवण्यासाठी
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
             let cleanMyMobile = (myMobile || "").replace(/\D/g, '').slice(-10);
 
+            // १. मॉल ऑर्डर्स सिंक करणे
             db.collection("mall_orders").orderBy("timestamp", "desc").onSnapshot(querySnapshot => {
                 let cloudOrders = [];
                 let activeOrdersCount = 0;
@@ -1416,6 +1428,7 @@
                 checkVendorNotifications(); 
             }, e => console.log("Cloud business orders sync error: ", e));
 
+            // २. लीड्स सिंक करणे
             db.collection("quote_requests").onSnapshot(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
@@ -1430,6 +1443,7 @@
                 if(elLeads) elLeads.innerText = myLeads;
             }, e => console.log("Cloud leads sync error:", e));
 
+            // ३. युजर/KYC सिंक करणे
             if (myMobile && myMobile !== "+91 9XXXX XXXX") {
                 db.collection("users").doc(myMobile).onSnapshot((doc) => {
                     if (doc.exists && doc.data()) {
@@ -1464,24 +1478,28 @@
                 }, (err) => console.log("Cloud user sync error:", err));
             }
 
-            if (myMobile) {
-                db.collection("app_notifications")
-                .where("receiver_mobile", "==", myMobile)
-                .onSnapshot(querySnapshot => {
-                    let cloudNotifs = [];
-                    querySnapshot.forEach(doc => {
-                        let n = doc.data();
-                        n.firebaseDocId = doc.id;
+            // ४. नोटिफिकेशन सिंक करणे (मोबाईल नंबर किंवा नाव दोन्ही मॅच करणारे क्लायंट साईड फिल्टरिंग)
+            db.collection("app_notifications").orderBy("timestamp", "desc").limit(50).onSnapshot(querySnapshot => {
+                let cloudNotifs = [];
+                querySnapshot.forEach(doc => {
+                    let n = doc.data();
+                    n.firebaseDocId = doc.id;
+                    
+                    let nMobile = (n.receiver_mobile || "").replace(/\D/g, '').slice(-10);
+                    let matchMob = cleanMyMobile && nMobile === cleanMyMobile;
+                    let matchName = n.receiver_mobile && myName && n.receiver_mobile.trim().toLowerCase() === myName.trim().toLowerCase();
+
+                    if (matchMob || matchName || n.receiver_mobile === myMobile) {
                         cloudNotifs.push(n);
-                    });
-                    localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
-                    checkVendorNotifications();
-                    let dropdown = document.getElementById('vendorNotificationDropdown');
-                    if(dropdown && dropdown.style.display === 'block') {
-                        buildVendorNotificationDropdown();
                     }
-                }, e => console.log("Cloud notif sync error:", e));
-            }
+                });
+                localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
+                checkVendorNotifications();
+                let dropdown = document.getElementById('vendorNotificationDropdown');
+                if(dropdown && dropdown.style.display === 'block') {
+                    buildVendorNotificationDropdown();
+                }
+            }, e => console.log("Cloud notif sync error:", e));
         }
 
         function syncMyProductsAndAdsFromCloud() {
@@ -2605,7 +2623,6 @@
             }).catch(e => console.log(e));
         }
 
-        // 🔥 अपडेट केलेले फंक्शन: दुसऱ्या मोबाईलवरून आलेल्या ऑर्डर्स अचूक शोधण्यासाठी (10 Digits Number Matching)
         function loadDealerOrdersDashboard() {
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
             let myName = localStorage.getItem("current_user_name") || "";
