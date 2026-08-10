@@ -255,7 +255,7 @@
     <div id="sessionAlertBox">
         <div class="session-alert-content">
             <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत মাঠে...</p>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
         </div>
     </div>
 
@@ -958,7 +958,7 @@
                         <div class="info-accordion-body">
                             <b>उपयोग:</b> तुमच्या व्यवसायाचे लाईव्ह आकडे (Views, Orders, Sales) पाहण्यासाठी.<br>
                             <b>फायदा:</b> तुम्हाला समजेल की तुमची उत्पादने किती शेतकऱ्यांनी पहिली आणि किती नफा झाला.<br>
-                            <b>रिफ्लेक्ट कुठे होणार?:</b> हा फक्त तुमचा स्वतःचा (Private) रिपोर्ट आहे.
+                            <b>रिफ्लेक्ट कुठे होणार?:</b> हा तुमचा स्वतःचा (Private) रिपोर्ट आहे.
                         </div>
                     </div>
 
@@ -1010,7 +1010,7 @@
                     <div class="info-accordion" onclick="this.classList.toggle('open')">
                         <div class="info-accordion-header">१२. Farmer Database <span>▼</span></div>
                         <div class="info-accordion-body">
-                            <b>उपयोग:</b> तुमच्या परिसरातील (जिल्ह्यातील) शेतकरी कोणता चारा किंवा खाद्य वापरत सास याची ढोबळ माहिती पाहण्यासाठी.<br>
+                            <b>उपयोग:</b> तुमच्या परिसरातील (जिल्ह्यातील) शेतकरी कोणता चारा किंवा खाद्य वापरत आहे याची ढोबळ माहिती पाहण्यासाठी.<br>
                             <b>फायदा:</b> शेतकऱ्यांच्या गरजा ओळखून तुम्ही नवीन प्रॉडक्ट्स बाजारात आणू शकता.<br>
                             <b>रिफ्लेक्ट कुठे होणार?:</b> ही फक्त तुमच्या माहितीसाठी (Analytics) आहे.
                         </div>
@@ -1226,7 +1226,6 @@
             }
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🔥 बदल: मोबाईल नंबर जोडला 
             let myPendingOrdersList = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile));
 
             if(myPendingOrdersList.length > 0) {
@@ -1278,7 +1277,6 @@
             let myMobile = localStorage.getItem("current_user_mobile");
             
             let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-            // 🔥 बदल: मोबाईल नंबर जोडला
             let myPendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'shipped' && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile)).length;
             totalCount += myPendingOrders;
             
@@ -1344,6 +1342,7 @@
             syncSupportTickets();
         }
 
+        // 🔥 अपडेट केलेले फंक्शन: नवीन ऑर्डर येताच बेल आयकॉन रिअल-टाइम अपडेट होईल
         function syncBusinessDashboardFromCloud() {
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
@@ -1357,7 +1356,6 @@
                     let order = doc.data();
                     order.firebaseDocId = doc.id; 
                     
-                    // 🔥 बदल: मोबाईल नंबर जोडला
                     let belongsToMe = (order.vendorMobiles && order.vendorMobiles.includes(myMobile)) || (order.items || []).some(i => i.vendorMobile === myMobile || i.company === myName || i.company === myMobile || i.vendorName === myName || i.vendorName === myMobile);
                     
                     if (belongsToMe) {
@@ -1378,13 +1376,13 @@
                 if(elSales) elSales.innerText = Math.round(totalSales).toLocaleString('en-IN');
                 
                 loadDealerOrdersDashboard(); 
+                checkVendorNotifications(); // 🔔 सप्लायरचा बेल आयकॉन रिअल-टाइम अपडेट करण्यासाठी
             }, e => console.log("Cloud business orders sync error: ", e));
 
             db.collection("quote_requests").onSnapshot(querySnapshot => {
                 let myLeads = 0;
                 querySnapshot.forEach(doc => {
                     let q = doc.data();
-                    // 🔥 बदल: मोबाईल नंबर जोडला
                     if (q.vendorMobile === myMobile || q.userMobile === myMobile || q.vendorName === myName || q.vendorName === myMobile || q.vendorName === "Unknown") {
                         myLeads++;
                     }
@@ -1427,20 +1425,24 @@
                 }, (err) => console.log("Cloud user sync error:", err));
             }
 
-            db.collection("app_notifications").onSnapshot(querySnapshot => {
-                let cloudNotifs = [];
-                querySnapshot.forEach(doc => {
-                    let n = doc.data();
-                    n.firebaseDocId = doc.id;
-                    cloudNotifs.push(n);
-                });
-                localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
-                checkVendorNotifications();
-                let dropdown = document.getElementById('vendorNotificationDropdown');
-                if(dropdown && dropdown.style.display === 'block') {
-                    buildVendorNotificationDropdown();
-                }
-            }, e => console.log("Cloud notif sync error:", e));
+            if (myMobile) {
+                db.collection("app_notifications")
+                .where("receiver_mobile", "==", myMobile)
+                .onSnapshot(querySnapshot => {
+                    let cloudNotifs = [];
+                    querySnapshot.forEach(doc => {
+                        let n = doc.data();
+                        n.firebaseDocId = doc.id;
+                        cloudNotifs.push(n);
+                    });
+                    localStorage.setItem('app_notifications', JSON.stringify(cloudNotifs));
+                    checkVendorNotifications();
+                    let dropdown = document.getElementById('vendorNotificationDropdown');
+                    if(dropdown && dropdown.style.display === 'block') {
+                        buildVendorNotificationDropdown();
+                    }
+                }, e => console.log("Cloud notif sync error:", e));
+            }
         }
 
         function syncMyProductsAndAdsFromCloud() {
@@ -1572,7 +1574,6 @@
             let myName = localStorage.getItem("current_user_name") || "";
             let myMobile = localStorage.getItem("current_user_mobile") || "";
             let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-            // 🔥 बदल: मोबाईल नंबर जोडला
             let myProducts = products.filter(p => p.vendorName === myName || p.vendorName === myMobile || p.vendorMobile === myMobile);
             let container = document.getElementById('my_products_container');
             if (!container) return;
@@ -1603,7 +1604,6 @@
             if (!container) return;
 
             let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            // 🔥 बदल: मोबाईल नंबर जोडला
             let myAds = pendingAds.filter(ad => ad.vendorMobile === myMobile || ad.vendorName === myName || ad.vendorName === myMobile || (ad.title && (ad.title.includes(myName) || ad.title.includes(myMobile) || ad.url)));
             
             if (myAds.length === 0) {
@@ -1793,7 +1793,7 @@
                 description: pDesc,
                 images: images,
                 vendorName: localStorage.getItem("current_user_name") || pBrand, 
-                vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
+                vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                 dateAdded: new Date().toISOString()
             };
 
@@ -2503,7 +2503,6 @@
                 let hasUpdates = false;
 
                 orders.forEach(o => {
-                    // 🔥 बदल: मोबाईल नंबर जोडला
                     if(o.paymentMethod === 'COD' && o.commissionPaid !== true && o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile)) {
                         if (o.firebaseDocId) {
                             let orderRef = db.collection("mall_orders").doc(o.firebaseDocId);
@@ -2549,7 +2548,6 @@
             let myName = localStorage.getItem("current_user_name");
             let myMobile = localStorage.getItem("current_user_mobile");
             
-            // 🔥 बदल: मोबाईल नंबर जोडला
             let myOrders = orders.filter(o => {
                 return (o.vendorMobiles && o.vendorMobiles.includes(myMobile)) || o.items.some(item => item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile);
             });
@@ -2576,7 +2574,6 @@
                 let totalCommission = 0;
                 
                 order.items.forEach(item => {
-                    // 🔥 बदल: मोबाईल नंबर जोडला
                     if(item.vendorMobile === myMobile || item.company === myName || item.company === myMobile || item.vendorName === myName || item.vendorName === myMobile) {
                         itemsList += `<li>${item.qty}x ${item.name} (₹${item.price})</li>`;
                         
@@ -2745,7 +2742,7 @@
             
             let vendorData = {
                 vendorName: localStorage.getItem("current_user_name") || "व्यापारी",
-                vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
+                vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                 number: num,
                 status: "Pending"
             };
@@ -2830,7 +2827,7 @@
                 role: jobType, 
                 req: requirement, 
                 date: new Date().toLocaleDateString(),
-                vendorMobile: localStorage.getItem("current_user_mobile") || "" // 🔥 बदल: मोबाईल नंबर जोडला
+                vendorMobile: localStorage.getItem("current_user_mobile") || "" 
             })
             .then(() => {
                 alert(`✅ तुमची '${jobType}' पदासाठीची आणि '${requirement}' रिक्वायरमेंट ॲडमिनकडे मंजुरीसाठी पाठवली आहे. लवकरच ती जॉब पोर्टलवर लाईव्ह होईल.`);
@@ -2851,7 +2848,7 @@
                 type: eventType, 
                 date: eventDate, 
                 createdOn: new Date().toLocaleDateString(),
-                vendorMobile: localStorage.getItem("current_user_mobile") || "" // 🔥 बदल: मोबाईल नंबर जोडला
+                vendorMobile: localStorage.getItem("current_user_mobile") || "" 
             })
             .then(() => {
                 let d = new Date(eventDate);
@@ -2927,7 +2924,7 @@
                     status: "Approved & Live",
                     date: new Date().toLocaleDateString(),
                     vendorName: localStorage.getItem("current_user_name") || "",
-                    vendorMobile: localStorage.getItem("current_user_mobile") || "", // 🔥 बदल: मोबाईल नंबर जोडला
+                    vendorMobile: localStorage.getItem("current_user_mobile") || "", 
                     isGeneric: isGenericAd
                 };
 
