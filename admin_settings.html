@@ -519,7 +519,7 @@
                         <div class="field"><label>Target Age (वय)</label><input type="text" id="m8_2" placeholder="4 Months"></div>
                         <div class="field"><label>Reminder Cycle</label><select id="m8_3"><option>6 Months</option><option>1 Year</option></select></div>
                     </div>
-                    <div class="field"><label>SMS Notification Text</label><textarea id="m8_4" rows="2">तुमच्या गाईच्या लसीकरणाची वेळ आली आहे...</textarea></div>
+                    <div class="field"><label>SMS Notification Text</label><textarea id="m8_4" rows="2">तुमच्या गाईच्या लसीकरणाची वेळ आली মিলিটারি...</textarea></div>
                     <button class="btn-prime" onclick="saveModule('M8')">💾 Save Vaccine Rule</button>
                 </div>
             </div>
@@ -1444,15 +1444,17 @@
             let doctorSubmissions = JSON.parse(localStorage.getItem("vendor_submitted_cc"));
             let doctorPendingCount = (doctorSubmissions && doctorSubmissions.status === 'Pending') ? 1 : 0;
             
-            // 🔥 NEW: Vet Partner Pending Count 
             let vetPendingCount = parseInt(localStorage.getItem('admin_pending_vets_count')) || 0;
+            
+            // 🔥 नवीन: ब्रॉडकास्ट मेसेजेस लोकल स्टोरेजमधून घ्या
+            let broadcastNotifs = JSON.parse(localStorage.getItem("admin_broadcast_notifs")) || [];
 
             let processNotifications = (quotePendingCount) => {
                 let supportTickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
                 let openTicketsCount = supportTickets.filter(t => t.status === "Open").length;
 
-                // Total Notification Count
-                let totalPending = farmerPending.length + kycPending.length + adPending.length + commPending.length + doctorPendingCount + openTicketsCount + quotePendingCount + vetPendingCount;
+                // 🔥 नवीन: totalPending मध्ये broadcastNotifs.length ॲड केले आहे
+                let totalPending = farmerPending.length + kycPending.length + adPending.length + commPending.length + doctorPendingCount + openTicketsCount + quotePendingCount + vetPendingCount + broadcastNotifs.length;
 
                 let badge = document.getElementById('admin_notif_badge');
                 let listContainer = document.getElementById('admin_notif_list_container');
@@ -1472,6 +1474,18 @@
                     if(openTicketsCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m36'); toggleAdminNotifications();">📩 <b style="color:#d32f2f;">${openTicketsCount}</b> नवीन कस्टम सपोर्ट मेसेजेस</div>`;
                     if(quotePendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m1'); toggleAdminNotifications();">📦 <b style="color:#d32f2f;">${quotePendingCount}</b> नवीन कोटेशन (Bulk) रिक्वेस्ट्स</div>`;
                     
+                    // 🔥 नवीन: लाईव्ह टेक्स्ट ब्रॉडकास्ट नोटिफिकेशन्स बेल (Bell) मध्ये दाखवण्यासाठी
+                    if(broadcastNotifs.length > 0) {
+                        html += `<h5 style="margin:10px 0 5px; color:#1565c0; font-size:12px; border-bottom:1px solid #ccc; padding-bottom:5px;">📩 इतर नवीन मेसेजेस</h5>`;
+                        broadcastNotifs.forEach(bn => {
+                            html += `<div style="font-size: 11px; color: #444; padding: 6px 0; border-bottom: 1px dashed #eee;">
+                                        <b style="color:#d32f2f;">${bn.title}</b><br>
+                                        ${bn.message}
+                                        <div style="font-size:9px; color:#888; margin-top:2px;">⏰ ${bn.time || ''}</div>
+                                     </div>`;
+                        });
+                    }
+
                     listContainer.innerHTML = html;
                 } else {
                     badge.style.display = 'none';
@@ -1484,6 +1498,26 @@
             }).catch(e => {
                 console.error("Error loading notifications:", e);
                 processNotifications(0); // एरर आल्यास बाकीचे नोटिफिकेशन्स थांबू नयेत!
+            });
+        }
+
+        // 🔥 नवीन: ॲडमिनसाठी रिअल-टाइम टेक्स्ट नोटिफिकेशन्स ऐकण्यासाठी
+        function listenAdminBroadcasts() {
+            db.collection("broadcast_notifications").where("target", "==", "admin")
+            .onSnapshot(snapshot => {
+                let notifs = [];
+                snapshot.forEach(doc => {
+                    notifs.push(doc.data());
+                });
+                
+                // लेटेस्ट मेसेज वर दिसावेत म्हणून सॉर्ट करा (फक्त शेवटचे ५ ठेवा)
+                notifs.sort((a, b) => b.id - a.id);
+                localStorage.setItem("admin_broadcast_notifs", JSON.stringify(notifs.slice(0, 5)));
+                
+                // बेलचे आकडे अपडेट करा
+                if(typeof loadAdminNotifications === "function") {
+                    loadAdminNotifications(); 
+                }
             });
         }
 
@@ -1876,6 +1910,9 @@
             
             // 🔥 NEW: Vet Partner Approval Load
             loadPendingVetsForAdmin();
+
+            // 🔥 नवीन लाईन: टेक्स्ट नोटिफिकेशन्स ऐकण्यासाठी
+            listenAdminBroadcasts(); 
 
             loadAdminNotifications(); 
             loadCustomerSupportTickets(); 
