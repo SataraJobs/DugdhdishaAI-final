@@ -275,8 +275,16 @@
     }
 
     function loadVetNotifications() {
+        // 🔥 सुधारित: डॉक्टरचा स्वतःचा मोबाईल नंबर तपासा 🔥
+        let loggedInDoc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
+        let myMobile = loggedInDoc ? loggedInDoc.mobile : null;
+
         let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
-        let myNotifications = notifications.filter(n => n.target === CURRENT_ROLE || n.target === 'all');
+        let myNotifications = notifications.filter(n => 
+            n.target === CURRENT_ROLE || 
+            n.target === 'all' || 
+            n.target === myMobile
+        );
         return myNotifications;
     }
 
@@ -339,13 +347,21 @@
         }
     }
 
-    // --- 🔥 NEW: SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD ACROSS DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
+    // --- 🔥 SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD 🔥 ---
     function syncVetProfileFromCloud(doc) {
         if(doc && doc.mobile) {
             // 🔥 REAL-TIME SNAPSHOT FOR VET PROFILE UPDATE 🔥
             db.collection("vet_partners").doc(doc.mobile).onSnapshot(cloudDoc => {
                 if(cloudDoc.exists && cloudDoc.data()) {
                     let updatedDoc = cloudDoc.data();
+                    let oldDoc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
+                    
+                    // 🔥 सुधारित: जर ॲडमिनने प्रोफाईल नुकतेच मंजूर केले असेल, तर अलर्ट द्या 🔥
+                    if(oldDoc && oldDoc.isVerified === false && updatedDoc.isVerified === true) {
+                        alert("🎉 अभिनंदन! ॲडमिनने तुमचे प्रोफाईल मंजूर केले आहे. आता तुम्ही 'Available' होऊ शकता.");
+                        sendNotification("✅ प्रोफाईल मंजूर!", "तुमचे खाते ॲडमिनकडून यशस्वीरीत्या व्हेरिफाय झाले आहे.", updatedDoc.mobile);
+                    }
+
                     localStorage.setItem("current_logged_in_doc", JSON.stringify(updatedDoc));
                     
                     let allDoctors = JSON.parse(localStorage.getItem("live_vet_partners")) || [];
@@ -460,7 +476,7 @@
             lon: parseFloat(document.getElementById('v_lon').value),
             radius: parseInt(document.getElementById('v_radius').value) || 10,
             charges: { farm: document.getElementById('c_farm').value || "Not Set" },
-            status: "Online", 
+            status: "Offline", // नोंदणीवेळी बाय डिफॉल्ट Offline ठेवा
             isVerified: false, 
             rating: 0.0, 
             reviewsCount: 0
@@ -482,7 +498,7 @@
             'admin'
         );
 
-        alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत!");
+        alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत! ॲडमिनच्या मंजुरीची प्रतीक्षा करा.");
         window.location.reload(); 
     }
 
@@ -495,17 +511,23 @@
         
         document.getElementById('dash_name').innerText = doc.name;
         document.getElementById('dash_edu').innerText = doc.qual;
-        document.getElementById('v_status').value = doc.status;
         document.getElementById('dash_rating').innerText = doc.rating.toFixed(1);
         document.getElementById('dash_reviews').innerText = doc.reviewsCount;
 
         let badge = document.getElementById('dash_badge');
+        let statusSelect = document.getElementById('v_status'); // Dropdown select
+
+        // 🔥 सुधारित: मंजुरीनुसार Online/Offline बटन लॉक करणे 🔥
         if(doc.isVerified) {
             badge.className = "verified-badge";
             badge.innerText = "✅ KYC Verified";
+            statusSelect.disabled = false; // मंजूर झाल्यावर ऑनलाईन होता येईल
+            statusSelect.value = doc.status; // जे असेल ते स्टेटस सेट करा
         } else {
             badge.className = "pending-badge";
             badge.innerText = "⏳ KYC Pending";
+            statusSelect.value = "Offline"; // मंजुरी मिळेपर्यंत Offline ठेवा
+            statusSelect.disabled = true; // Dropdown लॉक करा
         }
 
         let allApts = JSON.parse(localStorage.getItem("live_appointments")) || [];
@@ -549,7 +571,7 @@
         listContainer.innerHTML = html;
     }
 
-    // --- 🔥 NEW: SYNC APPOINTMENTS FROM FIREBASE CLOUD ACROSS DEVICES (REAL-TIME SNAPSHOT) 🔥 ---
+    // --- 🔥 SYNC APPOINTMENTS FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
     function syncAppointmentsFromCloud(docId) {
         db.collection("vet_appointments").where("docId", "==", docId).onSnapshot(querySnapshot => {
             let cloudApts = [];
@@ -589,6 +611,14 @@
 
     function updateStatus() {
         let doc = JSON.parse(localStorage.getItem("current_logged_in_doc"));
+        
+        // जर प्रोफाईल पेंडिंग असेल, तर ऑनलाईन होऊ देऊ नका
+        if(doc && !doc.isVerified) {
+            alert("तुमचे प्रोफाईल अजून ॲडमिनकडून मंजूर झालेले नाही. मंजुरी मिळाल्यावर तुम्ही काम सुरू करू शकता.");
+            document.getElementById('v_status').value = "Offline";
+            return;
+        }
+
         if(doc) {
             doc.status = document.getElementById('v_status').value;
             localStorage.setItem("current_logged_in_doc", JSON.stringify(doc));
