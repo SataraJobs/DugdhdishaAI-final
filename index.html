@@ -41,7 +41,8 @@
             
             // 🚀 नियम २: जर युजर प्रमाणित "पशुवैद्यक (Vet)" असेल आणि ॲप नव्याने उघडले असेल...
             else if (role === 'vet' && isVerified && !fromSpecialPage) {
-                window.location.replace("vet_partner.html"); 
+                // (टीप: 'vet_dashboard.html' च्या जागी तुमच्या व्हेट डॅशबोर्डच्या फाईलचे खरे नाव टाका)
+                window.location.replace("vet_dashboard.html"); 
                 return;
             }
             
@@ -71,12 +72,12 @@
                         topBtn.style.background = "linear-gradient(145deg, #1976d2, #1565c0)";
                         topBtn.style.borderColor = "#1565c0";
                         topBtn.style.display = "inline-block";
-                        topBtn.onclick = function() { window.location.href = "vet_partner.html"; }; 
+                        topBtn.onclick = function() { window.location.href = "vet_dashboard.html"; }; 
                     }
                     if(sideBtn) {
                         sideBtn.innerHTML = '<span class="m-icon">🩺</span> माझे क्लिनिक';
                         sideBtn.style.display = "flex";
-                        sideBtn.onclick = function() { window.location.href = "vet_partner.html"; }; 
+                        sideBtn.onclick = function() { window.location.href = "vet_dashboard.html"; }; 
                     }
                 }
             }
@@ -407,7 +408,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत垓 आहे...</p>
     </div>
 </div>
 
@@ -733,6 +734,7 @@
         </a>
         
         <!-- 🔥 NEW: VET / पशुवैद्यक BUTTON 🔥 -->
+        <!-- बदल: इथे findNearestVets() हे फंक्शन कॉल केले आहे -->
         <a onclick="findNearestVets()" class="dynamic-card card-vet">
             <div class="dynamic-icon">🩺</div><div class="dynamic-title" style="color:#2e7d32;">पशुवैद्यक</div>
         </a>
@@ -1042,22 +1044,22 @@
                     fetchAndSortVets(userLat, userLon, listContainer);
                 },
                 (error) => {
-                    alert("लोकेशन घेण्यास अडचण! कृपया तुमच्या मोबाईलचे GPS/Location चालू करा.");
+                    // लोकेशन न दिल्यास किंवा GPS बंद असल्यास विना-लोकेशन लिस्ट दाखवा
+                    console.warn("Location error:", error);
                     fetchAndSortVets(null, null, listContainer);
                 },
-                { enableHighAccuracy: true, timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 5000 }
             );
         } else {
-            alert("तुमचा ब्राऊझर लोकेशन सपोर्ट करत नाही.");
             fetchAndSortVets(null, null, listContainer);
         }
     }
 
     // ३. Firebase मधून व्हेटर्नरी डॉक्टर आणणे आणि अंतरानुसार सॉर्ट करणे
     function fetchAndSortVets(userLat, userLon, listContainer) {
-        listContainer.innerHTML = '<p style="text-align:center; color:#1b5e20;">⏳ जवळचे डॉक्टर शोधत आहे...</p>';
+        listContainer.innerHTML = '<p style="text-align:center; color:#1b5e20;">⏳ डॉक्टर शोधत आहे...</p>';
 
-        // 🔥 FIX: Firestore Index Error टाळण्यासाठी सर्व डेटा आणून JS मध्ये फिल्टर करत आहोत 🔥
+        // Firebase इंडेक्सिंग एरर टाळण्यासाठी सर्व व्हेट्स घेऊन JS मध्ये फिल्टर करत आहोत
         db.collection("vet_partners").get()
           .then((querySnapshot) => {
               let vets = [];
@@ -1065,11 +1067,11 @@
               querySnapshot.forEach((doc) => {
                   let v = doc.data();
                   
-                  // इस व्हेरीफाईड चेक (String किंवा Boolean दोन्ही हँडल करण्यासाठी)
-                  let isVetVerified = v.isVerified === true || String(v.isVerified) === "true";
-                  
-                  // फक्त मंजूर (Verified) डॉक्टरच लिस्टमध्ये घ्या
-                  if (isVetVerified) {
+                  // Firebase मध्ये isVerified boolean (true) किंवा string ("true") असू शकते
+                  let isVerified = v.isVerified === true || String(v.isVerified) === "true";
+                  let isOnline = v.status === "Online" || v.status === "online";
+
+                  if (isVerified && isOnline) {
                       if (userLat && userLon && v.lat && v.lon) {
                           v.distance = calculateDistance(userLat, userLon, v.lat, v.lon);
                       } else {
@@ -1084,27 +1086,23 @@
 
               // ४. UI मध्ये डॉक्टरची लिस्ट दाखवा
               if (vets.length === 0) {
-                  listContainer.innerHTML = '<p style="text-align:center; color:#888;">सध्या कोणतेही मंजूर पशुवैद्यक उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>';
+                  listContainer.innerHTML = '<p style="text-align:center; color:#888;">सध्या कोणतेही पशुवैद्यक ऑनलाईन उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>';
                   return;
               }
 
               let html = '';
               vets.forEach(vet => {
-                  let distText = vet.distance !== Infinity 
+                  let distText = (vet.distance !== Infinity && vet.distance) 
                       ? `<span style="color:#d32f2f; font-weight:bold; font-size:11px;">📍 ${vet.distance.toFixed(1)} km दूर</span>` 
-                      : '';
-
-                  // डॉक्टर ऑनलाईन आहे की ऑफलाईन त्याचा बॅज
-                  let statusColor = vet.status === 'Online' ? '#2e7d32' : '#d32f2f';
-                  let statusText = vet.status === 'Online' ? '🟢 Available' : '🔴 Busy/Offline';
+                      : `<span style="color:#888; font-size:10px;">📍 लोकेशन उपलब्ध नाही</span>`;
 
                   html += `
                   <div class="vet-card">
                       <div class="vet-header">
                           <div>
-                              <h4 class="vet-name">👨‍⚕️ ${vet.name} <span style="font-size:10px; color:${statusColor}; margin-left:5px;">${statusText}</span></h4>
+                              <h4 class="vet-name">👨‍⚕️ ${vet.name}</h4>
                               <p style="margin:4px 0; font-size:11px; color:#555;">शिक्षण: ${vet.qual || 'N/A'}</p>
-                              <div class="vet-loc">फी: ₹${vet.charges ? vet.charges.farm : 'कॉल करा'}</div>
+                              <div class="vet-loc">फी: ₹${vet.charges && vet.charges.farm ? vet.charges.farm : 'कॉल करा'}</div>
                           </div>
                           ${distText}
                       </div>
