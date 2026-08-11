@@ -257,9 +257,8 @@
         notifications.unshift(newNotif);
         localStorage.setItem('system_notifications', JSON.stringify(notifications));
 
-        // 🔥 FIREBASE CLOUD SAVE FOR BROADCAST/SYSTEM NOTIFICATIONS 🔥
-        db.collection("broadcast_notifications").add(newNotif)
-        .catch(e => console.error("Error saving notification to cloud:", e));
+        // 🔥 FIREBASE ला डेटा पाठवा आणि Promise रिटर्न करा जेणेकरून आपण त्याची वाट पाहू शकू 🔥
+        return db.collection("broadcast_notifications").add(newNotif);
     }
 
     function autoClearOldNotifications() {
@@ -488,18 +487,36 @@
         
         localStorage.setItem("current_logged_in_doc", JSON.stringify(docProfile));
 
-        // 🔥 FIREBASE CLOUD SAVE: डॉक्टर प्रोफाईल डेटाबेसवर सेव्ह करा 🔥
-        db.collection("vet_partners").doc(docProfile.mobile).set(docProfile)
-        .catch(e => console.error("Error saving vet partner to cloud:", e));
+        // 🔥 बदल: सबमिट बटण क्लिक केल्यावर युजरला कळावे की प्रोसेस चालू आहे 🔥
+        let submitBtn = document.querySelector('.btn-blue');
+        if(submitBtn) {
+            submitBtn.innerText = "⏳ डेटा सेव्ह होत आहे, कृपया थांबा...";
+            submitBtn.disabled = true;
+        }
 
-        sendNotification(
+        // 🔥 मुख्य फिक्स: Firebase वर डेटा सेव्ह होण्याची वाट पहा (Promise.all) 🔥
+        let saveProfilePromise = db.collection("vet_partners").doc(docProfile.mobile).set(docProfile);
+        
+        let saveNotifPromise = sendNotification(
             "👨‍⚕️ नवीन व्हेटर्नरी डॉक्टर नोंदणी (KYC Pending)",
             `${name} (${mobile}) यांनी व्हेटर्नरी डॉक्टर/मित्र बनण्यासाठी नोंदणी केली आहे. त्यांचे KYC तपासा.`,
             'admin'
         );
 
-        alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत! ॲडमिनच्या मंजुरीची प्रतीक्षा करा.");
-        window.location.reload(); 
+        Promise.all([saveProfilePromise, saveNotifPromise])
+        .then(() => {
+            // जेव्हा दोन्ही गोष्टी Firebase वर यशस्वीरीत्या सेव्ह होतील, तेव्हाच रिफ्रेश करा!
+            alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत! ॲडमिनच्या मंजुरीची प्रतीक्षा करा.");
+            window.location.reload(); 
+        })
+        .catch(e => {
+            console.error("Error saving to cloud:", e);
+            alert("नेटवर्क एरर! डेटा सेव्ह करताना अडचण आली. कृपया इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.");
+            if(submitBtn) {
+                submitBtn.innerText = "✅ रजिस्टर करा (Submit Profile)";
+                submitBtn.disabled = false;
+            }
+        });
     }
 
     // ---------------------------------------------------------
