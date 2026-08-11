@@ -7,15 +7,15 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b5e20">
     
-    <!--  NEW: Cropper.js CSS for Admin Image Cropping  -->
+    <!-- 🔥 NEW: Cropper.js CSS for Admin Image Cropping 🔥 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 
-    <!--  रिपोर्ट लायब्ररी (Excel + PDF) -->
+    <!-- 📊 रिपोर्ट लायब्ररी (Excel + PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-    <!--  FIREBASE SDK  -->
+    <!-- 🔥 FIREBASE SDK 🔥 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -39,7 +39,7 @@
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-color); margin-left: 280px; transition: margin-left 0.3s ease; width: 100%; }
         .main-content.full-width { margin-left: 0; }
         
-        /*  FIXED TOP-BAR ALIGNMENT  */
+        /* 🔥 FIXED TOP-BAR ALIGNMENT 🔥 */
         .top-bar { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .top-bar-left-wrap { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
         .toggle-btn { background: var(--primary-color); color: white; border: none; padding: 8px 12px; font-size: 18px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-shrink: 0; }
@@ -93,14 +93,14 @@
         .ticket-reply-area { display: flex; gap: 10px; margin-top: 10px; }
         .ticket-reply-area textarea { flex: 1; height: 40px; padding: 10px; }
 
-        /*  NEW: IMAGE CROP MODAL STYLES  */
+        /* 🔥 NEW: IMAGE CROP MODAL STYLES 🔥 */
         .crop-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column;}
         .crop-container { width: 90%; max-width: 400px; height: 60vh; background: #000; margin-bottom: 20px;}
         .crop-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;}
         .crop-btn { background: #1976d2; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;}
         .crop-btn.save { background: #2e7d32; font-size: 16px; padding: 12px 25px;}
         
-        /*  NEW: VIEW DOCUMENT MODAL STYLES  */
+        /* 🔥 NEW: VIEW DOCUMENT MODAL STYLES 🔥 */
         .doc-modal-overlay {
             display: none;
             position: fixed;
@@ -152,7 +152,7 @@
             background: #f9f9f9;
         }
 
-        /*  Report Table Style (जुळवून घेतले) */
+        /* 📊 Report Table Style (जुळवून घेतले) */
         .report-table {
             width: 100%;
             border-collapse: collapse;
@@ -189,68 +189,68 @@
 </head>
 <body onload="initAdminPanel()">
 
-    <!--  LEFT SIDEBAR -->
+    <!-- 🟢 LEFT SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>दुग्ध दिशा AI </h2>
+            <h2>दुग्ध दिशा AI 👑</h2>
             <p>सुपर ॲडमिन मास्टर पॅनेल</p>
         </div>
         <div class="menu-list">
-            <div class="menu-item active" onclick="switchTab('m1')"> १. Dashboard</div>
+            <div class="menu-item active" onclick="switchTab('m1')">📊 १. Dashboard</div>
             
-            <div class="menu-item" onclick="switchTab('m_farmer_pay')" style="color: #4caf50; font-weight: 900;"> २. शेतकरी प्लॅन मंजुरी</div>
-            <div class="menu-item" onclick="switchTab('m_doctor_approve')" style="color: #1976d2; font-weight: 900;"> ३. डॉक्टर नंबर ॲप्रूव्हल</div>
-            <div class="menu-item" onclick="switchTab('m_vet_approve')" style="color: #0288d1; font-weight: 900;"> ४. व्हेटर्नरी डॉक्टर मंजुरी</div>
-            <div class="menu-item" onclick="switchTab('m35')" style="color: #ffca28; font-weight: 900;"> ५. Commission Approvals</div>
-            <div class="menu-item" onclick="switchTab('m34')" style="color: #00e676; font-weight: 900;"> ६. WhatsApp CRM</div>
-            <div class="menu-item" onclick="switchTab('m36')" style="color: #ff5252; font-weight: 900;"> ७. Customer Support</div>
+            <div class="menu-item" onclick="switchTab('m_farmer_pay')" style="color: #4caf50; font-weight: 900;">🧑‍🌾 २. शेतकरी प्लॅन मंजुरी</div>
+            <div class="menu-item" onclick="switchTab('m_doctor_approve')" style="color: #1976d2; font-weight: 900;">📞 ३. डॉक्टर नंबर ॲप्रूव्हल</div>
+            <div class="menu-item" onclick="switchTab('m_vet_approve')" style="color: #0288d1; font-weight: 900;">👨‍⚕️ ४. व्हेटर्नरी डॉक्टर मंजुरी</div>
+            <div class="menu-item" onclick="switchTab('m35')" style="color: #ffca28; font-weight: 900;">💰 ५. Commission Approvals</div>
+            <div class="menu-item" onclick="switchTab('m34')" style="color: #00e676; font-weight: 900;">💬 ६. WhatsApp CRM</div>
+            <div class="menu-item" onclick="switchTab('m36')" style="color: #ff5252; font-weight: 900;">📩 ७. Customer Support</div>
             
-            <div class="menu-item" onclick="switchTab('m2')"> ८. User Management</div>
-            <div class="menu-item" onclick="switchTab('m32')" style="color: #ffca28; font-weight: 900;"> ९. विक्रेता पडताळणी (KYC)</div>
-            <div class="menu-item" onclick="switchTab('m3')"> १०. Feed Database</div>
-            <div class="menu-item" onclick="switchTab('m4')"> ११. Formula Engine</div>
-            <div class="menu-item" onclick="switchTab('m5')"> १२. Recommendation Engine</div>
-            <div class="menu-item" onclick="switchTab('m6')"> १३. Disease Knowledge Base</div>
-            <div class="menu-item" onclick="switchTab('m7')"> १४. Medicine Database</div>
-            <div class="menu-item" onclick="switchTab('m8')"> १५. Vaccination</div>
-            <div class="menu-item" onclick="switchTab('m9')"> १६. Breeding Module</div>
-            <div class="menu-item" onclick="switchTab('m10')"> १७. Feed Price</div>
-            <div class="menu-item" onclick="switchTab('m11')"> १८. Milk Rate</div>
-            <div class="menu-item" onclick="switchTab('m12')"> १९. Notifications</div>
-            <div class="menu-item" onclick="switchTab('m13')"> २०. Ad Settings & Flash Ads</div>
-            <div class="menu-item" onclick="switchTab('m14')"> २१. Video Library</div>
-            <div class="menu-item" onclick="switchTab('m15')"> २२. PDF Library</div>
-            <div class="menu-item" onclick="switchTab('m16')"> २३. AI Settings</div>
-            <div class="menu-item" onclick="switchTab('m17')"> २४. Translation</div>
-            <div class="menu-item" onclick="switchTab('m18')"> २५. Form Builder</div>
-            <div class="menu-item" onclick="switchTab('m19')"> २६. Dropdown Builder</div>
-            <div class="menu-item" onclick="switchTab('m20')"> २७. Report Builder</div>
-            <div class="menu-item" onclick="switchTab('m21')"> २८. Backup</div>
-            <div class="menu-item" onclick="switchTab('m22')"> २९. Roles & Permissions</div>
-            <div class="menu-item" onclick="switchTab('m23')"> ३०. App Settings</div>
-            <div class="menu-item" onclick="switchTab('m24')"> ३१. Advertisement</div>
-            <div class="menu-item" onclick="switchTab('m25')" style="color: #ffca28; font-weight: 900;"> ३२. Pricing & Packages</div>
-            <div class="menu-item" onclick="switchTab('m26')"> ३३. Payment & Delivery</div>
-            <div class="menu-item" onclick="switchTab('m33')" style="color: #ffca28; font-weight: 900;"> ३४. Platform Fee Settings</div>
-            <div class="menu-item" onclick="switchTab('m31')" style="color: #ffca28; font-weight: 900;"> ३५. Ad Approvals</div>
-            <div class="menu-item" onclick="switchTab('m27')"> ३६. Analytics</div>
-            <div class="menu-item" onclick="switchTab('m28')"> ३७. Audit Log</div>
-            <div class="menu-item" onclick="switchTab('m29')"> ३८. CMS Editor</div>
-            <div class="menu-item" onclick="switchTab('m30')"> ३९. API Manager</div>
-            <div class="menu-item" onclick="switchTab('m_khillar_admin')" style="color: #ff9800; font-weight: 900;"> ४०. शर्यत बैल व खिलार नियंत्रण</div>
-            <!--  NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL  -->
-            <div class="menu-item" onclick="switchTab('m_all_market_ads')" style="color: #00bcd4; font-weight: 900;"> ४१. सर्व पशु बाजार नियंत्रण</div>
+            <div class="menu-item" onclick="switchTab('m2')">👥 ८. User Management</div>
+            <div class="menu-item" onclick="switchTab('m32')" style="color: #ffca28; font-weight: 900;">📋 ९. विक्रेता पडताळणी (KYC)</div>
+            <div class="menu-item" onclick="switchTab('m3')">🌾 १०. Feed Database</div>
+            <div class="menu-item" onclick="switchTab('m4')">🧮 ११. Formula Engine</div>
+            <div class="menu-item" onclick="switchTab('m5')">🧠 १२. Recommendation Engine</div>
+            <div class="menu-item" onclick="switchTab('m6')">🩺 १३. Disease Knowledge Base</div>
+            <div class="menu-item" onclick="switchTab('m7')">💊 १४. Medicine Database</div>
+            <div class="menu-item" onclick="switchTab('m8')">💉 १५. Vaccination</div>
+            <div class="menu-item" onclick="switchTab('m9')">🧬 १६. Breeding Module</div>
+            <div class="menu-item" onclick="switchTab('m10')">💵 १७. Feed Price</div>
+            <div class="menu-item" onclick="switchTab('m11')">🥛 १८. Milk Rate</div>
+            <div class="menu-item" onclick="switchTab('m12')">📢 १९. Notifications</div>
+            <div class="menu-item" onclick="switchTab('m13')">🖼️ २०. Ad Settings & Flash Ads</div>
+            <div class="menu-item" onclick="switchTab('m14')">🎥 २१. Video Library</div>
+            <div class="menu-item" onclick="switchTab('m15')">📄 २२. PDF Library</div>
+            <div class="menu-item" onclick="switchTab('m16')">⚙️ २३. AI Settings</div>
+            <div class="menu-item" onclick="switchTab('m17')">🌐 २४. Translation</div>
+            <div class="menu-item" onclick="switchTab('m18')">📋 २५. Form Builder</div>
+            <div class="menu-item" onclick="switchTab('m19')">🔽 २६. Dropdown Builder</div>
+            <div class="menu-item" onclick="switchTab('m20')">📊 २७. Report Builder</div>
+            <div class="menu-item" onclick="switchTab('m21')">💾 २८. Backup</div>
+            <div class="menu-item" onclick="switchTab('m22')">🔑 २९. Roles & Permissions</div>
+            <div class="menu-item" onclick="switchTab('m23')">📱 ३०. App Settings</div>
+            <div class="menu-item" onclick="switchTab('m24')">📺 ३१. Advertisement</div>
+            <div class="menu-item" onclick="switchTab('m25')" style="color: #ffca28; font-weight: 900;">💳 ३२. Pricing & Packages</div>
+            <div class="menu-item" onclick="switchTab('m26')">💰 ३३. Payment & Delivery</div>
+            <div class="menu-item" onclick="switchTab('m33')" style="color: #ffca28; font-weight: 900;">💰 ३४. Platform Fee Settings</div>
+            <div class="menu-item" onclick="switchTab('m31')" style="color: #ffca28; font-weight: 900;">🔥 ३५. Ad Approvals</div>
+            <div class="menu-item" onclick="switchTab('m27')">📈 ३६. Analytics</div>
+            <div class="menu-item" onclick="switchTab('m28')">🛡️ ३७. Audit Log</div>
+            <div class="menu-item" onclick="switchTab('m29')">📝 ३८. CMS Editor</div>
+            <div class="menu-item" onclick="switchTab('m30')">🔌 ३९. API Manager</div>
+            <div class="menu-item" onclick="switchTab('m_khillar_admin')" style="color: #ff9800; font-weight: 900;">🏆 ४०. शर्यत बैल व खिलार नियंत्रण</div>
+            <!-- 🔥 NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥 -->
+            <div class="menu-item" onclick="switchTab('m_all_market_ads')" style="color: #00bcd4; font-weight: 900;">🐄 ४१. सर्व पशु बाजार नियंत्रण</div>
         </div>
     </div>
 
-    <!--  RIGHT MAIN CONTENT -->
+    <!-- 🔵 RIGHT MAIN CONTENT -->
     <div class="main-content" id="main_content">
         
-        <!--  FIXED HEADER ALIGNMENT  -->
+        <!-- 🔥 FIXED HEADER ALIGNMENT 🔥 -->
         <div class="top-bar">
             <div class="top-bar-left-wrap">
                 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-                <h2 id="current_module_title"> १. Dashboard</h2>
+                <h2 id="current_module_title">📊 १. Dashboard</h2>
             </div>
             
             <div class="top-bar-right-wrap">
@@ -264,7 +264,7 @@
                 </div>
 
                 <div class="top-bar-right">सुपर ॲडमिन<br>९५७९५३५२९०</div>
-                <button class="btn-danger btn-logout" style="margin:0; width:auto; box-shadow:0 2px 5px rgba(0,0,0,0.1);" onclick="logoutAdmin()"> लॉग आऊट</button>
+                <button class="btn-danger btn-logout" style="margin:0; width:auto; box-shadow:0 2px 5px rgba(0,0,0,0.1);" onclick="logoutAdmin()">🚪 लॉग आऊट</button>
             </div>
         </div>
 
@@ -286,12 +286,12 @@
                 </div>
                 
                 <div class="admin-card" style="margin-top: 20px;">
-                    <h4> कृषी मॉल ऑर्डर्स (Live Orders)</h4>
+                    <h4>🛒 कृषी मॉल ऑर्डर्स (Live Orders)</h4>
                     <div class="order-list" id="live_orders_list"></div>
                 </div>
             </div>
 
-            <!--  NEW: M_VET_APPROVE - VET PARTNER APPROVALS  -->
+            <!-- 🔥 NEW: M_VET_APPROVE - VET PARTNER APPROVALS 🔥 -->
             <div id="m_vet_approve" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #0288d1;">
                     <h4 style="color:#0288d1; border-bottom-color:#b3e5fc;">👨‍⚕️ व्हेटर्नरी डॉक्टर (Vet Partner) मंजुरी</h4>
@@ -302,10 +302,10 @@
                 </div>
             </div>
 
-            <!--  NEW: M36 - CUSTOMER SUPPORT HELPDESK  -->
+            <!-- 🔥 NEW: M36 - CUSTOMER SUPPORT HELPDESK 🔥 -->
             <div id="m36" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #ff5252;">
-                    <h4 style="color:#c62828; border-bottom-color:#ffcdd2;"> कस्टम सपोर्ट डेस्क (Helpdesk Tickets)</h4>
+                    <h4 style="color:#c62828; border-bottom-color:#ffcdd2;">📩 कस्टम सपोर्ट डेस्क (Helpdesk Tickets)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापारी किंवा शेतकऱ्यांनी ॲपमधून विचारलेले प्रश्न येथे दिसतील. त्यांना रिप्लाय केल्यावर त्यांच्या डॅशबोर्डमध्ये उत्तर दिसेल.</p>
                     <div id="support_tickets_container"></div>
                 </div>
@@ -314,15 +314,15 @@
             <!-- M34 - WHATSAPP CRM & REPORTS -->
             <div id="m34" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #00e676;">
-                    <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;"> WhatsApp ब्रॉडकास्ट आणि CRM</h4>
+                    <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;">💬 WhatsApp ब्रॉडकास्ट आणि CRM</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">येथून तुम्ही व्यापाऱ्यांन त्यांच्या दिवसाच्या ऑर्डर्सची लिस्ट पाठवू शकता किंवा कमिशन भरण्यासाठी रिमाइंडर मेसेज देऊ शकता.</p>
                     
                     <div class="grid-2">
                         <div class="field">
                             <label>संदेशाचा प्रकार (Message Type)</label>
                             <select id="wa_msg_type" onchange="updateWhatsAppUI()">
-                                <option value="orders"> दिवसाच्या ऑर्डर्स पाठवा (Send Orders)</option>
-                                <option value="dues"> कमिशन/थकबाकी रिमाइंडर (Dues Reminder)</option>
+                                <option value="orders">📦 दिवसाच्या ऑर्डर्स पाठवा (Send Orders)</option>
+                                <option value="dues">💰 कमिशन/थकबाकी रिमाइंडर (Dues Reminder)</option>
                             </select>
                         </div>
                         <div class="field">
@@ -341,7 +341,7 @@
                     </div>
 
                     <div style="background:#e8f5e9; padding:15px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:15px;">
-                        <h5 style="margin: 0 0 5px; color:#2e7d32;"> मेसेजचा नमुना (Preview)</h5>
+                        <h5 style="margin: 0 0 5px; color:#2e7d32;">📄 मेसेजचा नमुना (Preview)</h5>
                         <p id="wa_msg_preview" style="font-size: 12px; color: #555; white-space: pre-wrap; font-family: monospace;">
 *दुग्ध दिशा AI - नवीन ऑर्डर्स*
 तारीख: [Date]
@@ -355,14 +355,14 @@
                         </p>
                     </div>
 
-                    <button class="btn-prime" style="background:#00c853; color:white; font-size:16px; box-shadow:0 4px 10px rgba(0,200,83,0.3);" onclick="sendWhatsAppMessage()"> Send on WhatsApp</button>
+                    <button class="btn-prime" style="background:#00c853; color:white; font-size:16px; box-shadow:0 4px 10px rgba(0,200,83,0.3);" onclick="sendWhatsAppMessage()">📲 Send on WhatsApp</button>
                 </div>
             </div>
 
             <!-- M35 - COMMISSION APPROVALS -->
             <div id="m35" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#ff9800; border-bottom-color:#ffe0b2;"> कमिशन आणि ड्युज मंजुरी (Ledger Clearance)</h4>
+                    <h4 style="color:#ff9800; border-bottom-color:#ffe0b2;">💰 कमिशन आणि ड्युज मंजुरी (Ledger Clearance)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी COD ऑर्डरचे कमिशन अनलॉक करण्यासाठी किंवा महिन्याचे बिल क्लियर करण्यासाठी केलेले पेमेंट तपासा. 'Approve' केल्यावर त्यांचा नंबर अनलॉक होईल.</p>
                     <div id="commission_approvals_container"></div>
                 </div>
@@ -371,7 +371,7 @@
             <!-- FARMER PAYMENT APPROVALS -->
             <div id="m_farmer_pay" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#2e7d32; border-bottom-color:#c8e6c9;"> शेतकरी प्लॅन मंजुरी (Farmer Plan Approvals)</h4>
+                    <h4 style="color:#2e7d32; border-bottom-color:#c8e6c9;">🧑‍🌾 शेतकरी प्लॅन मंजुरी (Farmer Plan Approvals)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">शेतकऱ्यांनी 'My Account' मधून केलेल्या पेमेंटचे UTR तपासा. 'Approve' केल्यावर त्यांचा प्लॅन चालू होईल.<br><b>टीप: रात्री ८ नंतर ॲप्रूव्ह केलेले पास (24h) आपोआप दुसऱ्या दिवशी सकाळी ८ वाजल्यापासून २४ तास मोजले जातील.</b></p>
                     <div id="farmer_payments_container"></div>
                 </div>
@@ -380,7 +380,7 @@
             <!-- DOCTOR CALL NUMBER APPROVALS -->
             <div id="m_doctor_approve" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#1976d2; border-bottom-color:#bbdefb;"> कंपनी डॉक्टर नंबर मंजुरी (Call Routing Approvals)</h4>
+                    <h4 style="color:#1976d2; border-bottom-color:#bbdefb;">📞 कंपनी डॉक्टर नंबर मंजुरी (Call Routing Approvals)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी 'Brand Partner' मधून टाकलेले नंबर तपासा. 'Approve' केल्यावर हे नंबर 'Round-Robin' सिस्टीममध्ये ॲड होतील आणि शेतकऱ्यांचे कॉल्स इथे लागतील.</p>
                     <div id="doctor_numbers_container"></div>
                 </div>
@@ -389,9 +389,9 @@
             <!-- M2: USER MANAGEMENT -->
             <div id="m2" class="tab-content">
                 <div class="admin-card">
-                    <h4> वापरकर्ता नियंत्रण (Search & Edit User)</h4>
+                    <h4>👥 वापरकर्ता नियंत्रण (Search & Edit User)</h4>
                     <div class="field"><label>Search User (Mobile Number)</label><input type="text" id="search_user_mobile" placeholder="Enter Mobile Number..." maxlength="10"></div>
-                    <button class="btn-prime" onclick="searchUser()"> Search User</button>
+                    <button class="btn-prime" onclick="searchUser()">🔍 Search User</button>
                     <hr style="margin:20px 0; border:1px solid #eee;">
                     <div id="user_edit_section" style="display: none;">
                         <div class="field"><label>User Name</label><input type="text" id="edit_user_name"></div>
@@ -403,19 +403,19 @@
                             </select>
                         </div>
                         <div class="grid-2">
-                            <button class="btn-prime" onclick="updateUser()"> Update User</button>
-                            <button class="btn-danger" onclick="deleteUser()"> Delete User</button>
+                            <button class="btn-prime" onclick="updateUser()">💾 Update User</button>
+                            <button class="btn-danger" onclick="deleteUser()">🗑️ Delete User</button>
                         </div>
                     </div>
                 </div>
-                <!--  सर्व युजर्सची यादी आणि डिलीट बटन -->
+                <!-- 📋 सर्व युजर्सची यादी आणि डिलीट बटन -->
                 <div class="admin-card">
-                    <h4> सर्व युजर्स (All Registered Users)</h4>
+                    <h4>📋 सर्व युजर्स (All Registered Users)</h4>
                     <div id="all_users_table_container"></div>
                 </div>
-                <!--  मंजूर डीलर्स / सप्लायर्सची यादी आणि डिलीट बटन -->
+                <!-- 📦 मंजूर डीलर्स / सप्लायर्सची यादी आणि डिलीट बटन -->
                 <div class="admin-card">
-                    <h4> मंजूर सप्लायर्स / विक्रेते (Approved Suppliers)</h4>
+                    <h4>📦 मंजूर सप्लायर्स / विक्रेते (Approved Suppliers)</h4>
                     <div id="supplier_table_container"></div>
                 </div>
             </div>
@@ -423,7 +423,7 @@
             <!-- M32: VENDOR KYC APPROVALS -->
             <div id="m32" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#0288d1; border-bottom-color:#b3e5fc;"> प्रलंबित विक्रेता पडताळणी (Vendor KYC Approvals)</h4>
+                    <h4 style="color:#0288d1; border-bottom-color:#b3e5fc;">📋 प्रलंबित विक्रेता पडताळणी (Vendor KYC Approvals)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">ज्या व्यापाऱ्यांनी माल विकण्यासाठी स्वतःचे डॉक्युमेंट्स (आधार/दुकान) अपलोड केले आहेत, ते येथे दिसतील. त्यांना Approve केल्यावरच ते प्रॉडक्ट आणि ॲड लावू शकतील.</p>
                     <div id="pending_kyc_container"></div>
                 </div>
@@ -432,7 +432,7 @@
             <!-- M3: FEED DATABASE -->
             <div id="m3" class="tab-content">
                 <div class="admin-card">
-                    <h4> नवीन चारा लायब्ररी (Add Feed)</h4>
+                    <h4>🌾 नवीन चारा लायब्ररी (Add Feed)</h4>
                     <div class="field"><label>Feed Name</label><input type="text" id="m3_name" placeholder="उदा. मका मुरघास"></div>
                     <div class="grid-2">
                         <div class="field"><label>Category</label><select id="m3_cat"><option>हिरवा चारा</option><option>सुका चारा</option><option>पेंड</option></select></div>
@@ -445,14 +445,14 @@
                     </div>
                     <div class="field"><label>Description</label><textarea id="m3_desc" rows="3" placeholder="चाऱ्याची सविस्तर माहिती..."></textarea></div>
                     <div class="field"><label>Status</label><select id="m3_status"><option>Active</option><option>Inactive</option></select></div>
-                    <button class="btn-prime" onclick="saveModule('M3')"> Save Feed</button>
+                    <button class="btn-prime" onclick="saveModule('M3')">💾 Save Feed</button>
                 </div>
             </div>
 
             <!-- M4: FORMULA ENGINE -->
             <div id="m4" class="tab-content">
                 <div class="admin-card">
-                    <h4> फॉर्म्युला इंजिन नियम (Formula Engine)</h4>
+                    <h4>🧮 फॉर्म्युला इंजिन नियम (Formula Engine)</h4>
                     <div class="field"><label>DM Formula (Dry Matter Rule)</label><input type="text" id="m4_f1" value="(Weight * 0.02) + (Milk / 3)"></div>
                     <div class="field"><label>Protein Formula (CP Rule)</label><input type="text" id="m4_f2" value="(Weight * 1) + (Milk * 100)"></div>
                     <div class="field"><label>Energy Formula (ME Rule)</label><input type="text" id="m4_f3" value="8 + (Milk * 0.7)"></div>
@@ -460,14 +460,14 @@
                         <div class="field"><label>Target FCR</label><input type="number" id="m4_f4" value="1.2"></div>
                         <div class="field"><label>Tolerance % (स्वीकार्य त्रुटी)</label><input type="number" id="m4_f5" value="5"></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M4')"> Update Formulas</button>
+                    <button class="btn-prime" onclick="saveModule('M4')">⚙️ Update Formulas</button>
                 </div>
             </div>
 
             <!-- M5: RECOMMENDATION ENGINE -->
             <div id="m5" class="tab-content">
                 <div class="admin-card">
-                    <h4> AI शिफारस नियम (Recommendation Logic)</h4>
+                    <h4>🧠 AI शिफारस नियम (Recommendation Logic)</h4>
                     <div class="field"><label>जर ही परिस्थिती असेल (Condition):</label>
                         <select id="m5_1"><option>Protein (CP) कमी असल्यास</option><option>Energy कमी असल्यास</option><option>Cost जास्त असल्यास</option></select>
                     </div>
@@ -476,14 +476,14 @@
                         <div class="field"><label>सुचवायचा घटक (Suggest Feed)</label><select id="m5_3"><option>सोयाबीन पेंड</option><option>मका भरडा</option></select></div>
                     </div>
                     <div class="field"><label>Warning Alert Text</label><input type="text" id="m5_4" value="तुमच्या आहारात प्रोटीनची कमतरता आहे."></div>
-                    <button class="btn-prime" onclick="saveModule('M5')"> Save AI Rule</button>
+                    <button class="btn-prime" onclick="saveModule('M5')">💾 Save AI Rule</button>
                 </div>
             </div>
 
             <!-- M6: DISEASE KNOWLEDGE BASE -->
             <div id="m6" class="tab-content">
                 <div class="admin-card">
-                    <h4> आजार ज्ञान केंद्र (Disease Editor)</h4>
+                    <h4>🩺 आजार ज्ञान केंद्र (Disease Editor)</h4>
                     <div class="field"><label>आजाराचे नाव (Disease Name)</label><input type="text" id="m6_1" placeholder="उदा. लाळ्या खुरकूत"></div>
                     <div class="field"><label>लक्षणे (Symptoms)</label><textarea id="m6_2" rows="2" placeholder="ताप, पायाला फोड..."></textarea></div>
                     <div class="field"><label>प्राथमिक उपचार (Treatment)</label><textarea id="m6_3" rows="2" placeholder="स्वच्छता ठेवणे..."></textarea></div>
@@ -491,14 +491,14 @@
                         <div class="field"><label>औषध (Medicine to suggest)</label><input type="text" id="m6_4"></div>
                         <div class="field"><label>इमर्जन्सी लेव्हल</label><select id="m6_5"><option>High</option><option>Medium</option><option>Low</option></select></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M6')"> Save Disease Info</button>
+                    <button class="btn-prime" onclick="saveModule('M6')">💾 Save Disease Info</button>
                 </div>
             </div>
 
             <!-- M7: MEDICINE DATABASE -->
             <div id="m7" class="tab-content">
                 <div class="admin-card">
-                    <h4> औषध डेटाबेस (Medicine Entry)</h4>
+                    <h4>💊 औषध डेटाबेस (Medicine Entry)</h4>
                     <div class="field"><label>Medicine Name</label><input type="text" id="m7_1" placeholder="उदा. Pendistrin SH"></div>
                     <div class="grid-2">
                         <div class="field"><label>Company</label><input type="text" id="m7_2" placeholder="Zydus"></div>
@@ -506,28 +506,28 @@
                     </div>
                     <div class="field"><label>Composition (घटक)</label><input type="text" id="m7_4"></div>
                     <div class="field"><label>Withdrawal Period (दूध न वापरण्याचा काळ)</label><input type="number" id="m7_5" placeholder="Days"></div>
-                    <button class="btn-prime" onclick="saveModule('M7')"> Add Medicine</button>
+                    <button class="btn-prime" onclick="saveModule('M7')">💾 Add Medicine</button>
                 </div>
             </div>
 
             <!-- M8: VACCINATION -->
             <div id="m8" class="tab-content">
                 <div class="admin-card">
-                    <h4> लसीकरण वेळापत्रक (Vaccine Config)</h4>
+                    <h4>💉 लसीकरण वेळापत्रक (Vaccine Config)</h4>
                     <div class="field"><label>Vaccine Name</label><input type="text" id="m8_1" placeholder="उदा. FMD"></div>
                     <div class="grid-2">
                         <div class="field"><label>Target Age (वय)</label><input type="text" id="m8_2" placeholder="4 Months"></div>
                         <div class="field"><label>Reminder Cycle</label><select id="m8_3"><option>6 Months</option><option>1 Year</option></select></div>
                     </div>
                     <div class="field"><label>SMS Notification Text</label><textarea id="m8_4" rows="2">तुमच्या गाईच्या लसीकरणाची वेळ आली आहे...</textarea></div>
-                    <button class="btn-prime" onclick="saveModule('M8')"> Save Vaccine Rule</button>
+                    <button class="btn-prime" onclick="saveModule('M8')">💾 Save Vaccine Rule</button>
                 </div>
             </div>
 
             <!-- M9: BREEDING MODULE -->
             <div id="m9" class="tab-content">
                 <div class="admin-card">
-                    <h4> प्रजनन सायकल नियम (Breeding Rules)</h4>
+                    <h4>🧬 प्रजनन सायकल नियम (Breeding Rules)</h4>
                     <div class="grid-2">
                         <div class="field"><label>Heat Cycle (Days)</label><input type="number" id="m9_1" value="21"></div>
                         <div class="field"><label>Pregnancy Check (Days after AI)</label><input type="number" id="m9_2" value="60"></div>
@@ -536,27 +536,27 @@
                         <div class="field"><label>Total Gestation (Days)</label><input type="number" id="m9_3" value="280"></div>
                         <div class="field"><label>Calving Alert Before (Days)</label><input type="number" id="m9_4" value="15"></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M9')"> Update Breeding Cycle</button>
+                    <button class="btn-prime" onclick="saveModule('M9')">💾 Update Breeding Cycle</button>
                 </div>
             </div>
 
             <!-- M10: FEED PRICE -->
             <div id="m10" class="tab-content">
                 <div class="admin-card">
-                    <h4> दैनिक चारा/पेंड बाजारभाव (Update Rates)</h4>
+                    <h4>💵 दैनिक चारा/पेंड बाजारभाव (Update Rates)</h4>
                     <div class="field"><label>Select Feed Item</label><select id="m10_1"><option>सरकी पेंड</option><option>मका भरडा</option></select></div>
                     <div class="grid-2">
                         <div class="field"><label>Dealer Price (₹)</label><input type="number" id="m10_2" value="24.50"></div>
                         <div class="field"><label>Market Price (₹)</label><input type="number" id="m10_3" value="28.00"></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M10')"> Update Market Rate</button>
+                    <button class="btn-prime" onclick="saveModule('M10')">💾 Update Market Rate</button>
                 </div>
             </div>
 
             <!-- M11: MILK RATE -->
             <div id="m11" class="tab-content">
                 <div class="admin-card">
-                    <h4> दूध दर कॅल्क्युलेशन (Milk Rate Matrix)</h4>
+                    <h4>🥛 दूध दर कॅल्क्युलेशन (Milk Rate Matrix)</h4>
                     <div class="grid-2">
                         <div class="field"><label>Base Rate (Cow)</label><input type="number" id="m11_1" value="35.00"></div>
                         <div class="field"><label>Base Rate (Buffalo)</label><input type="number" id="m11_2" value="48.00"></div>
@@ -565,39 +565,39 @@
                         <div class="field"><label>Per 0.1 Fat Incentive (₹)</label><input type="number" id="m11_3" value="0.30"></div>
                         <div class="field"><label>Per 0.1 SNF Incentive (₹)</label><input type="number" id="m11_4" value="0.20"></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M11')"> Apply New Milk Rates</button>
+                    <button class="btn-prime" onclick="saveModule('M11')">💾 Apply New Milk Rates</button>
                 </div>
             </div>
 
             <!-- M12: NOTIFICATIONS -->
             <div id="m12" class="tab-content">
                 <div class="admin-card">
-                    <h4> ब्रॉडकास्ट नोटिफिकेशन (Send Smart Alert)</h4>
-                    <p style="font-size: 12px; color: #666; margin-top: 0;">इथून पाठवलेला अलर्ट सर्व शेतकऱ्यांच्या ॲपवर  मध्ये दिसेल.</p>
+                    <h4>📢 ब्रॉडकास्ट नोटिफिकेशन (Send Smart Alert)</h4>
+                    <p style="font-size: 12px; color: #666; margin-top: 0;">इथून पाठवलेला अलर्ट सर्व शेतकऱ्यांच्या ॲपवर 🔔 मध्ये दिसेल.</p>
                     <div class="field"><label>Notification Type</label>
-                        <select id="notif_type"><option value=" Info">Info Alert</option><option value=" Warning">Emergency Alert</option><option value=" Offer">Store Offer</option></select>
+                        <select id="notif_type"><option value="🔔 Info">Info Alert</option><option value="⚠️ Warning">Emergency Alert</option><option value="🎉 Offer">Store Offer</option></select>
                     </div>
                     <div class="field"><label>Alert Title</label><input type="text" id="notif_title" placeholder="उदा. उन्हाळ्यात जनावरांची काळजी"></div>
                     <div class="field"><label>Alert Message</label><textarea id="notif_msg" rows="3" placeholder="मजकूर..."></textarea></div>
-                    <button class="btn-prime" style="background:#e65100;" onclick="sendBroadcastNotification()"> Send Notification Now</button>
+                    <button class="btn-prime" style="background:#e65100;" onclick="sendBroadcastNotification()">🚀 Send Notification Now</button>
                 </div>
             </div>
 
-            <!--  M13: BANNER MANAGEMENT (NOW WITH IMAGE CROP LOGIC)  -->
+            <!-- 🔥 M13: BANNER MANAGEMENT (NOW WITH IMAGE CROP LOGIC) 🔥 -->
             <div id="m13" class="tab-content">
                 <div class="admin-card" style="background:#fff8e1; border:2px solid #ff9800;">
-                    <h4 style="color:#d32f2f; border-bottom:1px dashed #ffb74d;"> फ्लॅश सेल जाहिरात (Flash Ad)</h4>
+                    <h4 style="color:#d32f2f; border-bottom:1px dashed #ffb74d;">⚡ फ्लॅश सेल जाहिरात (Flash Ad)</h4>
                     <p style="font-size: 11px; color: #666; margin-top: 0;">ही ॲड होम पेजवर पॉप-अप म्हणून दिसेल. मर्यादित वेळेच्या ऑफर्ससाठी सर्वोत्तम.</p>
                     <div class="field"><label>Flash Ad Text / Offer</label><input type="text" id="flash_ad_text" placeholder="उदा. फक्त आज रात्री १२ वाजेपर्यंत २०% सूट!"></div>
                     <div class="field"><label>Offer Link (URL)</label><input type="text" id="flash_ad_url" placeholder="https://store.com/offer"></div>
                     <div class="grid-2">
-                        <button class="btn-prime" style="background: #d32f2f;" onclick="publishFlashAd()"> Publish Flash Ad</button>
-                        <button class="btn-danger" style="background: #555;" onclick="removeFlashAd()"> Remove Flash Ad</button>
+                        <button class="btn-prime" style="background: #d32f2f;" onclick="publishFlashAd()">⚡ Publish Flash Ad</button>
+                        <button class="btn-danger" style="background: #555;" onclick="removeFlashAd()">🗑️ Remove Flash Ad</button>
                     </div>
                 </div>
 
                 <div class="admin-card">
-                    <h4> बॅनर / जाहिरात व्यवस्थापन (Live Slider Ads)</h4>
+                    <h4>🖼️ बॅनर / जाहिरात व्यवस्थापन (Live Slider Ads)</h4>
                     <p style="font-size: 12px; color: #666; margin-top: 0;">इथून तुम्ही हव्या तेवढ्या जाहिराती ॲड करू शकता. फोटो ऑटो-फिट होण्यासाठी क्रॉपचा पर्याय मिळेल.</p>
                     
                     <div class="field"><label>Banner Placement</label>
@@ -608,17 +608,17 @@
                         <!-- Dynamic Ads will be injected here by JS -->
                     </div>
 
-                    <button class="btn-prime" style="background:#2e7d32; margin-bottom:15px; width:auto; padding:8px 15px; font-size:13px;" onclick="addNewAdBlock()"> नवीन जाहिरात जोडा</button>
+                    <button class="btn-prime" style="background:#2e7d32; margin-bottom:15px; width:auto; padding:8px 15px; font-size:13px;" onclick="addNewAdBlock()">➕ नवीन जाहिरात जोडा</button>
 
                     <div class="grid-2">
-                        <button class="btn-prime" style="background: #ff9800;" onclick="publishAdImages()"> सर्व जाहिराती लाईव्ह करा</button>
-                        <button class="btn-danger" onclick="removeAds()"> सर्व जाहिराती काढा</button>
+                        <button class="btn-prime" style="background: #ff9800;" onclick="publishAdImages()">🚀 सर्व जाहिराती लाईव्ह करा</button>
+                        <button class="btn-danger" onclick="removeAds()">🗑️ सर्व जाहिराती काढा</button>
                     </div>
                 </div>
 
-                <!--  सर्व कृषी मॉल प्रॉडक्ट्स (Manage Products) -->
+                <!-- 🛒 सर्व कृषी मॉल प्रॉडक्ट्स (Manage Products) -->
                 <div class="admin-card">
-                    <h4> सर्व कृषी मॉल प्रॉडक्ट्स (Manage Products)</h4>
+                    <h4>🛒 सर्व कृषी मॉल प्रॉडक्ट्स (Manage Products)</h4>
                     <div id="all_products_table_container"></div>
                 </div>
             </div>
@@ -626,32 +626,32 @@
             <!-- M14: VIDEO LIBRARY -->
             <div id="m14" class="tab-content">
                 <div class="admin-card">
-                    <h4> व्हिडिओ लायब्ररी (Add YouTube Video)</h4>
+                    <h4>🎥 व्हिडिओ लायब्ररी (Add YouTube Video)</h4>
                     <div class="field"><label>Video Title</label><input type="text" id="m14_1" placeholder="व्हिडिओचे नाव"></div>
                     <div class="field"><label>YouTube Link</label><input type="text" id="m14_2" placeholder="https://youtube.com/..."></div>
                     <div class="grid-2">
                         <div class="field"><label>Category</label><select id="m14_3"><option>Training</option><option>Success Story</option></select></div>
                         <div class="field"><label>Language</label><select id="m14_4"><option>Marathi</option><option>Hindi</option></select></div>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M14')"> Add Video</button>
+                    <button class="btn-prime" onclick="saveModule('M14')">💾 Add Video</button>
                 </div>
             </div>
 
             <!-- M15: PDF LIBRARY -->
             <div id="m15" class="tab-content">
                 <div class="admin-card">
-                    <h4> PDF आणि पुस्तके (Upload Document)</h4>
+                    <h4>📄 PDF आणि पुस्तके (Upload Document)</h4>
                     <div class="field"><label>Document Title</label><input type="text" id="m15_1" placeholder="पुस्तकाचे नाव"></div>
                     <div class="field"><label>Document Category</label><select id="m15_2"><option>ICAR Guide</option><option>Training Manual</option></select></div>
                     <div class="field"><label>PDF File Link</label><input type="text" id="m15_3" placeholder="Cloudinary PDF URL"></div>
-                    <button class="btn-prime" onclick="saveModule('M15')"> Publish PDF</button>
+                    <button class="btn-prime" onclick="saveModule('M15')">💾 Publish PDF</button>
                 </div>
             </div>
 
             <!-- M16: AI SETTINGS -->
             <div id="m16" class="tab-content">
                 <div class="admin-card">
-                    <h4> AI प्रॉम्ट व API सेटिंग्ज (OpenAI / Gemini)</h4>
+                    <h4>⚙️ AI प्रॉम्ट व API सेटिंग्ज (OpenAI / Gemini)</h4>
                     <div class="field"><label>API Secret Key</label>
                         <input type="password" id="m16_1" placeholder="तुमची API Key इथे टाका (उदा. AIzaSy...)">
                     </div>
@@ -660,25 +660,25 @@
                         <div class="field"><label>Temperature</label><input type="number" id="m16_3" value="0.3" step="0.1"></div>
                     </div>
                     <div class="field"><label>Master System Prompt</label><textarea id="m16_4" rows="3">तुम्ही पशुवैद्यकीय तज्ज्ञ आहात...</textarea></div>
-                    <button class="btn-prime" onclick="saveModule('M16')"> Save AI Config</button>
+                    <button class="btn-prime" onclick="saveModule('M16')">💾 Save AI Config</button>
                 </div>
             </div>
 
             <!-- M17: TRANSLATION -->
             <div id="m17" class="tab-content">
                 <div class="admin-card">
-                    <h4> डायनॅमिक भाषांतर (Translation CMS)</h4>
+                    <h4>🌐 डायनॅमिक भाषांतर (Translation CMS)</h4>
                     <div class="field"><label>Select Key to Translate</label><select id="m17_1"><option>lbl_ration_balancer</option><option>btn_submit</option></select></div>
                     <div class="field"><label>Marathi Text</label><input type="text" id="m17_2" value="रेशन बॅलन्सर"></div>
                     <div class="field"><label>Hindi Text</label><input type="text" id="m17_3" value="राशन बैलेंसर"></div>
-                    <button class="btn-prime" onclick="saveModule('M17')"> Update Translation</button>
+                    <button class="btn-prime" onclick="saveModule('M17')">💾 Update Translation</button>
                 </div>
             </div>
 
             <!-- M18: FORM BUILDER -->
             <div id="m18" class="tab-content">
                 <div class="admin-card">
-                    <h4> डायनॅमिक फॉर्म बिल्डर (Create Forms)</h4>
+                    <h4>📋 डायनॅमिक फॉर्म बिल्डर (Create Forms)</h4>
                     <div class="field"><label>Select Target Form</label><select id="m18_1"><option>Feedback Form</option><option>Dealer Registration</option></select></div>
                     <div class="field"><label>Add New Field Name</label><input type="text" id="m18_2" placeholder="उदा. GST Number"></div>
                     <div class="field"><label>Field Type</label><select id="m18_3"><option>Text Box</option><option>Dropdown</option><option>File Upload</option></select></div>
@@ -693,29 +693,29 @@
                                 <input type="text" value="Supplements" readonly style="background:#eee; cursor:not-allowed;">
                             </div>
                         </div>
-                        <button onclick="addOtherCategory()" style="margin-top:10px; background:#e8f5e9; border:1px solid #2e7d32; color:#2e7d32; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;"> Add 'Other' Category</button>
+                        <button onclick="addOtherCategory()" style="margin-top:10px; background:#e8f5e9; border:1px solid #2e7d32; color:#2e7d32; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">➕ Add 'Other' Category</button>
                     </div>
 
-                    <button class="btn-prime" onclick="saveModule('M18')"> Add Field to Form</button>
+                    <button class="btn-prime" onclick="saveModule('M18')">➕ Add Field to Form</button>
                 </div>
             </div>
 
             <!-- M19: DYNAMIC DROPDOWN BUILDER -->
             <div id="m19" class="tab-content">
                 <div class="admin-card">
-                    <h4> ड्रॉपडाऊन सूची (Add Master Lists)</h4>
+                    <h4>🔽 ड्रॉपडाऊन सूची (Add Master Lists)</h4>
                     <div class="field"><label>Select Dropdown Category</label>
                         <select id="m19_1"><option>Cow Breed (गायीची जात)</option><option>Disease Types</option></select>
                     </div>
                     <div class="field"><label>Add New Option</label><input type="text" id="m19_2" placeholder="उदा. गीर (Gir)"></div>
-                    <button class="btn-prime" onclick="saveModule('M19')"> Add to Dropdown</button>
+                    <button class="btn-prime" onclick="saveModule('M19')">➕ Add to Dropdown</button>
                 </div>
             </div>
 
-            <!--  M20: REPORT BUILDER (वर्धित)  -->
+            <!-- 🔥🔥🔥 M20: REPORT BUILDER (वर्धित) 🔥🔥🔥 -->
             <div id="m20" class="tab-content">
                 <div class="admin-card">
-                    <h4> डेटा रिपोर्ट जनरेटर (Export Data)</h4>
+                    <h4>📊 डेटा रिपोर्ट जनरेटर (Export Data)</h4>
                     <div class="field"><label>Select Report Data</label>
                         <select id="m20_1">
                             <option>Registered Users List</option>
@@ -728,7 +728,7 @@
                             <option>Pending Payments/Commissions</option>
                             <option>Milk Collection History</option>
                             <option>Farmer Feedback Report</option>
-                            <!--  NEW REPORT OPTION  -->
+                            <!-- 🔥 NEW REPORT OPTION 🔥 -->
                             <option>Krushi Bazar Online Orders (Supplier Refund)</option>
                         </select>
                     </div>
@@ -737,10 +737,10 @@
                         <div class="field"><label>End Date</label><input type="date" id="m20_3"></div>
                     </div>
                     <div class="grid-2">
-                        <button class="btn-prime" style="background:#2e7d32;" onclick="downloadReport('excel')"> Download Excel</button>
-                        <button class="btn-prime" style="background:#d32f2f;" onclick="downloadReport('pdf')"> Download PDF</button>
+                        <button class="btn-prime" style="background:#2e7d32;" onclick="downloadReport('excel')">📥 Download Excel</button>
+                        <button class="btn-prime" style="background:#d32f2f;" onclick="downloadReport('pdf')">📥 Download PDF</button>
                     </div>
-                    <button class="btn-prime" style="background:#1976d2; margin-top:10px;" onclick="viewReport()"> रिपोर्ट पहा</button>
+                    <button class="btn-prime" style="background:#1976d2; margin-top:10px;" onclick="viewReport()">👁️ रिपोर्ट पहा</button>
                     <div id="report_display_area" style="margin-top:20px; overflow-x:auto;"></div>
                 </div>
             </div>
@@ -748,18 +748,18 @@
             <!-- M21: BACKUP -->
             <div id="m21" class="tab-content">
                 <div class="admin-card">
-                    <h4> सिस्टीम बॅकअप (Database Backup)</h4>
+                    <h4>💾 सिस्टीम बॅकअप (Database Backup)</h4>
                     <div class="field"><label>Auto-Backup Schedule</label><select id="m21_1"><option>Daily at Midnight</option><option>Weekly</option></select></div>
                     <div class="field"><label>Google Drive Sync Email</label><input type="text" id="m21_2" value="admin@dugdhadisha.com"></div>
-                    <button class="btn-prime" style="margin-bottom:10px;" onclick="saveModule('M21')"> Save Settings & Backup Now</button>
-                    <button class="btn-danger" onclick="restoreBackup()"> Restore Previous Backup</button>
+                    <button class="btn-prime" style="margin-bottom:10px;" onclick="saveModule('M21')">💾 Save Settings & Backup Now</button>
+                    <button class="btn-danger" onclick="restoreBackup()">⏮️ Restore Previous Backup</button>
                 </div>
             </div>
 
             <!-- M22: ROLES & PERMISSIONS -->
             <div id="m22" class="tab-content">
                 <div class="admin-card">
-                    <h4> भूमिका व परवानग्या (Access Control)</h4>
+                    <h4>🔑 भूमिका व परवानग्या (Access Control)</h4>
                     <div class="field"><label>Select Role to Edit</label>
                         <select id="m22_1"><option>Doctor</option><option>Nutritionist</option><option>Dealer</option></select>
                     </div>
@@ -768,40 +768,40 @@
                         <label><input type="checkbox" id="m22_3" checked> Write Access</label>
                         <label><input type="checkbox" id="m22_4"> Delete Access</label>
                     </div>
-                    <button class="btn-prime" onclick="saveModule('M22')"> Update Permissions</button>
+                    <button class="btn-prime" onclick="saveModule('M22')">💾 Update Permissions</button>
                 </div>
             </div>
 
             <!-- M23: APP SETTINGS -->
             <div id="m23" class="tab-content">
                 <div class="admin-card">
-                    <h4> ॲप कोर सेटिंग्ज (App Config)</h4>
+                    <h4>📱 ॲप कोर सेटिंग्ज (App Config)</h4>
                     <div class="field"><label>App Name</label><input type="text" id="m23_1" value="दुग्ध दिशा AI"></div>
                     <div class="grid-2">
                         <div class="field"><label>Current Version</label><input type="text" id="m23_2" value="v2.4.0"></div>
                         <div class="field"><label>Theme Color (Hex)</label><input type="text" id="m23_3" value="#0f4c13"></div>
                     </div>
                     <div class="field"><label>Maintenance Mode</label><select id="m23_4"><option>Live (Active)</option><option>Under Maintenance (Offline)</option></select></div>
-                    <button class="btn-prime" onclick="saveModule('M23')"> Save App Settings</button>
+                    <button class="btn-prime" onclick="saveModule('M23')">💾 Save App Settings</button>
                 </div>
             </div>
 
             <!-- M24: ADVERTISEMENT MANAGEMENT -->
             <div id="m24" class="tab-content">
                 <div class="admin-card">
-                    <h4> बाह्य जाहिरात नेटवर्क (AdMob / Meta Ads)</h4>
+                    <h4>📺 बाह्य जाहिरात नेटवर्क (AdMob / Meta Ads)</h4>
                     <div class="field"><label>Ad Provider</label><select id="m24_1"><option>Google AdMob</option><option>Custom Ads</option></select></div>
                     <div class="field"><label>Banner Ad Unit ID</label><input type="text" id="m24_2" placeholder="ca-app-pub-xxx"></div>
                     <div class="field"><label>Reward Video Ad Unit ID</label><input type="text" id="m24_3" placeholder="ca-app-pub-xxx"></div>
                     <div class="field"><label>Ad Status</label><select id="m24_4"><option>Enabled</option><option>Disabled</option></select></div>
-                    <button class="btn-prime" onclick="saveModule('M24')"> Save Ad Config</button>
+                    <button class="btn-prime" onclick="saveModule('M24')">💾 Save Ad Config</button>
                 </div>
             </div>
 
             <!-- M25: PRICING -->
             <div id="m25" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="border-bottom-color: #1b5e20;"> मास्टर प्राईसिंग सेटिंग्ज (Master Pricing Control)</h4>
+                    <h4 style="border-bottom-color: #1b5e20;">💳 मास्टर प्राईसिंग सेटिंग्ज (Master Pricing Control)</h4>
                     <p style="font-size: 12px; color: #666;">येथून तुम्ही सेट केलेले दर संपूर्ण ॲपमध्ये (शेतकरी आणि व्यापारी) आपोआप अपडेट होतील. <b>टीप: ० रुपये (0) सेट केल्यास ते फीचर पेमेंट न मागता मोफत (Free/Trial) अनलॉक होईल!</b></p>
                     
                     <h5 style="color:#d32f2f; margin-bottom:5px;">१. शेतकरी प्रीमियम प्लॅन्स (Farmer Plans)</h5>
@@ -817,8 +817,8 @@
                     </div>
                     <div class="field"><label>Platinum (6 Months - Auto 10% Off)</label><input type="number" id="m25_f_plat6" value="1074"></div>
 
-                    <!--  NEW: RACING KHILLAR KHOND & BULL FARMER PACKAGES (0 = Free Testing Mode)  -->
-                    <h5 style="color:#d84315; margin-bottom:5px; margin-top:15px;"> शर्यत बैल व खिलार स्पेशल शेतकरी प्लॅन्स (Khillar Special Plans)</h5>
+                    <!-- 🔥 NEW: RACING KHILLAR KHOND & BULL FARMER PACKAGES (0 = Free Testing Mode) 🔥 -->
+                    <h5 style="color:#d84315; margin-bottom:5px; margin-top:15px;">🏆 शर्यत बैल व खिलार स्पेशल शेतकरी प्लॅन्स (Khillar Special Plans)</h5>
                     <div class="grid-2">
                         <div class="field">
                             <label>शर्यत खोंड ॲडव्हान्स रेशन (24h) ₹</label>
@@ -852,7 +852,7 @@
 
                     <h5 style="color:#8e24aa; margin-bottom:5px; margin-top:20px;">४. स्मार्ट पेज-स्पेसिफिक जाहिराती (Targeted Ads)</h5>
                     <div class="grid-4">
-                        <!--  NEW: RACING KHILLAR AD PRICING INTEGRATED HERE  -->
+                        <!-- 🔥 NEW: RACING KHILLAR AD PRICING INTEGRATED HERE 🔥 -->
                         <div class="field"><label>शर्यत खोंड सजेशन (₹/१५ दिवस)</label><input type="number" id="m25_t_khillar" value="499"></div>
                         <div class="field"><label>रेशन सजेशन (₹/१५ दिवस)</label><input type="number" id="m25_t_ration" value="499"></div>
                         <div class="field"><label>आजार सजेशन (₹/महिना)</label><input type="number" id="m25_t_disease" value="299"></div>
@@ -866,8 +866,8 @@
                     </div>
                     
                     <div style="display:flex; gap:10px; margin-top: 15px;">
-                        <button class="btn-prime" style="flex:2;" onclick="saveModule('M25')"> Update All Prices</button>
-                        <button class="btn-danger" style="flex:1;" onclick="resetToDefaultPrices()"> मूळ किमती सेट करा</button>
+                        <button class="btn-prime" style="flex:2;" onclick="saveModule('M25')">💾 Update All Prices</button>
+                        <button class="btn-danger" style="flex:1;" onclick="resetToDefaultPrices()">🔄 मूळ किमती सेट करा</button>
                     </div>
                 </div>
             </div>
@@ -875,7 +875,7 @@
             <!-- M26: PAYMENT & CSV DELIVERY MATRIX -->
             <div id="m26" class="tab-content">
                 <div class="admin-card">
-                    <h4> पेमेंट गेटवे (Payment Config)</h4>
+                    <h4>💰 पेमेंट गेटवे (Payment Config)</h4>
                     <div class="field"><label>Active Gateway</label><select id="m26_gw"><option selected>Razorpay</option><option>Paytm</option><option>PhonePe</option><option>SidhaPay</option></select></div>
                     <div class="grid-2">
                         <div class="field"><label>API Key (Live)</label><input type="text" id="m26_key" value="rzp_live_TIkGEzUM5ygyd6" placeholder="Razorpay Key ID"></div>
@@ -885,15 +885,15 @@
                     <div class="field"><label>Company Invoice Address</label><textarea id="m26_addr" rows="2">Dugdha Disha Pvt Ltd, Satara.</textarea></div>
                     <div class="field"><label>Payee Name (Company Name)</label><input type="text" id="upi_payee_name" value="दुग्ध दिशा AI"></div>
                     <div class="field"><label>Support Email / Contact</label><input type="text" id="upi_id_value" value="support@dugdhadisha.com"></div>
-                    <button class="btn-prime" onclick="saveModule('M26')"> Save Payment Settings</button>
+                    <button class="btn-prime" onclick="saveModule('M26')">💾 Save Payment Settings</button>
                 </div>
 
                 <div class="admin-card">
-                    <h4> कुरिअर व पिनकोड दर (Delivery Matrix)</h4>
+                    <h4>🚚 कुरिअर व पिनकोड दर (Delivery Matrix)</h4>
                     <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px dashed #2e7d32; margin-bottom: 20px;">
                         <p style="font-size: 12px; color: #2e7d32; font-weight: bold; margin: 0 0 10px;">Excel (CSV) फाईलद्वारे हजारो दर एकत्र अपलोड करा:</p>
                         <input type="file" id="csv_file" accept=".csv" style="width: 100%; border: 1px solid #ccc; background: white; padding: 8px; border-radius: 6px;">
-                        <button class="btn-prime" style="background:#2e7d32; margin-top: 10px; width: auto;" onclick="handleCSVUpload()"> CSV अपलोड करा</button>
+                        <button class="btn-prime" style="background:#2e7d32; margin-top: 10px; width: auto;" onclick="handleCSVUpload()">📤 CSV अपलोड करा</button>
                     </div>
 
                     <div class="grid-3">
@@ -901,24 +901,24 @@
                         <div class="field"><label>पिनकोड</label><input type="number" id="del_pincode" placeholder="उदा. 415001"></div>
                         <div class="field"><label>चार्ज (₹)</label><input type="number" id="del_charge" placeholder="उदा. 50"></div>
                     </div>
-                    <button class="btn-prime" style="background: #ff9800; color: white;" onclick="saveDeliveryRate()"> मॅन्युअल दर सेव्ह करा</button>
+                    <button class="btn-prime" style="background: #ff9800; color: white;" onclick="saveDeliveryRate()">➕ मॅन्युअल दर सेव्ह करा</button>
 
                     <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin: 25px 0 10px;">
                         <h4 style="margin: 0; color: #333; font-size: 14px;">सेव्ह केलेले दर</h4>
-                        <span style="font-size: 10px; color: #d32f2f; cursor: pointer; font-weight: bold;" onclick="clearAllRates()"> सर्व क्लियर करा</span>
+                        <span style="font-size: 10px; color: #d32f2f; cursor: pointer; font-weight: bold;" onclick="clearAllRates()">🗑️ सर्व क्लियर करा</span>
                     </div>
                     <div class="order-list" id="saved_rates_list"></div>
                 </div>
             </div>
 
-            <!--  NEW: M33 - DYNAMIC PLATFORM FEE & COMMISSION MODULE  -->
+            <!-- 🔥 NEW: M33 - DYNAMIC PLATFORM FEE & COMMISSION MODULE 🔥 -->
             <div id="m33" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#1976d2; border-bottom: 2px solid #bbdefb; padding-bottom: 8px;"> प्लॅटफॉर्म सर्व्हिस फी सेटिंग्ज (Platform Service Fee)</h4>
+                    <h4 style="color:#1976d2; border-bottom: 2px solid #bbdefb; padding-bottom: 8px;">💰 प्लॅटफॉर्म सर्व्हिस फी सेटिंग्ज (Platform Service Fee)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी प्रॉडक्ट ॲड करताना त्यांच्याकडून किती प्लॅटफॉर्म फी घ्यायची ते तुम्ही येथे सेट करू शकता.</p>
                     
                     <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2; margin-bottom: 20px;">
-                        <h5 style="margin: 0 0 10px; color: #0d47a1;"> टप्पे आणि टक्केवारी (Slabs & Percentage)</h5>
+                        <h5 style="margin: 0 0 10px; color: #0d47a1;">📈 टप्पे आणि टक्केवारी (Slabs & Percentage)</h5>
                         
                         <div class="grid-3">
                             <div class="field"><label>रक्कम ० ते कुठपर्यंत? (Slab 1)</label><input type="number" id="m33_slab_1" value="1000" placeholder="उदा. 1000"></div>
@@ -945,21 +945,21 @@
                         <p style="font-size: 11px; color: #666; margin-top: 5px;">एका ऑर्डरवर जास्तीत जास्त किती फी आकारायची? (उदा. ₹500)</p>
                     </div>
 
-                    <!--  NEW: ONLINE PAYMENT DISCOUNT (BENEFIT) FIELD  -->
+                    <!-- 🔥 NEW: ONLINE PAYMENT DISCOUNT (BENEFIT) FIELD 🔥 -->
                     <div class="field" style="margin-top: 20px; background: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #fbc02d;">
-                        <label style="color: #f57f17; font-size: 14px;"> ऑनलाईन पेमेंट डिस्काउंट (Online Payment Benefit %)</label>
+                        <label style="color: #f57f17; font-size: 14px;">⚡ ऑनलाईन पेमेंट डिस्काउंट (Online Payment Benefit %)</label>
                         <input type="number" id="m33_online_benefit" value="0" step="0.1" placeholder="उदा. 5">
                         <p style="font-size: 11px; color: #666; margin-top: 5px;">ग्राहकाने ऑनलाईन पेमेंट केल्यास किती टक्के (Discount) द्यायचा ते येथे टाका. (उदा. 5 टाकल्यास 5% सूट मिळेल. 0 ठेवल्यास सूट मिळणार नाही.)</p>
                     </div>
 
-                    <button class="btn-prime" style="background:#1976d2;" onclick="savePlatformFeeConfig()"> Save Settings</button>
+                    <button class="btn-prime" style="background:#1976d2;" onclick="savePlatformFeeConfig()">💾 Save Settings</button>
                 </div>
             </div>
 
             <!-- M31: PENDING AD APPROVALS -->
             <div id="m31" class="tab-content">
                 <div class="admin-card">
-                    <h4 style="color:#e65100;"> प्रलंबित जाहिराती आणि पेमेंट (Pending Ad Approvals)</h4>
+                    <h4 style="color:#e65100;">🔥 प्रलंबित जाहिराती आणि पेमेंट (Pending Ad Approvals)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px;">व्यापाऱ्यांनी ऑफलाईन पेमेंट करून सबमिट केलेल्या जाहिराती तपासा आणि त्यांना लाईव्ह करण्यासाठी 'Approve' दाबा.</p>
                     <div id="pending_ads_container"></div>
                 </div>
@@ -968,7 +968,7 @@
             <!-- M27: ANALYTICS -->
             <div id="m27" class="tab-content">
                 <div class="admin-card">
-                    <h4> प्रगत ॲनालिटिक्स (Business Insights)</h4>
+                    <h4>📈 प्रगत ॲनालिटिक्स (Business Insights)</h4>
                     <div style="background:#e3f2fd; padding:15px; border-radius:8px; margin-bottom:10px;">
                         <h5>Trending Feed: मका मुरघास (62% Usage)</h5>
                         <h5>Trending Breed: HF Cross (55% Usage)</h5>
@@ -980,7 +980,7 @@
             <!-- M28: AUDIT LOG -->
             <div id="m28" class="tab-content">
                 <div class="admin-card">
-                    <h4> सिस्टीम ऑडिट लॉग्स (Action History)</h4>
+                    <h4>🛡️ सिस्टीम ऑडिट लॉग्स (Action History)</h4>
                     <div id="audit_log_box" style="background:#222; color:#0f0; padding:15px; border-radius:8px; height:150px; overflow-y:auto; font-family:monospace; font-size:11px;">
                         [2026-07-08 20:15] SuperAdmin updated DM Formula.<br>
                         [2026-07-08 18:24] Doctor (ID: 4) added new Medicine 'Mastilep'.<br>
@@ -993,7 +993,7 @@
             <!-- M29: CONTENT MANAGEMENT SYSTEM -->
             <div id="m29" class="tab-content">
                 <div class="admin-card">
-                    <h4> कंटेंट एडिटर (CMS / Policy Pages)</h4>
+                    <h4>📝 कंटेंट एडिटर (CMS / Policy Pages)</h4>
                     <div class="field"><label>Select Page to Edit</label><select id="m29_1" onchange="toggleCmsSection()"><option>Privacy Policy</option><option>Terms & Conditions</option><option>About Us</option></select></div>
                     
                     <!-- Privacy Policy / Terms साठी टेक्स्ट एरिया -->
@@ -1003,7 +1003,7 @@
 
                     <!-- About Us साठी सोपे फॉर्म -->
                     <div id="cms_about_section" style="display:none;">
-                        <h5 style="color:#e65100; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:20px;"> संस्थापक (Founder)</h5>
+                        <h5 style="color:#e65100; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:20px;">👤 संस्थापक (Founder)</h5>
                         <div class="grid-2">
                             <div class="field"><label>नाव (Name)</label><input type="text" id="about_founder_name" placeholder="संस्थापकाचे नाव"></div>
                             <div class="field"><label>पद / Qualification</label><input type="text" id="about_founder_role" placeholder="उदा. संस्थापक व मुख्य कार्यकारी अधिकारी"></div>
@@ -1011,72 +1011,72 @@
                         <div class="field"><label>फोटो (Photo URL)</label><input type="text" id="about_founder_photo" placeholder="फोटोची लिंक (URL) टाका"></div>
                         <div class="field"><label>संदेश (Message)</label><textarea id="about_founder_msg" rows="3" placeholder="संस्थापकाचा संदेश..."></textarea></div>
 
-                        <h5 style="color:#1565c0; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:25px;"> टीम मेंबर्स (Team Members)</h5>
+                        <h5 style="color:#1565c0; border-bottom:1px solid #ddd; padding-bottom:5px; margin-top:25px;">👥 टीम मेंबर्स (Team Members)</h5>
                         <div id="team_members_container">
                             <!-- Dynamic team member fields येतील -->
                         </div>
-                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()"> नवीन सदस्य जोडा</button>
+                        <button type="button" class="btn-prime" style="background:#0288d1; width:auto; padding:8px 15px; font-size:12px; margin-bottom:20px;" onclick="addTeamMemberField()">➕ नवीन सदस्य जोडा</button>
                     </div>
 
-                    <button class="btn-prime" onclick="saveModule('M29')"> Publish Page Content</button>
+                    <button class="btn-prime" onclick="saveModule('M29')">💾 Publish Page Content</button>
                 </div>
             </div>
 
             <!-- M30: API MANAGER -->
             <div id="m30" class="tab-content">
                 <div class="admin-card">
-                    <h4> थर्ड पार्टी API मॅनेजर (Integrations)</h4>
+                    <h4>🔌 थर्ड पार्टी API मॅनेजर (Integrations)</h4>
                     <div class="field"><label>Select Service</label><select id="m30_1"><option>Google Vision (Receipt OCR)</option><option>Cloudinary (Images)</option><option>Fast2SMS</option></select></div>
                     <div class="field"><label>Endpoint URL</label><input type="text" id="m30_2" value="https://api.cloudinary.com/v1_1/..."></div>
                     <div class="field"><label>Status</label><select id="m30_3"><option>Enabled</option><option>Disabled</option></select></div>
                     <div class="grid-2">
-                        <button class="btn-prime" onclick="saveModule('M30')"> Save API Config</button>
-                        <button class="btn-prime" style="background:#ff9800;" onclick="testAPI()"> Test Connection</button>
+                        <button class="btn-prime" onclick="saveModule('M30')">💾 Save API Config</button>
+                        <button class="btn-prime" style="background:#ff9800;" onclick="testAPI()">🔌 Test Connection</button>
                     </div>
                 </div>
             </div>
 
-            <!--  M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL  -->
+            <!-- 🔥🔥🔥 M_KHILLAR_ADMIN - KHILLAR & RACING BULL MASTER CONTROL 🔥🔥🔥 -->
             <div id="m_khillar_admin" class="tab-content">
                 
                 <!-- 1. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Moderation) -->
                 <div class="admin-card" style="border-left: 5px solid #ff6f00;">
-                    <h4 style="color:#d84315; border-bottom-color:#ffe0b2;"> १. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Ads)</h4>
+                    <h4 style="color:#d84315; border-bottom-color:#ffe0b2;">🏆 १. शर्यत बैल बाजार मॉडरेशन (Khillari Bazar Ads)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 15px;">शेतकऱ्यांनी शर्यत बैल बाजारामध्ये (`khillari_bazar.html`) टाकलेल्या सर्व जाहिराती येथे दिसतील. खोटी वंशावळ किंवा फसव्या जाहिराती तुम्ही एका क्लिकवर डिलीट करू शकता.</p>
                     <div id="admin_khillar_bazar_list"></div>
                 </div>
 
                 <!-- 2. ₹९९ 'दिशा प्राईम' महसूल ट्रॅकिंग (Khillar Prime Revenue) -->
                 <div class="admin-card" style="border-left: 5px solid #4caf50;">
-                    <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;"> २. ₹९९ 'दिशा प्राईम' महसूल व ॲक्सेस (Khillar Prime Revenue)</h4>
+                    <h4 style="color:#1b5e20; border-bottom-color:#c8e6c9;">⭐ २. ₹९९ 'दिशा प्राईम' महसूल व ॲक्सेस (Khillar Prime Revenue)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 15px;">ज्या शेतकऱ्यांनी शर्यतीच्या बैलासाठी ₹९९ भरून 'URGENT' जाहिरात व मोफत रेशन बॅलन्सर घेतला आहे, त्यांची यादी आणि कमाई येथे तपासा.</p>
                     <div id="admin_khillar_revenue_list"></div>
                 </div>
 
                 <!-- 3. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation) -->
                 <div class="admin-card" style="border-left: 5px solid #1976d2;">
-                    <h4 style="color:#0d47a1; border-bottom-color:#bbdefb;"> ३. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation)</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">कृषी मॉलमध्ये व्यापाऱ्यांनी <b>' शर्यत बैल / खोंड खुराक व सप्लीमेंट'</b> कॅटेगरीत टाकलेली उत्पादने तपासा. बंदी असलेली औषधे असल्यास लिस्टिंगमधून काढा.</p>
+                    <h4 style="color:#0d47a1; border-bottom-color:#bbdefb;">🛒 ३. शर्यत सप्लीमेंट प्रॉडक्ट्स नियंत्रण (Racing Products Moderation)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">कृषी मॉलमध्ये व्यापाऱ्यांनी <b>'🐂 शर्यत बैल / खोंड खुराक व सप्लीमेंट'</b> कॅटेगरीत टाकलेली उत्पादने तपासा. बंदी असलेली औषधे असल्यास लिस्टिंगमधून काढा.</p>
                     <div id="admin_khillar_products_list"></div>
                 </div>
 
                 <!-- 4. वंशावळ व ब्लडलाईन मास्टर लिस्ट (Pedigree Master Database) -->
                 <div class="admin-card" style="border-left: 5px solid #8e24aa;">
-                    <h4 style="color:#6a1b9a; border-bottom-color:#e1bee7;"> ४. प्रसिद्ध वंशावळ व ब्लडलाईन मास्टर (Pedigree Master DB)</h4>
+                    <h4 style="color:#6a1b9a; border-bottom-color:#e1bee7;">🧬 ४. प्रसिद्ध वंशावळ व ब्लडलाईन मास्टर (Pedigree Master DB)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 15px;">महाराष्ट्रातील प्रसिद्ध वळू व ब्लडलाईन (उदा. <i>माणदेशी खिलार, सोन्या, बंड्या, राजा, बहाद्दूर</i>) यांची नावे येथे जोडा किंवा डिलीट करा.</p>
                     <div class="grid-2">
                         <div class="field" style="margin-bottom:0;"><input type="text" id="new_bloodline_input" placeholder="नवीन प्रसिद्ध वळू/वंशावळ नाव टाका..."></div>
-                        <button class="btn-prime" style="margin-top:0; background:#8e24aa;" onclick="addKhillarBloodline()"> वंशावळ मास्टरमध्ये जोडा</button>
+                        <button class="btn-prime" style="margin-top:0; background:#8e24aa;" onclick="addKhillarBloodline()">➕ वंशावळ मास्टरमध्ये जोडा</button>
                     </div>
                     <div id="admin_khillar_bloodlines_list" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
                 </div>
 
             </div>
 
-            <!--  NEW TAB: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL  -->
+            <!-- 🔥🔥🔥 NEW TAB: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥🔥🔥 -->
             <div id="m_all_market_ads" class="tab-content">
                 <div class="admin-card" style="border-left: 5px solid #00bcd4;">
-                    <h4 style="color:#00838f; border-bottom-color:#b2ebf2;"> सर्व पशु बाजार नियंत्रण (Manage ALL Market Ads)</h4>
+                    <h4 style="color:#00838f; border-bottom-color:#b2ebf2;">🐄 सर्व पशु बाजार नियंत्रण (Manage ALL Market Ads)</h4>
                     <p style="font-size: 12px; color: #666; margin-bottom: 15px;">शेतकऱ्यांनी पशु बाजारामध्ये (`kharedi_vikri.html`) टाकलेल्या सर्वसाधारण जाहिराती (गाय, म्हैस, शेळी इ.) येथे दिसतील. कोणत्याही जाहिरातीचे व्यवस्थापन किंवा डिलीट तुम्ही येथून करू शकता.</p>
                     
                     <!-- Filter/Search for Ads -->
@@ -1093,7 +1093,7 @@
                             <input type="text" id="filter_all_market_mobile" placeholder="Search Mobile No..." onkeyup="if(event.key === 'Enter') loadAllMarketAdsAdmin()">
                         </div>
                         <div style="display:flex; align-items:flex-end;">
-                            <button class="btn-prime" style="background:#00bcd4; margin-bottom:0;" onclick="loadAllMarketAdsAdmin()"> Search / Refresh</button>
+                            <button class="btn-prime" style="background:#00bcd4; margin-bottom:0;" onclick="loadAllMarketAdsAdmin()">🔍 Search / Refresh</button>
                         </div>
                     </div>
 
@@ -1104,7 +1104,7 @@
         </div>
     </div>
 
-    <!--  NEW: ADMIN CROP MODAL  -->
+    <!-- 🔥 NEW: ADMIN CROP MODAL 🔥 -->
     <div class="crop-modal-overlay" id="admin_crop_modal">
         <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center;">
             <div style="width:100%; height:300px; background:#000; margin-bottom:15px;">
@@ -1117,13 +1117,13 @@
                 <button class="btn-prime" style="width:auto; padding:8px 10px;" onclick="adminCropper.setAspectRatio(4/3)">4:3</button>
             </div>
             <div style="display:flex; gap:10px;">
-                <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="saveAdminCroppedImage()"> Save Photo</button>
+                <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="saveAdminCroppedImage()">✅ Save Photo</button>
                 <button class="btn-danger" style="background:#e0e0e0; color:#333; flex:1; box-shadow:none;" onclick="closeAdminCropModal()">✕ Cancel</button>
             </div>
         </div>
     </div>
 
-    <!--  NEW: VIEW DOCUMENT MODAL  -->
+    <!-- 🔥 NEW: VIEW DOCUMENT MODAL 🔥 -->
     <div id="documentViewModal" class="doc-modal-overlay">
         <div class="doc-modal-content">
             <button class="doc-close-btn" onclick="closeDocumentModal()">✕</button>
@@ -1132,18 +1132,18 @@
             
             <div style="margin-top: 15px;">
                 <button id="doc_download_btn" style="background: #1b5e20; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
-                     पूर्ण साईझमध्ये पहा (Open in New Tab)
+                    🔗 पूर्ण साईझमध्ये पहा (Open in New Tab)
                 </button>
             </div>
         </div>
     </div>
 
-    <!--  Cropper.js Script  -->
+    <!-- 🔥 Cropper.js Script 🔥 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-    <!--  JAVASCRIPT FOR DYNAMIC LOGIC AND ALL MODULES SAVING -->
+    <!-- 🛠️ JAVASCRIPT FOR DYNAMIC LOGIC AND ALL MODULES SAVING -->
     <script>
-        //  FIREBASE INITIALIZATION 
+        // 🔥 FIREBASE INITIALIZATION 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
             authDomain: "dugdhdishaai.firebaseapp.com",
@@ -1197,7 +1197,7 @@
             container.appendChild(div);
         }
 
-        // ---  ADMIN CROP LOGIC FOR M13 ADS  ---
+        // --- 🔥 ADMIN CROP LOGIC FOR M13 ADS 🔥 ---
         let adminCropper = null;
         let currentAdminHiddenInputId = '';
         let currentAdminPreviewImgId = '';
@@ -1238,13 +1238,13 @@
             if(adminCropper) { adminCropper.destroy(); adminCropper = null; }
         }
 
-        //  CLOUDINARY INTEGRATION FOR ADMIN CROP LOGIC 
+        // 🔥 CLOUDINARY INTEGRATION FOR ADMIN CROP LOGIC 🔥
         function saveAdminCroppedImage() {
             if(!adminCropper) return;
 
             let saveBtn = document.querySelector('#admin_crop_modal .btn-prime.save') || document.querySelector('#admin_crop_modal button[onclick="saveAdminCroppedImage()"]');
             let originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = " Uploading...";
+            saveBtn.innerHTML = "⏳ Uploading...";
             saveBtn.disabled = true;
 
             let canvas = adminCropper.getCroppedCanvas({
@@ -1276,12 +1276,12 @@
 
                         closeAdminCropModal();
                     } else {
-                        alert(" फोटो अपलोड फेल झाले. कृपया पुन्हा प्रयत्न करा.");
+                        alert("❌ फोटो अपलोड फेल झाले. कृपया पुन्हा प्रयत्न करा.");
                     }
                 })
                 .catch(error => {
                     console.error("Error uploading to Cloudinary:", error);
-                    alert(" इंटरनेट एरर आला. फोटो अपलोड होऊ शकला नाही.");
+                    alert("❌ इंटरनेट एरर आला. फोटो अपलोड होऊ शकला नाही.");
                 })
                 .finally(() => {
                     saveBtn.innerHTML = originalText;
@@ -1290,7 +1290,7 @@
             }, 'image/jpeg', 0.8);
         }
 
-        // ---  M13: DYNAMIC MULTIPLE ADS LOGIC ---
+        // --- 🖼️ M13: DYNAMIC MULTIPLE ADS LOGIC ---
         function addNewAdBlock(text = '', url = '', img1 = '', img2 = '', img3 = '', uniqueId = null) {
             let container = document.getElementById('dynamic_ads_container');
             let div = document.createElement('div');
@@ -1340,7 +1340,7 @@
                 if (savedAds && savedAds.ads) {
                     savedAds.ads.splice(uniqueId, 1);
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(savedAds));
-                    //  FIREBASE CLOUD SAVE 
+                    // 🔥 FIREBASE CLOUD SAVE 🔥
                     db.collection("admin_settings").doc("live_admin_ad_images").set(savedAds, { merge: true });
                     loadSavedAds();
                     loadDashboardStats();
@@ -1363,7 +1363,7 @@
             }
         }
 
-        //  नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 
+        // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 🔥🔥🔥
         function publishAdImages() {
             let adBlocks = document.querySelectorAll('.ad-block');
             let allAds = [];
@@ -1385,11 +1385,11 @@
             let adData = { ads: allAds, active: true, place: adPlace };
             localStorage.setItem("live_admin_ad_images", JSON.stringify(adData));
             
-            //  FIREBASE CLOUD SAVE 
+            // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("live_admin_ad_images").set(adData, { merge: true })
             .catch(e => console.error("Cloud ad sync error:", e));
 
-            //  नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 
+            // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये सेव्ह करणे 🔥🔥🔥
             if(adPlace === 'Home Slider') {
                 allAds.forEach((ad, index) => {
                     db.collection("homepage_banners").doc("banner_" + index).set({
@@ -1405,36 +1405,37 @@
                 }
             }
 
-            alert(` ${allAds.length} जाहिराती ॲपवर यशस्वीरीत्या लाईव्ह झाल्या आहेत!`);
+            alert(`✅ ${allAds.length} जाहिराती ॲपवर यशस्वीरीत्या लाईव्ह झाल्या आहेत!`);
             loadDashboardStats();
             loadSavedAds(); 
         }
 
-        //  नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 
+        // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 🔥🔥🔥
         function removeAds() {
             if(confirm("तुम्हाला नक्की सर्व जाहिराती कायमच्या काढून टाकायच्या आहेत का?")) {
                 localStorage.removeItem("live_admin_ad_images");
-                //  FIREBASE CLOUD UPDATE 
+                // 🔥 FIREBASE CLOUD UPDATE 🔥
                 db.collection("admin_settings").doc("live_admin_ad_images").set({ ads: [], active: false }, { merge: true });
                 
-                //  नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 
+                // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमधून डिलीट करणे 🔥🔥🔥
                 for(let i = 0; i < 10; i++) {
                     db.collection("homepage_banners").doc("banner_" + i).delete().catch(e=>{});
                 }
 
                 document.getElementById('dynamic_ads_container').innerHTML = '';
                 addNewAdBlock(); 
-                alert(" सर्व जाहिराती काढून टाकल्या आहेत.");
+                alert("🗑️ सर्व जाहिराती काढून टाकल्या आहेत.");
                 loadDashboardStats();
             }
         }
 
-        // ---  ADMIN NOTIFICATIONS LOGIC  ---
+        // --- 🔔 ADMIN NOTIFICATIONS LOGIC 🔔 ---
         function toggleAdminNotifications() {
             const dropdown = document.getElementById('adminNotificationDropdown');
             dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
         }
 
+        // 🔥 सुधारित: एरर आल्यास सर्व नोटिफिकेशन ब्लॉक होऊ नये म्हणून try-catch चा वापर 🔥
         function loadAdminNotifications() {
             let farmerPending = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
             let kycPending = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
@@ -1446,12 +1447,11 @@
             // 🔥 NEW: Vet Partner Pending Count 
             let vetPendingCount = parseInt(localStorage.getItem('admin_pending_vets_count')) || 0;
 
-            //  Firebase Quote Requests Fetching 
-            db.collection("quote_requests").get().then((querySnapshot) => {
-                let quotePendingCount = querySnapshot.size;
+            let processNotifications = (quotePendingCount) => {
                 let supportTickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
                 let openTicketsCount = supportTickets.filter(t => t.status === "Open").length;
 
+                // Total Notification Count
                 let totalPending = farmerPending.length + kycPending.length + adPending.length + commPending.length + doctorPendingCount + openTicketsCount + quotePendingCount + vetPendingCount;
 
                 let badge = document.getElementById('admin_notif_badge');
@@ -1463,23 +1463,28 @@
                     
                     let html = '';
                     
-                    // 🔥 NEW: Add Vet Pending to dropdown list
                     if(vetPendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m_vet_approve'); toggleAdminNotifications();">👨‍⚕️ <b style="color:#d32f2f;">${vetPendingCount}</b> नवीन व्हेटर्नरी डॉक्टर प्रोफाईल पेंडिंग</div>`;
-
-                    if(farmerPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m_farmer_pay'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${farmerPending.length}</b> शेतकरी प्लॅन मंजुरीसाठी पेंडिंग</div>`;
-                    if(kycPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m32'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${kycPending.length}</b> विक्रेता KYC पडताळणी पेंडिंग</div>`;
-                    if(adPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m31'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${adPending.length}</b> जाहिराती मंजुरीसाठी पेंडिंग</div>`;
-                    if(commPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m35'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${commPending.length}</b> कमिशन पेमेंट्स मंजुरीसाठी पेंडिंग</div>`;
-                    if(doctorPendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m_doctor_approve'); toggleAdminNotifications();"> <b style="color:#d32f2f;">1</b> डॉक्टर नंबर मंजुरीसाठी पेंडिंग</div>`;
-                    if(openTicketsCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m36'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${openTicketsCount}</b> नवीन कस्टम सपोर्ट मेसेजेस</div>`;
-                    if(quotePendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m1'); toggleAdminNotifications();"> <b style="color:#d32f2f;">${quotePendingCount}</b> नवीन कोटेशन (Bulk) रिक्वेस्ट्स</div>`;
+                    if(farmerPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m_farmer_pay'); toggleAdminNotifications();">🧑‍🌾 <b style="color:#d32f2f;">${farmerPending.length}</b> शेतकरी प्लॅन मंजुरीसाठी पेंडिंग</div>`;
+                    if(kycPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m32'); toggleAdminNotifications();">📋 <b style="color:#d32f2f;">${kycPending.length}</b> विक्रेता KYC पडताळणी पेंडिंग</div>`;
+                    if(adPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m31'); toggleAdminNotifications();">🔥 <b style="color:#d32f2f;">${adPending.length}</b> जाहिराती मंजुरीसाठी पेंडिंग</div>`;
+                    if(commPending.length > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m35'); toggleAdminNotifications();">💰 <b style="color:#d32f2f;">${commPending.length}</b> कमिशन पेमेंट्स मंजुरीसाठी पेंडिंग</div>`;
+                    if(doctorPendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m_doctor_approve'); toggleAdminNotifications();">📞 <b style="color:#d32f2f;">1</b> डॉक्टर नंबर मंजुरीसाठी पेंडिंग</div>`;
+                    if(openTicketsCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m36'); toggleAdminNotifications();">📩 <b style="color:#d32f2f;">${openTicketsCount}</b> नवीन कस्टम सपोर्ट मेसेजेस</div>`;
+                    if(quotePendingCount > 0) html += `<div style="padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;" onclick="switchTab('m1'); toggleAdminNotifications();">📦 <b style="color:#d32f2f;">${quotePendingCount}</b> नवीन कोटेशन (Bulk) रिक्वेस्ट्स</div>`;
                     
                     listContainer.innerHTML = html;
                 } else {
                     badge.style.display = 'none';
                     listContainer.innerHTML = '<div style="text-align:center; color:#888; padding:10px;">कोणत्याही नवीन सूचना पेंडिंग नाहीत.</div>';
                 }
-            }).catch(e => console.error("Error loading notifications:", e));
+            };
+
+            db.collection("quote_requests").get().then((querySnapshot) => {
+                processNotifications(querySnapshot.size);
+            }).catch(e => {
+                console.error("Error loading notifications:", e);
+                processNotifications(0); // एरर आल्यास बाकीचे नोटिफिकेशन्स थांबू नयेत!
+            });
         }
 
         function resetToDefaultPrices() {
@@ -1514,17 +1519,17 @@
                 document.getElementById('m25_t_poison').value = 299;
                 document.getElementById('m25_t_weather').value = 299;
                 document.getElementById('m25_t_bcs').value = 399;
-                //  NEW: KHILLAR AD PRICE & FARMER PACKAGE DEFAULTS 
+                // 🔥 NEW: KHILLAR AD PRICE & FARMER PACKAGE DEFAULTS 🔥
                 if(document.getElementById('m25_t_khillar')) document.getElementById('m25_t_khillar').value = 499;
                 if(document.getElementById('m25_f_khillar_ration')) document.getElementById('m25_f_khillar_ration').value = 49;
                 if(document.getElementById('m25_f_khillar_prime')) document.getElementById('m25_f_khillar_prime').value = 99;
 
                 saveModule('M25');
-                alert(" सर्व किमती मूळ दरांनुसार (Default) सेट केल्या गेल्या आहेत आणि क्लाऊडवर सेव्ह झाल्या आहेत!");
+                alert("✅ सर्व किमती मूळ दरांनुसार (Default) सेट केल्या गेल्या आहेत आणि क्लाऊडवर सेव्ह झाल्या आहेत!");
             }
         }
 
-        // ---  NEW: PLATFORM FEE DYNAMIC CONFIG SAVE/LOAD ---
+        // --- 🔥 NEW: PLATFORM FEE DYNAMIC CONFIG SAVE/LOAD ---
         function savePlatformFeeConfig() {
             let s1 = parseFloat(document.getElementById('m33_slab_1').value) || 0;
             let p1 = parseFloat(document.getElementById('m33_perc_1').value) || 0;
@@ -1556,7 +1561,7 @@
             db.collection("admin_settings").doc("M33").set(feeConfig, { merge: true })
             .catch(e => console.error("Error saving fee config to cloud:", e));
 
-            alert(" प्लॅटफॉर्म सर्व्हिस फी आणि ऑनलाईन डिस्काउंट यशस्वीरीत्या क्लाऊडवर सेव्ह झाले आहेत.");
+            alert("✅ प्लॅटफॉर्म सर्व्हिस फी आणि ऑनलाईन डिस्काउंट यशस्वीरीत्या क्लाऊडवर सेव्ह झाले आहेत.");
         }
 
         function loadPlatformFeeConfig() {
@@ -1574,7 +1579,7 @@
             }
         }
 
-        // ---  2. CENTRALIZED SAVE/LOAD LOGIC FOR ALL MODULES (NOW CONNECTED TO FIREBASE CLOUD) ---
+        // --- 🚀 2. CENTRALIZED SAVE/LOAD LOGIC FOR ALL MODULES (NOW CONNECTED TO FIREBASE CLOUD) ---
         const configMap = {
             'M3': ['m3_name', 'm3_cat', 'm3_cost', 'm3_dm', 'm3_cp', 'm3_me', 'm3_desc', 'm3_status'],
             'M4': ['m4_f1', 'm4_f2', 'm4_f3', 'm4_f4', 'm4_f5'],
@@ -1624,12 +1629,12 @@
                         }
                     });
                     localStorage.setItem('about_us_team', JSON.stringify(team));
-                    alert(' About Us माहिती सेव्ह झाली!');
+                    alert('✅ About Us माहिती सेव्ह झाली!');
                 } else {
                     let data = { m29_1: page, m29_2: document.getElementById('m29_2').value };
                     localStorage.setItem('admin_data_M29', JSON.stringify(data));
                     db.collection("admin_settings").doc("M29").set(data, { merge: true });
-                    alert(' CMS Content saved successfully!');
+                    alert('✅ CMS Content saved successfully!');
                 }
                 return;
             }
@@ -1653,9 +1658,9 @@
 
             if(Object.keys(data).length > 0) {
                 localStorage.setItem('admin_data_' + mod, JSON.stringify(data));
-                //  FIREBASE CLOUD SAVE  (येथून माहिती थेट क्लाऊडवर सेव्ह होईल)
+                // 🔥 FIREBASE CLOUD SAVE 🔥 (येथून माहिती थेट क्लाऊडवर सेव्ह होईल)
                 db.collection("admin_settings").doc(mod).set(data, { merge: true })
-                .then(() => console.log(` Module ${mod} synced to Firebase Cloud`))
+                .then(() => console.log(`✅ Module ${mod} synced to Firebase Cloud`))
                 .catch(e => console.error(`Error syncing ${mod} to cloud:`, e));
             }
             
@@ -1666,11 +1671,11 @@
             }
             
             if(event && event.target && !event.target.innerText.includes('मूळ किमती')) {
-                alert(' ' + mod + ' टॅबमधील सर्व डेटा यशस्वीरीत्या क्लाऊडवर (Firebase) सेव्ह झाला!');
+                alert('✅ ' + mod + ' टॅबमधील सर्व डेटा यशस्वीरीत्या क्लाऊडवर (Firebase) सेव्ह झाला!');
             }
         }
 
-        //  FIREBASE CLOUD वरून सर्व ॲडमिन सेटिंग्ज डाऊनलोड करणारे ऑटो-सिंक फंक्शन 
+        // 🔥 FIREBASE CLOUD वरून सर्व ॲडमिन सेटिंग्ज डाऊनलोड करणारे ऑटो-सिंक फंक्शन 🔥
         function syncAdminSettingsFromCloud() {
             db.collection("admin_settings").get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -1691,11 +1696,11 @@
                     }
                 });
                 loadPlatformFeeConfig(); // Re-load specifically to handle M33 properly
-                console.log(" सर्व ॲडमिन सेटिंग्ज आणि दर Firebase Cloud वरून अपडेट झाले!");
+                console.log("✅ सर्व ॲडमिन सेटिंग्ज आणि दर Firebase Cloud वरून अपडेट झाले!");
             }).catch(e => console.error("Error syncing cloud admin settings:", e));
         }
 
-        // ---  NEW: SYNC ALL PENDING APPROVALS FROM FIREBASE CLOUD ACROSS DEVICES  ---
+        // --- 🔥 NEW: SYNC ALL PENDING APPROVALS FROM FIREBASE CLOUD ACROSS DEVICES 🔥 ---
         function syncAllPendingApprovalsFromCloud() {
             // १. शेतकरी पेमेंट अर्ज क्लाऊडवरून सिंक
             db.collection("successful_payments").where("status", "==", "pending").get()
@@ -1712,7 +1717,7 @@
                 }
             }).catch(e => console.log("Cloud farmer pay sync:", e));
 
-            // २. कस्टमर सपोर्ट हेल्पडेस्क तिकिटे क्लाऊडवरून सिंक
+            // २. कस्टम সাপোর্ট हेल्पडेस्क तिकिटे क्लाऊडवरून सिंक
             db.collection("support_tickets").orderBy("timestamp", "desc").get()
             .then(querySnapshot => {
                 let cloudTickets = [];
@@ -1728,7 +1733,7 @@
                 }
             }).catch(e => console.log("Cloud tickets sync:", e));
 
-            // ३. विक्रेता KYC अर्ज क्लाऊडवरून सिंक ( NEW KYC SYNC )
+            // ३. विक्रेता KYC अर्ज क्लाऊडवरून सिंक (🔥 NEW KYC SYNC 🔥)
             db.collection("admin_pending_kyc").get()
             .then(querySnapshot => {
                 let cloudKyc = [];
@@ -1743,7 +1748,7 @@
             }).catch(e => console.log("Cloud KYC sync error:", e));
         }
 
-        // ---  NEW: SYNC MALL ORDERS FOR REPORT BUILDER  ---
+        // --- 🔥 NEW: SYNC MALL ORDERS FOR REPORT BUILDER 🔥 ---
         function syncOrdersForReports() {
             db.collection("mall_orders").get().then(snap => {
                 let allOrders = [];
@@ -1757,7 +1762,7 @@
             }).catch(e => console.log("Orders background sync error for report builder:", e));
         }
 
-        //  NEW: क्लाऊडवरून सर्व युजर्सची यादी आणून रिपोर्ट बिल्डरसाठी सेव्ह करणे 
+        // 🔥 NEW: क्लाऊडवरून सर्व युजर्सची यादी आणून रिपोर्ट बिल्डरसाठी सेव्ह करणे 🔥
         function syncUsersForAdmin() {
             db.collection("users").get().then((querySnapshot) => {
                 let cloudUsers = [];
@@ -1852,9 +1857,9 @@
             container.appendChild(div);
         }
 
-        // ---  3. ON PAGE LOAD INIT ---
+        // --- 🚀 3. ON PAGE LOAD INIT ---
         function initAdminPanel() {
-            syncUsersForAdmin(); //  ही नवीन लाईन इथे ॲड केली (रिपोर्टसाठी युजर्स सिंक होतील)
+            syncUsersForAdmin(); 
             syncOrdersForReports(); 
             loadAllModules();
             syncAdminSettingsFromCloud(); 
@@ -1868,7 +1873,10 @@
             loadFarmerPayments(); 
             loadDoctorApprovals(); 
             loadCommissionApprovals(); 
-            loadPendingVetsForAdmin(); // 🔥 NEW: Vet Partner Approval Load
+            
+            // 🔥 NEW: Vet Partner Approval Load (सुधारित)
+            loadPendingVetsForAdmin();
+
             loadAdminNotifications(); 
             loadCustomerSupportTickets(); 
             refreshAllUsersTable();
@@ -1878,7 +1886,7 @@
             initKhillarAdmin(); 
         }
 
-        // ---  NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL  ---
+        // --- 🔥 NEW: M_ALL_MARKET_ADS - GENERAL MARKET ADS ADMIN CONTROL 🔥 ---
         function loadAllMarketAdsAdmin() {
             let container = document.getElementById('admin_all_market_ads_list');
             if(!container) return;
@@ -1886,7 +1894,7 @@
             let filterType = document.getElementById('filter_all_market_type').value;
             let filterMobile = document.getElementById('filter_all_market_mobile').value.trim();
             
-            container.innerHTML = '<p style="color:#666; text-align:center;"> सर्व जाहिराती लोड होत आहेत...</p>';
+            container.innerHTML = '<p style="color:#666; text-align:center;">⏳ सर्व जाहिराती लोड होत आहेत...</p>';
 
             function renderAllMarketTable(animalsList) {
                 if (animalsList.length === 0) {
@@ -1904,7 +1912,7 @@
                         <td style="color:#2e7d32; font-weight:bold;">₹${a.price || 0}</td>
                         <td>${a.farmerName || 'मालक'}<br><span style="font-size:11px; color:#1565c0; font-weight:bold;">${a.mobile || '-'}</span></td>
                         <td><span style="font-size:11px;">${a.timestamp ? new Date(a.timestamp).toLocaleDateString('mr-IN') : 'N/A'}</span></td>
-                        <td><button class="btn-danger" style="padding:5px 10px; font-size:11px; width:auto; margin:0;" onclick="deleteAllMarketAdAdmin('${a.firebaseDocId || a.id}')"> Delete Ad</button></td>
+                        <td><button class="btn-danger" style="padding:5px 10px; font-size:11px; width:auto; margin:0;" onclick="deleteAllMarketAdAdmin('${a.firebaseDocId || a.id}')">🗑️ Delete Ad</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -1932,7 +1940,7 @@
             })
             .catch(e => {
                 console.error("Error fetching market ads:", e);
-                container.innerHTML = `<p style="color:#d32f2f; text-align:center;"> एरर: इंटरनेट कनेक्शन तपासा. (${e.message})</p>`;
+                container.innerHTML = `<p style="color:#d32f2f; text-align:center;">❌ एरर: इंटरनेट कनेक्शन तपासा. (${e.message})</p>`;
             });
         }
 
@@ -1940,14 +1948,14 @@
             if(confirm("ही जाहिरात पशु बाजारातून (Market) कायमची डिलीट करायची आहे का?\n\nही कृती पूर्ववत (Undo) करता येणार नाही.")) {
                 db.collection("market_animals").doc(id).delete()
                 .then(() => {
-                    alert(" जाहिरात यशस्वीरीत्या डिलीट केली.");
+                    alert("✅ जाहिरात यशस्वीरीत्या डिलीट केली.");
                     loadAllMarketAdsAdmin(); // Refresh list
                 })
-                .catch(e => alert(" एरर: जाहिरात डिलीट करता आली नाही. " + e));
+                .catch(e => alert("❌ एरर: जाहिरात डिलीट करता आली नाही. " + e));
             }
         }
 
-        // ---  NEW: M_KHILLAR_ADMIN - MASTER KHILLAR & RACING BULL CONTROLS  ---
+        // --- 🔥 NEW: M_KHILLAR_ADMIN - MASTER KHILLAR & RACING BULL CONTROLS 🔥 ---
         function initKhillarAdmin() {
             loadKhillarBazarAdsAdmin();
             loadKhillarPrimeRevenueAdmin();
@@ -1959,7 +1967,7 @@
         function loadKhillarBazarAdsAdmin() {
             let container = document.getElementById('admin_khillar_bazar_list');
             if(!container) return;
-            container.innerHTML = '<p style="color:#666;"> शर्यत बैलांच्या जाहिराती लोड होत आहेत...</p>';
+            container.innerHTML = '<p style="color:#666;">⏳ शर्यत बैलांच्या जाहिराती लोड होत आहेत...</p>';
 
             function renderBazarTable(racingAnimals) {
                 if (racingAnimals.length === 0) {
@@ -1975,7 +1983,7 @@
                         <td style="color:#d32f2f; font-weight:bold;">₹${a.price || 0}</td>
                         <td>${a.farmerName || 'मालक'} (${a.mobile || '-'})</td>
                         <td><span style="background:${isSold ? '#ffebee' : '#e8f5e9'}; color:${isSold ? '#c62828' : '#2e7d32'}; padding:3px 8px; border-radius:4px; font-weight:bold;">${isSold ? 'Sold' : 'Live'}</span></td>
-                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteKhillariAdAdmin('${a.firebaseDocId || a.id}')"> Delete Ad</button></td>
+                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteKhillariAdAdmin('${a.firebaseDocId || a.id}')">🗑️ Delete Ad</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -1996,7 +2004,7 @@
                 renderBazarTable(racingAnimals);
             })
             .catch(e => {
-                //  FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
                 let localAnimals = JSON.parse(localStorage.getItem('market_animals')) || [];
                 let racingAnimals = localAnimals.filter(a => {
                     let bText = (a.breed || "").toLowerCase();
@@ -2010,10 +2018,10 @@
             if(confirm("ही जाहिरात बाजारातून कायमची डिलीट करायची का?")) {
                 db.collection("market_animals").doc(id).delete()
                 .then(() => {
-                    alert(" शर्यत बैलाची जाहिरात डिलीट केली.");
+                    alert("✅ शर्यत बैलाची जाहिरात डिलीट केली.");
                     loadKhillarBazarAdsAdmin();
                 })
-                .catch(e => alert(" एरर: " + e));
+                .catch(e => alert("❌ एरर: " + e));
             }
         }
 
@@ -2021,7 +2029,7 @@
         function loadKhillarPrimeRevenueAdmin() {
             let container = document.getElementById('admin_khillar_revenue_list');
             if(!container) return;
-            container.innerHTML = '<p style="color:#666;"> महसूल रिपोर्ट लोड होत आहे...</p>';
+            container.innerHTML = '<p style="color:#666;">⏳ महसूल रिपोर्ट लोड होत आहे...</p>';
 
             function renderRevenueTable(primePayments) {
                 if (primePayments.length === 0) {
@@ -2058,7 +2066,7 @@
                 renderRevenueTable(primePayments);
             })
             .catch(e => {
-                //  FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
                 let localPayments = JSON.parse(localStorage.getItem('successful_payments_log')) || [];
                 let primePayments = localPayments.filter(pay => {
                     let note = (pay.note || "").toLowerCase();
@@ -2073,7 +2081,7 @@
         function loadKhillarProductsAdmin() {
             let container = document.getElementById('admin_khillar_products_list');
             if(!container) return;
-            container.innerHTML = '<p style="color:#666;"> प्रॉडक्ट्स लोड होत आहेत...</p>';
+            container.innerHTML = '<p style="color:#666;">⏳ प्रॉडक्ट्स लोड होत आहेत...</p>';
 
             function renderProductsTable(racingProducts) {
                 if (racingProducts.length === 0) {
@@ -2088,7 +2096,7 @@
                         <td>${p.brand || ''}</td>
                         <td style="color:#d32f2f; font-weight:bold;">₹${p.offerPrice || p.mrp || 0}</td>
                         <td>${p.vendorName || '-'}</td>
-                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteProduct('${p.id}'); setTimeout(loadKhillarProductsAdmin, 1000);"> Remove</button></td>
+                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px; width:auto; margin:0;" onclick="deleteProduct('${p.id}'); setTimeout(loadKhillarProductsAdmin, 1000);">🗑️ Remove</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -2110,7 +2118,7 @@
                 renderProductsTable(racingProducts);
             })
             .catch(e => {
-                //  FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
+                // 🔥 FALLBACK: इंटरनेट एरर आल्यास LocalStorage मधून दाखवा
                 let localProducts = JSON.parse(localStorage.getItem('vendor_products')) || [];
                 let racingProducts = localProducts.filter(p => {
                     let cat = (p.category || "").toLowerCase();
@@ -2136,7 +2144,7 @@
             savedBloodlines.forEach((bName, index) => {
                 html += `
                 <div style="background:#fff3e0; border:1px solid #ffb74d; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:bold; color:#d84315; display:flex; align-items:center; gap:8px;">
-                    <span> ${bName}</span>
+                    <span>🏆 ${bName}</span>
                     <span style="cursor:pointer; color:#c62828; font-size:15px;" onclick="removeKhillarBloodline(${index})" title="काढून टाका">✕</span>
                 </div>`;
             });
@@ -2165,12 +2173,12 @@
             savedBloodlines.push(val);
             localStorage.setItem('admin_khillar_bloodlines', JSON.stringify(savedBloodlines));
             
-            //  FIREBASE CLOUD SAVE 
+            // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("khillar_bloodlines").set({ list: savedBloodlines }, { merge: true })
             .catch(e => console.error("Cloud bloodline sync error:", e));
 
             inputEl.value = "";
-            alert(` '${val}' हे नाव वंशावळ मास्टरमध्ये यशस्वीरीत्या जोडले गेले!`);
+            alert(`✅ '${val}' हे नाव वंशावळ मास्टरमध्ये यशस्वीरीत्या जोडले गेले!`);
             loadKhillarBloodlinesAdmin();
         }
 
@@ -2191,7 +2199,7 @@
             }
         }
 
-        // ---  NEW: VIEW DOCUMENT MODAL FUNCTIONS  ---
+        // --- 🔥 NEW: VIEW DOCUMENT MODAL FUNCTIONS 🔥 ---
         function openDocumentModal(imageUrl, documentName) {
             if(!imageUrl || imageUrl === "") {
                 alert("या फॉर्मसोबत " + documentName + " अपलोड केलेले नाही.");
@@ -2213,7 +2221,7 @@
             document.getElementById('doc_modal_image').src = ""; 
         }
 
-        // ---  NEW: M36 CUSTOMER SUPPORT TICKETS LOGIC  ---
+        // --- 🔥 NEW: M36 CUSTOMER SUPPORT TICKETS LOGIC 🔥 ---
         function loadCustomerSupportTickets() {
             let tickets = JSON.parse(localStorage.getItem('admin_support_tickets')) || [];
             let container = document.getElementById('support_tickets_container');
@@ -2263,25 +2271,25 @@
                 tickets[tIndex].status = "Closed"; 
                 localStorage.setItem('admin_support_tickets', JSON.stringify(tickets));
                 
-                //  FIREBASE CLOUD TICKET UPDATE 
+                // 🔥 FIREBASE CLOUD TICKET UPDATE 🔥
                 db.collection("support_tickets").doc(ticketId).update({
                     reply: replyText,
                     status: "Closed",
                     repliedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(e => console.log("Cloud ticket reply error:", e));
 
-                alert(" तुमचा रिप्लाय व्यापाऱ्याला/शेतकऱ्याला पाठवला गेला आहे.");
+                alert("✅ तुमचा रिप्लाय व्यापाऱ्याला/शेतकऱ्याला पाठवला गेला आहे.");
                 loadCustomerSupportTickets();
                 loadAdminNotifications(); 
             }
         }
 
-        // ---  M1: DASHBOARD STATS (FIREBASE INTEGRATED) ---
+        // --- 📊 M1: DASHBOARD STATS (FIREBASE INTEGRATED) ---
         function loadDashboardStats() {
             let users = JSON.parse(localStorage.getItem('app_users')) || [];
             document.getElementById('stat_users').innerText = users.length; 
 
-            //  NEW: Total Logged In / Active Users Logic 
+            // 🔥 NEW: Total Logged In / Active Users Logic 🔥
             let activeLogins = users.filter(u => u.status === 'Active' || u.isLoggedIn === true).length;
             if(document.getElementById('stat_active_users')) {
                 document.getElementById('stat_active_users').innerText = activeLogins > 0 ? activeLogins : users.length;
@@ -2306,7 +2314,7 @@
             let activeAdsCount = (savedAds && savedAds.ads && savedAds.ads.length > 0) ? savedAds.ads.length : 0;
             document.getElementById('stat_ads').innerText = activeAdsCount;
 
-            //  Fetch Live Orders from Firebase 
+            // 🔥 Fetch Live Orders from Firebase 🔥
             db.collection("mall_orders").orderBy("timestamp", "desc").limit(5).get()
             .then((querySnapshot) => {
                 let ordersCount = querySnapshot.size;
@@ -2344,7 +2352,7 @@
             .catch(error => console.error("Error fetching orders:", error));
         }
 
-        // ---  M34 WHATSAPP CRM LOGIC  ---
+        // --- 🔥 M34 WHATSAPP CRM LOGIC 🔥 ---
         function updateWhatsAppUI() {
             let msgType = document.getElementById('wa_msg_type').value;
             let previewBox = document.getElementById('wa_msg_preview');
@@ -2394,7 +2402,7 @@
             }
         }
 
-        // ---  M35 COMMISSION APPROVAL LOGIC  ---
+        // --- 🔥 M35 COMMISSION APPROVAL LOGIC 🔥 ---
         function loadCommissionApprovals() {
             let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
             let container = document.getElementById('commission_approvals_container');
@@ -2412,7 +2420,7 @@
                 <div class="approval-card" id="comm_card_${comm.id}">
                     <div class="approval-header">
                         <div><strong style="color:#d32f2f; font-size:16px;">${comm.id}</strong><br><span style="font-size:11px; color:#666;">Date: ${comm.date}</span></div>
-                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;"> Payment Checking</div>
+                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;">⏳ Payment Checking</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
                         <b>प्रकार:</b> ${contextText} <br>
@@ -2420,8 +2428,8 @@
                         <b>UTR Number:</b> <span style="background:#e8f5e9; padding:2px 5px; font-weight:bold; color:#2e7d32;">${comm.utr || 'Screenshot Uploaded'}</span>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveCommission('${comm.id}', '${comm.orderId}')"> Payment Verified</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectCommission('${comm.id}')"> Reject</button>
+                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveCommission('${comm.id}', '${comm.orderId}')">✅ Payment Verified</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectCommission('${comm.id}')">❌ Reject</button>
                     </div>
                 </div>`;
             });
@@ -2443,7 +2451,7 @@
                     }
                 }
                 
-                alert(" पेमेंट मंजूर झाले! व्यापाऱ्याला आता ग्राहकाचा नंबर दिसेल.");
+                alert("✅ पेमेंट मंजूर झाले! व्यापाऱ्याला आता ग्राहकाचा नंबर दिसेल.");
                 loadCommissionApprovals();
                 loadAdminNotifications();
             }
@@ -2455,14 +2463,14 @@
                 pendingCommissions = pendingCommissions.filter(c => c.id !== commId);
                 localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
                 
-                alert(" पेमेंट नाकारले.");
+                alert("❌ पेमेंट नाकारले.");
                 loadCommissionApprovals();
                 loadAdminNotifications();
             }
         }
 
 
-        // ---  M_FARMER_PAY: FARMER PAYMENT APPROVALS WITH 8 PM LOGIC  ---
+        // --- 🔥 M_FARMER_PAY: FARMER PAYMENT APPROVALS WITH 8 PM LOGIC 🔥 ---
         function loadFarmerPayments() {
             let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
             let container = document.getElementById('farmer_payments_container');
@@ -2478,7 +2486,7 @@
                 <div class="approval-card" style="border-color:#a5d6a7; background:#e8f5e9;">
                     <div class="approval-header" style="border-color:#4caf50;">
                         <div><strong style="color:#1b5e20; font-size:16px;">${req.farmerName}</strong><br><span style="font-size:11px; color:#666;">Req Date: ${req.requestTime}</span></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;"> Pending</div>
+                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
                         <b>Mobile:</b> ${req.mobile} <br>
@@ -2487,8 +2495,8 @@
                         <b>UTR Number:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${req.utr}</span>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveFarmerPlan(${index}, '${req.type}', '${req.name}')"> Approve Plan</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectFarmerPlan(${index})"> Reject</button>
+                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveFarmerPlan(${index}, '${req.type}', '${req.name}')">✅ Approve Plan</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectFarmerPlan(${index})">❌ Reject</button>
                     </div>
                 </div>`;
             });
@@ -2511,7 +2519,7 @@
                     expiryDate.setDate(expiryDate.getDate() + 1); 
                     expiryDate.setHours(8, 0, 0, 0); 
                     expiryDate.setHours(expiryDate.getHours() + 24); 
-                    alert(" रात्रीचे ८ वाजले असल्यामुळे, हा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
+                    alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, हा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
                 } else {
                     expiryDate.setHours(expiryDate.getHours() + 24);
                 }
@@ -2534,7 +2542,7 @@
             pendingList.splice(index, 1);
             localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
 
-            alert(" प्लॅन यशस्वीरीत्या सुरू झाला आहे!");
+            alert("🎉 प्लॅन यशस्वीरीत्या सुरू झाला आहे!");
             loadFarmerPayments();
             loadAdminNotifications(); 
         }
@@ -2545,12 +2553,12 @@
             pendingList.splice(index, 1);
             localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
             localStorage.removeItem('farmer_pending_plan');
-            alert(" पेमेंट नाकारले.");
+            alert("❌ पेमेंट नाकारले.");
             loadFarmerPayments();
             loadAdminNotifications(); 
         }
 
-        // ---  NEW: DOCTOR CALL NUMBER APPROVALS  ---
+        // --- 🔥 NEW: DOCTOR CALL NUMBER APPROVALS 🔥 ---
         function loadDoctorApprovals() {
             let submissions = JSON.parse(localStorage.getItem("vendor_submitted_cc"));
             let container = document.getElementById('doctor_numbers_container');
@@ -2564,14 +2572,14 @@
                 <div class="approval-card" style="border-color:#90caf9; background:#e3f2fd;">
                     <div class="approval-header" style="border-color:#1976d2;">
                         <div><strong style="color:#0d47a1; font-size:16px;">${submissions.vendorName}</strong></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;"> Pending</div>
+                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
                         <b>Doctor / Tech Support No:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${submissions.number}</span>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#1976d2; flex:1;" onclick="approveDoctorNumber('${submissions.number}')"> Approve & Add to Routing</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectDoctorNumber()"> Reject</button>
+                        <button class="btn-prime" style="background:#1976d2; flex:1;" onclick="approveDoctorNumber('${submissions.number}')">✅ Approve & Add to Routing</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectDoctorNumber()">❌ Reject</button>
                     </div>
                 </div>`;
             container.innerHTML = html;
@@ -2584,7 +2592,7 @@
             if(!approvedDoctors.includes(number)) {
                 approvedDoctors.push(number);
                 localStorage.setItem('admin_approved_doctors', JSON.stringify(approvedDoctors));
-                //  FIREBASE CLOUD SAVE 
+                // 🔥 FIREBASE CLOUD SAVE 🔥
                 db.collection("admin_settings").doc("admin_approved_doctors").set({ list: approvedDoctors }, { merge: true });
             }
 
@@ -2592,7 +2600,7 @@
             submissions.status = "Approved";
             localStorage.setItem("vendor_submitted_cc", JSON.stringify(submissions));
 
-            alert(" डॉक्टर नंबर ॲप्रूव्ह झाला आहे आणि कॉल सिस्टीममध्ये जोडला गेला आहे!");
+            alert("✅ डॉक्टर नंबर ॲप्रूव्ह झाला आहे आणि कॉल सिस्टीममध्ये जोडला गेला आहे!");
             loadDoctorApprovals();
             loadAdminNotifications(); 
         }
@@ -2600,7 +2608,7 @@
         function rejectDoctorNumber() {
             if(!confirm("हा नंबर रिजेक्ट करायचा का?")) return;
             localStorage.removeItem("vendor_submitted_cc");
-            alert(" नंबर रिजेक्ट केला.");
+            alert("❌ नंबर रिजेक्ट केला.");
             loadDoctorApprovals();
             loadAdminNotifications(); 
         }
@@ -2612,57 +2620,58 @@
             let container = document.getElementById('admin_pending_vets_container');
             if(!container) return;
             
-            // ज्यांचे KYC Pending (isVerified == false) आहे त्यांना शोधा
-            db.collection("vet_partners").where("isVerified", "==", false)
-              .onSnapshot(snapshot => {
-                  let html = "";
-                  let pendingCount = snapshot.size;
-                  
-                  snapshot.forEach(doc => {
-                      let vet = doc.data();
-                      html += `
-                      <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
-                          <div class="approval-header" style="border-color:#29b6f6;">
-                              <div><strong style="color:#0277bd; font-size:16px;">${vet.name}</strong><br><span style="font-size:11px; color:#666;">शिक्षण: ${vet.qual} | Reg No: ${vet.regNo || 'N/A'}</span></div>
-                              <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending KYC</div>
-                          </div>
-                          <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                              <b>मोबाईल:</b> ${vet.mobile} <br>
-                              <b>फी / वर्किंग रेडियस:</b> ${vet.charges?.farm ? 'Farm Visit ₹' + vet.charges.farm : 'N/A'} | ${vet.radius} km<br>
-                          </div>
-                          <div class="approval-actions">
-                              <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveVetProfile('${vet.mobile}', '${vet.name}')">✅ मंजूर करा (Approve)</button>
-                              <button class="btn-danger" style="flex:1;" onclick="rejectVetProfile('${vet.mobile}', '${vet.name}')">❌ नाकारा (Reject)</button>
-                          </div>
-                      </div>`;
-                  });
+            db.collection("vet_partners").onSnapshot(snapshot => {
+                let html = "";
+                let pendingCount = 0;
+                
+                snapshot.forEach(doc => {
+                    let vet = doc.data();
+                    
+                    if(vet.isVerified === false || vet.isVerified === "false" || !vet.isVerified) {
+                        pendingCount++;
+                        html += `
+                        <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
+                            <div class="approval-header" style="border-color:#29b6f6;">
+                                <div><strong style="color:#0277bd; font-size:16px;">${vet.name || 'Unknown'}</strong><br><span style="font-size:11px; color:#666;">शिक्षण: ${vet.qual || 'N/A'} | Reg No: ${vet.regNo || 'N/A'}</span></div>
+                                <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending KYC</div>
+                            </div>
+                            <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
+                                <b>मोबाईल:</b> ${vet.mobile || doc.id} <br>
+                                <b>फी / वर्किंग रेडियस:</b> ${vet.charges && vet.charges.farm ? 'Farm Visit ₹' + vet.charges.farm : 'N/A'} | ${vet.radius || 10} km<br>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveVetProfile('${doc.id}', '${vet.name}')">✅ मंजूर करा (Approve)</button>
+                                <button class="btn-danger" style="flex:1;" onclick="rejectVetProfile('${doc.id}', '${vet.name}')">❌ नाकारा (Reject)</button>
+                            </div>
+                        </div>`;
+                    }
+                });
 
-                  if(html === "") html = "<div style='text-align:center; padding:30px; color:#888;'>कोणतेही नवीन व्हेटर्नरी डॉक्टर प्रोफाईल मंजुरीसाठी पेंडिंग नाही.</div>";
-                  
-                  container.innerHTML = html; 
-                  
-                  // नोटिफिकेशन बेल अपडेट करण्यासाठी localStorage मध्ये सेव्ह करा
-                  localStorage.setItem("admin_pending_vets_count", pendingCount);
-                  if(typeof loadAdminNotifications === 'function') loadAdminNotifications();
-              });
+                if(html === "") html = "<div style='text-align:center; padding:30px; color:#888;'>कोणतेही नवीन व्हेटर्नरी डॉक्टर प्रोफाईल मंजुरीसाठी पेंडिंग नाही.</div>";
+                
+                container.innerHTML = html; 
+                
+                localStorage.setItem("admin_pending_vets_count", pendingCount);
+                loadAdminNotifications();
+            }, error => {
+                console.error("Error loading vet partners:", error);
+            });
         }
 
         function approveVetProfile(mobileNo, vetName) {
             if(confirm(`${vetName} यांचे प्रोफाईल मंजूर करायचे आहे का?`)) {
                 
-                // फायरबेसमध्ये isVerified = true करा
                 db.collection("vet_partners").doc(mobileNo).update({
                     isVerified: true,
-                    status: "Online" // मंजूर होताच त्यांना ऑनलाईन करा
+                    status: "Online"
                 }).then(() => {
                     alert(`✅ ${vetName} यांचे प्रोफाईल मंजूर झाले.`);
                     
-                    // डॉक्टरला ॲपमध्ये नोटिफिकेशन पाठवा
                     let newNotif = {
                         id: Date.now(),
                         title: "✅ तुमचे प्रोफाईल मंजूर झाले आहे!",
                         message: "ॲडमिनने तुमचे KYC तपासले आहे. आता तुम्ही शेतकऱ्यांच्या अपॉइंटमेंट्स घेऊ शकता.",
-                        target: mobileNo, // फक्त याच डॉक्टरला नोटिफिकेशन जाईल
+                        target: mobileNo,
                         timestamp: new Date().toISOString(),
                         time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
                     };
@@ -2683,7 +2692,7 @@
             }
         }
 
-        // ---  M2: USER MANAGEMENT LOGIC ---
+        // --- 👥 M2: USER MANAGEMENT LOGIC ---
         function searchUser() {
             let mobile = document.getElementById('search_user_mobile').value;
             let users = JSON.parse(localStorage.getItem('app_users')) || [];
@@ -2712,7 +2721,7 @@
                 users[index].name = newName;
                 users[index].status = newStatus;
                 localStorage.setItem('app_users', JSON.stringify(users));
-                alert(" युजरची माहिती यशस्वीरीत्या अपडेट केली!");
+                alert("✅ युजरची माहिती यशस्वीरीत्या अपडेट केली!");
                 refreshAllUsersTable();
             }
         }
@@ -2723,10 +2732,10 @@
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
                 
-                //  NEW: FIREBASE CLOUD DELETE LOGIC 
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
                 db.collection("users").doc(mobile).delete().catch(e => console.log(e));
 
-                alert(" युजर डिलीट केला!");
+                alert("🗑️ युजर डिलीट केला!");
                 document.getElementById('search_user_mobile').value = '';
                 document.getElementById('user_edit_section').style.display = 'none';
                 loadDashboardStats(); 
@@ -2742,7 +2751,7 @@
             if(!users.length) { container.innerHTML = '<p>कोणतेही युजर नाहीत.</p>'; return; }
             let html = '<table class="report-table"><thead><tr><th>मोबाईल</th><th>नाव</th><th>रोल</th><th>स्टेटस</th><th>कृती</th></tr></thead><tbody>';
             users.forEach(u => {
-                html += `<tr><td>${u.mobile}</td><td>${u.name}</td><td>${u.role}</td><td>${u.status||'Active'}</td><td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteAnyUser('${u.mobile}')"> Delete</button></td></tr>`;
+                html += `<tr><td>${u.mobile}</td><td>${u.name}</td><td>${u.role}</td><td>${u.status||'Active'}</td><td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteAnyUser('${u.mobile}')">🗑️ Delete</button></td></tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
@@ -2754,7 +2763,7 @@
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
                 
-                //  NEW: FIREBASE CLOUD DELETE LOGIC 
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
                 db.collection("users").doc(mobile).delete().catch(e => console.log(e));
 
                 refreshAllUsersTable();
@@ -2771,7 +2780,7 @@
             if(!suppliers.length) { container.innerHTML = '<p>कोणतेही मंजूर सप्लायर नाहीत.</p>'; return; }
             let html = '<table class="report-table"><thead><tr><th>नाव</th><th>मोबाईल</th><th>GST</th><th>कृती</th></tr></thead><tbody>';
             suppliers.forEach(s => {
-                html += `<tr><td>${s.name}</td><td>${s.mobile}</td><td>${s.gst || '-'}</td><td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSupplier('${s.mobile}')"> Delete</button></td></tr>`;
+                html += `<tr><td>${s.name}</td><td>${s.mobile}</td><td>${s.gst || '-'}</td><td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSupplier('${s.mobile}')">🗑️ Delete</button></td></tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
@@ -2783,7 +2792,7 @@
                 users = users.filter(u => u.mobile !== mobile);
                 localStorage.setItem('app_users', JSON.stringify(users));
                 
-                //  NEW: FIREBASE CLOUD DELETE LOGIC 
+                // 🔥 NEW: FIREBASE CLOUD DELETE LOGIC 🔥
                 db.collection("users").doc(mobile).delete().catch(e => console.log(e));
 
                 refreshSupplierTable();
@@ -2792,7 +2801,7 @@
             }
         }
 
-        //  FIREBASE: MANAGE PRODUCTS (ALL KRUSHI MALL PRODUCTS) 
+        // 🔥 FIREBASE: MANAGE PRODUCTS (ALL KRUSHI MALL PRODUCTS) 🔥
         function refreshAllProductsTable() {
             let container = document.getElementById('all_products_table_container');
             
@@ -2811,7 +2820,7 @@
                         <td>${p.brand}</td>
                         <td>${p.category}</td>
                         <td>₹${p.offerPrice || p.mrp}</td>
-                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteProduct('${doc.id}')"> Delete</button></td>
+                        <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteProduct('${doc.id}')">🗑️ Delete</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -2825,14 +2834,14 @@
             if (confirm('हे प्रॉडक्ट कायमचे डिलीट करायचे?')) {
                 db.collection("vendor_products").doc(productId).delete()
                 .then(() => {
-                    alert(' प्रॉडक्ट डिलीट केले.');
+                    alert('✅ प्रॉडक्ट डिलीट केले.');
                     refreshAllProductsTable();
                 })
-                .catch((e) => alert(" एरर: " + e));
+                .catch((e) => alert("❌ एरर: " + e));
             }
         }
 
-        // ---  M32: VENDOR KYC APPROVAL LOGIC (UPDATED WITH VIEW DOCUMENTS)  ---
+        // --- 🔥 M32: VENDOR KYC APPROVAL LOGIC (UPDATED WITH VIEW DOCUMENTS) 🔥 ---
         function loadPendingKyc() {
             let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
             let container = document.getElementById('pending_kyc_container');
@@ -2844,7 +2853,7 @@
 
             let html = '';
             pendingKycList.forEach((kyc, index) => {
-                //  Updated Logic to fetch Real Firebase uploaded Image URLs
+                // 🔥 Updated Logic to fetch Real Firebase uploaded Image URLs
                 let panImageLink = kyc.aadhaarUrl || kyc.panUrl || 'https://www.w3schools.com/html/pic_trulli.jpg'; 
                 let shopImageLink = kyc.shopProofUrl || kyc.shopActUrl || 'https://www.w3schools.com/html/img_girl.jpg';
                 
@@ -2852,7 +2861,7 @@
                 <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
                     <div class="approval-header" style="border-color:#29b6f6;">
                         <div><strong style="color:#0277bd; font-size:16px;">${kyc.vendorName}</strong><br><span style="font-size:11px; color:#666;">Date: ${kyc.date}</span></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;"> Pending KYC</div>
+                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending KYC</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
                         <b>Mobile:</b> ${kyc.mobile} <br>
@@ -2861,17 +2870,17 @@
                         <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
                             <button onclick="openDocumentModal('${panImageLink}', 'आधार / पॅन कार्ड - ${kyc.vendorName}')" 
                                     style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                 आधार/पॅन पहा
+                                👁️ आधार/पॅन पहा
                             </button>
                             <button onclick="openDocumentModal('${shopImageLink}', 'शॉप ॲक्ट / दुकानाचा पुरावा - ${kyc.vendorName}')" 
                                     style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                 शॉप ॲक्ट/दुकान पहा
+                                👁️ शॉप ॲक्ट/दुकान पहा
                             </button>
                         </div>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveKyc('${kyc.mobile}', ${index})"> Approve Seller</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index})"> Reject</button>
+                        <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveKyc('${kyc.mobile}', ${index})">✅ Approve Seller</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index})">❌ Reject</button>
                     </div>
                 </div>`;
             });
@@ -2889,7 +2898,7 @@
                     localStorage.setItem('app_users', JSON.stringify(users));
                 }
 
-                //  FIREBASE UPDATE (Real-time sync to vendor's app) 
+                // 🔥 FIREBASE UPDATE (Real-time sync to vendor's app) 🔥
                 if(mobile) {
                     db.collection("users").doc(mobile).set({
                         isVerified: true,
@@ -2901,7 +2910,7 @@
                 let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
                 let kycDoc = pendingKycList[index];
                 
-                //  Firebase मधील KYC रिक्वेस्ट डिलीट करा 
+                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
                 if(kycDoc && kycDoc.firebaseDocId) {
                     db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
                 }
@@ -2909,7 +2918,7 @@
                 pendingKycList.splice(index, 1);
                 localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
 
-                alert(" विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
+                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
                 loadPendingKyc(); 
                 loadAdminNotifications(); 
                 refreshSupplierTable();
@@ -2921,20 +2930,20 @@
                 let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
                 let kycDoc = pendingKycList[index];
                 
-                //  Firebase मधील KYC रिक्वेस्ट डिलीट करा 
+                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
                 if(kycDoc && kycDoc.firebaseDocId) {
                     db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
                 }
 
                 pendingKycList.splice(index, 1);
                 localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-                alert(" विक्रेत्याचा अर्ज नाकारला.");
+                alert("❌ विक्रेत्याचा अर्ज नाकारला.");
                 loadPendingKyc(); 
                 loadAdminNotifications(); 
             }
         }
 
-        // ---  M12: NOTIFICATIONS LOGIC (NOW CLOUD SYNCED) ---
+        // --- 📢 M12: NOTIFICATIONS LOGIC (NOW CLOUD SYNCED) ---
         function sendBroadcastNotification() {
             let type = document.getElementById('notif_type').value;
             let title = document.getElementById('notif_title').value;
@@ -2953,35 +2962,35 @@
             notifs.unshift(newNotif);
             localStorage.setItem('system_notifications', JSON.stringify(notifs));
 
-            //  FIREBASE CLOUD BROADCAST SAVE 
+            // 🔥 FIREBASE CLOUD BROADCAST SAVE 🔥
             db.collection("broadcast_notifications").add(newNotif)
             .catch(e => console.error("Cloud broadcast error: ", e));
 
-            alert(" सर्व युजर्सना नोटिफिकेशन यशस्वीरीत्या क्लाऊडवरून पाठवले आहे!");
+            alert("🚀 सर्व युजर्सना नोटिफिकेशन यशस्वीरीत्या क्लाऊडवरून पाठवले आहे!");
             document.getElementById('notif_title').value = '';
             document.getElementById('notif_msg').value = '';
         }
 
-        // ---  M13: FLASH AD LOGIC  ---
+        // --- 🔥 M13: FLASH AD LOGIC 🔥 ---
         function publishFlashAd() {
             let text = document.getElementById('flash_ad_text').value;
             let url = document.getElementById('flash_ad_url').value;
             if(!text) { alert("कृपया फ्लॅश ॲडचा मजकूर भरा!"); return; }
             localStorage.setItem('live_flash_ad', JSON.stringify({text: text, url: url, active: true}));
-            //  FIREBASE CLOUD SAVE 
+            // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("live_flash_ad").set({text: text, url: url, active: true}, { merge: true });
-            alert(" फ्लॅश जाहिरात ॲपवर लाईव्ह झाली आहे!");
+            alert("⚡ फ्लॅश जाहिरात ॲपवर लाईव्ह झाली आहे!");
         }
         function removeFlashAd() {
             localStorage.removeItem('live_flash_ad');
-            //  FIREBASE CLOUD UPDATE 
+            // 🔥 FIREBASE CLOUD UPDATE 🔥
             db.collection("admin_settings").doc("live_flash_ad").set({active: false}, { merge: true });
             document.getElementById('flash_ad_text').value = '';
             document.getElementById('flash_ad_url').value = '';
-            alert(" फ्लॅश जाहिरात काढून टाकली आहे.");
+            alert("🗑️ फ्लॅश जाहिरात काढून टाकली आहे.");
         }
 
-        // ---  M26: DELIVERY MATRIX LOGIC ---
+        // --- 🚚 M26: DELIVERY MATRIX LOGIC ---
         function saveDeliveryRate() {
             let courier = document.getElementById('del_courier').value;
             let pincode = document.getElementById('del_pincode').value;
@@ -2990,9 +2999,9 @@
             let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
             rates[pincode] = { courier: courier, charge: parseInt(charge) };
             localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-            //  FIREBASE CLOUD SAVE 
+            // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
-            alert(" पिनकोड दर सेव्ह झाले!");
+            alert("✅ पिनकोड दर सेव्ह झाले!");
             document.getElementById('del_pincode').value = ''; document.getElementById('del_charge').value = '';
             loadDeliveryRates(); 
         }
@@ -3016,9 +3025,9 @@
                     }
                 }
                 localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-                //  FIREBASE CLOUD SAVE 
+                // 🔥 FIREBASE CLOUD SAVE 🔥
                 db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
-                alert(` यशस्वी! ${count} नवीन पिनकोडचे दर सिस्टीममध्ये अपलोड झाले आहेत.`);
+                alert(`✅ यशस्वी! ${count} नवीन पिनकोडचे दर सिस्टीममध्ये अपलोड झाले आहेत.`);
                 loadDeliveryRates(); fileInput.value = '';
             };
             reader.readAsText(file);
@@ -3035,7 +3044,7 @@
         function deleteDeliveryRate(pin) {
             let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {}; delete rates[pin];
             localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-            //  FIREBASE CLOUD SAVE 
+            // 🔥 FIREBASE CLOUD SAVE 🔥
             db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
             loadDeliveryRates();
         }
@@ -3047,7 +3056,7 @@
             }
         }
 
-        // ---  M31: PENDING AD APPROVALS LOGIC  ---
+        // --- 🔥 M31: PENDING AD APPROVALS LOGIC 🔥 ---
         function loadPendingAds() {
             let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
             let container = document.getElementById('pending_ads_container');
@@ -3063,7 +3072,7 @@
                 <div class="approval-card" id="approval_card_${ad.id}">
                     <div class="approval-header">
                         <div><strong style="color:#d32f2f; font-size:16px;">${ad.id}</strong><br><span style="font-size:11px; color:#666;">Date: ${ad.date}</span></div>
-                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;"> Pending Approval</div>
+                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;">⏳ Pending Approval</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
                         <b>Ad Type:</b> ${ad.type} <br>
@@ -3073,15 +3082,15 @@
                         <b>UTR Number:</b> <span style="background:#e8f5e9; padding:2px 5px; font-weight:bold; color:#2e7d32;">${ad.utr}</span>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveAd('${ad.id}')"> Payment Received (Approve)</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectAd('${ad.id}')"> Reject</button>
+                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveAd('${ad.id}')">✅ Payment Received (Approve)</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectAd('${ad.id}')">❌ Reject</button>
                     </div>
                 </div>`;
             });
             container.innerHTML = html;
         }
 
-        // नवीन बदल: पेंडिंग जाहिरात मंजूर केल्यावर ती होमपेज बॅनर कलेक्शनमध्ये जाण्यासाठी 
+        // 🔥🔥🔥 नवीन बदल: पेंडिंग जाहिरात मंजूर केल्यावर ती होमपेज बॅनर कलेक्शनमध्ये जाण्यासाठी 🔥🔥🔥
         function approveAd(adId) {
             if(confirm("तुम्ही बँक खात्यात पेमेंट तपासले आहे का? ही जाहिरात 'लाईव्ह' करायची का?")) {
                 let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
@@ -3099,10 +3108,10 @@
                     });
                     liveAds.active = true;
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
-                    //  FIREBASE CLOUD SAVE 
+                    // 🔥 FIREBASE CLOUD SAVE 🔥
                     db.collection("admin_settings").doc("live_admin_ad_images").set(liveAds, { merge: true });
 
-                    // नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये नवीन ॲड जोडणे 
+                    // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये नवीन ॲड जोडणे 🔥🔥🔥
                     let newIndex = liveAds.ads.length - 1;
                     db.collection("homepage_banners").doc("banner_" + newIndex).set({
                         imageUrl: (ad.images && ad.images.length > 0) ? ad.images[0] : '', 
@@ -3112,7 +3121,7 @@
                     });
                 }
                 
-                alert(` जाहिरात ${adId} मंजूर करून होमपेजवर लाईव्ह केली!`);
+                alert(`✅ जाहिरात ${adId} मंजूर करून होमपेजवर लाईव्ह केली!`);
                 loadPendingAds(); 
                 loadAdminNotifications();
                 loadDashboardStats(); 
@@ -3124,13 +3133,13 @@
                 let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
                 pendingAds = pendingAds.filter(a => a.id !== adId);
                 localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
-                alert(" जाहिरात रद्द केली.");
+                alert("❌ जाहिरात रद्द केली.");
                 loadPendingAds(); 
                 loadAdminNotifications(); 
             }
         }
 
-        // ---  M28: AUDIT LOG ---
+        // --- 🛡️ M28: AUDIT LOG ---
         function clearLogs() {
             if(confirm("सर्व ऑडिट लॉग्स क्लिअर करायचे आहेत का?")) {
                 document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत Option...</span>";
@@ -3138,12 +3147,12 @@
             }
         }
 
-        // ---  M30: API MANAGER ---
+        // --- 🔌 M30: API MANAGER ---
         function testAPI() {
-            alert(" API कनेक्शन यशस्वी! (Server Response: 200 OK)");
+            alert("🔌 API कनेक्शन यशस्वी! (Server Response: 200 OK)");
         }
 
-        // ==============  M20 रिपोर्ट बिल्डर (नवीन लॉजिक) ==============
+        // ============== 📊 M20 रिपोर्ट बिल्डर (नवीन लॉजिक) ==============
         
         /**
          * रिपोर्ट डेटा मिळवतो — रिपोर्ट प्रकारानुसार
@@ -3305,7 +3314,7 @@
                     // Removed dummy fallback
                     break;
 
-                //  NEW: Online Order & Supplier Commission/Refund Report Logic 
+                // 🔥 NEW: Online Order & Supplier Commission/Refund Report Logic 🔥
                 case 'Krushi Bazar Online Orders (Supplier Refund)':
                     const allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
                     const platformFeeConfig = JSON.parse(localStorage.getItem('admin_data_M33')) || { slab1: 1000, perc1: 3, slab2: 10000, perc2: 2, perc3: 1, maxCap: 500 };
@@ -3456,7 +3465,7 @@
             area.innerHTML = html;
         }
 
-        // ---  LOGOUT ---
+        // --- 🚪 LOGOUT ---
         function logoutAdmin() {
             if(confirm("तुम्हाला खरोखर लॉग आऊट करायचे आहे का?")) {
                 localStorage.removeItem("current_logged_in_role");
