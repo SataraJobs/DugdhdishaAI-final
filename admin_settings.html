@@ -519,7 +519,7 @@
                         <div class="field"><label>Target Age (वय)</label><input type="text" id="m8_2" placeholder="4 Months"></div>
                         <div class="field"><label>Reminder Cycle</label><select id="m8_3"><option>6 Months</option><option>1 Year</option></select></div>
                     </div>
-                    <div class="field"><label>SMS Notification Text</label><textarea id="m8_4" rows="2">तुमच्या गाईच्या लसीकरणाची वेळ आली মিলিটারি...</textarea></div>
+                    <div class="field"><label>SMS Notification Text</label><textarea id="m8_4" rows="2">तुमच्या गाईच्या लसीकरणाची वेळ आली आहे...</textarea></div>
                     <button class="btn-prime" onclick="saveModule('M8')">💾 Save Vaccine Rule</button>
                 </div>
             </div>
@@ -1497,7 +1497,7 @@
                 processNotifications(querySnapshot.size);
             }).catch(e => {
                 console.error("Error loading notifications:", e);
-                processNotifications(0); // एरर आल्यास बाकीचे नोटिफिकेशन्स थांबू नयेत!
+                processNotifications(0); 
             });
         }
 
@@ -2404,7 +2404,7 @@
 ऑर्डर #101 
 आयटम: मका भरडा (50Kg) x 2
 ग्राहक: रामराव पाटील (+91 ******4321)
-पत्ता: सातारा, 415001
+पत्ता: ساتारा, 415001
 [पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
             } else if (msgType === 'dues') {
                 dateSection.style.display = 'none';
