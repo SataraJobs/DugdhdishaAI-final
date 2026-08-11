@@ -1,8 +1,9 @@
-// Firebase लायब्ररी इंपोर्ट करणे
+// =========================================================
+// भाग १: FIREBASE PUSH NOTIFICATIONS (बॅकग्राउंड अलर्ट्स)
+// =========================================================
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// तुमचे Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
     authDomain: "dugdhdishaai.firebaseapp.com",
@@ -13,34 +14,90 @@ const firebaseConfig = {
     measurementId: "G-6TFEJKBVFL"
 };
 
-// Firebase Initialize
 firebase.initializeApp(firebaseConfig);
-
-// Messaging सर्विस चालू करणे
 const messaging = firebase.messaging();
 
-// ॲप बंद असताना (Background) येणारे नोटिफिकेशन्स हँडल करणे
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    
     const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
-        // येथे आपण लोगोची पूर्ण लिंक दिली आहे जेणेकरून आयकॉन १००% दिसेल
         icon: 'https://dugdhadisha.com/logo-192x192.png',
         badge: 'https://dugdhadisha.com/logo-192x192.png',
-        vibrate: [200, 100, 200, 100, 200], // मोबाईल व्हायब्रेट होण्यासाठी
+        vibrate: [200, 100, 200, 100, 200], 
         data: payload.data || {}
     };
-
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// नोटिफिकेशनवर क्लिक केल्यावर ॲप उघडण्यासाठी
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    // जेव्हा युजर नोटिफिकेशनवर क्लिक करेल तेव्हा ॲप (index.html) ओपन होईल
     event.waitUntil(
         clients.openWindow('index.html')
+    );
+});
+
+
+// =========================================================
+// भाग २: PWA OFFLINE CACHING (ऑफलाईन ॲप चालवणे)
+// =========================================================
+const CACHE_NAME = "dugdhdisha-pwa-v1";
+
+// ॲप इन्स्टॉल होण्यासाठी आवश्यक असलेल्या मूळ फाईल्स
+const urlsToCache = [
+    "./",
+    "./index.html",
+    "./login.html",
+    "./logo-192x192.png", 
+    "./manifest.json"
+];
+
+// १. Service Worker Install करणे
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log("[Service Worker] Caching App Shell");
+            return cache.addAll(urlsToCache);
+        })
+    );
+    self.skipWaiting();
+});
+
+// २. जुनी Cache क्लिअर करणे (नवीन अपडेट आल्यावर)
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        console.log("[Service Worker] Clearing Old Cache");
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        })
+    );
+    self.clients.claim();
+});
+
+// ३. Network-First Strategy
+self.addEventListener("fetch", (event) => {
+    // API किंवा Firebase च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
+    if (event.request.url.includes("firestore") || event.request.url.includes("firebase")) {
+        return;
+    }
+
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                let responseClone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseClone);
+                });
+                return response;
+            })
+            .catch(() => {
+                return caches.match(event.request);
+            })
     );
 });
