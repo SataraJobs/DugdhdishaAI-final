@@ -734,7 +734,8 @@
         </a>
         
         <!-- 🔥 NEW: VET / पशुवैद्यक BUTTON 🔥 -->
-        <a onclick="openVetList()" class="dynamic-card card-vet">
+        <!-- बदल: इथे findNearestVets() हे फंक्शन कॉल केले आहे -->
+        <a onclick="findNearestVets()" class="dynamic-card card-vet">
             <div class="dynamic-icon">🩺</div><div class="dynamic-title" style="color:#2e7d32;">पशुवैद्यक</div>
         </a>
 
@@ -965,7 +966,7 @@
     // --- 🔥 NEW: संपूर्ण ॲप शेअर करण्याचे लॉजिक (Share Full App) 🔥 ---
     function shareMainApp() {
         let shareTitle = "दुग्ध दिशा AI - स्मार्ट पशुपालन ॲप";
-        let shareText = "नमस्कार! 🌾\nमी *'दुग्ध दिशा AI'* ॲप वापरत आहे. दुभत्या जनावरांचे व्यवस्थापन, दूध संकलन, चारा नियोजन आणि मोफत पशुवैद्यकीय सल्ल्यासाठी हे महाराष्ट्रातील नंबर १ ॲप आहे.\n\n👇 *आत्ताच खालील लिंकवर क्लिक करून ॲप डाऊनलोड/इन्स्टॉल करा:*";
+        let shareText = "नमस्कार! 🌾\nमी *'दुग्ध दिशा AI'* ॲप वापरत্বা आहे. दुभत्या जनावरांचे व्यवस्थापन, दूध संकलन, चारा नियोजन आणि मोफत पशुवैद्यकीय सल्ल्यासाठी हे महाराष्ट्रातील नंबर १ ॲप आहे.\n\n👇 *आत्ताच खालील लिंकवर क्लिक करून ॲप डाऊनलोड/इन्स्टॉल करा:*";
         let shareUrl = "https://satarajobs.github.io/DugdhdishaAI-final/login.html";
 
         if (navigator.share) {
@@ -1004,67 +1005,154 @@
         document.getElementById("joinUsModal").style.display = "none";
     }
 
-    // --- 🔥 NEW: VET / पशुवैद्यक LOGIC (डायनॅमिक, अ‍ॅडमिन डेटावर आधारित) 🔥 ---
-    function openVetList() {
-        document.getElementById("vetModal").style.display = "flex";
-        renderVets();
-    }
+
+    // ==============================================================
+    // 🔥 NEW: VET / पशुवैद्यक LOGIC (सर्वात जवळचे डॉक्टर शोधणे) 🔥
+    // ==============================================================
 
     function closeVetList() {
         document.getElementById("vetModal").style.display = "none";
     }
 
-    function renderVets() {
-        let container = document.getElementById("vet_list_container");
-        // अ‍ॅडमिन ने सेट केलेली पशुवैद्यक यादी (localStorage की 'registered_vets')
-        let vets = JSON.parse(localStorage.getItem('registered_vets')) || [];
-        let html = "";
-        if (vets.length > 0) {
-            vets.forEach(vet => {
-                html += `
-                <div class="vet-card">
-                    <div class="vet-header">
-                        <div>
-                            <h4 class="vet-name">${vet.name || 'नाव उपलब्ध नाही'}</h4>
-                            <div class="vet-loc">📍 ${vet.loc || 'स्थान माहिती नाही'}</div>
-                        </div>
-                    </div>
-                    <div class="vet-actions">
-                        <a href="tel:${vet.phone || '#'}" class="btn-call">📞 कॉल</a>
-                        <a href="https://wa.me/91${vet.wa || ''}?text=नमस्कार डॉक्टर, मला तुमच्याकडे अपॉइंटमेंट हवी आहे." target="_blank" class="btn-wa">💬 WhatsApp</a>
-                        <button class="btn-book" onclick="bookAppointment('${vet.id || ''}', '${vet.name || ''}')">📅 बुक करा</button>
-                    </div>
-                </div>
-                `;
-            });
-        } else {
-            html = `<p style="text-align:center; color:#888; padding:20px;">सध्या कोणतेही पशुवैद्यक उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>`;
-        }
-        container.innerHTML = html;
+    // १. दोन लोकेशन मधील अंतर (किलोमीटर मध्ये) काढण्याचे सूत्र (Haversine Formula)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity; 
+        const R = 6371; // पृथ्वीची त्रिज्या किलोमीटरमध्ये
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c; 
     }
 
-    function bookAppointment(vetId, vetName) {
-        if (!vetId || !vetName) {
+    // २. पशुवैद्यक टॅबवर क्लिक केल्यावर कॉल होणारे मुख्य फंक्शन
+    function findNearestVets() {
+        let modal = document.getElementById('vetModal');
+        let listContainer = document.getElementById('vet_list_container');
+        
+        modal.style.display = 'flex'; 
+        listContainer.innerHTML = '<p style="text-align:center; color:#e65100;">📍 तुमचे लोकेशन शोधत आहे... कृपया GPS ला Allow करा.</p>';
+
+        // युजरचे लोकेशन मिळवा
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    let userLat = position.coords.latitude;
+                    let userLon = position.coords.longitude;
+                    fetchAndSortVets(userLat, userLon, listContainer);
+                },
+                (error) => {
+                    alert("लोकेशन घेण्यास अडचण! कृपया तुमच्या मोबाईलचे GPS/Location चालू करा.");
+                    fetchAndSortVets(null, null, listContainer);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        } else {
+            alert("तुमचा ब्राऊझर लोकेशन सपोर्ट करत नाही.");
+            fetchAndSortVets(null, null, listContainer);
+        }
+    }
+
+    // ३. Firebase मधून व्हेटर्नरी डॉक्टर आणणे आणि अंतरानुसार सॉर्ट करणे
+    function fetchAndSortVets(userLat, userLon, listContainer) {
+        listContainer.innerHTML = '<p style="text-align:center; color:#1b5e20;">⏳ जवळचे डॉक्टर शोधत आहे...</p>';
+
+        // Firebase मधून फक्त मंजूर (Verified) आणि Online असणारे डॉक्टर काढा
+        db.collection("vet_partners")
+          .where("isVerified", "==", true)
+          .where("status", "==", "Online")
+          .get()
+          .then((querySnapshot) => {
+              let vets = [];
+              
+              querySnapshot.forEach((doc) => {
+                  let v = doc.data();
+                  if (userLat && userLon && v.lat && v.lon) {
+                      v.distance = calculateDistance(userLat, userLon, v.lat, v.lon);
+                  } else {
+                      v.distance = Infinity; 
+                  }
+                  vets.push(v);
+              });
+
+              // जवळचे डॉक्टर आधी (कमी अंतरावरून जास्त अंतराकडे Sort करा)
+              vets.sort((a, b) => a.distance - b.distance);
+
+              // ४. UI मध्ये डॉक्टरची लिस्ट दाखवा
+              if (vets.length === 0) {
+                  listContainer.innerHTML = '<p style="text-align:center; color:#888;">सध्या कोणतेही पशुवैद्यक ऑनलाईन उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>';
+                  return;
+              }
+
+              let html = '';
+              vets.forEach(vet => {
+                  let distText = vet.distance !== Infinity 
+                      ? `<span style="color:#d32f2f; font-weight:bold; font-size:11px;">📍 ${vet.distance.toFixed(1)} km दूर</span>` 
+                      : '';
+
+                  html += `
+                  <div class="vet-card">
+                      <div class="vet-header">
+                          <div>
+                              <h4 class="vet-name">👨‍⚕️ ${vet.name}</h4>
+                              <p style="margin:4px 0; font-size:11px; color:#555;">शिक्षण: ${vet.qual || 'N/A'}</p>
+                              <div class="vet-loc">फि: ₹${vet.charges ? vet.charges.farm : 'कॉल करा'}</div>
+                          </div>
+                          ${distText}
+                      </div>
+                      <div class="vet-actions">
+                          <a href="tel:+91${vet.mobile || '#'}" class="btn-call">📞 कॉल</a>
+                          <a href="https://wa.me/91${vet.mobile || ''}?text=नमस्कार डॉक्टर, मला तुमच्याकडे अपॉइंटमेंट हवी आहे." target="_blank" class="btn-wa">💬 WhatsApp</a>
+                          <button class="btn-book" onclick="bookAppointment('${vet.mobile || ''}', '${vet.name || ''}')">📅 बुक करा</button>
+                      </div>
+                  </div>`;
+              });
+              
+              listContainer.innerHTML = html;
+          })
+          .catch((error) => {
+              console.error("Error fetching vets: ", error);
+              listContainer.innerHTML = '<p style="text-align:center; color:red;">इंटरनेट एरर! डॉक्टरची यादी लोड होऊ शकली नाही.</p>';
+          });
+    }
+
+    function bookAppointment(vetMobile, vetName) {
+        if (!vetMobile || !vetName) {
             alert("अपॉइंटमेंट बुक करण्यासाठी डॉक्टरची माहिती पूर्ण नाही.");
             return;
         }
-        let appointments = JSON.parse(localStorage.getItem('vet_appointments')) || [];
         let userName = localStorage.getItem('current_user_name') || 'शेतकरी';
         let userMobile = localStorage.getItem('current_user_mobile') || 'Not Provided';
         
-        appointments.push({
-            vetId: vetId,
+        let appointmentData = {
+            id: "APT_" + Date.now(),
+            docId: "DOC_" + vetMobile, 
+            vetMobile: vetMobile,
             vetName: vetName,
-            userName: userName,
-            userMobile: userMobile,
-            date: new Date().toLocaleString(),
-            status: 'Pending'
-        });
+            farmerName: userName,
+            mobile: userMobile,
+            date: new Date().toLocaleDateString('mr-IN'),
+            time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' }),
+            reason: "General Visit",
+            status: "Pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
         
-        localStorage.setItem('vet_appointments', JSON.stringify(appointments));
-        alert(`✅ ${vetName} यांच्याकडे तुमची अपॉइंटमेंट बुक झाली आहे.\n\nडॉक्टर लवकरच तुम्हाला तुमच्या मोबाईल नंबरवर संपर्क करतील.`);
-        closeVetList();
+        // क्लाऊडवर सेव्ह करा
+        db.collection("vet_appointments").doc(appointmentData.id).set(appointmentData)
+        .then(() => {
+            alert(`✅ ${vetName} यांच्याकडे तुमची अपॉइंटमेंट बुक झाली आहे.\n\nडॉक्टर लवकरच तुम्हाला संपर्क करतील.`);
+            closeVetList();
+        })
+        .catch(e => {
+            console.error("Error booking apt: ", e);
+            alert("अपॉइंटमेंट बुक करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.");
+        });
     }
+    // ==============================================================
+
 
     // --- 🔥 STRICT EXPIRY & ACCESS CHECK LOGIC (WITH 0 = FREE TRY MODE) 🔥 ---
     function isPlanActive(requiredFeature) {
