@@ -619,13 +619,13 @@
 
         alert(`डॅशबोर्ड मध्ये स्वागत आहे, ${foundUser.name}! ☁️`);
         
-        // 🔥 नवीन लॉजिक: व्हेटर्नरी डॉक्टरचे अप्रूव्हल तपासा आणि vet.html ला पाठवा 🔥
+        // 🔥 नवीन लॉजिक: व्हेटर्नरी डॉक्टरचे अप्रूव्हल तपासा आणि vet_partner.html ला पाठवा 🔥
         db.collection("vet_partners").doc(foundUser.mobile).get().then((vetDoc) => {
             if (vetDoc.exists && (vetDoc.data().isVerified === true || String(vetDoc.data().isVerified) === "true")) {
                 
-                // व्हेटर्नरी डॉक्टर म्हणून मंजूर असेल तर थेट vet.html वर पाठवा
+                // व्हेटर्नरी डॉक्टर म्हणून मंजूर असेल तर थेट vet_partner.html वर पाठवा
                 localStorage.setItem("current_logged_in_doc", JSON.stringify(vetDoc.data()));
-                window.location.replace("vet.html"); 
+                window.location.replace("vet_partner.html"); 
 
             } else {
                 // जर डॉक्टर नसेल, तर डीलर किंवा युजर चेक करा (तुमचा पूर्वीचा कोड)
@@ -635,7 +635,7 @@
                 if ((userRole === 'dealer' || userRole === 'company' || userRole === 'supplier') && isUserVerified) {
                     window.location.replace("business_dashboard.html");
                 } else if (userRole === 'vet' && isUserVerified) {
-                    window.location.replace("vet.html"); // इथे vet_dashboard.html ऐवजी vet.html केले आहे
+                    window.location.replace("vet_partner.html"); // इथे vet_dashboard.html ऐवजी vet_partner.html केले आहे
                 } else {
                     window.location.replace("index.html");
                 }
