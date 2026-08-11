@@ -41,8 +41,7 @@
             
             // 🚀 नियम २: जर युजर प्रमाणित "पशुवैद्यक (Vet)" असेल आणि ॲप नव्याने उघडले असेल...
             else if (role === 'vet' && isVerified && !fromSpecialPage) {
-                // (टीप: 'vet_dashboard.html' च्या जागी तुमच्या व्हेट डॅशबोर्डच्या फाईलचे खरे नाव टाका)
-                window.location.replace("vet_dashboard.html"); 
+                window.location.replace("vet_partner.html"); 
                 return;
             }
             
@@ -72,12 +71,12 @@
                         topBtn.style.background = "linear-gradient(145deg, #1976d2, #1565c0)";
                         topBtn.style.borderColor = "#1565c0";
                         topBtn.style.display = "inline-block";
-                        topBtn.onclick = function() { window.location.href = "vet_dashboard.html"; }; 
+                        topBtn.onclick = function() { window.location.href = "vet_partner.html"; }; 
                     }
                     if(sideBtn) {
                         sideBtn.innerHTML = '<span class="m-icon">🩺</span> माझे क्लिनिक';
                         sideBtn.style.display = "flex";
-                        sideBtn.onclick = function() { window.location.href = "vet_dashboard.html"; }; 
+                        sideBtn.onclick = function() { window.location.href = "vet_partner.html"; }; 
                     }
                 }
             }
@@ -734,7 +733,6 @@
         </a>
         
         <!-- 🔥 NEW: VET / पशुवैद्यक BUTTON 🔥 -->
-        <!-- बदल: इथे findNearestVets() हे फंक्शन कॉल केले आहे -->
         <a onclick="findNearestVets()" class="dynamic-card card-vet">
             <div class="dynamic-icon">🩺</div><div class="dynamic-title" style="color:#2e7d32;">पशुवैद्यक</div>
         </a>
@@ -966,7 +964,7 @@
     // --- 🔥 NEW: संपूर्ण ॲप शेअर करण्याचे लॉजिक (Share Full App) 🔥 ---
     function shareMainApp() {
         let shareTitle = "दुग्ध दिशा AI - स्मार्ट पशुपालन ॲप";
-        let shareText = "नमस्कार! 🌾\nमी *'दुग्ध दिशा AI'* ॲप वापरत্বা आहे. दुभत्या जनावरांचे व्यवस्थापन, दूध संकलन, चारा नियोजन आणि मोफत पशुवैद्यकीय सल्ल्यासाठी हे महाराष्ट्रातील नंबर १ ॲप आहे.\n\n👇 *आत्ताच खालील लिंकवर क्लिक करून ॲप डाऊनलोड/इन्स्टॉल करा:*";
+        let shareText = "नमस्कार! 🌾\nमी *'दुग्ध दिशा AI'* ॲप वापरत आहे. दुभत्या जनावरांचे व्यवस्थापन, दूध संकलन, चारा नियोजन आणि मोफत पशुवैद्यकीय सल्ल्यासाठी हे महाराष्ट्रातील नंबर १ ॲप आहे.\n\n👇 *आत्ताच खालील लिंकवर क्लिक करून ॲप डाऊनलोड/इन्स्टॉल करा:*";
         let shareUrl = "https://satarajobs.github.io/DugdhdishaAI-final/login.html";
 
         if (navigator.share) {
@@ -1059,22 +1057,26 @@
     function fetchAndSortVets(userLat, userLon, listContainer) {
         listContainer.innerHTML = '<p style="text-align:center; color:#1b5e20;">⏳ जवळचे डॉक्टर शोधत आहे...</p>';
 
-        // Firebase मधून फक्त मंजूर (Verified) आणि Online असणारे डॉक्टर काढा
-        db.collection("vet_partners")
-          .where("isVerified", "==", true)
-          .where("status", "==", "Online")
-          .get()
+        // 🔥 FIX: Firestore Index Error टाळण्यासाठी सर्व डेटा आणून JS मध्ये फिल्टर करत आहोत 🔥
+        db.collection("vet_partners").get()
           .then((querySnapshot) => {
               let vets = [];
               
               querySnapshot.forEach((doc) => {
                   let v = doc.data();
-                  if (userLat && userLon && v.lat && v.lon) {
-                      v.distance = calculateDistance(userLat, userLon, v.lat, v.lon);
-                  } else {
-                      v.distance = Infinity; 
+                  
+                  // इस व्हेरीफाईड चेक (String किंवा Boolean दोन्ही हँडल करण्यासाठी)
+                  let isVetVerified = v.isVerified === true || String(v.isVerified) === "true";
+                  
+                  // फक्त मंजूर (Verified) डॉक्टरच लिस्टमध्ये घ्या
+                  if (isVetVerified) {
+                      if (userLat && userLon && v.lat && v.lon) {
+                          v.distance = calculateDistance(userLat, userLon, v.lat, v.lon);
+                      } else {
+                          v.distance = Infinity; 
+                      }
+                      vets.push(v);
                   }
-                  vets.push(v);
               });
 
               // जवळचे डॉक्टर आधी (कमी अंतरावरून जास्त अंतराकडे Sort करा)
@@ -1082,7 +1084,7 @@
 
               // ४. UI मध्ये डॉक्टरची लिस्ट दाखवा
               if (vets.length === 0) {
-                  listContainer.innerHTML = '<p style="text-align:center; color:#888;">सध्या कोणतेही पशुवैद्यक ऑनलाईन उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>';
+                  listContainer.innerHTML = '<p style="text-align:center; color:#888;">सध्या कोणतेही मंजूर पशुवैद्यक उपलब्ध नाहीत. कृपया नंतर प्रयत्न करा.</p>';
                   return;
               }
 
@@ -1092,13 +1094,17 @@
                       ? `<span style="color:#d32f2f; font-weight:bold; font-size:11px;">📍 ${vet.distance.toFixed(1)} km दूर</span>` 
                       : '';
 
+                  // डॉक्टर ऑनलाईन आहे की ऑफलाईन त्याचा बॅज
+                  let statusColor = vet.status === 'Online' ? '#2e7d32' : '#d32f2f';
+                  let statusText = vet.status === 'Online' ? '🟢 Available' : '🔴 Busy/Offline';
+
                   html += `
                   <div class="vet-card">
                       <div class="vet-header">
                           <div>
-                              <h4 class="vet-name">👨‍⚕️ ${vet.name}</h4>
+                              <h4 class="vet-name">👨‍⚕️ ${vet.name} <span style="font-size:10px; color:${statusColor}; margin-left:5px;">${statusText}</span></h4>
                               <p style="margin:4px 0; font-size:11px; color:#555;">शिक्षण: ${vet.qual || 'N/A'}</p>
-                              <div class="vet-loc">फि: ₹${vet.charges ? vet.charges.farm : 'कॉल करा'}</div>
+                              <div class="vet-loc">फी: ₹${vet.charges ? vet.charges.farm : 'कॉल करा'}</div>
                           </div>
                           ${distText}
                       </div>
