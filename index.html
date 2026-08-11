@@ -408,7 +408,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत垓 आहे...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
     </div>
 </div>
 
@@ -1007,7 +1007,7 @@
 
 
     // ==============================================================
-    // 🔥 NEW: VET / पशुवैद्यक LOGIC (सर्वात जवळचे डॉक्टर शोधणे) 🔥
+    // 🔥 NEW: VET / पशुवैद्यक LOGIC (सर्वात जवळचे डॉक्टर शोधणे आणि अपॉइंटमेंट फिक्स) 🔥
     // ==============================================================
 
     function closeVetList() {
@@ -1077,6 +1077,8 @@
                       } else {
                           v.distance = Infinity; 
                       }
+                      // 🔥 फिक्स: डॉक्टरचा खरा आयडी (vet.id) असाइन करणे
+                      v.id = doc.id || v.id; 
                       vets.push(v);
                   }
               });
@@ -1096,6 +1098,7 @@
                       ? `<span style="color:#d32f2f; font-weight:bold; font-size:11px;">📍 ${vet.distance.toFixed(1)} km दूर</span>` 
                       : `<span style="color:#888; font-size:10px;">📍 लोकेशन उपलब्ध नाही</span>`;
 
+                  // 🔥 फिक्स: बुक करताना डॉक्टरचा खरा आयडी (vet.id) पास केला आहे
                   html += `
                   <div class="vet-card">
                       <div class="vet-header">
@@ -1109,7 +1112,7 @@
                       <div class="vet-actions">
                           <a href="tel:+91${vet.mobile || '#'}" class="btn-call">📞 कॉल</a>
                           <a href="https://wa.me/91${vet.mobile || ''}?text=नमस्कार डॉक्टर, मला तुमच्याकडे अपॉइंटमेंट हवी आहे." target="_blank" class="btn-wa">💬 WhatsApp</a>
-                          <button class="btn-book" onclick="bookAppointment('${vet.mobile || ''}', '${vet.name || ''}')">📅 बुक करा</button>
+                          <button class="btn-book" onclick="bookAppointment('${vet.id || ''}', '${vet.name || ''}', '${vet.mobile || ''}')">📅 बुक करा</button>
                       </div>
                   </div>`;
               });
@@ -1122,8 +1125,8 @@
           });
     }
 
-    function bookAppointment(vetMobile, vetName) {
-        if (!vetMobile || !vetName) {
+    function bookAppointment(vetId, vetName, vetMobile) {
+        if (!vetId || !vetName) {
             alert("अपॉइंटमेंट बुक करण्यासाठी डॉक्टरची माहिती पूर्ण नाही.");
             return;
         }
@@ -1132,7 +1135,7 @@
         
         let appointmentData = {
             id: "APT_" + Date.now(),
-            docId: "DOC_" + vetMobile, 
+            docId: vetId, // 👈 फिक्स: येथे 'vet.id' वापरले आहे, जेणेकरून डॉक्टरच्या डॅशबोर्डशी अचूक मॅच होईल
             vetMobile: vetMobile,
             vetName: vetName,
             farmerName: userName,
@@ -1147,6 +1150,17 @@
         // क्लाऊडवर सेव्ह करा
         db.collection("vet_appointments").doc(appointmentData.id).set(appointmentData)
         .then(() => {
+            // 🔥 NEW FIX: डॉक्टरला रिअल-टाईम नोटिफिकेशन पाठवा 🔥
+            let newNotif = {
+                id: Date.now(),
+                title: "📅 नवीन अपॉइंटमेंट विनंती",
+                message: `${userName} (${userMobile}) यांनी तुमच्याकडे अपॉइंटमेंट बुक केली आहे.`,
+                target: vetMobile, // 👈 डॉक्टरचा मोबाईल नंबर
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+            db.collection("broadcast_notifications").add(newNotif);
+
             alert(`✅ ${vetName} यांच्याकडे तुमची अपॉइंटमेंट बुक झाली आहे.\n\nडॉक्टर लवकरच तुम्हाला संपर्क करतील.`);
             closeVetList();
         })
