@@ -29,11 +29,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         // Cloud Firestore मध्ये टोकन सेव्ह करणे (युजर लॉगिन असेल तर)
                         let userMobile = localStorage.getItem('current_user_mobile');
                         if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
-                            db.collection("fcm_tokens").doc(userMobile).set({
-                                token: currentToken,
+                            
+                            // 🔥 बदललेला भाग: 'users' कलेक्शन आणि 'fcmToken' फिल्ड वापरले 🔥
+                            db.collection("users").doc(userMobile).set({
+                                fcmToken: currentToken, 
                                 role: localStorage.getItem('current_logged_in_role') || 'unknown',
                                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                             }, { merge: true })
+                            .then(() => console.log("FCM Token saved to users collection!"))
                             .catch(err => console.error("Error saving token to firestore:", err));
                         }
                     } else {
