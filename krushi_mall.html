@@ -45,7 +45,7 @@
         .banner { width: 100%; height: 100px; background: linear-gradient(145deg, #1565c0, #0d47a1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .banner-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #ffeb3b; border: 1px solid #ffeb3b;}
 
-        /* 4. AI Smart Shopping Feature */
+        /* 4. AI Smart Shopping Feature (Hidden by default until dynamic) */
         .ai-recommendation { background: linear-gradient(145deg, #fff3e0, #ffe0b2); margin: 0 20px 20px; padding: 15px; border-radius: 16px; border: 1px solid #ffcc80; box-shadow: 0 6px 15px rgba(255, 152, 0, 0.15); position: relative; display: none; }
         .ai-title { font-size: 14px; font-weight: 900; color: #e65100; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .ai-text { font-size: 12.5px; color: #555; font-weight: bold; line-height: 1.4; margin-bottom: 12px; }
@@ -91,6 +91,7 @@
         .btn-cart:active { top: 2px; position: relative; box-shadow: none; }
         .btn-icon { background: #f0f0f0; color: #555; border: none; padding: 8px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 
+        /* NEW: Shop button */
         .btn-shop { margin-top: 6px; background: #1565c0; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; width: 100%; box-shadow: 0 2px 0 #0d47a1; }
         .btn-shop:active { top: 2px; position: relative; box-shadow: none; }
 
@@ -162,9 +163,32 @@
         .b-nav-item.active { background: #e8f5e9; color: #1b5e20; }
         .b-nav-item.active .b-nav-icon { filter: grayscale(0%); transform: scale(1.15); }
 
+        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
+        #sessionAlertBox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .session-alert-content {
+            background: white; padding: 25px; border-radius: 15px;
+            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body onload="initializeStore()">
+
+    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <div id="sessionAlertBox">
+        <div class="session-alert-content">
+            <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        </div>
+    </div>
 
     <header class="top-header">
         <div class="header-title">
@@ -211,6 +235,7 @@
         <div class="banner" id="dynamic_mall_banner" style="display: none;"></div>
     </div>
 
+    <!-- AI Recommendation Container (Hidden until dynamic data is added) -->
     <div class="ai-recommendation" id="ai_recommendation_container">
         <!-- Live AI Recommendations will be shown here -->
     </div>
@@ -340,12 +365,12 @@
         </div>
         
         <div class="checkout-actions">
-            <button class="btn-action-large" id="cod_btn" style="background:#ff9800; box-shadow: 0 4px 0 #e65100;" onclick="processCOD()">
+            <button class="btn-action-large" style="background:#ff9800; box-shadow: 0 4px 0 #e65100;" onclick="processCOD()">
                 🏠 कॅश ऑन डिलिव्हरी (COD) <br>
                 <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_cod" style="font-weight:bold; font-size:14px;">₹0</span></span>
             </button>
             <div style="text-align:center; font-size:12px; color:#888; font-weight:bold; margin: 2px 0;">-- किंवा --</div>
-            <button class="btn-action-large" id="online_btn" style="background:linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #0d3b11;" onclick="processPayment()">
+            <button class="btn-action-large" style="background:linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #0d3b11;" onclick="processPayment()">
                 ⚡ ऑनलाईन पेमेंट (Online UPI) <br>
                 <span style="font-size:12px; font-weight:normal;">एकूण भरा: <span id="btn_amt_online" style="font-weight:bold; font-size:14px;">₹0</span></span>
                 <div id="btn_save_text" style="font-size:11px; background:#c8e6c9; color:#1b5e20; padding:2px 8px; border-radius:4px; display:inline-block; margin-top:5px; font-weight:bold;">तुमची बचत: ₹0</div>
@@ -413,6 +438,7 @@
             if(typeof loadNotifications === 'function') loadNotifications('farmer');
             updateCartBadge();
             
+            // 🔥 FIREBASE CLOUD SYNC: मॉल सेटिंग्ज आणि नोटिफिकेशन्स क्लाऊडवरून सिंक करा 🔥
             syncMallSettingsFromCloud();
             syncUserNotificationsFromCloud();
             
@@ -426,6 +452,7 @@
             if(liveAdsData && liveAdsData.ads && liveAdsData.ads.length > 0) {
                 if(liveAdsData.place === "Krushi Mall Header") {
                     hasBannerAd = true;
+                    
                     let allAds = liveAdsData.ads;
                     let counterKey = "ad_rotation_mall_counter";
                     let currentCounter = parseInt(localStorage.getItem(counterKey) || "0");
@@ -466,32 +493,68 @@
             loadDynamicProducts(hasSponsorAd);
         }
 
+        // --- 🔥 NEW: CLOUD DATABASE MALL SETTINGS SYNC ACROSS ALL DEVICES (WITH SESSION WATCHER) 🔥 ---
         function syncMallSettingsFromCloud() {
+            // १. प्लॅटफॉर्म फी आणि ऑनलाईन बेनेफिट्स सिंक (`admin_settings/M33`)
             db.collection("admin_settings").doc("M33").get().then((doc) => {
                 if (doc.exists && doc.data()) {
                     localStorage.setItem('admin_data_M33', JSON.stringify(doc.data()));
                 }
             }).catch(e => console.log("Cloud M33 sync error:", e));
 
+            // २. डिलिव्हरी दर सिंक (`admin_settings/delivery_rates`)
             db.collection("admin_settings").doc("delivery_rates").get().then((doc) => {
                 if (doc.exists && doc.data()) {
                     localStorage.setItem('admin_delivery_rates', JSON.stringify(doc.data()));
                 }
             }).catch(e => console.log("Cloud delivery rates sync error:", e));
 
+            // ३. पेमेंट गेटवे आणि UPI माहिती सिंक (`admin_settings/payment_settings`)
             db.collection("admin_settings").doc("payment_settings").get().then((doc) => {
                 if (doc.exists && doc.data()) {
                     localStorage.setItem('admin_payment_settings', JSON.stringify(doc.data()));
                 }
             }).catch(e => console.log("Cloud payment settings sync error:", e));
 
+            // ४. 🔥 जाहिराती (Ads) सिंक करा (FIXED: NOW CLOUD ADS WILL SHOW IMMEDIATELY) 🔥
             db.collection("admin_settings").doc("live_admin_ad_images").get().then((doc) => {
                 if (doc.exists && doc.data()) {
                     localStorage.setItem('live_admin_ad_images', JSON.stringify(doc.data()));
                 }
             }).catch(e => console.log("Cloud ads sync error:", e));
+
+            // 🔥 SINGLE DEVICE SESSION WATCHER (कृषी मॉलमध्ये असताना दुसऱ्या फोनवरून लॉगिन झाल्यास ऑटो लॉग-आऊट) 🔥
+            let userMobile = localStorage.getItem("current_user_mobile");
+            if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+                db.collection("users").doc(userMobile).onSnapshot((doc) => {
+                    if (doc.exists && doc.data()) {
+                        let cloudData = doc.data();
+                        let localSessionId = localStorage.getItem("current_session_id");
+                        let cloudSessionId = cloudData.currentSessionId;
+                        if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
+                            let alertBox = document.getElementById("sessionAlertBox");
+                            if (alertBox) alertBox.style.display = "flex";
+                            setTimeout(() => {
+                                localStorage.clear();
+                                window.location.replace("login.html");
+                            }, 3000);
+                        }
+                    }
+                }, (err) => console.log("Cloud user sync error:", err));
+
+                // 🔥 NEW: कृषी मॉल व्हिजिटचे क्लाऊड लॉगिंग (`krushi_mall_activity_logs`) 🔥
+                let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+                db.collection("krushi_mall_activity_logs").add({
+                    userName: fName,
+                    userMobile: userMobile,
+                    action: "Visited Smart Krushi Mall Marketplace",
+                    date: new Date().toLocaleDateString('mr-IN'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Activity logging error:", e));
+            }
         }
 
+        // --- 🔥 NEW: CLOUD USER NOTIFICATIONS SYNC ACROSS ALL DEVICES 🔥 ---
         function syncUserNotificationsFromCloud() {
             let userMobile = localStorage.getItem("current_user_mobile");
             if (userMobile && userMobile !== "+91 9XXXX XXXX") {
@@ -514,17 +577,18 @@
             }
         }
 
+        // 🔥 FIREBASE: प्रॉडक्ट्स डेटाबेसमधून थेट आणणे 🔥
         function loadDynamicProducts(hasSponsorAd) {
             let productGrid = document.getElementById('main_product_grid');
             let noProductMsg = document.getElementById('no_product_msg');
-            let originalHtml = productGrid.innerHTML; 
+            let originalHtml = productGrid.innerHTML; // Sponsor card included
 
             db.collection("vendor_products").get()
             .then((querySnapshot) => {
                 let products = [];
                 querySnapshot.forEach((doc) => {
                     let pData = doc.data();
-                    pData.id = doc.id; 
+                    pData.id = doc.id; // Assign actual Firebase ID
                     products.push(pData);
                 });
 
@@ -563,12 +627,8 @@
                         discount = Math.round(((prod.mrp - prod.offerPrice) / prod.mrp) * 100);
                     }
 
-                    // Replace single quotes with encoded version to avoid breaking HTML
-                    let safeProdJson = encodeURIComponent(JSON.stringify(prod).replace(/'/g, "%27"));
-                    let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
-                    let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
-                    let safeVendorMobile = prod.vendorMobile || prod.vendorName; // 🔥 बदल: सप्लायरचा मोबाईल नंबर घेतला
-
+                    let prodJsonStr = encodeURIComponent(JSON.stringify(prod));
+                    
                     let isPaidPlan = (prod.vendorPlan === 'Silver Seller' || prod.vendorPlan === 'Corporate Partner');
                     let shopLinkHtml = '';
                     if (isPaidPlan) {
@@ -581,12 +641,12 @@
                         <div class="card-badges">
                             ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
                         </div>
-                        <div class="card-img" style="background:${bgGradient}; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="openDynamicProduct('${safeProdJson}')">
+                        <div class="card-img" style="background:${bgGradient}; display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden;" onclick="openDynamicProduct('${prodJsonStr}')">
                             ${mainImgHtml}
                         </div>
                         <div class="card-body">
                             <div class="company-name">दुग्ध दिशा प्रमाणित विक्रेता <span style="color:#1976d2; margin-left:4px;">✅</span></div>
-                            <h4 class="prod-title" onclick="openDynamicProduct('${safeProdJson}')">${prod.name}</h4>
+                            <h4 class="prod-title" onclick="openDynamicProduct('${prodJsonStr}')">${prod.name}</h4>
                             <div class="prod-weight">${prod.category}</div>
                             
                             <div class="price-row">
@@ -596,7 +656,7 @@
                             <div class="rating-row"><span class="stars">★★★★★</span> ४.५ (नवीन)</div>
                             
                             <div class="card-actions">
-                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${safeName}', ${prod.offerPrice}, '📦', '${safeVendor}', '${safeVendorMobile}', '${prod.category}')">🛒 Add</button>
+                                <button class="btn-cart" onclick="addToCart('${prod.id}', '${prod.name}', ${prod.offerPrice}, '📦', '${prod.vendorName}', '${prod.category}')">🛒 Add</button>
                                 <button class="btn-icon">❤️</button>
                             </div>
                             ${shopLinkHtml}
@@ -609,7 +669,7 @@
         }
 
         function openDynamicProduct(prodJsonStr) {
-            let prod = JSON.parse(decodeURIComponent(prodJsonStr).replace(/%27/g, "'"));
+            let prod = JSON.parse(decodeURIComponent(prodJsonStr));
             
             document.getElementById('detail_title').innerText = prod.name;
             document.getElementById('detail_company').innerHTML = `दुग्ध दिशा प्रमाणित विक्रेता`;
@@ -689,23 +749,17 @@
                 mainImageArea.style.background = 'linear-gradient(to bottom, #e3f2fd, #bbdefb)';
             }
 
-            let safeName = prod.name ? prod.name.replace(/'/g, "\\'") : '';
-            let safeVendor = prod.vendorName ? prod.vendorName.replace(/'/g, "\\'") : '';
-            let safeVendorMobile = prod.vendorMobile || prod.vendorName; // 🔥 बदल: मोबाईल नंबर घेतला
-
             let buyBtn = document.getElementById('detail_buy_btn');
             buyBtn.innerText = `🛒 Buy Now (₹${prod.offerPrice})`;
             buyBtn.onclick = function() {
-                // 🔥 बदल: vendorMobile पास केला
-                addToCart(prod.id, safeName, prod.offerPrice, '📦', safeVendor, safeVendorMobile, prod.category);
+                addToCart(prod.id, prod.name, prod.offerPrice, '📦', prod.vendorName, prod.category);
                 closeProduct();
                 openCart();
             };
 
             let quoteBtn = document.getElementById('detail_quote_btn');
             quoteBtn.onclick = function() {
-                // 🔥 बदल: vendorMobile पास केला
-                requestQuote(safeName, safeVendor, safeVendorMobile);
+                requestQuote(prod.name, prod.vendorName);
             };
 
             document.getElementById('productModal').style.display = 'block';
@@ -750,13 +804,12 @@
             closeCropModal();
         }
 
-        // 🔥 बदल: vendorMobile पॅरामीटर ॲड केला
-        function addToCart(id, name, price, icon, company, vendorMobile, category = 'Feed') {
+        function addToCart(id, name, price, icon, company, category = 'Feed') {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
             let existingItem = cart.find(i => i.id === id);
             
             if(existingItem) { existingItem.qty += 1; } 
-            else { cart.push({id, name, price, icon, company, vendorMobile, category, qty: 1}); } // 🔥 बदल: कार्टमध्ये सेव्ह केला
+            else { cart.push({id, name, price, icon, company, category, qty: 1}); }
             
             localStorage.setItem('krushi_cart', JSON.stringify(cart));
             updateCartBadge();
@@ -809,7 +862,6 @@
             let totalBill = 0;
             
             cart.forEach((item) => {
-                let safeName = item.name ? item.name.replace(/'/g, "\\'") : '';
                 totalBill += (item.price * item.qty);
                 html += `
                 <div style="display:flex; align-items:center; gap:12px; background:white; padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
@@ -860,10 +912,13 @@
             if(userPincode && adminRates[userPincode]) {
                 deliveryFee = adminRates[userPincode].charge;
                 courierName = "(" + adminRates[userPincode].courier + ")";
-            } else { deliveryFee = subtotal >= 1000 ? 0 : 50; }
+            } else { 
+                deliveryFee = 0; 
+            }
 
             let adminSettings = JSON.parse(localStorage.getItem('admin_data_M33')) || {};
             
+            // 🔥 CHANGED `|| 1` TO `|| 0` SO THERE IS NO AUTOMATIC DISCOUNT 🔥
             let onlineDiscountPercent = parseFloat(adminSettings.m33_online_benefit) || 0; 
             let benefitAmount = subtotal * (onlineDiscountPercent / 100);
             
@@ -900,9 +955,10 @@
             return name;
         }
 
+        // 🔥 FIREBASE: ऑर्डर सेव्ह करणे 🔥
         function saveOrderToHistory(paymentType, finalAmount) {
             let cart = JSON.parse(localStorage.getItem('krushi_cart')) || [];
-            if(cart.length === 0) return Promise.reject("Cart is empty");
+            if(cart.length === 0) return;
 
             let name = document.getElementById('chk_name').value;
             let mobile = document.getElementById('chk_mobile').value;
@@ -914,71 +970,41 @@
             let today = new Date();
             let dateStr = today.toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + " • " + today.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
 
-            let uniqueVendors = [...new Set(cart.map(item => item.company))];
-            let uniqueVendorMobiles = [...new Set(cart.map(item => item.vendorMobile || item.company))]; // 🔥 बदल: व्यापाऱ्यांचे मोबाईल नंबर काढले
-            let cleanCustomerMobile = mobile.replace(/\D/g, '').slice(-10);
-
-            // 1. लोकल स्टोरेजमध्ये सेव्ह करण्यासाठीचा डेटा
-            let newOrderLocal = {
+            let newOrder = {
                 id: orderId, 
                 date: dateStr, 
-                customer: { name: name, mobile: cleanCustomerMobile, address: address, pincode: pincode, district: district }, 
+                customer: { name, mobile, address, pincode, district },
                 items: cart, 
                 totalAmount: finalAmount, 
                 paymentMethod: paymentType, 
                 status: "pending", 
                 commissionPaid: false,
-                vendorNames: uniqueVendors, 
-                vendorMobiles: uniqueVendorMobiles, // 🔥 बदल: डेटाबेसमध्ये सेव्ह केले
-                timestampStr: new Date().toISOString()
-            };
-
-            let newOrderCloud = {
-                ...newOrderLocal,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             // Firebase ला पाठवा
-            return db.collection("mall_orders").add(newOrderCloud)
-            .then(docRef => {
-                let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-                
-                // 🔥 बदल: नावाऐवजी मोबाईल नंबरवर नोटिफिकेशन पाठवले
-                uniqueVendorMobiles.forEach(vMobile => {
-                    let notifId = "NOTIF-" + Math.floor(10000 + Math.random() * 90000);
-                    
-                    let notifObjLocal = {
-                        receiver_mobile: vMobile, // 🔥 बदल: अचूक मोबाईल नंबर
-                        type: 'order',
-                        title: "📦 नवीन ऑर्डर प्राप्त!",
-                        message: `तुम्हाला कृषी मॉलवरून श्री. ${name} यांची नवीन ऑर्डर आली आहे.`,
-                        date: new Date().toLocaleDateString('mr-IN'), 
-                        orderId: orderId, 
-                        isRead: false,
-                        firebaseDocId: notifId,
-                        timestampStr: new Date().toISOString()
-                    };
-                    
-                    let notifObjCloud = {
-                        ...notifObjLocal,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    };
+            db.collection("mall_orders").add(newOrder).catch(err => console.error(err));
 
-                    appNotifs.push(notifObjLocal);
-                    
-                    db.collection("app_notifications").doc(notifId).set(notifObjCloud)
-                    .catch(e => console.error("Cloud vendor notif error:", e));
-                });
+            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+            allOrders.unshift(newOrder); 
+            localStorage.setItem('user_orders', JSON.stringify(allOrders));
+
+            let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+            let uniqueVendors = [...new Set(cart.map(item => item.company))];
+            
+            uniqueVendors.forEach(vendorName => {
+                let notifObj = {
+                    receiver_mobile: vendorName, title: "📦 नवीन ऑर्डर प्राप्त!",
+                    message: `तुम्हाला कृषी मॉलवरून श्री. ${name} यांची नवीन ऑर्डर आली आहे.`,
+                    date: new Date().toLocaleDateString('mr-IN'), orderId: orderId, isRead: false
+                };
+                appNotifs.push(notifObj);
                 
-                localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-                
-                let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                newOrderLocal.firebaseDocId = docRef.id;
-                allOrders.unshift(newOrderLocal); 
-                localStorage.setItem('user_orders', JSON.stringify(allOrders));
-                
-                return docRef;
+                // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDORS 🔥
+                db.collection("app_notifications").add(notifObj)
+                .catch(e => console.error("Cloud vendor notif error:", e));
             });
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
         }
 
         function processCOD() {
@@ -986,24 +1012,12 @@
             if(!customerName) return;
 
             if(confirm(`श्री. ${customerName},\nतुमची ₹${window.currentBaseTotal} ची ऑर्डर कॅश ऑन डिलिव्हरी (COD) वर कन्फर्म करायची आहे का?`)) {
-                
-                let btn = document.getElementById('cod_btn');
-                let oldText = btn.innerHTML;
-                btn.innerHTML = "⏳ ऑर्डर कन्फर्म होत आहे...";
-                document.body.style.cursor = 'wait';
-
-                saveOrderToHistory('COD', window.currentBaseTotal).then(() => {
-                    document.body.style.cursor = 'default';
-                    localStorage.removeItem('krushi_cart');
-                    updateCartBadge();
-                    closeCheckout();
-                    alert("🎉 तुमची COD ऑर्डर यशस्वीरीत्या नोंदवली गेली आहे!\n\nमाल तुमच्या पत्त्यावर पोहोचल्यावर ₹" + window.currentBaseTotal + " रोख द्यावे लागतील.");
-                    window.location.href = "my_orders.html";
-                }).catch((err) => {
-                    btn.innerHTML = oldText;
-                    document.body.style.cursor = 'default';
-                    alert("ऑर्डर नोंदवताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा.");
-                });
+                saveOrderToHistory('COD', window.currentBaseTotal); 
+                localStorage.removeItem('krushi_cart');
+                updateCartBadge();
+                closeCheckout();
+                alert("🎉 तुमची COD ऑर्डर यशस्वीरीत्या नोंदवली गेली आहे!\n\nमाल तुमच्या पत्त्यावर पोहोचल्यावर ₹" + window.currentBaseTotal + " रोख द्यावे लागतील.");
+                window.location.href = "my_orders.html";
             }
         }
 
@@ -1020,29 +1034,17 @@
                 window.location.href = upiLink;
                 setTimeout(() => {
                     if(confirm("पेमेंट यशस्वी झाले का? (डेमो मोड)")) {
-                        
-                        let btn = document.getElementById('online_btn');
-                        let oldText = btn.innerHTML;
-                        btn.innerHTML = "⏳ ऑर्डर कन्फर्म होत आहे...";
-                        document.body.style.cursor = 'wait';
-
-                        saveOrderToHistory('Online Paid', window.currentOnlineTotal).then(() => {
-                            document.body.style.cursor = 'default';
-                            let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                            if(allOrders.length > 0) {
-                                allOrders[0].commissionPaid = true;
-                                localStorage.setItem('user_orders', JSON.stringify(allOrders));
-                            }
-                            localStorage.removeItem('krushi_cart');
-                            updateCartBadge();
-                            closeCheckout();
-                            alert("🎉 पेमेंट यशस्वी! तुमची ऑर्डर नोंदवली गेली आहे. लवकरच माल तुमच्या पत्त्यावर पोहोचेल.");
-                            window.location.href = "my_orders.html";
-                        }).catch(err => {
-                            btn.innerHTML = oldText;
-                            document.body.style.cursor = 'default';
-                            alert("ऑर्डर नोंदवताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा.");
-                        });
+                        saveOrderToHistory('Online Paid', window.currentOnlineTotal); 
+                        let allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                        if(allOrders.length > 0) {
+                            allOrders[0].commissionPaid = true;
+                            localStorage.setItem('user_orders', JSON.stringify(allOrders));
+                        }
+                        localStorage.removeItem('krushi_cart');
+                        updateCartBadge();
+                        closeCheckout();
+                        alert("🎉 पेमेंट यशस्वी! तुमची ऑर्डर नोंदवली गेली आहे. लवकरच माल तुमच्या पत्त्यावर पोहोचेल.");
+                        window.location.href = "my_orders.html";
                     }
                 }, 3000);
             }
@@ -1068,14 +1070,15 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // 🔥 बदल: vendorMobile पॅरामीटर जोडला
-        function requestQuote(prodName, vendorName, vendorMobile) {
+        // 🔥 FIREBASE: कोटेशन रिक्वेस्ट सेव्ह करणे 🔥
+        function requestQuote(prodName, vendorName) {
             let qty = prompt(prodName + "\n\nतुम्हाला किती किलो/नग (Quantity) हवे आहेत? (उदा. 500 kg, 100 bags):");
             
             if(qty) {
                 let userName = localStorage.getItem("current_user_name") || "शेतकरी/ग्राहक";
                 let userMobile = localStorage.getItem("current_user_mobile") || "माहिती नाही";
 
+                // Firebase ला कोटेशन पाठवणे
                 let quoteData = {
                     prodName: prodName,
                     vendorName: vendorName || "Unknown",
@@ -1085,46 +1088,33 @@
                     date: new Date().toLocaleDateString('mr-IN'),
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
-                
-                db.collection("quote_requests").add(quoteData)
-                .then(() => {
-                    let adminNotifs = JSON.parse(localStorage.getItem("admin_notifications")) || [];
-                    adminNotifs.unshift({
-                        title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)",
-                        message: `${userName} (${userMobile}) यांना '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. सप्लायरला (Vendor: ${vendorName}) संपर्क करा.`,
-                        date: new Date().toLocaleDateString('mr-IN')
-                    });
-                    localStorage.setItem("admin_notifications", JSON.stringify(adminNotifs));
+                db.collection("quote_requests").add(quoteData).catch(e => console.error(e));
 
-                    if (vendorMobile && vendorMobile !== "Unknown") { // 🔥 बदल: नंबर वापरला
-                        let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
-                        let notifId = "REQ-" + Math.floor(1000 + Math.random() * 9000);
-                        
-                        let vendorNotifObjLocal = {
-                            receiver_mobile: vendorMobile, // 🔥 बदल: अचूक मोबाईल नंबर
-                            type: 'lead',
-                            title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
-                            message: `श्री. ${userName} यांना तुमच्या '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
-                            date: new Date().toLocaleDateString('mr-IN'),
-                            orderId: notifId,
-                            isRead: false,
-                            firebaseDocId: notifId,
-                            timestampStr: new Date().toISOString()
-                        };
+                let adminNotifs = JSON.parse(localStorage.getItem("admin_notifications")) || [];
+                adminNotifs.unshift({
+                    title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)",
+                    message: `${userName} (${userMobile}) यांना '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. सप्लायरला (Vendor: ${vendorName}) संपर्क करा.`,
+                    date: new Date().toLocaleDateString('mr-IN')
+                });
+                localStorage.setItem("admin_notifications", JSON.stringify(adminNotifs));
 
-                        let vendorNotifObjCloud = {
-                            ...vendorNotifObjLocal,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        };
+                if (vendorName) {
+                    let appNotifs = JSON.parse(localStorage.getItem('app_notifications')) || [];
+                    let vendorNotifObj = {
+                        receiver_mobile: vendorName, 
+                        title: "📝 नवीन कोटेशन रिक्वेस्ट (Bulk Order)!",
+                        message: `श्री. ${userName} यांना तुमच्या '${prodName}' ची ${qty} प्रमाणात आवश्यकता आहे. कृपया कोटेशन तयार करा.`,
+                        date: new Date().toLocaleDateString('mr-IN'),
+                        orderId: "#REQ-" + Math.floor(1000 + Math.random() * 9000),
+                        isRead: false
+                    };
+                    appNotifs.push(vendorNotifObj);
+                    localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
 
-                        appNotifs.push(vendorNotifObjLocal);
-                        localStorage.setItem('app_notifications', JSON.stringify(appNotifs));
-
-                        db.collection("app_notifications").doc(notifId).set(vendorNotifObjCloud)
-                        .catch(e => console.error("Cloud vendor quote notif error:", e));
-                    }
-                })
-                .catch(e => console.error(e));
+                    // 🔥 FIREBASE CLOUD NOTIFICATION SAVE FOR VENDOR QUOTE REQUEST 🔥
+                    db.collection("app_notifications").add(vendorNotifObj)
+                    .catch(e => console.error("Cloud vendor quote notif error:", e));
+                }
 
                 alert("✅ तुमची रिक्वेस्ट ॲडमिन आणि सप्लायर दोघांनाही पाठवली आहे! लवकरच तुम्हाला संपर्क केला जाईल.");
                 closeProduct();
@@ -1186,6 +1176,7 @@
                 let currentId = n.orderId || idx;
                 if (n.receiver_mobile === currentUserMobile && currentId.toString() === id.toString()) {
                     n.isRead = true;
+                    // 🔥 UPDATE ON FIREBASE CLOUD IF DOC ID EXISTS
                     if (n.firebaseDocId) {
                         db.collection("app_notifications").doc(n.firebaseDocId).update({ isRead: true })
                         .catch(e => console.log("Cloud notif read update error:", e));
