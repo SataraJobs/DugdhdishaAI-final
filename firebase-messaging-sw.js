@@ -26,8 +26,9 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
-        icon: 'logo.png',
-        badge: 'logo.png',
+        // येथे आपण लोगोची पूर्ण लिंक दिली आहे जेणेकरून आयकॉन १००% दिसेल
+        icon: 'https://dugdhadisha.com/logo-192x192.png',
+        badge: 'https://dugdhadisha.com/logo-192x192.png',
         vibrate: [200, 100, 200, 100, 200], // मोबाईल व्हायब्रेट होण्यासाठी
         data: payload.data || {}
     };
