@@ -1717,7 +1717,7 @@
                 }
             }).catch(e => console.log("Cloud farmer pay sync:", e));
 
-            // २. कस्टम সাপোর্ট हेल्पडेस्क तिकिटे क्लाऊडवरून सिंक
+            // २. कस्टमर सपोर्ट हेल्पडेस्क तिकिटे क्लाऊडवरून सिंक
             db.collection("support_tickets").orderBy("timestamp", "desc").get()
             .then(querySnapshot => {
                 let cloudTickets = [];
@@ -1874,7 +1874,7 @@
             loadDoctorApprovals(); 
             loadCommissionApprovals(); 
             
-            // 🔥 NEW: Vet Partner Approval Load (सुधारित)
+            // 🔥 NEW: Vet Partner Approval Load
             loadPendingVetsForAdmin();
 
             loadAdminNotifications(); 
@@ -2660,7 +2660,6 @@
 
         function approveVetProfile(mobileNo, vetName) {
             if(confirm(`${vetName} यांचे प्रोफाईल मंजूर करायचे आहे का?`)) {
-                
                 db.collection("vet_partners").doc(mobileNo).update({
                     isVerified: true,
                     status: "Online"
