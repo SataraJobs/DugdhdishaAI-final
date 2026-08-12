@@ -2404,8 +2404,8 @@
 ऑर्डर #101 
 आयटम: मका भरडा (50Kg) x 2
 ग्राहक: रामराव पाटील (+91 ******4321)
-पत्ता: ساتारा, 415001
-[पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
+पत्ता: सातारा, 415001
+[पेमेंट: COD - कमिशन भरणे बाकीহেতু बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
             } else if (msgType === 'dues') {
                 dateSection.style.display = 'none';
                 previewBox.innerText = `*दुग्ध दिशा AI - पेमेंट रिमाइंडर*
@@ -2903,6 +2903,13 @@
                         <b>Mobile:</b> ${kyc.mobile} <br>
                         <b>GST No:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold;">${kyc.gst || 'Not Provided'}</span> <br>
                         
+                        <!-- 🔥 NEW: Bank Details Displayed Here 🔥 -->
+                        <div style="background:#f1f8e9; padding:8px; border-radius:6px; border:1px solid #c8e6c9; margin-top:10px;">
+                            <span style="font-size:11px; color:#2e7d32; font-weight:bold; display:block; margin-bottom:4px;">बँक डिटेल्स (पेमेंट रिफंडसाठी):</span>
+                            <b>Bank A/C:</b> <span style="background:#fff; padding:1px 4px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${kyc.bankAccount || 'Not Provided'}</span> <br>
+                            <b>IFSC Code:</b> <span style="background:#fff; padding:1px 4px; border:1px solid #ccc; font-weight:bold; color:#2e7d32;">${kyc.bankIfsc || 'Not Provided'}</span>
+                        </div>
+
                         <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
                             <button onclick="openDocumentModal('${panImageLink}', 'आधार / पॅन कार्ड - ${kyc.vendorName}')" 
                                     style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
@@ -2925,12 +2932,18 @@
 
         function approveKyc(mobile, index) {
             if(confirm("या व्यापाऱ्याचे डॉक्युमेंट्स बरोबर आहेत का? याला ॲपवर 'Verified Seller' बनवायचे का?")) {
+                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
+                let kycDoc = pendingKycList[index];
+
                 let users = JSON.parse(localStorage.getItem('app_users')) || [];
                 let userIndex = users.findIndex(u => u.mobile === mobile);
                 if(userIndex > -1) {
                     users[userIndex].isVerified = true;
                     users[userIndex].role = 'dealer'; 
                     users[userIndex].kyc_status = 'approved';
+                    // 🔥 NEW: Store Bank Details locally in App Users
+                    users[userIndex].bankAccount = kycDoc.bankAccount || '';
+                    users[userIndex].bankIfsc = kycDoc.bankIfsc || '';
                     localStorage.setItem('app_users', JSON.stringify(users));
                 }
 
@@ -2939,12 +2952,11 @@
                     db.collection("users").doc(mobile).set({
                         isVerified: true,
                         role: 'dealer',
-                        kyc_status: 'approved'
+                        kyc_status: 'approved',
+                        bankAccount: kycDoc.bankAccount || '',  // <-- NEW: Save Bank details
+                        bankIfsc: kycDoc.bankIfsc || ''         // <-- NEW: Save IFSC Code
                     }, { merge: true }).catch(e => console.log("User KYC update error:", e));
                 }
-
-                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                let kycDoc = pendingKycList[index];
                 
                 // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
                 if(kycDoc && kycDoc.firebaseDocId) {
@@ -3355,6 +3367,9 @@
                     const allOrders = JSON.parse(localStorage.getItem('user_orders')) || [];
                     const platformFeeConfig = JSON.parse(localStorage.getItem('admin_data_M33')) || { slab1: 1000, perc1: 3, slab2: 10000, perc2: 2, perc3: 1, maxCap: 500 };
                     
+                    // १. आधी युजर्सचा डेटा घ्या (बँक डिटेल्स मिळवण्यासाठी)
+                    const allAppUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+
                     // Filter orders that are Online (Not COD)
                     const onlineOrders = allOrders.filter(o => {
                         let method = (o.paymentMethod || '').toUpperCase();
@@ -3390,6 +3405,11 @@
                         let productsList = (o.items || []).map(i => `${i.name} (x${i.qty})`).join(' | ');
                         let vendorNames = (o.items || []).map(i => i.vendorName || 'Unknown Vendor').filter((v, i, a) => a.indexOf(v) === i).join(', ');
 
+                        // त्या व्यापाऱ्याचे बँक डिटेल्स शोधणे
+                        let vendorProfile = allAppUsers.find(u => u.name === vendorNames);
+                        let bankAccNo = vendorProfile ? (vendorProfile.bankAccount || 'Not Found') : 'Not Found';
+                        let bankIfscCode = vendorProfile ? (vendorProfile.bankIfsc || 'Not Found') : 'Not Found';
+
                         return {
                             'Order ID': o.id || '-',
                             'Date': o.date || o.timestamp || '-',
@@ -3400,7 +3420,9 @@
                             'Payment Mode': o.paymentMethod || 'Online',
                             'Total Amount (₹)': totalOrderAmt.toFixed(2),
                             'Platform Cut (₹)': fee.toFixed(2),
-                            'Supplier Refund (₹)': supplierPayable.toFixed(2)
+                            'Supplier Refund (₹)': supplierPayable.toFixed(2),
+                            'Bank A/C No': bankAccNo,      // <--- नवीन लाईन
+                            'IFSC Code': bankIfscCode      // <--- नवीन लाईन
                         };
                     });
                     
