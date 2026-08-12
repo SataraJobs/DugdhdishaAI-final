@@ -1059,6 +1059,17 @@
                 </div>
             </div>
 
+            <!-- 🔥 NEW: Bank Details for Supplier Refund 🔥 -->
+            <h5 style="color:#1565c0; margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">बँक माहिती (पेमेंट जमा होण्यासाठी)</h5>
+            <div class="field">
+                <label>बँक खाते क्रमांक (Bank Account Number)</label>
+                <input type="text" id="vendor_bank_acc" placeholder="उदा. 123456789012">
+            </div>
+            <div class="field">
+                <label>IFSC कोड (IFSC Code)</label>
+                <input type="text" id="vendor_bank_ifsc" placeholder="उदा. SBIN0001234" style="text-transform: uppercase;">
+            </div>
+
             <div class="checkbox-container">
                 <input type="checkbox" id="kyc_legal_check">
                 <label for="kyc_legal_check">
@@ -2089,6 +2100,10 @@
             let shopInput = document.getElementById('kyc_shop_proof');
             let isChecked = document.getElementById('kyc_legal_check').checked;
 
+            // 🔥 NEW: Fetch Bank Details
+            let bankAccVal = document.getElementById('vendor_bank_acc') ? document.getElementById('vendor_bank_acc').value.trim() : '';
+            let bankIfscVal = document.getElementById('vendor_bank_ifsc') ? document.getElementById('vendor_bank_ifsc').value.trim() : '';
+
             if(gstVal.length !== 15) {
                 if(aadhaarInput.files.length === 0 || shopInput.files.length === 0) {
                     alert("कृपया एकतर १५ अंकी GST नंबर टाका, किंवा आधार कार्ड आणि दुकानाचा फोटो अपलोड करा.");
@@ -2132,6 +2147,8 @@
                     gst: gstVal || "Not Provided",
                     aadhaarUrl: aadhaarUrl || "",   // <-- Saved to Firebase
                     shopProofUrl: shopUrl || "",    // <-- Saved to Firebase
+                    bankAccount: bankAccVal,        // <-- 🔥 NEW: Bank Details
+                    bankIfsc: bankIfscVal,          // <-- 🔥 NEW: Bank Details
                     date: new Date().toLocaleString(),
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     status: "Pending"
