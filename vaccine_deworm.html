@@ -77,6 +77,15 @@
             background: white; padding: 25px; border-radius: 15px;
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
+
+        /* 🔥 NEW: History Card Style for Vaccines 🔥 */
+        .history-card {
+            background: #fff; padding: 15px; border-radius: 10px; margin: 0 20px 15px;
+            border-left: 5px solid #1976d2; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .history-card h4 { margin: 0 0 5px; font-size: 15px; color: #1565c0; display:flex; justify-content:space-between;}
+        .history-card p { margin: 0; font-size: 12px; color: #666; line-height: 1.5;}
+        .delete-btn { color: #d32f2f; background: #ffebee; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;}
     </style>
 </head>
 <body onload="initPage()">
@@ -137,8 +146,36 @@
         </div>
     </div>
 
+    <!-- 🔥 NEW: VACCINE LOG ENTRY FORM FOR AUTOMATIC NOTIFICATIONS 🔥 -->
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #2e7d32; border-left: 5px solid #4caf50; padding-left: 10px;">२. लसीकरणाची नोंद करा (डायरी)</div>
+    <div class="form-section" style="background:#e8f5e9; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.03), inset -4px -4px 8px rgba(255,255,255,1);">
+        <p style="font-size: 12px; color: #2e7d32; margin-top: 0;">येथे दिलेली लस सेव्ह करा म्हणजे ॲप तुम्हाला पुढील डोसची (उदा. ६ महिन्यांनी) स्वयंचलित आठवण करून देईल.</p>
+        
+        <label>जनावराचे नाव किंवा टॅग नंबर:</label>
+        <input type="text" id="vax_cow_id" placeholder="उदा. गोदावरी / Tag 102">
+        
+        <label>कोणती लस दिली?</label>
+        <select id="vax_type">
+            <option value="FMD">लाळ्याखुरकूत (FMD) - दर ६ महिन्यांनी</option>
+            <option value="HS">घटसर्प (HS) - दर १ वर्षाने</option>
+            <option value="BQ">फऱ्या (BQ) - दर १ वर्षाने</option>
+            <option value="Anthrax">फाशी / ॲन्थ्रॅक्स (Anthrax) - दर १ वर्षाने</option>
+            <option value="Brucellosis">संसर्गजन्य गर्भपात (Brucellosis) - एकदाच</option>
+            <option value="Deworming">जंतनिर्मूलन (Deworming) - दर ३ महिन्यांनी</option>
+        </select>
+
+        <label>लस दिल्याची तारीख:</label>
+        <input type="date" id="vax_date">
+
+        <button class="btn-primary" style="background: linear-gradient(145deg, #2e7d32, #1b5e20); box-shadow: 0 4px 0 #1b5e20;" onclick="saveVaccineRecord()">💾 लस सेव्ह करा & ॲलर्ट चालू करा</button>
+    </div>
+
+    <div id="saved_vaccines_container">
+        <!-- Saved history will be injected here -->
+    </div>
+
     <!-- Smart Guidelines -->
-    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">२. लसीकरणाचे सुवर्ण नियम</div>
+    <div class="category-title" style="margin: 20px 20px 10px; font-weight: bold; font-size: 16px; color: #1565c0; border-left: 5px solid #ff9800; padding-left: 10px;">३. लसीकरणाचे सुवर्ण नियम</div>
     <div class="rules-box">
         <h4>⚠️ लसीकरणापूर्वी लक्षात ठेवा:</h4>
         <ul>
@@ -218,10 +255,28 @@
                 date: new Date().toLocaleDateString('mr-IN'),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(e => console.error("Activity logging error:", e));
+
+            // Sync Saved Vaccines from Cloud
+            db.collection("vaccine_records").where("farmerMobile", "==", userMobile).get()
+            .then(querySnapshot => {
+                let cloudVaccines = [];
+                querySnapshot.forEach(doc => {
+                    let v = doc.data();
+                    v.firebaseDocId = doc.id;
+                    cloudVaccines.push(v);
+                });
+                if(cloudVaccines.length > 0) {
+                    localStorage.setItem('saved_vaccines', JSON.stringify(cloudVaccines));
+                }
+                renderSavedVaccines();
+            }).catch(e => { console.log(e); renderSavedVaccines(); });
+        } else {
+            renderSavedVaccines();
         }
     }
 
     function initPage() {
+        document.getElementById('vax_date').valueAsDate = new Date(); // Set today's date
         syncProducts();
         syncVaccineRulesFromCloud();
     }
@@ -366,6 +421,106 @@
                 <p>${desc}</p>
             </div>
         `;
+    }
+
+    // --- 🔥 NEW: LOG VACCINE AND SCHEDULE NEXT DOSE 🔥 ---
+    function saveVaccineRecord() {
+        let cowId = document.getElementById('vax_cow_id').value.trim();
+        let vaxType = document.getElementById('vax_type').value;
+        let vaxTypeText = document.getElementById('vax_type').options[document.getElementById('vax_type').selectedIndex].text;
+        let vaxDateStr = document.getElementById('vax_date').value;
+
+        if(!cowId || !vaxDateStr) { alert("कृपया गाईचे नाव आणि तारीख भरा."); return; }
+
+        let vaxDate = new Date(vaxDateStr);
+        let timestampId = new Date().getTime();
+        let nextDoseDays = 0;
+        let reminderMsg = "";
+
+        // Calculate Next Dose based on type
+        if(vaxType === 'FMD') { nextDoseDays = 180; reminderMsg = `🔔 ${cowId} ला लाळ्या खुरकूत (FMD) ची लस देऊन ६ महिने झाले आहेत. कृपया पुढील डोस द्या.`; }
+        else if(vaxType === 'HS' || vaxType === 'BQ' || vaxType === 'Anthrax') { nextDoseDays = 365; reminderMsg = `🔔 ${cowId} ची ${vaxType} ची लस देण्याची वेळ आली आहे.`; }
+        else if(vaxType === 'Deworming') { nextDoseDays = 90; reminderMsg = `🚨 ${cowId} ला जंतनाशक देऊन ३ महिने झाले आहेत. नवीन डोस द्या.`; }
+
+        // Save local record
+        let record = {
+            id: timestampId,
+            cowName: cowId,
+            type: vaxTypeText,
+            dateGiven: vaxDateStr,
+            nextDoseDays: nextDoseDays
+        };
+
+        let savedList = JSON.parse(localStorage.getItem('saved_vaccines')) || [];
+        savedList.unshift(record);
+        localStorage.setItem('saved_vaccines', JSON.stringify(savedList));
+
+        // 🔥 Save to Firebase & Schedule Notification 🔥
+        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
+        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
+
+        let firebaseData = { ...record, farmerName: fName, farmerMobile: fMob, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+
+        db.collection("vaccine_records").add(firebaseData).then(docRef => {
+            let updatedList = JSON.parse(localStorage.getItem('saved_vaccines')) || [];
+            let index = updatedList.findIndex(p => p.id === timestampId);
+            if(index > -1) {
+                updatedList[index].firebaseDocId = docRef.id;
+                localStorage.setItem('saved_vaccines', JSON.stringify(updatedList));
+                renderSavedVaccines();
+            }
+
+            // Schedule the Notification if next dose is applicable
+            if(nextDoseDays > 0 && fMob !== "अज्ञात") {
+                let nextDate = new Date(vaxDate);
+                nextDate.setDate(nextDate.getDate() + nextDoseDays);
+                let nextDateStr = nextDate.toISOString().split('T')[0];
+
+                db.collection("scheduled_notifications").add({
+                    title: "💉 लसीकरण ॲलर्ट",
+                    message: reminderMsg,
+                    receiver_mobile: fMob,
+                    scheduled_date: nextDateStr,
+                    is_sent: false,
+                    type: "vaccine",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Notification schedule error: ", e));
+            }
+        }).catch(err => console.error("Error saving vaccine: ", err));
+
+        alert(`✅ ${cowId} ची नोंद सेव्ह झाली आहे.\nपुढील डोसच्या वेळी ॲप तुम्हाला आठवण करून देईल!`);
+        document.getElementById('vax_cow_id').value = '';
+        renderSavedVaccines();
+    }
+
+    function renderSavedVaccines() {
+        let savedList = JSON.parse(localStorage.getItem('saved_vaccines')) || [];
+        let container = document.getElementById('saved_vaccines_container');
+        container.innerHTML = '';
+
+        savedList.forEach(v => {
+            let formattedDate = new Date(v.dateGiven).toLocaleDateString('mr-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            let nextDoseText = v.nextDoseDays > 0 ? `<br><span style="color:#e65100;">पुढील डोस: ${v.nextDoseDays} दिवसांनी</span>` : `<br><span style="color:#2e7d32;">(हा सिंगल डोस आहे)</span>`;
+            
+            container.innerHTML += `
+            <div class="history-card">
+                <h4>🐄 ${v.cowName} <button class="delete-btn" onclick="deleteVaccine(${v.id}, '${v.firebaseDocId || ''}')">✕ Delete</button></h4>
+                <p><b>लस:</b> ${v.type}<br><b>दिलेली तारीख:</b> ${formattedDate} ${nextDoseText}</p>
+            </div>`;
+        });
+    }
+
+    function deleteVaccine(id, fbId) {
+        if(confirm("ही नोंद खरोखर डिलीट करायची आहे का?")) {
+            let savedList = JSON.parse(localStorage.getItem('saved_vaccines')) || [];
+            savedList = savedList.filter(v => v.id !== id);
+            localStorage.setItem('saved_vaccines', JSON.stringify(savedList));
+
+            if(fbId) {
+                db.collection("vaccine_records").doc(fbId).delete().catch(e => console.log(e));
+            }
+            renderSavedVaccines();
+        }
     }
 </script>
 

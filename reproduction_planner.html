@@ -406,6 +406,23 @@
                 localStorage.setItem('cow_ai_plans', JSON.stringify(updatedPlans));
                 loadSavedPlans(); // Refresh list to attach correct ID to delete button
             }
+
+            // --------- नवीन कोड: भविष्यातील नोटिफिकेशन्स शेड्युल करणे ---------
+            if(fMob && fMob !== "अज्ञात") {
+                planData.alerts.forEach(alertItem => {
+                    db.collection("scheduled_notifications").add({
+                        title: "🧬 प्रजनन व कॅलेंडर अलर्ट",
+                        message: alertItem.msg,
+                        receiver_mobile: fMob,
+                        scheduled_date: alertItem.date, // YYYY-MM-DD
+                        is_sent: false,
+                        type: "reproduction",
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.error("Notification schedule error: ", e));
+                });
+            }
+            // -----------------------------------------------------------------------
+
         })
         .catch(err => console.error("Error logging AI plan: ", err));
 

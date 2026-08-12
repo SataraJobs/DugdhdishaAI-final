@@ -308,7 +308,19 @@
                 taskId: taskId,
                 completed: isCompleted,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).catch(err => console.error("Firebase Sync Error:", err));
+            }, { merge: true }).then(() => {
+                // --------- नवीन कोड: काम पूर्ण झाल्यावर नोटिफिकेशन पाठवणे ---------
+                if(isCompleted && fMob !== "अज्ञात") {
+                    let taskTitle = cardElement.querySelector('.task-title').innerText;
+                    db.collection("app_notifications").add({
+                        title: "✅ काम पूर्ण!",
+                        message: `अभिनंदन! तुम्ही आजचे '${taskTitle}' हे काम पूर्ण केले आहे.`,
+                        receiver_mobile: fMob,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.error("Notification trigger error: ", e));
+                }
+                // -----------------------------------------------------------------------
+            }).catch(err => console.error("Firebase Sync Error:", err));
         }
     }
 
