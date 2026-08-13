@@ -1,4 +1,4 @@
-// fcm_setup.js (Nuclear Cleanup + Auto Registration)
+// fcm_setup.js (Final Fix with Fresh VAPID Key)
 
 document.addEventListener("DOMContentLoaded", function() {
     console.log("FCM Setup Loaded");
@@ -9,7 +9,7 @@ function manualNotificationRequest() {
         
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-                alert("✅ परवानगी मिळाली! जुना लपलेला डेटा डिलीट करत आहे, कृपया ३ सेकंद थांबा...");
+                alert("✅ परवानगी मिळाली! सिस्टीम अपडेट होत आहे, कृपया ३ सेकंद थांबा...");
                 
                 // --- १. जुना कचरा (Old Subscriptions) डिलीट करण्याचे ब्रह्मास्त्र ---
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -28,7 +28,7 @@ function manualNotificationRequest() {
                     return Promise.all(clearPromises);
                 })
                 .then(function() {
-                    console.log("✅ All old data cleared successfully!");
+                    console.log("✅ All old data cleared successfully! Registering fresh SW...");
                     
                     // --- २. आता पूर्णपणे फ्रेश सुरुवात करणे ---
                     const swUrl = './firebase-messaging-sw.js';
@@ -43,9 +43,9 @@ function manualNotificationRequest() {
                     
                     messaging.useServiceWorker(activeRegistration);
                     
-                    // तुझी कालची अचूक Vapid Key
+                    // 🔥 तुझी नवीन फ्रेश Vapid Key इथे टाकली आहे 🔥
                     return messaging.getToken({ 
-                        vapidKey: 'BD-7KyWdmNApZMLjzXAU46ImxoWcliNdJwKtpmwRPPuzpLz2en0mQ-fNcHMxM8WGONN2UnSOj6MPhTS4uJyWn2s'
+                        vapidKey: 'BGqlt0YU2AanQHbq7QxScptUIrMD3qv01pY8MrqqzO57puer0Dye9ROl9egeqw-yu4UCmY2M0dqwHs4VA1kbMbQ'
                     });
                 })
                 .then((currentToken) => {
