@@ -1,7 +1,13 @@
-// fcm_setup.js (Final Fix with Correct VAPID Key)
+// fcm_setup.js (Final Auto-Active Version)
 
 document.addEventListener("DOMContentLoaded", function() {
-    // आपण पेज लोड झाल्यावर काहीही करणार नाही. सर्व काम बटणावर होईल.
+    // पेज उघडताच बॅकग्राउंडला वर्करला ॲक्टिव्ह करायला सुरुवात करा
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./firebase-messaging-sw.js')
+        .then(function(reg) {
+            console.log('SW Registered in background');
+        });
+    }
 });
 
 function manualNotificationRequest() {
@@ -9,24 +15,16 @@ function manualNotificationRequest() {
         
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-                alert("✅ परवानगी मिळाली! सिस्टीम तयार होत आहे, कृपया २ सेकंद थांबा...");
+                alert("✅ परवानगी मिळाली! आता टोकन जनरेट होत आहे...");
                 
-                const swUrl = './firebase-messaging-sw.js';
-                
-                navigator.serviceWorker.register(swUrl)
-                .then((registration) => {
-                    console.log('Service Worker Registered.');
-                    
-                    // वर्कर पूर्णपणे 'Active' होण्याची वाट पाहणे
-                    return navigator.serviceWorker.ready;
-                })
-                .then((activeRegistration) => {
-                    console.log('Service Worker is now ACTIVE!');
+                // वर्कर ॲक्टिव्ह होण्याची खात्री करणे
+                navigator.serviceWorker.ready.then((registration) => {
                     const messaging = firebase.messaging();
                     
-                    messaging.useServiceWorker(activeRegistration);
+                    // फायरबेसला ॲक्टिव्ह वर्कर देणे
+                    messaging.useServiceWorker(registration);
                     
-                    // 🔥 इथे तुझी नवीन अचूक Key टाकली आहे 🔥
+                    // टोकन मागणे (तुझी कालची अचूक Vapid Key)
                     return messaging.getToken({ 
                         vapidKey: 'BD-7KyWdmNApZMLjzXAU46ImxoWcliNdJwKtpmwRPPuzpLz2en0mQ-fNcHMxM8WGONN2UnSOj6MPhTS4uJyWn2s'
                     });
@@ -47,7 +45,7 @@ function manualNotificationRequest() {
                             })
                             .catch(err => alert("❌ डेटाबेस एरर: " + err.message));
                         } else {
-                            alert("⚠️ टोकन मिळाले पण मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
+                            alert("⚠️ मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
                         }
                     } else {
                         alert("⚠️ टोकन जनरेट झाले नाही.");
