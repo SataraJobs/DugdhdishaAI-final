@@ -401,7 +401,7 @@
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
     </style>
-</head>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
 <body onload="initDashboard()"> 
 
 <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
@@ -805,6 +805,8 @@
 <!-- 🔥 FIREBASE SDK 🔥 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<!-- 🔥 FCM Messaging SDK (नवीन जोडले) 🔥 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
 <script>
     // 🔥 FIREBASE INITIALIZATION 🔥
@@ -1289,10 +1291,40 @@
         }
     }
 
+    // --- 🔥 NEW: ॲप उघडताच FCM टोकन मिळवणे आणि सेव्ह करणे 🔥 ---
+    async function requestAndSaveFCMToken() {
+        let mobile = localStorage.getItem("current_user_mobile");
+        if (!mobile || mobile === "+91 9XXXX XXXX") return;
+
+        try {
+            const messaging = firebase.messaging();
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                const token = await messaging.getToken({
+                    vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' 
+                });
+                
+                if (token) {
+                    console.log("FCM Token Generated (Dashboard):", token);
+                    // टोकन डेटाबेसमध्ये सेव्ह करा
+                    await db.collection("users").doc(mobile).set({
+                        fcmToken: token
+                    }, { merge: true });
+                }
+            }
+        } catch (error) {
+            console.error("Error saving FCM token on dashboard:", error);
+        }
+    }
+
     function initDashboard() {
         // नोटिफिकेशन ऑटो-क्लिअर आणि लोड
         autoClearOldNotifications();
         loadNotifications(CURRENT_ROLE);
+        
+        // 🔥 इथे टोकनचे फंक्शन कॉल केले आहे 🔥
+        requestAndSaveFCMToken();
 
         // --- Category Wise Horizontal Krushi Mall Ads ---
         const offers = [
@@ -1575,6 +1607,5 @@
     }
 </script>
 
-<script src="fcm_setup.js"></script>
 </body>
 </html>

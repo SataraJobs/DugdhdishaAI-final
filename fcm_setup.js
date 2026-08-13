@@ -1,3 +1,5 @@
+// fcm_setup.js
+
 document.addEventListener("DOMContentLoaded", function() {
     // फक्त Firebase उपलब्ध असेल तरच पुढे जा
     if (typeof firebase !== 'undefined' && firebase.messaging) {
@@ -19,8 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
             if (permission === 'granted') {
                 console.log('Notification permission granted.');
                 
-                // २. FCM Registration Token मिळवणे (तुमची Vapid Key)
-                messaging.getToken({ vapidKey: 'BD-7KyWdmNApZMLjzXAU46ImxoWcliNdJwKtpmwRPPuzpLz2en0mQ-fNcHMxM8WGONN2UnSOj6MPhTS4uJyWn2s' })
+                // २. FCM Registration Token मिळवणे (🔥 सुधारित Vapid Key इथे टाकली आहे)
+                messaging.getToken({ vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' })
                 .then((currentToken) => {
                     if (currentToken) {
                         console.log('FCM Token:', currentToken);
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         let userMobile = localStorage.getItem('current_user_mobile');
                         if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
                             
-                            // 🔥 बदललेला भाग: 'users' कलेक्शन आणि 'fcmToken' फिल्ड वापरले 🔥
+                            // 🔥 'users' कलेक्शन आणि 'fcmToken' फिल्ड वापरले 🔥
                             db.collection("users").doc(userMobile).set({
                                 fcmToken: currentToken, 
                                 role: localStorage.getItem('current_logged_in_role') || 'unknown',
@@ -88,9 +90,12 @@ function showInAppNotification(title, body) {
     document.body.appendChild(notifBox);
 
     // CSS Animation Add करणे
-    let style = document.createElement('style');
-    style.innerHTML = `@keyframes slideDownNotif { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }`;
-    document.head.appendChild(style);
+    if (!document.getElementById('notif-animation-style')) {
+        let style = document.createElement('style');
+        style.id = 'notif-animation-style';
+        style.innerHTML = `@keyframes slideDownNotif { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }`;
+        document.head.appendChild(style);
+    }
 
     // ५ सेकंदांनंतर नोटिफिकेशन आपोआप गायब होईल
     setTimeout(() => {

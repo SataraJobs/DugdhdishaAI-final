@@ -248,7 +248,7 @@
             .step-circle { margin: 0; }
         }
     </style>
-</head>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
 <body onload="initializeDashboard()"> 
     
     <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
@@ -742,7 +742,7 @@
                         <select id="campaign_product_select">
                             <option value="">-- प्रॉडक्ट निवडण्यासाठी आधी 'Product Store' मध्ये ॲड करा --</option>
                         </select>
-                        <span style="font-size:11px; color:#888;">(येथे प्रॉडक्ट दिसत नसल्यास आधी 'Product Store' मध्ये जाऊन नवीन प्रॉडक्ट ॲड करा. Generic Promotion साठी निवडणे ऐच्छिक आहे.)</span>
+                        <span style="font-size:11px; color:#888;">(येथे प्रॉडक्ट दिसत नसल्यास आधी 'Product Store' मध्ये जाऊन नवीन प्रॉडक्ट ॲड करा. Generic Promotion साठी निवडणे ऐच्छिकInfo आहे.)</span>
                     </div>
 
                     <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📷 ३. फोटो / बॅनर (Images)</h5>
@@ -1123,6 +1123,8 @@
     <!-- 🔥 FIREBASE SDK 🔥 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- 🔥 FCM Messaging SDK (नवीन जोडले) 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
     <script>
         // 🔥 FIREBASE INITIALIZATION 🔥
@@ -1296,6 +1298,33 @@
             }
         }
 
+        // --- 🔥 NEW: ॲप उघडताच FCM टोकन मिळवणे आणि सेव्ह करणे 🔥 ---
+        async function requestAndSaveFCMToken() {
+            let mobile = localStorage.getItem("current_user_mobile");
+            if (!mobile || mobile === "+91 9XXXX XXXX") return;
+
+            try {
+                const messaging = firebase.messaging();
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    const token = await messaging.getToken({
+                        vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' 
+                    });
+                    
+                    if (token) {
+                        console.log("FCM Token Generated (Business Hub):", token);
+                        // टोकन डेटाबेसमध्ये सेव्ह करा
+                        await db.collection("users").doc(mobile).set({
+                            fcmToken: token
+                        }, { merge: true });
+                    }
+                }
+            } catch (error) {
+                console.error("Error saving FCM token on Business Hub:", error);
+            }
+        }
+
         autoClearOldNotifications();
         checkVendorNotifications();
 
@@ -1318,6 +1347,9 @@
             refreshMyProducts();
             refreshMyAds();
             setAdMode('product');
+
+            // 🔥 इथे टोकनचे फंक्शन कॉल केले आहे 🔥
+            requestAndSaveFCMToken();
 
             let userName = localStorage.getItem("current_user_name") || "Guest Seller";
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
@@ -2112,7 +2144,7 @@
             }
             
             if(!isChecked) {
-                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्य आहे.");
+                alert("तुम्हाला कायदेशीर हमीपत्रावर (Checkbox) टिक करणे अनिवार्यচেতন अनिवार्य आहे.");
                 return;
             }
 

@@ -1,4 +1,6 @@
-// Firebase Config
+// firebase_config.js
+
+// 🔥 १. Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
   authDomain: "dugdhdishaai.firebaseapp.com",
@@ -9,7 +11,25 @@ const firebaseConfig = {
   measurementId: "G-6TFEJKBVFL"
 };
 
-// फायरबेस Initialize करणे (जर आधीच केले नसेल तर)
+// 🔥 २. फायरबेस Initialize करणे (जर आधीच केले नसेल तर)
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
+
+// 🔥 ३. संपूर्ण ॲपसाठी ग्लोबल व्हेरिएबल्स (Global Variables)
+// (var वापरल्यामुळे इतर पेजेसवर एरर येणार नाही)
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// 🔥 ४. युजर लॉगिन आहे की नाही ते बॅकग्राउंडला तपासणे
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        localStorage.setItem("is_logged_in", "true");
+        if(user.phoneNumber) {
+            let mobileOnly = user.phoneNumber.replace("+91", "");
+            localStorage.setItem("current_user_mobile", mobileOnly);
+        }
+    } else {
+        localStorage.setItem("is_logged_in", "false");
+    }
+});

@@ -22,6 +22,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- 🔥 FCM Messaging SDK (नवीन जोडले) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e8f5e9; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -97,7 +99,7 @@
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
     </style>
-</head>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
 <body onload="initLoginPage()">
 
 <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
@@ -586,8 +588,40 @@
         });
     }
 
-    // --- 📍 ROUTING FUNCTION (UPDATED WITH SINGLE DEVICE SESSION ID) ---
+    // --- 🔥 NEW: FCM टोकन तयार करणारे आणि सेव्ह करणारे फंक्शन 🔥 ---
+    async function saveFCMToken(mobile) {
+        try {
+            const messaging = firebase.messaging();
+            // वापरकर्त्याची नोटिफिकेशन पाठवण्याची परवानगी घ्या
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                const token = await messaging.getToken({
+                    // टीप: इथे तुमची खरी VAPID Key टाकणे गरजेचे आहे (सध्यासाठी ही टेम्पररी की आहे)
+                    vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' 
+                });
+                
+                if (token) {
+                    console.log("FCM Token Generated:", token);
+                    // व्यतिरिक्त इतर डेटा न पुसता (merge: true) फक्त fcmToken डेटाबेसमध्ये सेव्ह करा
+                    await db.collection("users").doc(mobile).set({
+                        fcmToken: token
+                    }, { merge: true });
+                }
+            } else {
+                console.log("Notification permission denied.");
+            }
+        } catch (error) {
+            console.error("Error saving FCM token:", error);
+        }
+    }
+
+    // --- 📍 ROUTING FUNCTION (UPDATED WITH FCM TOKEN CALL) ---
     function processSuccessfulLogin(foundUser, sessionId) {
+        
+        // 🔥 लॉगिन होताच हे FCM फंक्शन कॉल होईल आणि टोकन सेव्ह होईल 🔥
+        saveFCMToken(foundUser.mobile); 
+
         localStorage.setItem("current_logged_in_role", foundUser.role);
         localStorage.setItem("current_user_name", foundUser.name);
         localStorage.setItem("current_user_mobile", foundUser.mobile); 
