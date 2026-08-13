@@ -1,79 +1,79 @@
-// fcm_setup.js (Corrected for Firebase v8)
+// fcm_setup.js (Final Fix for Firebase v8 Race Condition)
 
-const SW_URL = './firebase-messaging-sw.js';
+let customMessaging = null;
 
 document.addEventListener("DOMContentLoaded", function() {
-    if (typeof firebase !== 'undefined' && firebase.messaging) {
+    if (typeof firebase !== 'undefined' && firebase.messaging && 'serviceWorker' in navigator) {
         
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(SW_URL)
-            .then(function(registration) {
-                console.log('✅ Service Worker Registered. Scope:', registration.scope);
-                // 🔥 ही आहे ती सर्वात महत्त्वाची ओळ (Firebase v8 साठी) 🔥
-                firebase.messaging().useServiceWorker(registration);
-            }).catch(function(err) {
-                console.error('Service Worker Registration Failed:', err);
+        // १. सर्वात आधी आपला अचूक सर्व्हिस वर्कर रजिस्टर करा (दुसरे काहीही करण्याआधी)
+        navigator.serviceWorker.register('./firebase-messaging-sw.js')
+        .then(function(registration) {
+            console.log('✅ Service Worker Registered. Scope:', registration.scope);
+            
+            // २. सर्व्हिस वर्कर रजिस्टर झाल्यावरच Firebase Messaging सुरु करा
+            customMessaging = firebase.messaging();
+            
+            // ३. फायरबेसला सक्तीने सांगा की हाच नवीन वर्कर वापरायचा आहे (डिफॉल्ट नाही)
+            customMessaging.useServiceWorker(registration);
+            
+            // ४. आता Background मेसेज (onMessage) सुरु करा 
+            customMessaging.onMessage((payload) => {
+                if (payload.notification) {
+                    showInAppNotification(payload.notification.title, payload.notification.body);
+                }
             });
-        }
-
-        const messaging = firebase.messaging();
-        
-        messaging.onMessage((payload) => {
-            if (payload.notification) {
-                showInAppNotification(payload.notification.title, payload.notification.body);
-            }
+            
+        }).catch(function(err) {
+            console.error('Service Worker Error:', err);
         });
     }
 });
 
+// बटण दाबल्यावर चालणारे फंक्शन
 function manualNotificationRequest() {
-    if (typeof firebase !== 'undefined' && firebase.messaging) {
-        const messaging = firebase.messaging();
-        
-        Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-                alert("✅ परवानगी मिळाली! आता फायरबेस टोकन जनरेट होत आहे...");
-                
-                navigator.serviceWorker.register(SW_URL).then((registration) => {
-                    // 🔥 टोकन मागण्याआधी फायरबेसला सर्व्हिस वर्कर वापरण्याची सक्ती करणे 🔥
-                    messaging.useServiceWorker(registration);
-                    
-                    messaging.getToken({ 
-                        vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk'
-                    })
-                    .then((currentToken) => {
-                        if (currentToken) {
-                            localStorage.setItem('fcm_device_token', currentToken);
-                            let userMobile = localStorage.getItem('current_user_mobile');
-                            
-                            if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
-                                db.collection("users").doc(userMobile).set({
-                                    fcmToken: currentToken, 
-                                    role: localStorage.getItem('current_logged_in_role') || 'unknown',
-                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                }, { merge: true })
-                                .then(() => {
-                                    alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले!");
-                                })
-                                .catch(err => alert("❌ डेटाबेस एरर: " + err.message));
-                            } else {
-                                alert("⚠️ मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
-                            }
-                        } else {
-                            alert("⚠️ टोकन जनरेट झाले नाही.");
-                        }
-                    }).catch((err) => {
-                        alert("❌ Token Error: " + err.message);
-                    });
-                }).catch(err => alert("❌ Service Worker Load Error: " + err.message));
-                
-            } else {
-                alert("⚠️ तुम्ही नोटिफिकेशनची परवानगी नाकारली आहे.");
-            }
-        });
-    } else {
-        alert("⚠️ इंटरनेट कनेक्शन किंवा फायरबेसमध्ये अडचण आहे.");
+    // जर पेज लोड होऊन सर्व्हिस वर्कर सेट झाला नसेल, तर युजरला २ सेकंद थांबायला सांगणे
+    if (!customMessaging) {
+        alert("⚠️ कृपया पेज एकदा रिफ्रेश करा. बॅकग्राउंड सर्व्हिस अजून लोड होत आहे.");
+        return;
     }
+
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            alert("✅ परवानगी मिळाली! आता फायरबेस टोकन जनरेट होत आहे...");
+            
+            // आता थेट getToken वापरा (कारण आपण आधीच useServiceWorker सेट केले आहे)
+            customMessaging.getToken({ 
+                vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk'
+            })
+            .then((currentToken) => {
+                if (currentToken) {
+                    localStorage.setItem('fcm_device_token', currentToken);
+                    let userMobile = localStorage.getItem('current_user_mobile');
+                    
+                    if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
+                        db.collection("users").doc(userMobile).set({
+                            fcmToken: currentToken, 
+                            role: localStorage.getItem('current_logged_in_role') || 'unknown',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true })
+                        .then(() => {
+                            alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले!");
+                        })
+                        .catch(err => alert("❌ डेटाबेस एरर: " + err.message));
+                    } else {
+                        alert("⚠️ मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
+                    }
+                } else {
+                    alert("⚠️ टोकन जनरेट झाले नाही.");
+                }
+            }).catch((err) => {
+                alert("❌ Token Error: " + err.message);
+            });
+            
+        } else {
+            alert("⚠️ तुम्ही नोटिफिकेशनची परवानगी नाकारली आहे.");
+        }
+    });
 }
 
 function showInAppNotification(title, body) {
