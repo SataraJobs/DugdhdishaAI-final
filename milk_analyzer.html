@@ -435,7 +435,7 @@
     }
     function retakePhoto() { startCamera(); }
 
-    // 🔥 AI VISION EXTRACTION (Using pro-vision fallback for old keys) 🔥
+    // 🔥 AI VISION EXTRACTION 🔥
     async function scanReceiptWithAI() {
         if (!GEMINI_API_KEY) await initChatbotAPI();
         if (!GEMINI_API_KEY) { alert("API Key सापडली नाही. ॲडमिनला कळवा."); return; }
@@ -570,18 +570,35 @@
         container.innerHTML = html;
     }
 
-    // 🔥 4 GRAPHS & REDIRECTION TO AI SARTHI 🔥
+    // 🔥 4 GRAPHS & 30 DAYS VALIDATION & REDIRECTION TO AI SARTHI 🔥
     let milkChartInst = null;
     let fatChartInst = null;
     let snfChartInst = null;
     let incomeChartInst = null;
 
     async function analyzeMilkData() {
-        let startDate = new Date(document.getElementById('ana_start_date').value);
-        let endDate = new Date(document.getElementById('ana_end_date').value);
+        let startDateInput = document.getElementById('ana_start_date').value;
+        let endDateInput = document.getElementById('ana_end_date').value;
+        
+        let startDate = new Date(startDateInput);
+        let endDate = new Date(endDateInput);
         
         if(isNaN(startDate) || isNaN(endDate)) { alert("कृपया 'पासून' आणि 'पर्यंत' तारखा अचूक निवडा."); return; }
         
+        // 🔥 ३० दिवसांची मर्यादा (30 Days Limit Validation) 🔥
+        let timeDifference = endDate - startDate;
+        let dayDifference = timeDifference / (1000 * 3600 * 24);
+
+        if (dayDifference < 0) {
+            alert("⚠️ 'पर्यंत'ची तारीख 'पासून'च्या तारखेपेक्षा आधीची असू शकत नाही.");
+            return;
+        }
+
+        if (dayDifference > 30) {
+            alert("⚠️ कृपया अचूक आणि जलद AI ॲनालिसिससाठी जास्तीत जास्त ३० दिवसांपर्यंतचाच कालावधी निवडा.");
+            return;
+        }
+
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
         let filtered = records.filter(r => { let d = new Date(r.date); return d >= startDate && d <= endDate; }).sort((a, b) => new Date(a.date) - new Date(b.date));
         
