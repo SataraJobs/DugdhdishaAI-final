@@ -1,25 +1,24 @@
-// fcm_setup.js (Final with Correct Github Absolute Link)
+// fcm_setup.js (Corrected for Firebase v8)
 
-// 🔥 तुझी अचूक Github लिंक इथे टाकली आहे 🔥
-const SW_URL = 'https://satarajobs.github.io/DugdhdishaAI-final/firebase-messaging-sw.js';
+const SW_URL = './firebase-messaging-sw.js';
 
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof firebase !== 'undefined' && firebase.messaging) {
         
-        // १. पेज लोड झाल्यावर पहिली नोंदणी (Registration)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register(SW_URL)
             .then(function(registration) {
-                console.log('✅ Service Worker Registration Successful with scope:', registration.scope);
+                console.log('✅ Service Worker Registered. Scope:', registration.scope);
+                // 🔥 ही आहे ती सर्वात महत्त्वाची ओळ (Firebase v8 साठी) 🔥
+                firebase.messaging().useServiceWorker(registration);
             }).catch(function(err) {
-                console.error('❌ Service Worker Registration Failed:', err);
+                console.error('Service Worker Registration Failed:', err);
             });
         }
 
         const messaging = firebase.messaging();
         
         messaging.onMessage((payload) => {
-            console.log('Message received in foreground. ', payload);
             if (payload.notification) {
                 showInAppNotification(payload.notification.title, payload.notification.body);
             }
@@ -33,19 +32,18 @@ function manualNotificationRequest() {
         
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-                alert("✅ ब्राउझरची परवानगी मिळाली! आता फायरबेस टोकन जनरेट होत आहे...");
+                alert("✅ परवानगी मिळाली! आता फायरबेस टोकन जनरेट होत आहे...");
                 
-                // २. बटण दाबल्यावर टोकनसाठी पुन्हा अचूक लिंक वापरणे 🔥
                 navigator.serviceWorker.register(SW_URL).then((registration) => {
+                    // 🔥 टोकन मागण्याआधी फायरबेसला सर्व्हिस वर्कर वापरण्याची सक्ती करणे 🔥
+                    messaging.useServiceWorker(registration);
+                    
                     messaging.getToken({ 
-                        vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk',
-                        serviceWorkerRegistration: registration 
+                        vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk'
                     })
                     .then((currentToken) => {
                         if (currentToken) {
-                            console.log('FCM Token:', currentToken);
                             localStorage.setItem('fcm_device_token', currentToken);
-                            
                             let userMobile = localStorage.getItem('current_user_mobile');
                             
                             if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
@@ -55,16 +53,14 @@ function manualNotificationRequest() {
                                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                                 }, { merge: true })
                                 .then(() => {
-                                    alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले! आता तुम्हाला नोटिफिकेशन नक्की येईल.");
+                                    alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले!");
                                 })
-                                .catch(err => {
-                                    alert("❌ डेटाबेस एरर: " + err.message);
-                                });
+                                .catch(err => alert("❌ डेटाबेस एरर: " + err.message));
                             } else {
-                                alert("⚠️ टोकन जनरेट झाले, पण तुमचा मोबाईल नंबर LocalStorage मध्ये सापडला नाही. कृपया ॲपमधून एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
+                                alert("⚠️ मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
                             }
                         } else {
-                            alert("⚠️ टोकन जनरेट झाले नाही. कृपया पुन्हा प्रयत्न करा.");
+                            alert("⚠️ टोकन जनरेट झाले नाही.");
                         }
                     }).catch((err) => {
                         alert("❌ Token Error: " + err.message);
@@ -72,11 +68,11 @@ function manualNotificationRequest() {
                 }).catch(err => alert("❌ Service Worker Load Error: " + err.message));
                 
             } else {
-                alert("⚠️ तुम्ही नोटिफिकेशनची परवानगी (Permission) नाकारली आहे. कृपया क्रोमच्या सेटिंग्जमध्ये जाऊन Notifications 'Allow' करा आणि पेज रिफ्रेश करा.");
+                alert("⚠️ तुम्ही नोटिफिकेशनची परवानगी नाकारली आहे.");
             }
         });
     } else {
-        alert("⚠️ इंटरनेट कनेक्शन किंवा फायरबेसमध्ये अडचण आहे. कृपया पेज रिफ्रेश करा.");
+        alert("⚠️ इंटरनेट कनेक्शन किंवा फायरबेसमध्ये अडचण आहे.");
     }
 }
 
@@ -94,7 +90,6 @@ function showInAppNotification(title, body) {
     notifBox.style.zIndex = '99999';
     notifBox.style.minWidth = '280px';
     notifBox.style.border = '2px solid #4caf50';
-    notifBox.style.animation = 'slideDownNotif 0.5s ease-out';
     
     notifBox.innerHTML = `
         <div style="font-size: 14px; font-weight: 900; margin-bottom: 4px; display:flex; align-items:center; gap:8px;">
@@ -104,18 +99,5 @@ function showInAppNotification(title, body) {
     `;
     
     document.body.appendChild(notifBox);
-
-    if (!document.getElementById('notif-animation-style')) {
-        let style = document.createElement('style');
-        style.id = 'notif-animation-style';
-        style.innerHTML = `@keyframes slideDownNotif { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }`;
-        document.head.appendChild(style);
-    }
-
-    setTimeout(() => {
-        notifBox.style.transition = "opacity 0.5s, top 0.5s";
-        notifBox.style.opacity = "0";
-        notifBox.style.top = "-50px";
-        setTimeout(() => notifBox.remove(), 500);
-    }, 5000);
+    setTimeout(() => notifBox.remove(), 5000);
 }
