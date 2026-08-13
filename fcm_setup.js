@@ -30,7 +30,7 @@ function manualNotificationRequest() {
                     
                     // आता वर्कर ॲक्टिव्ह असल्यामुळे टोकन मागणे
                     return messaging.getToken({ 
-                        vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk'
+                        vapidKey: 'BD-7KyWdmNApZMLjzXAU46ImxoWcliNdJwKtpmwRPPuzpLz2en0mQ-fNcHMxM8WGONN2UnSOj6MPhTS4uJyWn2s'
                     });
                 })
                 .then((currentToken) => {
