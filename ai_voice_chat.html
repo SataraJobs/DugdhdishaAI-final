@@ -65,7 +65,7 @@
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
     </style>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
+</head>
 <body onload="initAIVoiceChat()">
 
 <!-- 🔒 सिक्युरिटी चेक -->
@@ -406,6 +406,94 @@
             }, 1500); // AI उत्तर दिल्यानंतर 1.5 सेकंदाने Ad लोड होईल (नैसर्गिक वाटण्यासाठी)
         }
     }
+
+    // 🔥 NEW: मिल्क ॲनालायझर मधून आलेला डेटा आपोआप स्कॅन करून उत्तर देणे (अचूक Auto-Discovery सोबत) 🔥
+    window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(async () => {
+            let pendingAnalysis = localStorage.getItem("pending_milk_analysis");
+            
+            if (pendingAnalysis) {
+                // डेटा एकदा घेतला की डिलीट करा, जेणेकरून पेज रिफ्रेश केल्यावर पुन्हा मेसेज जाणार नाही
+                localStorage.removeItem("pending_milk_analysis");
+
+                // UI मध्ये शेतकऱ्याचा मेसेज म्हणून दाखवा
+                addMessage("माझ्या 'मिल्क ॲनालायझर' मधील ग्राफ आणि रेकॉर्डचे सविस्तर ॲनालिसिस करा.", 'user-msg');
+                
+                typingIndicator.style.display = 'block';
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                if (!GEMINI_API_KEY) {
+                    await initChatbot(); // API Key लोड करा
+                }
+
+                let apiKey = GEMINI_API_KEY.trim();
+                
+                if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+                    typingIndicator.style.display = 'none';
+                    addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही.", 'bot-msg');
+                    return;
+                }
+
+                try {
+                    // --- 🔥 SMART AUTO-DISCOVERY (जे मॅन्युअल चॅट मध्ये यशस्वी झाले तेच इथे वापरले आहे) 🔥 ---
+                    if(!CURRENT_MODEL) {
+                        try {
+                            let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                            let mData = await mRes.json();
+                            
+                            if(mData.models) {
+                                let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                                
+                                if(validModel) {
+                                    CURRENT_MODEL = validModel.name; 
+                                }
+                            }
+                        } catch(err) {
+                            console.log("Model discovery error: ", err);
+                        }
+                    }
+                    
+                    let modelToUse = CURRENT_MODEL || "models/gemini-1.5-flash";
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelToUse}:generateContent?key=${apiKey}`;
+                    
+                    const requestBody = {
+                        contents: [{
+                            parts: [{ text: SYSTEM_PROMPT + "\n\nशेतकऱ्याचा डेटा आणि प्रश्न: " + pendingAnalysis }]
+                        }]
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    const data = await response.json();
+                    typingIndicator.style.display = 'none';
+
+                    if (data.candidates && data.candidates.length > 0) {
+                        let aiResponse = data.candidates[0].content.parts[0].text;
+                        aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                        aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                        
+                        addMessage(aiResponse, 'bot-msg'); // ॲनालिसिस प्रिंट करा
+                        injectContextualAd(pendingAnalysis); // योग्य प्रॉडक्ट ॲड सुचवा
+                    } else if (data.error) {
+                        // जर गुगल कडून एरर आला तर आता तो स्क्रीनवर दिसेल
+                        addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
+                    } else {
+                        addMessage("माफ करा, डेटा ॲनालिसिस पूर्ण होऊ शकले नाही.", 'bot-msg');
+                    }
+                } catch (e) {
+                    typingIndicator.style.display = 'none';
+                    addMessage("सर्व्हर एरर आला आहे. कृपया थोडे थांबा.", 'bot-msg');
+                }
+            }
+        }, 1500); // ॲप लोड झाल्यानंतर 1.5 सेकंदाने आपोआप ॲनालिसिस सुरू होईल
+    });
 </script>
     <script src="fcm_setup.js"></script>
 </body>

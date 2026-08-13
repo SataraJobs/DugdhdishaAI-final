@@ -11,6 +11,9 @@
     <!-- 🔥 FIREBASE SDK 🔥 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- 🔥 Chart.js for Graphs 🔥 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
@@ -66,7 +69,7 @@
         .hist-details { font-size: 14px; color: #333; font-weight: bold; margin-top: 5px; }
         .hist-amount { font-size: 18px; color: #2e7d32; font-weight: 900; }
         
-        /* 🔥 Dynamic Ad Box Styling 🔥 */
+        /* Dynamic Ad Box Styling */
         .dynamic-ad-container { background:#fff3e0; border-left:4px solid #ff9800; padding:15px; border-radius:12px; margin: 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: none;}
         .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer;}
         .vendor-ad-box h3 { color: #0d47a1; font-weight: 900; font-size: 15px; margin: 0 0 5px;}
@@ -75,34 +78,31 @@
         .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
         .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
 
-        /* 🔥 Knowledge Box */
+        /* Knowledge Box */
         .knowledge-box { background: #e8eaf6; border-left: 4px solid #3f51b5; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .knowledge-box:hover { background: #c5cae9; }
         .knowledge-box h4 { margin: 0 0 5px; font-size: 13px; color: #1a237e; }
         .knowledge-box p { margin: 0; font-size: 11.5px; color: #333; line-height: 1.4; }
 
-        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
-        #sessionAlertBox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .session-alert-content {
-            background: white; padding: 25px; border-radius: 15px;
-            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
+        /* Security Alert Box */
+        #sessionAlertBox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 99999; justify-content: center; align-items: center; text-align: center; }
+        .session-alert-content { background: white; padding: 25px; border-radius: 15px; max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        
+        /* 🔥 AI Insights Grouping Styles */
+        .ai-insight-group { background: white; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #1976d2;}
+        .ai-insight-title { font-weight: 900; color: #1565c0; font-size: 14.5px; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;}
+        .ai-insight-text { font-size: 13px; color: #444; line-height: 1.6; }
+
+        /* 🔥 4 Separate Chart Containers */
+        .chart-wrapper { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #e0e0e0; }
+        .chart-title { font-size: 13px; font-weight: bold; color: #555; text-align: center; margin-bottom: 8px; }
     </style>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
+</head>
 <body>
 
 <div class="app-container">
     
-    <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
+    <!-- Security Popup -->
     <div id="sessionAlertBox">
         <div class="session-alert-content">
             <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
@@ -118,7 +118,7 @@
         </div>
     </div>
 
-    <!-- 🔒 सिक्युरिटी चेक -->
+    <!-- Security Check -->
     <script>
         if (!localStorage.getItem("current_logged_in_role")) {
             window.location.replace("login.html");
@@ -143,7 +143,7 @@
             <button class="btn-retake" id="btn_retake" onclick="retakePhoto()">🔄 पुन्हा काढा</button>
         </div>
         
-        <button class="btn-magic" id="btn_ai_scan" onclick="simulateAIExtraction()" disabled style="opacity: 0.6;">
+        <button class="btn-magic" id="btn_ai_scan" onclick="scanReceiptWithAI()" disabled style="opacity: 0.6;">
             🤖 AI ने फॉर्म भरा (जादू पहा)
         </button>
     </div>
@@ -212,6 +212,52 @@
     <div class="section-title" style="margin: 20px; font-size: 16px;">अलीकडील नोंदी (Recent Entries)</div>
     <div id="history_container"></div>
 
+    <!-- Analytics Section -->
+    <div class="section-title" style="margin: 20px; font-size: 16px;">📊 दूध आणि उत्पन्न विश्लेषण (Graphs & Analysis)</div>
+    <div class="form-section" style="background:#f4f7f6; padding: 0; box-shadow: none; margin:0 20px 20px;">
+        <div style="background:#fff; padding:20px; border-radius:16px; margin-bottom: 20px;">
+            <div class="input-row">
+                <div class="input-col">
+                    <label>पासून (Start Date)</label>
+                    <input type="date" id="ana_start_date">
+                </div>
+                <div class="input-col">
+                    <label>पर्यंत (End Date)</label>
+                    <input type="date" id="ana_end_date">
+                </div>
+            </div>
+            <button class="btn-primary" id="btn_analyze" style="background: linear-gradient(145deg, #f57c00, #e65100); box-shadow: 0 4px 0 #e65100;" onclick="analyzeMilkData()">📈 रिपोर्ट आणि ग्राफ पहा</button>
+        </div>
+
+        <div id="analytics_result" style="display:none;">
+            <!-- 🔥 4 SEPARATE GRAPHS 🔥 -->
+            <div class="chart-wrapper">
+                <div class="chart-title">📈 दुधाचा ट्रेंड (लिटर)</div>
+                <canvas id="milkChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-wrapper">
+                <div class="chart-title">🧈 फॅटचा ट्रेंड (Fat)</div>
+                <canvas id="fatChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-title">🥛 एसएनएफ ट्रेंड (SNF)</div>
+                <canvas id="snfChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-title">💸 एकूण उत्पन्नाचा ट्रेंड (रुपये)</div>
+                <canvas id="incomeChart" width="400" height="200"></canvas>
+            </div>
+            
+            <!-- AI Analysis Redirection Button Below Graphs -->
+            <div id="analytics_insights" style="margin-top:20px;">
+                <!-- AI Switch logic will inject button here -->
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -230,6 +276,28 @@
     }
     const db = firebase.firestore();
 
+    // 🔥 GEMINI API INTEGRATION VARIABLES 🔥
+    let GEMINI_API_KEY = "";
+    
+    // Fetch API Key from Cloud
+    async function initChatbotAPI() {
+        try {
+            let docSnap = await db.collection("admin_settings").doc("M16").get();
+            if (docSnap.exists && docSnap.data()) {
+                let data = docSnap.data();
+                if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
+                    GEMINI_API_KEY = data.m16_1.trim();
+                }
+            }
+            if (!GEMINI_API_KEY) {
+                let docSnapAlt = await db.collection("admin_settings").doc("ai_config").get();
+                if (docSnapAlt.exists && docSnapAlt.data() && docSnapAlt.data().gemini_key) {
+                    GEMINI_API_KEY = docSnapAlt.data().gemini_key.trim();
+                }
+            }
+        } catch (e) { console.log("Cloud API Key Load Error:", e); }
+    }
+
     document.getElementById('milk_date').valueAsDate = new Date();
 
     let videoStream = null;
@@ -243,54 +311,41 @@
     const btnRetake = document.getElementById('btn_retake');
     const btnMagic = document.getElementById('btn_ai_scan');
 
-    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥 ---
+    // Cloud Database Sync
     function syncMilkDataFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-            
-            // १. दुधाच्या नोंदी क्लाऊडवरून आणा (REAL-TIME SNAPSHOT)
-            db.collection("milk_records")
-            .where("farmerMobile", "==", userMobile)
-            .orderBy("timestamp", "desc")
-            .limit(10) // फक्त शेवटच्या १० नोंदी
+            db.collection("milk_records").where("farmerMobile", "==", userMobile).orderBy("timestamp", "desc").limit(10)
             .onSnapshot((querySnapshot) => {
                 let cloudRecords = [];
                 querySnapshot.forEach((doc) => {
                     let data = doc.data();
-                    data.firebaseDocId = doc.id; // 🔥 ADD DOC ID
+                    data.firebaseDocId = doc.id;
                     cloudRecords.push(data);
                 });
-                
                 if (cloudRecords.length > 0) {
                     localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
                     loadHistory();
                 }
-            }, (e) => console.log("Error syncing milk records from cloud: ", e));
+            });
 
-            // २. 🔥 SINGLE DEVICE SESSION WATCHER 🔥
             db.collection("users").doc(userMobile).onSnapshot((doc) => {
                 if (doc.exists && doc.data()) {
                     let cloudData = doc.data();
                     let localSessionId = localStorage.getItem("current_session_id");
-                    let cloudSessionId = cloudData.currentSessionId;
-                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        let alertBox = document.getElementById("sessionAlertBox");
-                        if(alertBox) alertBox.style.display = "flex";
-                        setTimeout(() => {
-                            localStorage.clear();
-                            window.location.replace("login.html");
-                        }, 3000);
+                    if (cloudData.currentSessionId && localSessionId && cloudData.currentSessionId !== localSessionId) {
+                        document.getElementById("sessionAlertBox").style.display = "flex";
+                        setTimeout(() => { localStorage.clear(); window.location.replace("login.html"); }, 3000);
                     }
                 }
-            }, (err) => console.log("Cloud session sync error:", err));
+            });
         }
     }
 
-    // Load Animals into Dropdown
+    // Load Animals
     function loadAnimalsIntoDropdown() {
         let selectBox = document.getElementById('milk_animal_select');
         let optionsHtml = '<option value="all">एकत्रित दूध (सर्व गोठा)</option>';
-        
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
             if (key.startsWith("cow_")) {
@@ -305,73 +360,26 @@
         selectBox.innerHTML = optionsHtml;
     }
 
-    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
-    function generateFatBoosterAd(targetTag, defaultHtml) {
-        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-        
-        // Find a product that contains the specific tag in its aiFilters array
-        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
-        
-        if (matchedProduct) {
-            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
-            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
-            
-            // Generate Vendor Ad UI
-            return `
-                <div class="vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
-                    <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); color:#333; font-weight:bold;">Sponsored by ${matchedProduct.brand}</span>
-                    <div class="vendor-product-flex" style="margin-top: 8px;">
-                        ${imgHtml}
-                        <div>
-                            <h3>${matchedProduct.name}</h3>
-                            <p style="margin:0; font-size:11px; color:#444;">${matchedProduct.benefits.substring(0, 45)}...</p>
-                        </div>
-                    </div>
-                    <div class="sponsor-bottom-row">
-                        <span style="font-size: 13px; font-weight: bold; color: #0d47a1;">किंमत: ₹${matchedProduct.offerPrice}</span>
-                        <div class="buy-now-btn">खरेदी करा ➔</div>
-                    </div>
-                </div>`;
-        }
-        
-        return defaultHtml;
-    }
-
-    // --- Check Quality and Inject Ad ---
+    // Quality Check logic
     function checkMilkQuality() {
         let fat = parseFloat(document.getElementById('milk_fat').value) || 0;
         let snf = parseFloat(document.getElementById('milk_snf').value) || 0;
         let adContainer = document.getElementById('dynamic_ad_container');
 
-        // Thresholds: Fat < 3.5 or SNF < 8.5 triggers the Ad & Knowledge Link
         if ((fat > 0 && fat < 3.5) || (snf > 0 && snf < 8.5)) {
-            
-            // Default Ad if no vendor product is found
-            let defaultFatAdHtml = `
-                <div class="vendor-ad-box" style="background: linear-gradient(145deg, #e8f5e9, #c8e6c9); border-color: #4caf50;" onclick="window.location.href='krushi_mall.html'">
-                    <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); color:#333; font-weight:bold;">Sponsored by गोदरेज ॲग्रोव्हेट</span>
-                    <div style="margin-top: 8px;">
-                        <h3 style="color:#1b5e20;">बायपास फॅट (Bypass Fat)</h3>
-                        <p style="margin:0; font-size:11px; color:#444;">दुधाची फॅट आणि गुणवत्ता हमखास वाढवण्यासाठी उपयुक्त.</p>
-                    </div>
-                    <div class="sponsor-bottom-row" style="border-top-color: #81c784;">
-                        <span style="font-size: 13px; font-weight: bold; color: #1b5e20;">किंमत: ₹१,२५०</span>
-                        <div class="buy-now-btn" style="background:#2e7d32; box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);">मॉलमध्ये पहा ➔</div>
-                    </div>
-                </div>`;
-
-            let dynamicAdHtml = generateFatBoosterAd("Fat_SNF", defaultFatAdHtml); // 🔥 FIXED THE TAG VALUE TO MATCH VENDOR AD
-
             adContainer.innerHTML = `
                 <h4 style="margin:0 0 5px; color:#e65100; display:flex; align-items:center; gap:5px;">⚠️ AI अलर्ट: फॅट / SNF कमी आहे!</h4>
                 <p style="font-size:12.5px; color:#555; margin:0 0 12px;">दुधाची गुणवत्ता आणि फॅट वाढवण्यासाठी खालील प्रॉडक्ट वापरून पहा:</p>
-                
-                ${dynamicAdHtml}
-
-                <!-- 🔥 Knowledge Base Link (Learning Gallery) -->
+                <div class="vendor-ad-box" style="background: linear-gradient(145deg, #e8f5e9, #c8e6c9); border-color: #4caf50;" onclick="window.location.href='krushi_mall.html'">
+                    <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.1); color:#333; font-weight:bold;">Sponsored by हिंदुस्तान फिड्स</span>
+                    <div style="margin-top: 8px;">
+                        <h3 style="color:#1b5e20;">हाय-फॅट कॅल्शियम व बायपास फॅट</h3>
+                        <p style="margin:0; font-size:11px; color:#444;">दुधाची फॅट आणि गुणवत्ता हमखास वाढवण्यासाठी उपयुक्त.</p>
+                    </div>
+                </div>
                 <div class="knowledge-box" onclick="window.location.href='learning_center.html'">
-                    <h4>💡 दुग्ध दिशा ज्ञान केंद्र (Knowledge Gallery)</h4>
-                    <p>चारा व्यवस्थापन, मुरघास (Silage) आणि संतुलित आहार कसा ठेवावा याबद्दल <b>सविस्तर माहिती व व्हिडिओ पाहण्यासाठी येथे क्लिक करा.</b></p>
+                    <h4>💡 दुग्ध दिशा ज्ञान केंद्र</h4>
+                    <p>चारा व्यवस्थापनाबद्दल <b>सविस्तर माहिती पाहण्यासाठी येथे क्लिक करा.</b></p>
                 </div>
             `;
             adContainer.style.display = "block";
@@ -399,7 +407,7 @@
                 btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
             })
             .catch(function(error) { alert("कॅमेरा सुरू करता आला नाही."); });
-        } else { alert("तुमच्या ब्राऊझरमध्ये लाईव्ह कॅमेरा सपोर्ट करत नाही."); }
+        }
     }
 
     function stopCamera() {
@@ -415,7 +423,7 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-            preview.src = canvas.toDataURL('image/png');
+            preview.src = canvas.toDataURL('image/jpeg'); 
             video.style.display = "none";
             preview.style.display = "block";
             stopCamera();
@@ -425,32 +433,64 @@
             btnMagic.style.opacity = "1";
         }
     }
-
     function retakePhoto() { startCamera(); }
 
-    function simulateAIExtraction() {
-        btnMagic.innerHTML = "⏳ पावती वाचत आहे... (कृपया थांबा)";
+    // 🔥 AI VISION EXTRACTION (Using pro-vision fallback for old keys) 🔥
+    async function scanReceiptWithAI() {
+        if (!GEMINI_API_KEY) await initChatbotAPI();
+        if (!GEMINI_API_KEY) { alert("API Key सापडली नाही. ॲडमिनला कळवा."); return; }
+
+        btnMagic.innerHTML = "⏳ पावती वाचत आहे... (AI स्कॅनिंग सुरू)";
         btnMagic.disabled = true;
 
-        setTimeout(() => {
-            document.getElementById('milk_liters').value = "12.0";
-            document.getElementById('milk_fat').value = "3.2"; // Low fat set to trigger ad and learning gallery
-            document.getElementById('milk_snf').value = "8.2";
-            document.getElementById('milk_rate').value = "30.00";
+        try {
+            let base64Image = preview.src.split(',')[1];
             
-            calculateTotal();
-            checkMilkQuality(); // Trigger check after AI scan
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+            const prompt = `तू एक अचूक पावती वाचक (Receipt Scanner) आहेस. या दूध डेअरीच्या थर्मल पावतीमधील आकडे शोध. 
+            मला फक्त आणि फक्त JSON फॉरमॅटमध्ये उत्तर दे. इतर कोणताही मजकूर लिहू नकोस.
+            फॉरमॅट: {"liters": 0.0, "fat": 0.0, "snf": 0.0, "rate": 0.0}`;
 
-            btnMagic.innerHTML = "✅ यश आले! (डेमो आकडे)";
-            btnMagic.style.background = "linear-gradient(145deg, #43a047, #2e7d32)";
-            
+            const requestBody = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                    ]
+                }]
+            };
+
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+            const data = await response.json();
+
+            if (data.candidates && data.candidates.length > 0) {
+                let aiText = data.candidates[0].content.parts[0].text;
+                aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                let extractedData = JSON.parse(aiText);
+
+                document.getElementById('milk_liters').value = extractedData.liters || "";
+                document.getElementById('milk_fat').value = extractedData.fat || "";
+                document.getElementById('milk_snf').value = extractedData.snf || "";
+                document.getElementById('milk_rate').value = extractedData.rate || "";
+                
+                calculateTotal();
+                checkMilkQuality(); 
+
+                btnMagic.innerHTML = "✅ यश आले! फॉर्म भरला गेला.";
+                btnMagic.style.background = "linear-gradient(145deg, #43a047, #2e7d32)";
+            } else {
+                throw new Error("No data found");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("पावती स्पष्ट वाचता आली नाही. कृपया आकडे मॅन्युअली भरा.");
+        } finally {
             setTimeout(() => {
                 btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
                 btnMagic.style.background = "linear-gradient(145deg, #ab47bc, #7b1fa2)";
                 btnMagic.disabled = false;
-            }, 1000);
-
-        }, 1500); 
+            }, 2500);
+        }
     }
 
     function calculateTotal() {
@@ -460,7 +500,6 @@
         document.getElementById('milk_total').value = total.toFixed(2);
     }
 
-    // 🔥 FIXED: SAVE MILK RECORD (WITH UNIQUE DOC ID TO PREVENT OVERWRITES) 🔥
     function saveMilkRecord() {
         let date = document.getElementById('milk_date').value;
         let shift = document.getElementById('milk_shift').value;
@@ -473,97 +512,51 @@
         let rate = document.getElementById('milk_rate').value;
         let total = document.getElementById('milk_total').value;
 
-        if(!liters || !fat || !snf || !rate) {
-            alert("कृपया सर्व आवश्यक माहिती भरा.");
-            return;
-        }
+        if(!liters || !fat || !snf || !rate) { alert("कृपया सर्व आवश्यक माहिती भरा."); return; }
 
         let saveBtn = document.getElementById("save_btn_milk");
         let originalText = saveBtn.innerHTML;
         saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
         saveBtn.disabled = true;
 
-        let uniqueId = "MILK_" + Date.now(); // String unique ID
-
-        let newRecord = {
-            id: uniqueId,
-            date: date,
-            shift: shift,
-            animalId: animalId,
-            animalName: animalNameText,
-            liters: parseFloat(liters),
-            fat: parseFloat(fat),
-            snf: parseFloat(snf),
-            rate: parseFloat(rate),
-            total: parseFloat(total)
-        };
+        let uniqueId = "MILK_" + Date.now();
+        let newRecord = { id: uniqueId, date: date, shift: shift, animalId: animalId, animalName: animalNameText, liters: parseFloat(liters), fat: parseFloat(fat), snf: parseFloat(snf), rate: parseFloat(rate), total: parseFloat(total) };
 
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
         records.unshift(newRecord);
         localStorage.setItem('milk_history', JSON.stringify(records));
 
-        // 2. 🔥 Save to Firebase Live Database with Specific Document ID 🔥
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
-        
-        let firebaseData = {
-            ...newRecord,
-            farmerName: fName,
-            farmerMobile: fMob,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
+        let firebaseData = { ...newRecord, farmerName: fName, farmerMobile: fMob, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
 
         db.collection("milk_records").doc(uniqueId).set(firebaseData)
-        .then(() => {
-            alert("✅ दूध संकलनाची नोंद यशस्वीरित्या सेव्ह झाली!");
-        })
-        .catch(err => {
-            console.error("Firebase save error: ", err);
-            alert("✅ तुमची नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे.");
-        })
+        .then(() => { alert("✅ दूध संकलनाची नोंद यशस्वीरित्या सेव्ह झाली!"); })
+        .catch(err => { console.error("Firebase save error: ", err); alert("✅ नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे."); })
         .finally(() => {
-            // Reset Inputs
-            document.getElementById('milk_liters').value = '';
-            document.getElementById('milk_fat').value = '';
-            document.getElementById('milk_snf').value = '';
-            document.getElementById('milk_rate').value = '';
+            document.getElementById('milk_liters').value = ''; document.getElementById('milk_fat').value = '';
+            document.getElementById('milk_snf').value = ''; document.getElementById('milk_rate').value = '';
             document.getElementById('milk_total').value = '';
-            
-            // Hide Ad container on reset
             document.getElementById('dynamic_ad_container').style.display = "none";
-
-            preview.style.display = "none";
-            placeholder.style.display = "block";
-            btnRetake.style.display = "none";
-            btnStartCam.style.display = "block";
-            btnMagic.disabled = true;
-            btnMagic.style.opacity = "0.6";
-            stopCamera();
-
-            loadHistory();
-            
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
+            preview.style.display = "none"; placeholder.style.display = "block";
+            btnRetake.style.display = "none"; btnStartCam.style.display = "block";
+            btnMagic.disabled = true; btnMagic.style.opacity = "0.6";
+            stopCamera(); loadHistory();
+            saveBtn.innerHTML = originalText; saveBtn.disabled = false;
         });
     }
 
     function loadHistory() {
         let container = document.getElementById('history_container');
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
-        
-        if (records.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#888; font-size:13px;'>कोणतीही नोंद आढळली नाही.</p>";
-            return;
-        }
+        if (records.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888; font-size:13px;'>कोणतीही नोंद आढळली नाही.</p>"; return; }
 
         let html = "";
         let displayRecords = records.slice(0, 5);
-        
         displayRecords.forEach(rec => {
             let d = new Date(rec.date);
             let dateStr = `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
             let shortAnimalName = rec.animalId === 'all' ? 'एकत्रित दूध' : rec.animalName.split('(')[0];
-
             html += `
             <div class="history-card">
                 <div>
@@ -574,14 +567,125 @@
                 <div class="hist-amount">₹${rec.total}</div>
             </div>`;
         });
-        
         container.innerHTML = html;
     }
 
+    // 🔥 4 GRAPHS & REDIRECTION TO AI SARTHI 🔥
+    let milkChartInst = null;
+    let fatChartInst = null;
+    let snfChartInst = null;
+    let incomeChartInst = null;
+
+    async function analyzeMilkData() {
+        let startDate = new Date(document.getElementById('ana_start_date').value);
+        let endDate = new Date(document.getElementById('ana_end_date').value);
+        
+        if(isNaN(startDate) || isNaN(endDate)) { alert("कृपया 'पासून' आणि 'पर्यंत' तारखा अचूक निवडा."); return; }
+        
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        let filtered = records.filter(r => { let d = new Date(r.date); return d >= startDate && d <= endDate; }).sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        if(filtered.length === 0) { alert("या निवडलेल्या तारखांमध्ये कोणतीही दुधाची नोंद आढळली नाही."); return; }
+
+        let dailyData = {};
+        filtered.forEach(r => {
+            if(!dailyData[r.date]) dailyData[r.date] = { date: r.date, liters: 0, total: 0, fatSum: 0, snfSum: 0, count: 0 };
+            dailyData[r.date].liters += r.liters; dailyData[r.date].total += r.total;
+            dailyData[r.date].fatSum += r.fat; dailyData[r.date].snfSum += (r.snf || 0); dailyData[r.date].count += 1;
+        });
+
+        let labels = []; let litersData = []; let totalData = []; let fatData = []; let snfData = [];
+        Object.values(dailyData).forEach(d => {
+            labels.push(d.date); 
+            litersData.push(d.liters); 
+            totalData.push(d.total);
+            fatData.push(parseFloat((d.fatSum / d.count).toFixed(1)));
+            snfData.push(parseFloat((d.snfSum / d.count).toFixed(1)));
+        });
+
+        document.getElementById('analytics_result').style.display = 'block';
+
+        // 📊 Render 4 Separate Graphs
+        if(milkChartInst) milkChartInst.destroy();
+        if(fatChartInst) fatChartInst.destroy();
+        if(snfChartInst) snfChartInst.destroy();
+        if(incomeChartInst) incomeChartInst.destroy();
+
+        // 1. Milk Chart
+        milkChartInst = new Chart(document.getElementById('milkChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'दूध (लिटर)', data: litersData, borderColor: '#1976d2', backgroundColor: 'rgba(25,118,210,0.1)', tension: 0.3, fill: true }] },
+            options: { responsive: true, scales: { y: { beginAtZero: false } } }
+        });
+
+        // 2. Fat Chart
+        fatChartInst = new Chart(document.getElementById('fatChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'फॅट (Fat)', data: fatData, borderColor: '#f57c00', backgroundColor: 'rgba(245,124,0,0.1)', tension: 0.3, fill: true, borderDash: [5, 5] }] },
+            options: { responsive: true, scales: { y: { beginAtZero: false } } }
+        });
+
+        // 3. SNF Chart
+        snfChartInst = new Chart(document.getElementById('snfChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'एसएनएफ (SNF)', data: snfData, borderColor: '#8e24aa', backgroundColor: 'rgba(142,36,170,0.1)', tension: 0.3, fill: true }] },
+            options: { responsive: true, scales: { y: { beginAtZero: false } } }
+        });
+
+        // 4. Income Chart
+        incomeChartInst = new Chart(document.getElementById('incomeChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'उत्पन्न (₹)', data: totalData, backgroundColor: '#4caf50', borderRadius: 4 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+        // Generate Insights UI (Redirection to AI Sarthi)
+        await generateRealAIInsights(Object.values(dailyData));
+    }
+
+    async function generateRealAIInsights(dataArr) {
+        let container = document.getElementById('analytics_insights');
+        let btnAnalyze = document.getElementById('btn_analyze');
+        
+        btnAnalyze.innerHTML = "📈 रिपोर्ट आणि ग्राफ पहा";
+        btnAnalyze.disabled = false;
+        
+        if(dataArr.length < 2) {
+            container.innerHTML = "<div class='ai-insight-group'><div class='ai-insight-text'><b>💡 सूचना:</b> अचूक आणि सविस्तर विश्लेषणासाठी कृपया किमान २ किंवा अधिक दिवसांचा डेटा (तारखा) निवडा.</div></div>";
+            return;
+        }
+
+        // १. डेटा AI व्हॉईस चॅटकडे पाठवण्यासाठी पॅक करा आणि सेव्ह करा
+        let analysisPrompt = `मी मिल्क ॲनालायझर मधून आलो आहे. माझा दुधाचा डेटा असा आहे: ${JSON.stringify(dataArr)}. 
+कृपया मला सोप्या मराठीत खालील ३ मुद्द्यांवर सविस्तर अहवाल दे:
+१. दुधाचा आणि फॅटचा कल (प्रगती कशी आहे?)
+२. आहार आणि व्यवस्थापन सल्ला (काय बदल करावेत?)
+३. तज्ज्ञ शिफारस (माझ्यासाठी कोणते प्रॉडक्ट योग्य राहील?)`;
+
+        localStorage.setItem("pending_milk_analysis", analysisPrompt);
+
+        // २. ग्राफच्या खाली थेट 'AI सारथी' ला भेटण्याचे आकर्षक बटण द्या
+        container.innerHTML = `
+            <div style="text-align:center; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #1976d2;">
+                <h3 style="color:#1976d2; margin: 0 0 10px 0;">📊 ग्राफ्स तयार आहेत!</h3>
+                <p style="font-size:13px; color:#555; margin-bottom:15px; line-height:1.5;">वरील आकडेवारीनुसार दुधात आणि फॅटमध्ये नक्की काय बदल झाले आहेत आणि आहाराचे नियोजन कसे करावे, याचा सविस्तर अहवाल <b>'AI सारथी'</b> कडून मिळवा.</p>
+                <button onclick="window.location.href='ai_voice_chat.html'" style="background: linear-gradient(145deg, #1976d2, #1565c0); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #0d47a1; transition: 0.3s;">
+                    🤖 AI सारथी कडून ॲनालिसिस घ्या ➔
+                </button>
+            </div>
+        `;
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
+        initChatbotAPI();
         loadAnimalsIntoDropdown();
         loadHistory();
         syncMilkDataFromCloud(); 
+        
+        let today = new Date();
+        let firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        document.getElementById('ana_start_date').valueAsDate = firstDayOfMonth;
+        document.getElementById('ana_end_date').valueAsDate = today;
     });
 </script>
 

@@ -248,14 +248,14 @@
             .step-circle { margin: 0; }
         }
     </style>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script><script src="firebase_config.js"></script></head>
+</head>
 <body onload="initializeDashboard()"> 
     
     <!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
     <div id="sessionAlertBox">
         <div class="session-alert-content">
             <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होतConfig आउट होत आहे...</p>
+            <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
         </div>
     </div>
 
@@ -265,6 +265,7 @@
         <div class="sidebar-header">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h2>Business Hub 🏢</h2>
+                <!-- Close Button for Mobile Menu -->
                 <span style="font-size:20px; cursor:pointer; display:none;" class="mobile-close-btn" onclick="toggleSidebar()">✖</span>
             </div>
             <p>दुग्ध दिशा AI इकोसिस्टम</p>
@@ -310,9 +311,6 @@
             </div>
             
             <div class="top-action-group">
-                
-                <!-- 🔥 NEW MANUAL BUTTON 🔥 -->
-                <button class="top-action-btn" style="background:#ff9800; color:white; border:1px solid #e65100; box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);" onclick="manualNotificationRequest()">🔔 सूचना चालू करा</button>
                 
                 <div style="position: relative; cursor: pointer; margin-right: 5px;" onclick="toggleVendorNotifications()">
                     <span style="font-size: 22px;">🔔</span>
@@ -377,6 +375,7 @@
                                 <li><span class="icon-check">✔</span> ३ प्रॉडक्ट पेज-स्पेसिफिक सजेशनमध्ये</li>
                                 <li><span class="icon-check">✔</span> कृषी मॉलच्या स्क्रोलमध्ये १ ॲड हाईलाईट</li>
                                 <li><span class="icon-check">✔</span> शेतकऱ्यांच्या थेट ऑर्डर्स (Direct Leads)</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> ॲडव्हान्स रेशन बॅलन्सर</li>
                             </ul>
@@ -391,6 +390,7 @@
                                 <li><span class="icon-check">✔</span> रेशन बॅलन्सरमध्ये (Top) प्राधान्याने ॲड</li>
                                 <li><span class="icon-check">✔</span> महिन्यातून २ मोफत पुश नोटिफिकेशन्स</li>
                                 <li><span class="icon-check">✔</span> ॲपमध्ये सर्वत्र ब्रँड 'Top Sponsored' दिसेल</li>
+                                <!-- 🔥 NEW: Own Shop feature highlighted -->
                                 <li><span class="icon-check">✔</span> स्वतःचे ऑनलाईन शॉप (Own Shop)</li>
                                 <li class="farmer-bonus">🎁 <b>बोनस:</b> मार्केटिंग स्टाफला मोफत ॲप + डॉक्टर लिंकिंग</li>
                             </ul>
@@ -742,7 +742,7 @@
                         <select id="campaign_product_select">
                             <option value="">-- प्रॉडक्ट निवडण्यासाठी आधी 'Product Store' मध्ये ॲड करा --</option>
                         </select>
-                        <span style="font-size:11px; color:#888;">(येथे प्रॉडक्ट दिसत नसल्यास आधी 'Product Store' मध्ये जाऊन नवीन प्रॉडक्ट ॲड करा. Generic Promotion साठी निवडणे ऐच्छिक आहे.)</span>
+                        <span style="font-size:11px; color:#888;">(येथे प्रॉडक्ट दिसत नसल्यास आधी 'Product Store' मध्ये जाऊन नवीन प्रॉडक्ट ॲड करा. Generic Promotion साठी निवडणे ऐच्छिकInfo आहे.)</span>
                     </div>
 
                     <h5 style="color:var(--b-primary); border-bottom:1px solid #e0e6ed; padding-bottom:8px; margin-top:25px; margin-bottom:15px;">📷 ३. फोटो / बॅनर (Images)</h5>
@@ -1300,42 +1300,28 @@
 
         // --- 🔥 NEW: ॲप उघडताच FCM टोकन मिळवणे आणि सेव्ह करणे 🔥 ---
         async function requestAndSaveFCMToken() {
-            // टोकन आता मॅन्युअल बटणाद्वारे जनरेट होईल, जेणेकरून ब्राउझर ब्लॉक करणार नाही.
-        }
+            let mobile = localStorage.getItem("current_user_mobile");
+            if (!mobile || mobile === "+91 9XXXX XXXX") return;
 
-        // 🔥 NEW: MANUAL NOTIFICATION TRIGGER 🔥
-        function manualNotificationRequest() {
-            if (typeof firebase !== 'undefined' && firebase.messaging) {
+            try {
                 const messaging = firebase.messaging();
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        alert("✅ परवानगी मिळाली! टोकन जनरेट होत आहे...");
-                        messaging.getToken({ vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' })
-                        .then((currentToken) => {
-                            if (currentToken) {
-                                localStorage.setItem('fcm_device_token', currentToken);
-                                let userMobile = localStorage.getItem('current_user_mobile');
-                                if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-                                    db.collection("users").doc(userMobile).set({
-                                        fcmToken: currentToken, 
-                                        role: localStorage.getItem('current_logged_in_role') || 'unknown',
-                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                    }, { merge: true }).then(() => {
-                                        alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले! आता तुम्हाला नोटिफिकेशन्स येतील.");
-                                    }).catch(e => alert("डेटाबेस एरर: " + e.message));
-                                } else {
-                                    alert("टोकन मिळाले, पण युजर मोबाईल नंबर सापडला नाही.");
-                                }
-                            } else {
-                                alert("टोकन बनले नाही.");
-                            }
-                        }).catch(e => alert("टोकन एरर: " + e.message));
-                    } else {
-                        alert("⚠️ तुम्ही परवानगी नाकारली आहे. क्रोम सेटिंग्ज मध्ये जाऊन Allow करा.");
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    const token = await messaging.getToken({
+                        vapidKey: 'BGqlt0YU2AanQHbq7QxScptUIrMD3qv01pY8MrqqzO57puer0Dye9ROl9egeqw-yu4UCmY2M0dqwHs4VA1kbMbQ' 
+                    });
+                    
+                    if (token) {
+                        console.log("FCM Token Generated (Business Hub):", token);
+                        // टोकन डेटाबेसमध्ये सेव्ह करा
+                        await db.collection("users").doc(mobile).set({
+                            fcmToken: token
+                        }, { merge: true });
                     }
-                });
-            } else {
-                alert("इंटरनेट किंवा फायरबेस एरर. पेज रिफ्रेश करा.");
+                }
+            } catch (error) {
+                console.error("Error saving FCM token on Business Hub:", error);
             }
         }
 
@@ -1361,6 +1347,9 @@
             refreshMyProducts();
             refreshMyAds();
             setAdMode('product');
+
+            // 🔥 इथे टोकनचे फंक्शन कॉल केले आहे 🔥
+            requestAndSaveFCMToken();
 
             let userName = localStorage.getItem("current_user_name") || "Guest Seller";
             let isVerified = localStorage.getItem("vendor_verified") === 'true';
@@ -3153,42 +3142,6 @@
 
                 refreshMyAds();
             });
-        }
-        
-        // 🔥 NEW: MANUAL NOTIFICATION TRIGGER 🔥
-        function manualNotificationRequest() {
-            if (typeof firebase !== 'undefined' && firebase.messaging) {
-                const messaging = firebase.messaging();
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        alert("✅ परवानगी मिळाली! टोकन जनरेट होत आहे...");
-                        messaging.getToken({ vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk' })
-                        .then((currentToken) => {
-                            if (currentToken) {
-                                localStorage.setItem('fcm_device_token', currentToken);
-                                let userMobile = localStorage.getItem('current_user_mobile');
-                                if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-                                    db.collection("users").doc(userMobile).set({
-                                        fcmToken: currentToken, 
-                                        role: localStorage.getItem('current_logged_in_role') || 'unknown',
-                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                    }, { merge: true }).then(() => {
-                                        alert("🎉 सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले! आता तुम्हाला नोटिफिकेशन्स येतील.");
-                                    }).catch(e => alert("डेटाबेस एरर: " + e.message));
-                                } else {
-                                    alert("टोकन मिळाले, पण युजर मोबाईल नंबर सापडला नाही.");
-                                }
-                            } else {
-                                alert("टोकन बनले नाही.");
-                            }
-                        }).catch(e => alert("टोकन एरर: " + e.message));
-                    } else {
-                        alert("⚠️ तुम्ही परवानगी नाकारली आहे. क्रोम सेटिंग्ज मध्ये जाऊन Allow करा.");
-                    }
-                });
-            } else {
-                alert("इंटरनेट किंवा फायरबेस एरर. पेज रिफ्रेश करा.");
-            }
         }
     </script>
 </body>

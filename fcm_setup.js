@@ -1,89 +1,68 @@
-// fcm_setup.js (Final Fix with Fresh VAPID Key)
+// fcm_setup.js
 
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("FCM Setup Loaded");
-});
-
-function manualNotificationRequest() {
-    if (typeof firebase !== 'undefined' && firebase.messaging && 'serviceWorker' in navigator) {
+    // फक्त Firebase उपलब्ध असेल तरच पुढे जा
+    if (typeof firebase !== 'undefined' && firebase.messaging) {
         
+        // PWA Service Worker रजिस्टर करणे
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('Service Worker Registration Successful with scope:', registration.scope);
+            }).catch(function(err) {
+                console.log('Service Worker Registration Failed:', err);
+            });
+        }
+
+        const messaging = firebase.messaging();
+        
+        // १. नोटिफिकेशनसाठी परवानगी (Permission) मागणे
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-                alert("✅ परवानगी मिळाली! सिस्टीम अपडेट होत आहे, कृपया ३ सेकंद थांबा...");
+                console.log('Notification permission granted.');
                 
-                // --- १. जुना कचरा (Old Subscriptions) डिलीट करण्याचे ब्रह्मास्त्र ---
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    let clearPromises = [];
-                    for(let registration of registrations) {
-                        let p = registration.pushManager.getSubscription().then(function(subscription) {
-                            if (subscription) {
-                                console.log("Deleting old push subscription...");
-                                return subscription.unsubscribe(); // जुनी चुकीची Key डिलीट करणे
-                            }
-                        }).then(function() {
-                            return registration.unregister(); // जुना वर्कर उडवणे
-                        });
-                        clearPromises.push(p);
-                    }
-                    return Promise.all(clearPromises);
-                })
-                .then(function() {
-                    console.log("✅ All old data cleared successfully! Registering fresh SW...");
-                    
-                    // --- २. आता पूर्णपणे फ्रेश सुरुवात करणे ---
-                    const swUrl = './firebase-messaging-sw.js';
-                    return navigator.serviceWorker.register(swUrl);
-                })
-                .then((registration) => {
-                    return navigator.serviceWorker.ready;
-                })
-                .then((activeRegistration) => {
-                    console.log('✅ Service Worker is Fresh and ACTIVE!');
-                    const messaging = firebase.messaging();
-                    
-                    messaging.useServiceWorker(activeRegistration);
-                    
-                    // 🔥 तुझी नवीन फ्रेश Vapid Key इथे टाकली आहे 🔥
-                    return messaging.getToken({ 
-                        vapidKey: 'BGqlt0YU2AanQHbq7QxScptUIrMD3qv01pY8MrqqzO57puer0Dye9ROl9egeqw-yu4UCmY2M0dqwHs4VA1kbMbQ'
-                    });
-                })
+                // २. FCM Registration Token मिळवणे (🔥 सुधारित Vapid Key इथे टाकली आहे)
+                messaging.getToken({ vapidKey: 'BGqlt0YU2AanQHbq7QxScptUIrMD3qv01pY8MrqqzO57puer0Dye9ROl9egeqw-yu4UCmY2M0dqwHs4VA1kbMbQ' })
                 .then((currentToken) => {
                     if (currentToken) {
+                        console.log('FCM Token:', currentToken);
                         localStorage.setItem('fcm_device_token', currentToken);
-                        let userMobile = localStorage.getItem('current_user_mobile');
                         
-                        if (userMobile && typeof db !== 'undefined') {
+                        // Cloud Firestore मध्ये टोकन सेव्ह करणे (युजर लॉगिन असेल तर)
+                        let userMobile = localStorage.getItem('current_user_mobile');
+                        if (userMobile && userMobile !== "+91 9XXXX XXXX" && typeof db !== 'undefined') {
+                            
+                            // 🔥 'users' कलेक्शन आणि 'fcmToken' फिल्ड वापरले 🔥
                             db.collection("users").doc(userMobile).set({
                                 fcmToken: currentToken, 
                                 role: localStorage.getItem('current_logged_in_role') || 'unknown',
                                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                             }, { merge: true })
-                            .then(() => {
-                                alert("🎉 फायनल सक्सेस! FCM Token डेटाबेसमध्ये सेव्ह झाले! 🚀");
-                            })
-                            .catch(err => alert("❌ डेटाबेस एरर: " + err.message));
-                        } else {
-                            alert("⚠️ मोबाईल नंबर सापडला नाही. एकदा लॉग-आऊट करून पुन्हा लॉग-इन करा.");
+                            .then(() => console.log("FCM Token saved to users collection!"))
+                            .catch(err => console.error("Error saving token to firestore:", err));
                         }
                     } else {
-                        alert("⚠️ टोकन जनरेट झाले नाही.");
+                        console.log('No registration token available. Request permission to generate one.');
                     }
-                })
-                .catch((err) => {
-                    alert("❌ Token Error: " + err.message);
+                }).catch((err) => {
+                    console.log('An error occurred while retrieving token. ', err);
                 });
-                
             } else {
-                alert("⚠️ तुम्ही नोटिफिकेशनची परवानगी नाकारली आहे.");
+                console.log('Unable to get permission to notify.');
             }
         });
-    } else {
-        alert("⚠️ इंटरनेट कनेक्शन किंवा फायरबेसमध्ये अडचण आहे.");
+        
+        // ३. ॲप चालू असताना (Foreground) मेसेज आल्यास स्क्रीनवर दाखवणे
+        messaging.onMessage((payload) => {
+            console.log('Message received in foreground. ', payload);
+            if (payload.notification) {
+                showInAppNotification(payload.notification.title, payload.notification.body);
+            }
+        });
     }
-}
+});
 
-// ॲपमध्ये असताना नोटिफिकेशन दाखवण्याचे फंक्शन
+// ॲपमध्ये असताना वरून येणारा सुंदर नोटिफिकेशन पॉप-अप
 function showInAppNotification(title, body) {
     let notifBox = document.createElement('div');
     notifBox.style.position = 'fixed';
@@ -97,7 +76,9 @@ function showInAppNotification(title, body) {
     notifBox.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
     notifBox.style.zIndex = '99999';
     notifBox.style.minWidth = '280px';
+    notifBox.style.maxWidth = '90%';
     notifBox.style.border = '2px solid #4caf50';
+    notifBox.style.animation = 'slideDownNotif 0.5s ease-out';
     
     notifBox.innerHTML = `
         <div style="font-size: 14px; font-weight: 900; margin-bottom: 4px; display:flex; align-items:center; gap:8px;">
@@ -107,5 +88,20 @@ function showInAppNotification(title, body) {
     `;
     
     document.body.appendChild(notifBox);
-    setTimeout(() => notifBox.remove(), 5000);
+
+    // CSS Animation Add करणे
+    if (!document.getElementById('notif-animation-style')) {
+        let style = document.createElement('style');
+        style.id = 'notif-animation-style';
+        style.innerHTML = `@keyframes slideDownNotif { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }`;
+        document.head.appendChild(style);
+    }
+
+    // ५ सेकंदांनंतर नोटिफिकेशन आपोआप गायब होईल
+    setTimeout(() => {
+        notifBox.style.transition = "opacity 0.5s, top 0.5s";
+        notifBox.style.opacity = "0";
+        notifBox.style.top = "-50px";
+        setTimeout(() => notifBox.remove(), 500);
+    }, 5000);
 }
