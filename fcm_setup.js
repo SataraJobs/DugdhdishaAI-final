@@ -1,39 +1,41 @@
-// fcm_setup.js (Final Fix for Firebase v8 Race Condition)
+// fcm_setup.js (Final Perfected Architecture)
 
-let customMessaging = null;
+// १. ग्लोबल व्हेरिएबल बनवणे
+let myMessaging = null; 
 
 document.addEventListener("DOMContentLoaded", function() {
+    // फक्त Firebase असेल तरच पुढे जा
     if (typeof firebase !== 'undefined' && firebase.messaging && 'serviceWorker' in navigator) {
         
-        // १. सर्वात आधी आपला अचूक सर्व्हिस वर्कर रजिस्टर करा (दुसरे काहीही करण्याआधी)
+        // २. सर्वात आधी आपला स्वतःचा Service Worker रजिस्टर करणे
         navigator.serviceWorker.register('./firebase-messaging-sw.js')
         .then(function(registration) {
             console.log('✅ Service Worker Registered. Scope:', registration.scope);
             
-            // २. सर्व्हिस वर्कर रजिस्टर झाल्यावरच Firebase Messaging सुरु करा
-            customMessaging = firebase.messaging();
+            // ३. वर्कर रजिस्टर झाल्यावरच Firebase Messaging सुरु करणे
+            myMessaging = firebase.messaging();
             
-            // ३. फायरबेसला सक्तीने सांगा की हाच नवीन वर्कर वापरायचा आहे (डिफॉल्ट नाही)
-            customMessaging.useServiceWorker(registration);
+            // ४. फायरबेसला सक्तीने सांगणे की हाच नवीन वर्कर वापरायचा आहे (डिफॉल्ट अजिबात नाही!)
+            myMessaging.useServiceWorker(registration);
             
-            // ४. आता Background मेसेज (onMessage) सुरु करा 
-            customMessaging.onMessage((payload) => {
+            // ५. हे सर्व सेट झाल्यावरच Notification Listener चालू करणे
+            myMessaging.onMessage((payload) => {
                 if (payload.notification) {
                     showInAppNotification(payload.notification.title, payload.notification.body);
                 }
             });
             
         }).catch(function(err) {
-            console.error('Service Worker Error:', err);
+            console.error('❌ Service Worker Error:', err);
         });
     }
 });
 
-// बटण दाबल्यावर चालणारे फंक्शन
+// मॅन्युअल बटण क्लिक केल्यावर चालणारे फंक्शन
 function manualNotificationRequest() {
-    // जर पेज लोड होऊन सर्व्हिस वर्कर सेट झाला नसेल, तर युजरला २ सेकंद थांबायला सांगणे
-    if (!customMessaging) {
-        alert("⚠️ कृपया पेज एकदा रिफ्रेश करा. बॅकग्राउंड सर्व्हिस अजून लोड होत आहे.");
+    // जर बॅकग्राउंडला सर्व्हिस वर्कर सेट झाला नसेल, तर थांबवणे
+    if (!myMessaging) {
+        alert("⚠️ कृपया २ सेकंद थांबा किंवा पेज रिफ्रेश करा. बॅकग्राउंड सर्व्हिस लोड होत आहे.");
         return;
     }
 
@@ -41,8 +43,8 @@ function manualNotificationRequest() {
         if (permission === 'granted') {
             alert("✅ परवानगी मिळाली! आता फायरबेस टोकन जनरेट होत आहे...");
             
-            // आता थेट getToken वापरा (कारण आपण आधीच useServiceWorker सेट केले आहे)
-            customMessaging.getToken({ 
+            // आता इथे परत रजिस्टर करण्याची गरज नाही, थेट getToken वापरा
+            myMessaging.getToken({ 
                 vapidKey: 'BD_Yh5b8O50dK9N7X7v3U6rYnZk-4H2g-9Vq-2X2k3E1t3H8h0n_8Zz3XjXQv5b8O50dK9N7X7v3U6rYnZk'
             })
             .then((currentToken) => {
