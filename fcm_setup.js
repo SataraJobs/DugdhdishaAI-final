@@ -1,4 +1,4 @@
-// fcm_setup.js (Final Fix for Active Service Worker)
+// fcm_setup.js (Final Fix with Correct VAPID Key)
 
 document.addEventListener("DOMContentLoaded", function() {
     // आपण पेज लोड झाल्यावर काहीही करणार नाही. सर्व काम बटणावर होईल.
@@ -11,24 +11,22 @@ function manualNotificationRequest() {
             if (permission === 'granted') {
                 alert("✅ परवानगी मिळाली! सिस्टीम तयार होत आहे, कृपया २ सेकंद थांबा...");
                 
-                // फाईलची लिंक (आता 404 एरर नाहीये, त्यामुळे हे काम करेल)
                 const swUrl = './firebase-messaging-sw.js';
                 
                 navigator.serviceWorker.register(swUrl)
                 .then((registration) => {
                     console.log('Service Worker Registered.');
                     
-                    // 🔥 सर्वात महत्त्वाची ओळ: वर्कर पूर्णपणे 'Active' होण्याची वाट पाहणे 🔥
+                    // वर्कर पूर्णपणे 'Active' होण्याची वाट पाहणे
                     return navigator.serviceWorker.ready;
                 })
                 .then((activeRegistration) => {
                     console.log('Service Worker is now ACTIVE!');
                     const messaging = firebase.messaging();
                     
-                    // आता फायरबेसला सांगणे की हा ॲक्टिव्ह वर्कर वापर
                     messaging.useServiceWorker(activeRegistration);
                     
-                    // आता वर्कर ॲक्टिव्ह असल्यामुळे टोकन मागणे
+                    // 🔥 इथे तुझी नवीन अचूक Key टाकली आहे 🔥
                     return messaging.getToken({ 
                         vapidKey: 'BD-7KyWdmNApZMLjzXAU46ImxoWcliNdJwKtpmwRPPuzpLz2en0mQ-fNcHMxM8WGONN2UnSOj6MPhTS4uJyWn2s'
                     });
