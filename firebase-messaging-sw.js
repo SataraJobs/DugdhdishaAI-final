@@ -22,8 +22,8 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
-        icon: 'https://dugdhadisha.com/logo-192x192.png',
-        badge: 'https://dugdhadisha.com/logo-192x192.png',
+        icon: '/logo-192x192.png',
+        badge: '/logo-192x192.png',
         vibrate: [200, 100, 200, 100, 200], 
         data: payload.data || {}
     };
@@ -80,10 +80,16 @@ self.addEventListener("activate", (event) => {
     self.clients.claim();
 });
 
-// ३. Network-First Strategy
+// ३. Network-First Strategy (🔥 UPDATED WITH CHROME-EXTENSION FIX 🔥)
 self.addEventListener("fetch", (event) => {
+    
+    // 🔥 FIX: फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा (chrome-extension इग्नोर करा)
+    if (!event.request.url.startsWith('http')) {
+        return;
+    }
+
     // API किंवा Firebase च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
-    if (event.request.url.includes("firestore") || event.request.url.includes("firebase")) {
+    if (event.request.url.includes("firestore") || event.request.url.includes("firebase") || event.request.url.includes("googleapis")) {
         return;
     }
 
