@@ -3046,7 +3046,7 @@
         }
 
         // 🔥🔥🔥 NEW: PAYMENT AND AD CLOUD SUBMISSION LOGIC 🔥🔥🔥
-        function initiatePayment() {
+        function initiatePayment(){
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
             let location = document.getElementById('campaign_location').value;
@@ -3142,6 +3142,7 @@
 
                 refreshMyAds();
             });
+            }
             // १. हिरव्या पॉप-अपचा कोड
     function showInAppNotification(title, body) {
         let notifBox = document.createElement('div');
@@ -3183,9 +3184,7 @@
             setTimeout(() => notifBox.remove(), 500);
         }, 5000);
     }
-    
     </script>
-    
     <script src="fcm_setup.js"></script>
 </body>
 </html>
