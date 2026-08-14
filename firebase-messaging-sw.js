@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-const firebaseConfig = {
+firebase.initializeApp({
     apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
     authDomain: "dugdhdishaai.firebaseapp.com",
     projectId: "dugdhdishaai",
@@ -12,58 +12,56 @@ const firebaseConfig = {
     messagingSenderId: "1059551640041",
     appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
     measurementId: "G-6TFEJKBVFL"
-};
+});
 
-firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    console.log('[firebase-sw] Received background message ', payload);
     const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
-        
-        // GitHub ची पूर्ण (Absolute) लिंक
         icon: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
         badge: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
-        
         vibrate: [200, 100, 200, 100, 200], 
         data: payload.data || {}
     };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// 🔥 अपडेटेड: नोटिफिकेशनवर क्लिक केल्यावर 404 Error येऊ नये म्हणून (Smart Click)
+// 🔥 स्मार्ट क्लिक लॉजिक: 404 एरर टाळण्यासाठी आणि अचूक पानावर जाण्यासाठी
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    
-    // तुमची GitHub ची अचूक लिंक
-    const targetUrl = 'https://satarajobs.github.io/DugdhdishaAI-final/';
+
+    // नोटिफिकेशन डेटा मधून URL घेणे, नसल्यास डिफॉल्ट मुख्य पेज वापरणे
+    const notificationData = event.notification.data || {};
+    const targetUrl = notificationData.url || 'https://satarajobs.github.io/DugdhdishaAI-final/';
 
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(windowClients => {
-            // जर ॲप आधीच बॅकग्राउंडला चालू असेल, तर तेच पेज समोर आणा (१०-१२ नवीन टॅब उघडणार नाहीत)
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
+            // आधीपासून टॅब/विंडो खुली असल्यास तिला फोकस करणे
             for (var i = 0; i < windowClients.length; i++) {
                 var client = windowClients[i];
-                if (client.url.indexOf(targetUrl) !== -1 && 'focus' in client) {
+                if (client.url.includes('satarajobs.github.io') && 'focus' in client) {
+                    if ('navigate' in client && notificationData.url) {
+                        client.navigate(notificationData.url);
+                    }
                     return client.focus();
                 }
             }
-            // जर ॲप पूर्णपणे बंद असेल, तर नवीन टॅबमध्ये ॲप उघडा
-            if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
+            // कोणतीही विंडो खुली नसेल तर नवीन विंडो उघडणे
+            if (self.clients.openWindow) {
+                return self.clients.openWindow(targetUrl);
             }
         })
     );
 });
 
-
 // =========================================================
 // भाग २: PWA OFFLINE CACHING (ऑफलाईन ॲप चालवणे)
 // =========================================================
-const CACHE_NAME = "dugdhdisha-pwa-v1";
+const CACHE_NAME = "dugdhdisha-pwa-v2"; // 🔥 बदल: v1 च्या जागी v2 केले आहे जेणेकरून जुना कचरा निघून जाईल.
 
-// ॲप इन्स्टॉल होण्यासाठी आवश्यक असलेल्या मूळ फाईल्स
 const urlsToCache = [
     "./",
     "./index.html",
@@ -72,43 +70,34 @@ const urlsToCache = [
     "./manifest.json"
 ];
 
-// १. Service Worker Install करणे
 self.addEventListener("install", (event) => {
+    self.skipWaiting(); // 🔥 सक्तीने नवीन कोड लागू करणे
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("[Service Worker] Caching App Shell");
             return cache.addAll(urlsToCache);
         })
     );
-    self.skipWaiting();
 });
 
-// २. जुनी Cache क्लिअर करणे (नवीन अपडेट आल्यावर)
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
-                        console.log("[Service Worker] Clearing Old Cache");
                         return caches.delete(cache);
                     }
                 })
             );
         })
     );
-    self.clients.claim();
+    self.clients.claim(); // 🔥 नवीन कंट्रोल लगेच हातात घेणे
 });
 
-// ३. Network-First Strategy
 self.addEventListener("fetch", (event) => {
+    if (!event.request.url.startsWith('http')) return;
     
-    // फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा
-    if (!event.request.url.startsWith('http')) {
-        return;
-    }
-
-    // API, Firebase किंवा Google च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
+    // API लिंक्स कॅश करू नका
     if (event.request.url.includes("firestore") || 
         event.request.url.includes("firebase") || 
         event.request.url.includes("googleapis")) {
@@ -116,16 +105,14 @@ self.addEventListener("fetch", (event) => {
     }
 
     event.respondWith(
-        fetch(event.request)
-            .then((response) => {
-                let responseClone = response.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseClone);
-                });
-                return response;
-            })
-            .catch(() => {
-                return caches.match(event.request);
-            })
+        fetch(event.request).then((response) => {
+            let responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseClone);
+            });
+            return response;
+        }).catch(() => {
+            return caches.match(event.request);
+        })
     );
 });
