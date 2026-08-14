@@ -1,491 +1,110 @@
-<!DOCTYPE html>
-<html lang="mr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>दुग्ध दिशा AI - चारा नोंदणी</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b5e20">
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- 🔥 FIREBASE SDK 🔥 -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+// =========================================================
+// भाग १: FIREBASE PUSH NOTIFICATIONS (बॅकग्राउंड अलर्ट्स)
+// =========================================================
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-    <style>
-        .stats-row { display: flex; gap: 10px; margin: 15px 20px; }
-        .stat-box {
-            flex: 1; background: #fff; padding: 15px 10px; border-radius: 12px;
-            text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-bottom: 4px solid #1976d2;
-        }
-        .stat-box h3 { margin: 0; font-size: 18px; color: #333; }
-        .stat-box p { margin: 5px 0 0; font-size: 11px; color: #666; font-weight: bold; }
-        
-        .form-section {
-            background: #eef2f5; padding: 20px; margin: 15px 20px; border-radius: 16px;
-            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,1);
-        }
-        .form-section label { display: block; font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
-        select, input {
-            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
-            background: #fff; box-sizing: border-box; font-family: inherit; font-size: 14px; margin-bottom: 15px;
-        }
+firebase.initializeApp({
+    apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+    authDomain: "dugdhdishaai.firebaseapp.com",
+    projectId: "dugdhdishaai",
+    storageBucket: "dugdhdishaai.firebasestorage.app",
+    messagingSenderId: "1059551640041",
+    appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
+    measurementId: "G-6TFEJKBVFL"
+});
 
-        .btn-primary {
-            background: linear-gradient(145deg, #1b5e20, #2e7d32); color: white; width: 100%;
-            padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 0 #144d18; margin-top: 5px;
-        }
-        .btn-primary:active { top: 4px; box-shadow: 0 1px 0 #144d18; position: relative; }
-        
-        .btn-danger {
-            background: linear-gradient(145deg, #d32f2f, #b71c1c); color: white; width: 100%;
-            padding: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 0 #7f0000; margin-top: 15px; display: none;
-        }
-        .btn-danger:active { top: 4px; box-shadow: 0 1px 0 #7f0000; position: relative; }
+const messaging = firebase.messaging();
 
-        /* History List */
-        .history-list { margin: 0 20px 20px; }
-        .history-card {
-            background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .history-card.in { border-left-color: #4caf50; } /* Green for Stock In */
-        .history-card.out { border-left-color: #f44336; } /* Red for Stock Out */
-        
-        .history-info h4 { margin: 0 0 5px; font-size: 14px; color: #333; }
-        .history-info p { margin: 0; font-size: 11px; color: #666; }
-        .history-qty { font-weight: bold; font-size: 15px; }
-        .history-qty.in { color: #2e7d32; }
-        .history-qty.out { color: #c62828; }
-
-        /* 🔥 Dynamic Ad Box styling */
-        .ad-container { margin: 0 20px 15px; display: none; }
-        .ai-recommendation-box { background: linear-gradient(145deg, #fff9c4, #fff176); border: 1px dashed #fbc02d; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); cursor: pointer; position: relative; }
-        .ai-recommendation-box h4 { margin: 0 0 5px; color: #f57f17; font-size: 14px; display: flex; align-items: center; gap: 5px; }
-        .ai-recommendation-box p { margin: 0; font-size: 12px; color: #444; line-height: 1.4; font-weight: bold; }
-        .sponsor-tag { font-size: 9px; background: rgba(0,0,0,0.1); padding: 3px 8px; border-radius: 4px; color: #333; margin-top: 8px; display: inline-block; font-weight: bold; }
-        .ad-badge { position: absolute; top: -8px; right: -8px; background: #d32f2f; color: white; padding: 2px 6px; font-size: 9px; border-radius: 10px; font-weight: bold; border: 2px solid white;}
-        
-        /* 🔥 Vendor Product Ad Style Override 🔥 */
-        .vendor-ad-box { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; }
-        .vendor-ad-box h4 { color: #0d47a1; font-weight: 900;}
-        .vendor-ad-box .sponsor-bottom-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #64b5f6; padding-top: 10px; margin-top: 10px;}
-        .vendor-ad-box .buy-now-btn { background: #1976d2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; box-shadow: 0 3px 8px rgba(25, 118, 210, 0.3); }
-        .vendor-product-flex { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
-        .vendor-product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; border: 1px solid #90caf9; background: #fff;}
-
-        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
-        #sessionAlertBox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .session-alert-content {
-            background: white; padding: 25px; border-radius: 15px;
-            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-    </style>
-</head>
-<body>
-
-<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
-<div id="sessionAlertBox">
-    <div class="session-alert-content">
-        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
-    </div>
-</div>
-
-<div class="app-container">
-    
-    <div class="top-dashboard" style="background: #2e7d32; padding-bottom: 20px; border-radius: 0 0 20px 20px;">
-        <a href="index.html" style="color: white; text-decoration: none; font-size: 14px;">⬅️ मुख्य डॅशबोर्ड</a>
-        <div class="header-titles" style="margin-top: 15px;">
-            <h1 style="color: white;">चारा व खाद्य नोंदणी 🥬</h1>
-            <p style="color: #e8f5e9;">गोठ्यातील इन्व्हेंटरी आणि स्टॉक मॅनेजमेंट</p>
-        </div>
-    </div>
-
-    <!-- 🔒 सिक्युरिटी चेक -->
-    <script>
-        if (!localStorage.getItem("current_logged_in_role")) {
-            window.location.replace("login.html");
-        }
-    </script>
-
-    <!-- Current Stock Display -->
-    <div class="category-title" style="margin-top: 20px; font-weight: bold; font-size: 16px; color: #1b5e20; border-left: 5px solid #ff9800; padding-left: 10px; margin-left: 20px;">📦 गोठ्यातील शिल्लक साठा</div>
-    <div class="stats-row">
-        <div class="stat-box" style="border-color: #4caf50;">
-            <h3 id="stock_green">० Kg</h3><p>हिरवा चारा</p>
-        </div>
-        <div class="stat-box" style="border-color: #ffb300;">
-            <h3 id="stock_dry">० Kg</h3><p>सुका चारा</p>
-        </div>
-        <div class="stat-box" style="border-color: #1976d2;">
-            <h3 id="stock_conc">० Kg</h3><p>पशुखाद्य / पेंड</p>
-        </div>
-    </div>
-
-    <!-- Entry Form -->
-    <div class="category-title" style="font-weight: bold; font-size: 16px; color: #1b5e20; border-left: 5px solid #ff9800; padding-left: 10px; margin-left: 20px; margin-top: 20px;">📝 नवीन नोंद करा</div>
-    <div class="form-section">
-        <label>नोंदीचा प्रकार:</label>
-        <select id="entry_type" onchange="toggleCostField()">
-            <option value="in">🟢 खरेदी / नवीन साठा आला (Stock IN)</option>
-            <option value="out">🔴 रोजचा वापर / साठा संपला (Stock OUT)</option>
-        </select>
-
-        <label>चाऱ्याचा गट (Category):</label>
-        <select id="fodder_category" onchange="showContextualAd()">
-            <option value="none">-- गट निवडा --</option>
-            <option value="green">हिरवा चारा / मुरघास</option>
-            <option value="dry">सुका चारा (कडबा/भुसा)</option>
-            <option value="conc">पशुखाद्य व पेंड (Concentrates)</option>
-        </select>
-
-        <label>चाऱ्याचे/खाद्याचे नाव:</label>
-        <input type="text" id="fodder_name" placeholder="उदा. मका मुरघास, सरकी पेंड...">
-
-        <label>वजन (किलोमध्ये):</label>
-        <input type="number" id="fodder_qty" placeholder="उदा. 500">
-
-        <div id="cost_section">
-            <label>एकूण खर्च (रुपये) - ऐच्छिक:</label>
-            <input type="number" id="fodder_cost" placeholder="उदा. 4500">
-        </div>
-
-        <button class="btn-primary" id="btn_save" onclick="saveTransaction()">💾 साठा अपडेट करा</button>
-        <button class="btn-danger" id="btn_deduct" onclick="saveTransaction()">➖ साठ्यातून वजा करा</button>
-    </div>
-
-    <!-- 🔥 DYNAMIC AD CONTAINER -->
-    <div class="ad-container" id="dynamic_ad_box"></div>
-
-    <!-- History -->
-    <div class="category-title" style="font-weight: bold; font-size: 16px; color: #1b5e20; border-left: 5px solid #ff9800; padding-left: 10px; margin-left: 20px; margin-top: 20px;">🕒 मागील नोंदी (इतिहास)</div>
-    <div class="history-list" id="history_list">
-        <!-- Records will load here -->
-    </div>
-
-</div>
-
-<script>
-    // 🔥 FIREBASE INITIALIZATION 🔥
-    const firebaseConfig = {
-        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
-        authDomain: "dugdhdishaai.firebaseapp.com",
-        projectId: "dugdhdishaai",
-        storageBucket: "dugdhdishaai.firebasestorage.app",
-        messagingSenderId: "1059551640041",
-        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
-        measurementId: "G-6TFEJKBVFL"
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-sw] Received background message ', payload);
+    const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
+    const notificationOptions = {
+        body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
+        icon: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
+        badge: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
+        vibrate: [200, 100, 200, 100, 200], 
+        data: payload.data || {}
     };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
 
-    // --- 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION WATCHER) 🔥 ---
-    function syncUserSessionFromCloud() {
-        let userMobile = localStorage.getItem("current_user_mobile");
-        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-            db.collection("users").doc(userMobile).onSnapshot((doc) => {
-                if (doc.exists && doc.data()) {
-                    let cloudData = doc.data();
-                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
-                    let cloudSessionId = cloudData.currentSessionId;
-                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        let alertBox = document.getElementById("sessionAlertBox");
-                        if (alertBox) alertBox.style.display = "flex";
-                        setTimeout(() => {
-                            localStorage.clear();
-                            window.location.replace("login.html");
-                        }, 3000);
+// 🔥 स्मार्ट क्लिक: 404 Error येऊ नये म्हणून आणि ॲप अचूक उघडण्यासाठी
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    const targetUrl = 'https://satarajobs.github.io/DugdhdishaAI-final/';
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url.includes('satarajobs.github.io') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (self.clients.openWindow) {
+                return self.clients.openWindow(targetUrl);
+            }
+        })
+    );
+});
+
+// =========================================================
+// भाग २: PWA OFFLINE CACHING (ऑफलाईन ॲप चालवणे)
+// =========================================================
+const CACHE_NAME = "dugdhdisha-pwa-v2"; // 🔥 बदल: v1 च्या जागी v2 केले आहे जेणेकरून जुना कचरा निघून जाईल.
+
+const urlsToCache = [
+    "./",
+    "./index.html",
+    "./login.html",
+    "./logo-192x192.png", 
+    "./manifest.json"
+];
+
+self.addEventListener("install", (event) => {
+    self.skipWaiting(); // 🔥 सक्तीने नवीन कोड लागू करणे
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(urlsToCache);
+        })
+    );
+});
+
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        return caches.delete(cache);
                     }
-                }
-            }, (err) => console.log("Cloud session sync error:", err));
-        }
+                })
+            );
+        })
+    );
+    self.clients.claim(); // 🔥 नवीन कंट्रोल लगेच हातात घेणे
+});
+
+self.addEventListener("fetch", (event) => {
+    if (!event.request.url.startsWith('http')) return;
+    
+    // API लिंक्स कॅश करू नका
+    if (event.request.url.includes("firestore") || 
+        event.request.url.includes("firebase") || 
+        event.request.url.includes("googleapis")) {
+        return;
     }
 
-    // 🔥 SYNC LIVE PRODUCTS FOR ADS 🔥
-    function syncProducts() {
-        db.collection("vendor_products").get().then((querySnapshot) => {
-            let products = [];
-            querySnapshot.forEach((doc) => {
-                let p = doc.data();
-                p.id = doc.id;
-                products.push(p);
+    event.respondWith(
+        fetch(event.request).then((response) => {
+            let responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseClone);
             });
-            localStorage.setItem('vendor_products', JSON.stringify(products));
-        }).catch(e => console.error("Error fetching live products:", e));
-    }
-
-    // Toggle button color and cost field based on In/Out
-    function toggleCostField() {
-        let type = document.getElementById('entry_type').value;
-        if(type === 'in') {
-            document.getElementById('cost_section').style.display = 'block';
-            document.getElementById('btn_save').style.display = 'block';
-            document.getElementById('btn_deduct').style.display = 'none';
-        } else {
-            document.getElementById('cost_section').style.display = 'none';
-            document.getElementById('btn_save').style.display = 'none';
-            document.getElementById('btn_deduct').style.display = 'block';
-        }
-        showContextualAd(); // Refresh ad logic if type changes
-    }
-
-    // 🔥 NEW: Dynamic Ad Generation based on AI Filters (Tags) 🔥
-    function generateDynamicAd(targetTag, defaultHtml, customBadgeText = "Offer") {
-        let products = JSON.parse(localStorage.getItem('vendor_products')) || [];
-        let matchedProduct = products.find(p => p.aiFilters && p.aiFilters.includes(targetTag));
-        
-        if (matchedProduct) {
-            let imgSrc = (matchedProduct.images && matchedProduct.images.length > 0) ? matchedProduct.images[0] : '';
-            let imgHtml = imgSrc ? `<img src="${imgSrc}" class="vendor-product-img">` : `<div class="vendor-product-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
-            
-            return `
-                <div class="ai-recommendation-box vendor-ad-box" onclick="window.location.href='krushi_mall.html?search=${encodeURIComponent(matchedProduct.name)}'">
-                    <span class="ad-badge">${customBadgeText}</span>
-                    <h4>✨ पशुखाद्यासोबत हे नक्की घ्या!</h4>
-                    <div class="vendor-product-flex">
-                        ${imgHtml}
-                        <div>
-                            <p style="margin:0; font-size:14.5px; font-weight:900; color:#0d47a1;">${matchedProduct.name}</p>
-                            <p style="margin:3px 0 0; font-size:11px; color:#444; font-weight:normal;">${matchedProduct.benefits.substring(0, 45)}...</p>
-                        </div>
-                    </div>
-                    <div class="sponsor-bottom-row">
-                        <span class="sponsor-tag" style="background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;">Sponsored by ${matchedProduct.brand}</span>
-                        <div class="buy-now-btn">₹${matchedProduct.offerPrice} - खरेदी करा ➔</div>
-                    </div>
-                </div>`;
-        }
-        return defaultHtml;
-    }
-
-    // --- 🔥 SMART CONTEXTUAL AD LOGIC ---
-    function showContextualAd() {
-        let category = document.getElementById('fodder_category').value;
-        let entryType = document.getElementById('entry_type').value;
-        let adBox = document.getElementById('dynamic_ad_box');
-        
-        if (category === "none") {
-            adBox.style.display = 'none';
-            return;
-        }
-
-        let adHtml = "";
-
-        if (category === "conc") {
-            if (entryType === "in") {
-                let defaultInAd = `
-                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
-                        <span class="ad-badge">Offer</span>
-                        <h4>🥣 पशुखाद्यासोबत हे नक्की घ्या!</h4>
-                        <p>पशुखाद्यात <b>गोदरेज मिनरल मिक्सचर (Gold)</b> मिसळल्यास दुधाची फॅट आणि SNF लगेच वाढते. आजच कृषी मॉलवरून ऑर्डर करा.</p>
-                        <span class="sponsor-tag">Sponsored by Godrej Agrovet</span>
-                        <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:8px;">खरेदी करा ➔</span>
-                    </div>`;
-                adHtml = generateDynamicAd("Daily_Ration_Mineral", defaultInAd, "Offer");
-            } else {
-                let defaultOutAd = `
-                    <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
-                        <span class="ad-badge">Stock Alert</span>
-                        <h4>🛒 पशुखाद्य संपत आहे का?</h4>
-                        <p>कृषी मॉलमध्ये <b>गोदावरी फिड्स</b> च्या मिल्क पेलेटवर सध्या <b>१५% सूट</b> सुरू आहे. घरपोच डिलिव्हरी मिळवा.</p>
-                        <span class="sponsor-tag">Sponsored by Godavari Feeds</span>
-                        <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:8px;">ऑर्डर करा ➔</span>
-                    </div>`;
-                adHtml = generateDynamicAd("Fat_SNF", defaultOutAd, "Stock Alert");
-            }
-        } 
-        else if (category === "green" || category === "dry") {
-            adHtml = `
-                <div class="ai-recommendation-box" onclick="window.location.href='krushi_mall.html'">
-                    <span class="ad-badge">Ad</span>
-                    <h4>🚜 चारा कापणी सोपी करा!</h4>
-                    <p><b>अल्फा लाव्हल</b> ची नवीन उच्च दर्जाची 'चाफ कटर (Chaff Cutter) मशीन' आता सवलतीच्या दरात उपलब्ध. चाऱ्याची नासाडी टाळा.</p>
-                    <span class="sponsor-tag">Sponsored by Alfa Laval</span>
-                    <span style="font-size:11px; float:right; color:#e65100; font-weight:bold; margin-top:8px;">किंमत पहा ➔</span>
-                </div>`;
-        }
-
-        adBox.innerHTML = adHtml;
-        adBox.style.display = 'block';
-    }
-
-    // Save Data to LocalStorage and Firebase
-    function saveTransaction() {
-        let type = document.getElementById('entry_type').value;
-        let category = document.getElementById('fodder_category').value;
-        let name = document.getElementById('fodder_name').value.trim();
-        let qty = parseFloat(document.getElementById('fodder_qty').value);
-        let cost = parseFloat(document.getElementById('fodder_cost').value) || 0;
-        let date = new Date().toLocaleDateString('mr-IN');
-
-        if(category === "none") {
-            alert("कृपया चाऱ्याचा गट निवडा.");
-            return;
-        }
-
-        if(!name || !qty || qty <= 0) {
-            alert("कृपया चाऱ्याचे नाव आणि योग्य वजन टाका!");
-            return;
-        }
-
-        // Change button text while saving
-        let saveBtn = type === 'in' ? document.getElementById('btn_save') : document.getElementById('btn_deduct');
-        let originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
-        saveBtn.disabled = true;
-
-        let transaction = {
-            id: Date.now(),
-            date: date,
-            type: type, // 'in' or 'out'
-            category: category,
-            name: name,
-            qty: qty,
-            cost: (type === 'in') ? cost : 0
-        };
-
-        // 1. Get existing history from local storage
-        let history = JSON.parse(localStorage.getItem('feed_history')) || [];
-        history.unshift(transaction); // Add to top
-        localStorage.setItem('feed_history', JSON.stringify(history));
-
-        // 2. Save to Firebase Live Database
-        let fName = localStorage.getItem("current_user_name") || "शेतकरी";
-        let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
-        
-        let firebaseData = { ...transaction, farmerName: fName, farmerMobile: fMob, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
-        
-        db.collection("feed_transactions").add(firebaseData)
-        .catch(err => console.error("Firebase save error: ", err))
-        .finally(() => {
-            // Check Low Stock for Notification
-            checkLowStockNotification();
-
-            // Clear Form
-            document.getElementById('fodder_name').value = '';
-            document.getElementById('fodder_qty').value = '';
-            document.getElementById('fodder_cost').value = '';
-            document.getElementById('fodder_category').value = 'none';
-            document.getElementById('dynamic_ad_box').style.display = 'none'; // Hide ad
-
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
-            
-            alert(type === 'in' ? "✅ नवीन साठा यशस्वीरित्या ॲड झाला!" : "✅ वापरलेला साठा वजा झाला!");
-            loadDashboard();
-        });
-    }
-
-    // --- CHECK LOW STOCK FOR NOTIFICATIONS ---
-    function checkLowStockNotification() {
-        let history = JSON.parse(localStorage.getItem('feed_history')) || [];
-        let totals = { green: 0, dry: 0, conc: 0 };
-        
-        history.forEach(tx => {
-            if(tx.type === 'in') totals[tx.category] += tx.qty;
-            else if(tx.type === 'out') totals[tx.category] -= tx.qty;
-        });
-
-        // Trigger Notification if Concentrate is less than 50 kg
-        if(totals.conc > 0 && totals.conc <= 50) {
-            let systemNotifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            
-            // Check if we already notified recently to prevent spam
-            let alreadyNotified = systemNotifs.some(n => n.title === "🛒 पशुखाद्य ॲलर्ट" && (Date.now() - new Date(n.timestamp).getTime()) < 86400000); // within 24 hours
-            
-            if(!alreadyNotified) {
-                systemNotifs.unshift({
-                    id: Date.now(),
-                    title: `🛒 पशुखाद्य ॲलर्ट`,
-                    message: `तुमच्या गोठ्यातील पशुखाद्याचा (Concentrate) साठा कमी झाला आहे (फक्त ${totals.conc} Kg शिल्लक). कृपया कृषी मॉलमधून नवीन ऑर्डर करा.`,
-                    target: 'farmer',
-                    timestamp: new Date().toISOString(),
-                    time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
-                });
-                localStorage.setItem('system_notifications', JSON.stringify(systemNotifs));
-                
-                // Update Badge visually if available
-                let badge = document.getElementById('notif_badge');
-                if(badge) {
-                    badge.style.display = 'inline-block';
-                    badge.innerText = parseInt(badge.innerText || 0) + 1;
-                }
-            }
-        }
-    }
-
-    // Load Dashboard Stats and History
-    function loadDashboard() {
-        let history = JSON.parse(localStorage.getItem('feed_history')) || [];
-        let totals = { green: 0, dry: 0, conc: 0 };
-        let listHTML = "";
-
-        if(history.length === 0) {
-            listHTML = "<p style='text-align:center; color:#888;'>अद्याप कोणतीही नोंद नाही.</p>";
-        }
-
-        history.forEach(tx => {
-            // Calculate Totals
-            if(tx.type === 'in') {
-                totals[tx.category] += tx.qty;
-            } else if(tx.type === 'out') {
-                totals[tx.category] -= tx.qty;
-            }
-
-            // Generate History List UI
-            let catName = (tx.category === 'green') ? "हिरवा चारा" : (tx.category === 'dry') ? "सुका चारा" : "पशुखाद्य";
-            let sign = (tx.type === 'in') ? "+" : "-";
-            let cssClass = (tx.type === 'in') ? "in" : "out";
-            let costStr = (tx.type === 'in' && tx.cost > 0) ? ` | खर्च: ₹${tx.cost}` : "";
-
-            listHTML += `
-                <div class="history-card ${cssClass}">
-                    <div class="history-info">
-                        <h4>${tx.name}</h4>
-                        <p>${tx.date} | ${catName}${costStr}</p>
-                    </div>
-                    <div class="history-qty ${cssClass}">${sign}${tx.qty} Kg</div>
-                </div>
-            `;
-        });
-
-        // Prevent negative stock visually
-        if(totals.green < 0) totals.green = 0;
-        if(totals.dry < 0) totals.dry = 0;
-        if(totals.conc < 0) totals.conc = 0;
-
-        // Update UI
-        document.getElementById('stock_green').innerText = totals.green + " Kg";
-        document.getElementById('stock_dry').innerText = totals.dry + " Kg";
-        document.getElementById('stock_conc').innerText = totals.conc + " Kg";
-        
-        document.getElementById('history_list').innerHTML = listHTML;
-    }
-
-    // Load data on start
-    window.onload = () => {
-        syncUserSessionFromCloud(); // Added Security Check Here
-        syncProducts();
-        loadDashboard();
-    };
-</script>
-
-    <script src="fcm_setup.js"></script>
-</body>
-</html>
+            return response;
+        }).catch(() => {
+            return caches.match(event.request);
+        })
+    );
+});
