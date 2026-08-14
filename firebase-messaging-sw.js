@@ -23,7 +23,7 @@ messaging.onBackgroundMessage((payload) => {
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
         
-        // 🔥 अत्यंत महत्त्वाचा बदल: GitHub ची पूर्ण (Absolute) लिंक वापरा
+        // GitHub ची पूर्ण (Absolute) लिंक
         icon: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
         badge: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
         
@@ -33,11 +33,27 @@ messaging.onBackgroundMessage((payload) => {
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// नोटिफिकेशनवर क्लिक केल्यावर ॲप उघडण्यासाठी
+// 🔥 अपडेटेड: नोटिफिकेशनवर क्लिक केल्यावर 404 Error येऊ नये म्हणून (Smart Click)
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
+    
+    // तुमची GitHub ची अचूक लिंक
+    const targetUrl = 'https://satarajobs.github.io/DugdhdishaAI-final/';
+
     event.waitUntil(
-        clients.openWindow('https://satarajobs.github.io/DugdhdishaAI-final/index.html')
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            // जर ॲप आधीच बॅकग्राउंडला चालू असेल, तर तेच पेज समोर आणा (१०-१२ नवीन टॅब उघडणार नाहीत)
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url.indexOf(targetUrl) !== -1 && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // जर ॲप पूर्णपणे बंद असेल, तर नवीन टॅबमध्ये ॲप उघडा
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
+        })
     );
 });
 
@@ -84,15 +100,15 @@ self.addEventListener("activate", (event) => {
     self.clients.claim();
 });
 
-// ३. Network-First Strategy (🔥 UPDATED WITH CHROME-EXTENSION FIX 🔥)
+// ३. Network-First Strategy
 self.addEventListener("fetch", (event) => {
     
-    // 🔥 FIX 1: फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा (chrome-extension इग्नोर करा)
+    // फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा
     if (!event.request.url.startsWith('http')) {
         return;
     }
 
-    // 🔥 FIX 2: API, Firebase किंवा Google च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
+    // API, Firebase किंवा Google च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
     if (event.request.url.includes("firestore") || 
         event.request.url.includes("firebase") || 
         event.request.url.includes("googleapis")) {
