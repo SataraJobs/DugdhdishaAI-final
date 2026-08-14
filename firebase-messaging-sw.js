@@ -22,18 +22,22 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification ? payload.notification.title : 'दुग्ध दिशा AI';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'तुम्हाला एक नवीन सूचना आहे.',
-        icon: '/logo-192x192.png',
-        badge: '/logo-192x192.png',
+        
+        // 🔥 अत्यंत महत्त्वाचा बदल: GitHub ची पूर्ण (Absolute) लिंक वापरा
+        icon: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
+        badge: 'https://satarajobs.github.io/DugdhdishaAI-final/logo-192x192.png',
+        
         vibrate: [200, 100, 200, 100, 200], 
         data: payload.data || {}
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+// नोटिफिकेशनवर क्लिक केल्यावर ॲप उघडण्यासाठी
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('index.html')
+        clients.openWindow('https://satarajobs.github.io/DugdhdishaAI-final/index.html')
     );
 });
 
@@ -83,13 +87,15 @@ self.addEventListener("activate", (event) => {
 // ३. Network-First Strategy (🔥 UPDATED WITH CHROME-EXTENSION FIX 🔥)
 self.addEventListener("fetch", (event) => {
     
-    // 🔥 FIX: फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा (chrome-extension इग्नोर करा)
+    // 🔥 FIX 1: फक्त http किंवा https च्या रिक्वेस्ट्स कॅश करा (chrome-extension इग्नोर करा)
     if (!event.request.url.startsWith('http')) {
         return;
     }
 
-    // API किंवा Firebase च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
-    if (event.request.url.includes("firestore") || event.request.url.includes("firebase") || event.request.url.includes("googleapis")) {
+    // 🔥 FIX 2: API, Firebase किंवा Google च्या लिंक्स कॅश करू नका (ते लाईव्ह असावे)
+    if (event.request.url.includes("firestore") || 
+        event.request.url.includes("firebase") || 
+        event.request.url.includes("googleapis")) {
         return;
     }
 
