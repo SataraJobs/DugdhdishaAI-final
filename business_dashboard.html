@@ -1512,7 +1512,7 @@
                         let localSessionId = localStorage.getItem("current_session_id");
                         let cloudSessionId = cloudData.currentSessionId;
                         if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात आहे.");
+                            alert("⚠️ तुमचे खाते दुसऱ्या डिव्हाईसवर लॉगिन झाले आहे. सुरक्षिततेसाठी इथून स्वयंचलित लॉग-आऊट केले जात ചിळत आहे.");
                             localStorage.clear();
                             window.location.replace("login.html");
                         }
@@ -3046,7 +3046,7 @@
         }
 
         // 🔥🔥🔥 NEW: PAYMENT AND AD CLOUD SUBMISSION LOGIC 🔥🔥🔥
-        function initiatePayment(){
+        function initiatePayment() {
             let adTypeSelect = document.getElementById('campaign_type');
             let adType = adTypeSelect.options[adTypeSelect.selectedIndex].text;
             let location = document.getElementById('campaign_location').value;
@@ -3142,7 +3142,7 @@
 
                 refreshMyAds();
             });
-            }
+        }
             // १. हिरव्या पॉप-अपचा कोड
     function showInAppNotification(title, body) {
         let notifBox = document.createElement('div');
