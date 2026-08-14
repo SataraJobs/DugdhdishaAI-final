@@ -346,7 +346,7 @@
         }
     }
 
-    // --- 🔥 SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD 🔥 ---
+    // --- 🔥 SYNC VET PROFILE & SESSION WATCHER FROM FIREBASE CLOUD ---
     function syncVetProfileFromCloud(doc) {
         if(doc && doc.mobile) {
             // 🔥 REAL-TIME SNAPSHOT FOR VET PROFILE UPDATE 🔥
@@ -494,18 +494,28 @@
             submitBtn.disabled = true;
         }
 
-        // 🔥 मुख्य फिक्स: Firebase वर डेटा सेव्ह होण्याची वाट पहा (Promise.all) 🔥
+        // 🔥 १. डॉक्टरचे प्रोफाईल vet_partners मध्ये सेव्ह करा
         let saveProfilePromise = db.collection("vet_partners").doc(docProfile.mobile).set(docProfile);
         
+        // 🔥 २. मुख्य 'users' कलेक्शनमध्ये रोल 'vet' म्हणून अपडेट करा (ॲडमिन पॅनलसाठी) 🔥
+        let updateUserRolePromise = db.collection("users").doc(docProfile.mobile).set({
+            role: "vet",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        // 🔥 ३. ॲडमिनला नोटिफिकेशन पाठवा
         let saveNotifPromise = sendNotification(
             "👨‍⚕️ नवीन व्हेटर्नरी डॉक्टर नोंदणी (KYC Pending)",
             `${name} (${mobile}) यांनी व्हेटर्नरी डॉक्टर/मित्र बनण्यासाठी नोंदणी केली आहे. त्यांचे KYC तपासा.`,
             'admin'
         );
 
-        Promise.all([saveProfilePromise, saveNotifPromise])
+        // 🔥 सर्व प्रोसेस एकत्र पूर्ण झाल्यावरच पेज रिफ्रेश करा
+        Promise.all([saveProfilePromise, saveNotifPromise, updateUserRolePromise])
         .then(() => {
-            // जेव्हा दोन्ही गोष्टी Firebase वर यशस्वीरीत्या सेव्ह होतील, तेव्हाच रिफ्रेश करा!
+            // युजरच्या मोबाईलमध्ये सुद्धा रोल बदला जेणेकरून ॲपमध्ये बदल लगेच दिसेल
+            localStorage.setItem("current_logged_in_role", "vet");
+            
             alert("🎉 तुमचे प्रोफाईल आणि कागदपत्रे यशस्वीरित्या सबमिट झाली आहेत! ॲडमिनच्या मंजुरीची प्रतीक्षा करा.");
             window.location.reload(); 
         })
