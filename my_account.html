@@ -296,6 +296,14 @@
 </div>
 
 <script>
+    // 🔥 सिक्युरिटी लॉक (Route Guard) - युजर लॉग आऊट असल्यास थेट लॉगिन पेजवर पाठवा 🔥
+    document.addEventListener("DOMContentLoaded", function() {
+        let userMobile = localStorage.getItem('current_user_mobile'); 
+        if (!userMobile) {
+            window.location.replace("login.html"); 
+        }
+    });
+
     // 🔥 FIREBASE INITIALIZATION 🔥
     const firebaseConfig = {
         apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
@@ -314,8 +322,11 @@
     let pendingPurchase = null;
 
     function initAccount() {
+        let uMob = localStorage.getItem("current_user_mobile");
+        // जर मोबाईल नंबर नसेल, तर पुढचा कोणताही डमी डेटा लोड करू नका 
+        if(!uMob) return;
+
         let uName = localStorage.getItem("current_user_name") || "शेतकरी मित्र";
-        let uMob = localStorage.getItem("current_user_mobile") || "+91 9XXXX XXXX";
         document.getElementById('profile_name').innerText = uName;
         document.getElementById('profile_mobile').innerText = uMob;
 
