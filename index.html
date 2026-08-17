@@ -17,7 +17,7 @@
     <!-- 🔥 ऑटो-रीडायरेक्ट सिस्टीम आणि सिक्युरिटी लॉक 🔥 -->
     <script>
         // 🔒 सिक्युरिटी चेक: जर युजरने लॉगिन केले नसेल, तर थेट लॉगिन पेजवर पाठवा
-        if (!localStorage.getItem("current_logged_in_role")) {
+        if (!localStorage.getItem("current_logged_in_role") || !localStorage.getItem("current_user_mobile")) {
             window.location.replace("login.html");
         }
 
@@ -1305,6 +1305,10 @@
     }
 
     function initDashboard() {
+        let uMob = localStorage.getItem("current_user_mobile");
+        // सिक्युरिटी चेक - जर युजर नसेल तर पुढील डेटा लोड नको
+        if (!uMob) return;
+
         autoClearOldNotifications();
         loadNotifications(CURRENT_ROLE);
         
@@ -1498,6 +1502,7 @@
                     let alertBox = document.getElementById("sessionAlertBox");
                     if (alertBox) alertBox.style.display = "flex";
                     setTimeout(() => {
+                        // सुरक्षित लॉग आऊट
                         localStorage.removeItem("current_logged_in_role");
                         localStorage.removeItem("current_user_name");
                         localStorage.removeItem("current_user_mobile");
@@ -1562,12 +1567,16 @@
 
     function logoutUser() {
         if(confirm("तुम्हाला खरोखर लॉग आऊट करायचे आहे का?")) {
+            // सुरक्षित लॉग आऊट
             localStorage.removeItem("current_logged_in_role");
             localStorage.removeItem("current_user_name");
             localStorage.removeItem("current_user_mobile");
             localStorage.removeItem("current_session_id");
+            localStorage.removeItem("is_logged_in");
             sessionStorage.removeItem("visited_user_page");
-            window.location.href = "login.html";
+            
+            // replace वापरल्यामुळे परत 'Back' येता येणार नाही
+            window.location.replace("login.html");
         }
     }
         // ==============================================================
