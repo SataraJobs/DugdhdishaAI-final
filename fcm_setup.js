@@ -1,5 +1,14 @@
 // fcm_setup.js
 
+// 🔥 सिक्युरिटी लॉक (Route Guard) - युजर लॉग आऊट असल्यास थेट लॉगिन पेजवर पाठवा 🔥
+// जर चालू पेज login.html नसेल आणि युजरचा मोबाईल नंबर किंवा रोल सापडत नसेल, तर लगेच लॉगिनला पाठवा
+let currentUrl = window.location.href;
+if (!currentUrl.includes("login.html") && !currentUrl.includes("signup.html")) {
+    if (!localStorage.getItem("current_user_mobile") || !localStorage.getItem("current_logged_in_role")) {
+        window.location.replace("login.html");
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     // फक्त Firebase उपलब्ध असेल तरच पुढे जा
     if (typeof firebase !== 'undefined' && firebase.messaging) {
