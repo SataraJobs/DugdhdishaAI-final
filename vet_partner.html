@@ -339,6 +339,10 @@
             
             // 🔥 FIREBASE CLOUD SYNC: डॉक्टरचे प्रोफाईल आणि KYC स्टेट्स क्लाऊडवरून तपासा 🔥
             syncVetProfileFromCloud(loggedInDoc);
+
+            // 🔥 NEW: डॉक्टरच्या डॅशबोर्डवर रिअल-टाइम कॉल नोटिफिकेशन्स ऍड करा 🔥
+            listenToIncomingCalls(loggedInDoc.mobile);
+
         } else {
             document.getElementById("btn_tab_dashboard").style.display = "none";
             document.getElementById("btn_tab_register").style.display = "block";
@@ -402,6 +406,30 @@
             // 🔥 START LISTENING TO APPOINTMENTS AFTER SYNCING PROFILE 🔥
             syncAppointmentsFromCloud(doc.id);
         }
+    }
+
+    // --- 🔥 NEW: शेतकऱ्याने ॲपवरून कॉल केल्यास नोटिफिकेशन ऐकणारे फंक्शन 🔥 ---
+    function listenToIncomingCalls(docMobile) {
+        db.collection("broadcast_notifications")
+          .where("target", "==", docMobile)
+          .onSnapshot(snapshot => {
+              let notifications = JSON.parse(localStorage.getItem('system_notifications')) || [];
+              let changed = false;
+              
+              snapshot.forEach(doc => {
+                  let cData = doc.data();
+                  let exists = notifications.some(n => n.message === cData.message && n.title === cData.title);
+                  if (!exists) {
+                      notifications.push(cData);
+                      changed = true;
+                  }
+              });
+              
+              if (changed) {
+                  localStorage.setItem('system_notifications', JSON.stringify(notifications));
+                  buildVetNotificationDropdown(); // UI अपडेट करा
+              }
+          });
     }
 
     function switchTab(tabId, element) {
