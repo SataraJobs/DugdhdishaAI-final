@@ -29,6 +29,12 @@
             // चेक करा तो स्वतः मुद्दामून 'शेतकरी डॅशबोर्डवर' आला आहे का (Back Button दाबून)
             let fromSpecialPage = sessionStorage.getItem("visited_user_page") === 'true';
 
+            // 🚀 नवीन नियम: जर युजर सुपर ॲडमिन असेल आणि ॲप नव्याने उघडले असेल...
+            if (role === 'admin' && !fromSpecialPage) {
+                window.location.replace("admin_settings.html"); // थेट ॲडमिन पॅनेलवर पाठवा
+                return;
+            }
+
             // 🚀 नियम १: जर युजर प्रमाणित "डीलर" असेल आणि ॲप नव्याने उघडले असेल...
             if (role === 'dealer' && isVerified && !fromSpecialPage) {
                 window.location.replace("business_dashboard.html"); // थेट डीलर डॅशबोर्डला पाठवा
@@ -414,7 +420,7 @@
     <div class="menu-header">
         <h3><span style="font-size:24px;">👨‍🌾</span> दुग्ध दिशा मेनू</h3>
         <div class="close-menu" onclick="closeMenu()">✖</div>
-    </div>
+        </div>
     <div class="menu-body">
         
         <!-- 🔥 ABOUT US MENU ITEM 🔥 -->
