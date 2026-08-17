@@ -511,6 +511,9 @@
             setTimeout(() => {
                 localStorage.setItem("current_logged_in_role", "admin");
                 localStorage.setItem("is_logged_in", "true");
+                // 🔥 NEW LINES ADDED HERE 🔥
+                localStorage.setItem("current_user_mobile", mobile); 
+                localStorage.setItem("current_user_name", "Super Admin"); 
                 alert("सुपर ॲडमिन लॉगिन यशस्वी! 👑");
                 window.location.href = "admin_settings.html"; 
             }, 1000);
