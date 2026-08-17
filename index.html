@@ -629,7 +629,7 @@
             <!-- WhatsApp Share Button -->
             <div class="wa-share-btn" onclick="shareChampionKhillar(event)">
                 <span>📲 शेअर करा (WhatsApp)</span>
-            </div>
+                </div>
         </div>
         <img src="Khillar.png" alt="चॅम्पियन खिल्लार AI" class="khillar-logo-img" onerror="this.src='https://via.placeholder.com/60?text=Khillar'">
     </a>
@@ -1102,7 +1102,8 @@
                           ${distText}
                       </div>
                       <div class="vet-actions">
-                          <a href="tel:+91${vet.mobile || '#'}" class="btn-call">📞 कॉल</a>
+                          <!-- 🔥 UPDATED: logCallAndDial() फंक्शन ॲड केले आहे 🔥 -->
+                          <a onclick="logCallAndDial('${vet.mobile || '#'}', '${vet.name}')" class="btn-call">📞 कॉल</a>
                           <a href="https://wa.me/91${vet.mobile || ''}?text=नमस्कार डॉक्टर, मला तुमच्याकडे अपॉइंटमेंट हवी आहे." target="_blank" class="btn-wa">💬 WhatsApp</a>
                           <button class="btn-book" onclick="bookAppointment('${vet.id || ''}', '${vet.name || ''}', '${vet.mobile || ''}')">📅 बुक करा</button>
                       </div>
@@ -1115,6 +1116,29 @@
               console.error("Error fetching vets: ", error);
               listContainer.innerHTML = '<p style="text-align:center; color:red;">इंटरनेट एरर! डॉक्टरची यादी लोड होऊ शकली नाही.</p>';
           });
+    }
+
+    // --- 🔥 NEW: कॉल लावण्यापूर्वी डॉक्टरला नोटिफिकेशन पाठवणारे फंक्शन 🔥 ---
+    function logCallAndDial(vetMobile, vetName) {
+        let userName = localStorage.getItem('current_user_name') || 'शेतकरी';
+        let userMobile = localStorage.getItem('current_user_mobile') || 'Not Provided';
+
+        // फायरबेस मध्ये ब्रॉडकास्ट नोटिफिकेशन सेव्ह करा (जे डॉक्टरच्या बेलमध्ये दिसेल)
+        let newNotif = {
+            id: Date.now(),
+            title: "📞 ॲपवरून थेट कॉल",
+            message: `${userName} (${userMobile}) यांनी तुम्हाला 'दुग्ध दिशा AI' ॲपवरून कॉल केला आहे.`,
+            target: vetMobile,
+            timestamp: new Date().toISOString(),
+            time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+        };
+        
+        db.collection("broadcast_notifications").add(newNotif).catch(e => console.log("Call notif error:", e));
+
+        // ०.५ सेकंद थांबून डायलर ओपन करा, जेणेकरून नोटिफिकेशन बॅकग्राउंडला सेव्ह होईल
+        setTimeout(() => {
+            window.location.href = `tel:+91${vetMobile}`;
+        }, 500);
     }
 
     function bookAppointment(vetId, vetName, vetMobile) {
