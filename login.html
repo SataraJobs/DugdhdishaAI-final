@@ -511,7 +511,6 @@
             setTimeout(() => {
                 localStorage.setItem("current_logged_in_role", "admin");
                 localStorage.setItem("is_logged_in", "true");
-                // 🔥 NEW LINES ADDED HERE 🔥
                 localStorage.setItem("current_user_mobile", mobile); 
                 localStorage.setItem("current_user_name", "Super Admin"); 
                 alert("सुपर ॲडमिन लॉगिन यशस्वी! 👑");
@@ -745,6 +744,27 @@
                 .catch((err) => console.log('Service Worker Error', err));
         });
     }
+</script>
+
+<!-- 🔥 SMART BROWSER REDIRECT FOR FACEBOOK/INSTAGRAM 🔥 -->
+<script>
+    function forceChromeRedirect() {
+        var ua = navigator.userAgent || navigator.vendor || window.opera;
+        var isFBorIG = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1);
+        var isAndroid = /android/i.test(ua);
+
+        if (isFBorIG) {
+            // Android असल्यास थेट Chrome मध्ये ढकलून द्या (Intent URL)
+            if (isAndroid) {
+                var currentUrl = window.location.href.replace(/^https?:\/\//, '');
+                var chromeIntent = "intent://" + currentUrl + "#Intent;scheme=https;package=com.android.chrome;end";
+                window.location.replace(chromeIntent);
+            }
+        }
+    }
+    
+    // पेज लोड झाल्यावर लगेच कमांड चालवा
+    document.addEventListener("DOMContentLoaded", forceChromeRedirect);
 </script>
 
 </body>
