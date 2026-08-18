@@ -586,11 +586,11 @@
 
             <div id="glossary_section" class="glossary-box adv-result pdf-page-break" style="margin-top: 0; margin-bottom: 20px; display:none;">
                 <h4 style="margin: 0 0 10px; color: #1b5e20; font-size: 14px;">📖 शब्दावली (Terms Explained)</h4>
-                <div class="glossary-item"><b>DM (Dry Matter - शुष्क घटक):</b> चाऱ्यातील पाण्याचा अंश काढून उरलेला खरा पौष्टिक भाग. गाईचे पोट भरण्यासाठी हे आवश्यक आहे.</div>
+                <div class="glossary-item"><b>DM (Dry Matter - शुष्क घटक):</b> चाऱ्यातील पाण्याचा अंश काढून उरलेला खरा पौष्टिक भाग. गाईचे पोट भरण्यासाठी हे आवश्यक মাঠে.</div>
                 <div class="glossary-item"><b>CP (Crude Protein - प्रथिने):</b> स्नायू आणि दूध तयार करण्यासाठी आवश्यक घटक. कमतरतेमुळे दूध उत्पादनात थेट घट होते.</div>
                 <div class="glossary-item"><b>ME (Metabolizable Energy - ऊर्जा):</b> अन्नातून मिळणारी प्रत्यक्ष ताकद. उर्जा कमी असल्यास गाय स्वतःच्या शरीरातील चरबी वितळवून दूध देते व हाडकुळी पडते.</div>
                 <div class="glossary-item-highlight" style="color: #1b5e20; border-left: 3px solid #4caf50;"><b>NDF/ADF (फायबर):</b> चाऱ्यातील फायबर. हे योग्य असेल तरच गाय चांगला <b>रवंथ करते</b> आणि दुधाची <b>फॅट टिकवून ठेवते</b>.</div>
-                <div class="glossary-item-highlight" style="color: #e65100; border-left: 3px solid #ff9800;"><b>CF (Crude Fat - स्निग्धांश):</b> खाद्यातून मिळणारी स्निग्धता. दुधाची फॅट व ऊर्जा मिळवण्यासाठी महत्त्वाची.</div>
+                <div class="glossary-item-highlight" style="color: #e65100; border-left: 3px solid #ff9800;"><b>Fat / EE (स्निग्धांश):</b> खाद्यातून मिळणारी स्निग्धता. दुधाची फॅट व ऊर्जा मिळवण्यासाठी महत्त्वाची.</div>
                 <div class="glossary-item"><b>Mineral Mixture (खनिज मिश्रण):</b> हाडांची बळकटी, रोगप्रतिकारशक्ती आणि प्रजननासाठी आवश्यक क्षार. (नियम: 50g बेस + 02g/लिटर दूध).</div>
             </div>
 
@@ -641,7 +641,7 @@
                     </div>
                 </div>
                 <div class="result-row adv-result" style="border-left-color: #f57c00; display:none;">
-                    <div class="res-label">फॅट / स्निग्धांश (CF)</div>
+                    <div class="res-label">फॅट / स्निग्धांश (Fat)</div>
                     <div class="res-data">
                         <span class="res-val" id="res_cf">0 ग्रॅम</span>
                         <span class="res-req">गरज: <span id="req_cf">0</span> ग्रॅम</span>
@@ -1325,8 +1325,8 @@
         let reqCP = (weight * 1) + (milk * 100);
         if (pregMonths >= 7) reqCP += 200; 
 
-        let meMaintenance = 8;
-        let milkME = milk * 0.7;
+        let meMaintenance = 15.5;
+        let milkME = milk * 1.15;
         let pregnancyME = (pregMonths === 7 ? 2.5 : pregMonths === 8 ? 4 : pregMonths >= 9 ? 6 : 0); 
         let heatMEBase = meMaintenance + milkME + pregnancyME;
         let heatME = heatStress === "high" ? heatMEBase * 0.10 : 0;
@@ -1419,7 +1419,7 @@
 
         if(currentMode === 'adv') {
             penalize(totalNDF < reqNDF * 0.90, 10, "NDF कमी आहे."); penalize(totalNDF > reqNDF * 1.25, 5, "NDF जास्त आहे.");
-            penalize(totalADF < reqADF * 0.90, 5, "ADF कमी आहे."); penalize(totalCF < reqCF * 0.85, 5, "खाद्यातील फॅट (CF) कमी आहे.");
+            penalize(totalADF < reqADF * 0.90, 5, "ADF कमी आहे."); penalize(totalCF < reqCF * 0.85, 5, "खाद्यातील फॅट कमी आहे.");
             if (heatStress === 'high') score -= 3;
             if (ratioC > 50) deficiencyTags.push("Digestion");
             // NDF आणि CF साठी टॅग
@@ -1812,7 +1812,7 @@
             rows += addRow('खनिज मिश्रण', 'ग्रॅम', data.reqMinerals, data.minerals, 'हाडे ठिसूळ, प्रजनन समस्या.');
             rows += addRow('NDF (फायबर)', 'Kg', data.reqNDF, data.totalNDF, 'रवंथ बिघडेल, दुधातील फॅट कमी होईल.');
             rows += addRow('ADF (पचनक्षमता)', 'Kg', data.reqADF, data.totalADF, 'पचन मंदावेल, आहाराचा फायदा कमी.');
-            rows += addRow('CF (फॅट)', 'ग्रॅम', data.reqCF, data.totalCF, 'दुधातील फॅट कमी, ऊर्जा अपुरी.');
+            rows += addRow('Fat (स्निग्धांश)', 'ग्रॅम', data.reqCF, data.totalCF, 'दुधातील फॅट कमी, ऊर्जा अपुरी.');
             rows += addRow('कॅल्शियम (Ca)', 'ग्रॅम', data.reqCa, data.totalCa, 'हाडे कमकुवत, दूध ताप येणे.');
             rows += addRow('फॉस्फरस (P)', 'ग्रॅम', data.reqP, data.totalP, 'प्रजनन समस्या, भूक कमी.');
             rows += addRow('पाणी', 'लिटर', data.reqWater, data.reqWater, 'दूध कमी, शरीर तापमान वाढेल.'); 
