@@ -278,7 +278,8 @@
 
     function startDictation() {
         if (SpeechRecognition) {
-            if('speechSynthesis' in window) window.speechSynthesis.cancel(); // 🔥 AI बोलत असल्यास थांबवा 🔥
+            // 🔥 जेव्हा युजर माईक चालू करेल, तेव्हा AI चा आवाज आपोआप थांबेल 🔥
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
             recognition.start();
         } else {
             alert("तुमचा ब्राउझर व्हॉईस टायपिंग सपोर्ट करत नाही. कृपया क्रोम (Chrome) वापरा.");
@@ -311,7 +312,8 @@
 
         let apiKey = GEMINI_API_KEY.trim();
 
-        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+        // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
+        if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
             typingIndicator.style.display = 'none';
             addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.", 'bot-msg');
             return;
@@ -473,7 +475,8 @@
 
                 let apiKey = GEMINI_API_KEY.trim();
                 
-                if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+                // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
+                if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
                     typingIndicator.style.display = 'none';
                     addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही.", 'bot-msg');
                     return;
@@ -518,13 +521,6 @@
                     
                     const data = await response.json();
                     typingIndicator.style.display = 'none';
-
-                    // 🔥 UPDATE: NEW API KEY VALIDATION LOGIC IN RESPONSE 🔥
-                    let apiKeyTest = geminiApiKey.trim();
-                    if(!apiKeyTest || (!apiKeyTest.startsWith("AIzaSy") && !apiKeyTest.startsWith("AQ."))) {
-                        showErrorMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.");
-                        return;
-                    }
 
                     if (data.candidates && data.candidates.length > 0) {
                         let aiResponse = data.candidates[0].content.parts[0].text;
