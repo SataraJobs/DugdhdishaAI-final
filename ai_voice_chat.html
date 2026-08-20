@@ -92,7 +92,7 @@
         <a href="index.html">⬅️</a>
         <div class="header-titles">
             <h1>AI सारथी 🐮</h1>
-            <p>Gemini 3.6 Flash द्वारे समर्थित (मराठीत विचारा)</p>
+            <p>Gemini AI द्वारे समर्थित (मराठीत विचारा)</p>
         </div>
         <!-- 🔥 NEW: Mute Button 🔥 -->
         <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="आवाज बंद/चालू करा">🔊</button>
@@ -131,11 +131,10 @@
     }
     const db = firebase.firestore();
 
-    // 🔥 AI Configuration Variables 🔥
+    // 🔴 रिकामी ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
     let GEMINI_API_KEY = ""; 
-    let geminiModel = "gemini-3.6-flash"; // 🔥 UPDATED TO LATEST FAST MODEL 🔥
-    let aiTemperature = 0.3;
-    let isVoiceMuted = false;
+    
+    // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
     let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
 तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणे आहे.
 तुझे कडक नियम:
@@ -146,15 +145,15 @@
 ५. कोणतेही चुकीचे (Hallucinated) औषध किंवा डोस सांगू नकोस. जर माहिती नसेल तर थेट सांग की 'यासाठी डॉक्टरांना बोलावणे योग्य राहील'.
 ६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मार.`;
 
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
-    const typingIndicator = document.getElementById('typingIndicator');
-    const micBtn = document.getElementById('micBtn');
-    const muteBtn = document.getElementById('muteBtn');
+    let CURRENT_MODEL = ""; // Auto-discovery variable
+    let isVoiceMuted = false; // 🔥 NEW: Voice Mute State 🔥
+    let geminiModel = "gemini-1.5-flash"; // Default fast model
+    let aiTemperature = 0.3;
 
     // --- 🔇 Mute Toggle Function ---
     function toggleMute() {
         isVoiceMuted = !isVoiceMuted;
+        let muteBtn = document.getElementById('muteBtn');
         if (isVoiceMuted) {
             muteBtn.innerText = "🔇";
             muteBtn.style.background = "rgba(211, 47, 47, 0.8)";
@@ -222,12 +221,21 @@
                 if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
                     GEMINI_API_KEY = data.m16_1.trim();
                 }
+
+                // 🔥 SMART MODEL FIX: Prevent GPT selection from crashing Gemini API
                 if (data.m16_2 && data.m16_2.trim() !== "") {
-                    geminiModel = data.m16_2.trim(); // 🔥 Load model from Admin Panel
+                    let fetchedModel = data.m16_2.trim().toLowerCase();
+                    if (fetchedModel.includes("gpt")) {
+                        geminiModel = "gemini-1.5-flash"; // 🚨 Force Gemini if admin wrongly selected GPT
+                    } else {
+                        geminiModel = fetchedModel;
+                    }
                 }
+                
                 if (data.m16_3) {
                     aiTemperature = parseFloat(data.m16_3) || 0.3;
                 }
+
                 if (data.m16_4 && data.m16_4.trim() !== "") {
                     SYSTEM_PROMPT = data.m16_4;
                 }
@@ -246,6 +254,11 @@
             console.log("Cloud API Key Load Error:", e);
         }
     }
+    
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const micBtn = document.getElementById('micBtn');
 
     // 1. Voice Recognition Setup (Marathi)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -323,7 +336,7 @@
         }
 
         try {
-            // 🔥 DIRECTLY USE MODEL SELECTED IN ADMIN PANEL (No Auto-Discovery Delay) 🔥
+            // 🔥 DIRECTLY USE MODEL SECURELY FETCHED FROM FIREBASE 🔥
             let modelPath = geminiModel.startsWith("models/") ? geminiModel : "models/" + geminiModel;
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${apiKey}`;
 
