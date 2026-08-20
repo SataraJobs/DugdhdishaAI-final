@@ -83,7 +83,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत মাঠে...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
     </div>
 </div>
 
@@ -134,16 +134,16 @@
     // 🔴 रिकामी ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
     let GEMINI_API_KEY = ""; 
     
-    // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
-    let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
-तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणे आहे.
+    // 🔥 100% UPDATED PROMPT: FOR VERY DEEP, EXHAUSTIVE MARATHI RESPONSES ONLY 🔥
+    let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक वरिष्ठ आणि अत्यंत अनुभवी पशुवैद्यक (Senior Veterinary Doctor) आणि डेअरी तज्ज्ञ आहेस. 
+तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत सखोल (Deep), अचूक, शास्त्रीय आणि परिपूर्ण माहिती देणे आहे.
 तुझे कडक नियम:
-१. केवळ पशुपालन, दुग्ध व्यवसाय, चारा व्यवस्थापन, गाई-म्हशींचे आजार आणि डेअरी संबंधित प्रश्नांचीच उत्तरे दे. इतर विषयांवर (उदा. राजकारण, चित्रपट, सामान्य ज्ञान) प्रश्न विचारल्यास नम्रपणे सांग की 'माफ करा, मी केवळ पशुपालन आणि दुग्ध व्यवसाया संबंधित माहिती देऊ शकतो.'
-२. उत्तरे शुद्ध मराठी भाषेत, अत्यंत सोप्या आणि थेट शब्दांत दे.
-३. उत्तरे मोठी नसावीत, वाचायला सोपी जावीत म्हणून बुलेट पॉईंट्स (Bullet points) चा वापर कर.
-४. कोणत्याही गंभीर आजाराच्या (उदा. कासदाह, लाळ्या खुरकूत, विषबाधा) लक्षणांवर उत्तर देताना शेवटी 'तातडीने स्थानिक पशुवैद्यकीय डॉक्टरांचा (Veterinary Doctor) सल्ला घ्या' अशी कडक सूचना नक्की दे.
-५. कोणतेही चुकीचे (Hallucinated) औषध किंवा डोस सांगू नकोस. जर माहिती नसेल तर थेट सांग की 'यासाठी डॉक्टरांना बोलावणे योग्य राहील'.
-६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मार.`;
+१. केवळ पशुपालन, दुग्ध व्यवसाय, चारा व्यवस्थापन, गाई-म्हशींचे आजार आणि डेअरी संबंधित प्रश्नांचीच उत्तरे दे. इतर विषयांवर (उदा. राजकारण, चित्रपट) प्रश्न विचारल्यास नम्रपणे नकार दे.
+२. उत्तरे केवळ आणि केवळ 'शुद्ध आणि सोप्या मराठी' भाषेतच दे. इंग्रजी भाषेचा वापर अजिबात करू नकोस.
+३. उत्तरे अत्यंत सखोल (Very Deep), सविस्तर (Comprehensive) आणि मुद्देसूद (Bullet points) असावीत. विषयाच्या मुळापर्यंत जाऊन (Root cause), त्याची कारणे, लक्षणे, वैज्ञानिक माहिती, घरगुती उपाय आणि वैद्यकीय उपाय अशी संपूर्ण 'A to Z' माहिती दे. कोणतेही उत्तर त्रोटक किंवा शॉर्टकटमध्ये देऊ नकोस.
+४. कोणत्याही गंभीर आजाराच्या (उदा. कासदाह, विषबाधा) लक्षणांवर उत्तर देताना शेवटी 'तातडीने स्थानिक पशुवैद्यकीय डॉक्टरांचा (Veterinary Doctor) सल्ला घ्या' अशी कडक सूचना नक्की दे.
+५. कोणतेही चुकीचे (Hallucinated) औषध सांगू नकोस. जर खात्री नसेल तर थेट डॉक्टरांना बोलावण्यास सांग.
+६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मारून उत्तर दे.`;
 
     let geminiModel = "gemini-3.6-flash"; // Default to newest
     let aiTemperature = 0.3;
@@ -330,17 +330,13 @@
         }
 
         try {
-            // 🔥 १००% ERROR FIX: ॲडमिन पॅनेलमधील नावामध्ये असलेल्या स्पेस (Space) आणि ब्रॅकेट मुळे येणारा एरर सॉल्व्ह केला 🔥
             let finalModelName = "gemini-3.6-flash"; // Default and safe
-            
-            // ॲडमिन पॅनेलच्या ड्रॉपडाऊन मधून योग्य गुगल मॉडेल नाव काढण्याचे लॉजिक
             let rawModelString = geminiModel.toLowerCase();
             if (rawModelString.includes("3.7")) {
                 finalModelName = "gemini-3.7-flash";
             } else if (rawModelString.includes("3.6")) {
                 finalModelName = "gemini-3.6-flash";
             } else if (rawModelString.includes("1.5")) {
-                // 1.5 आता बंद झाले आहे, तरीही कुणी निवडले तर त्याला चालणाऱ्या 3.6 वर रीडायरेक्ट करा
                 finalModelName = "gemini-3.6-flash"; 
             }
 
@@ -354,7 +350,7 @@
                     temperature: aiTemperature,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 1024,
+                    maxOutputTokens: 4096, // 🔥 FORCING HIGHEST TOKEN LIMIT FOR MAX DETAILS 🔥
                 }
             };
 
@@ -379,9 +375,19 @@
                 let aiResponse = data.candidates[0].content.parts[0].text;
                 let rawText = aiResponse; // 🔥 आवाज देण्यासाठी ओरिजनल मजकूर सेव्ह केला 🔥
 
-                // Simple markdown formatting to HTML (bolding and line breaks)
+                // 🔥 १००% BUG FIX: जुने चुकीचे 'स्टार' काढणारे लॉजिक काढले आहे. आता मेसेज अजिबात कट होणार नाही! 🔥
+                // बोल्ड टेक्स्टसाठी:
                 aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                
+                // बुलेट पॉईंट्स नीट दिसण्यासाठी (* किंवा - ने सुरू होणारे):
+                aiResponse = aiResponse.replace(/^\*\s/gm, '• ');
+                aiResponse = aiResponse.replace(/^\-\s/gm, '• ');
+                
+                // नको असलेले सिंगल स्टार (Italic) काढण्यासाठी:
+                aiResponse = aiResponse.replace(/\*/g, '');
+                
+                // नवीन ओळींसाठी (New Lines) <br> टॅग:
+                aiResponse = aiResponse.replace(/\n/g, '<br>');
                 
                 addMessage(aiResponse, 'bot-msg');
                 speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
@@ -485,6 +491,7 @@
 
                 let apiKey = GEMINI_API_KEY.trim();
                 
+                // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
                 if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
                     typingIndicator.style.display = 'none';
                     addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही.", 'bot-msg');
@@ -492,16 +499,13 @@
                 }
 
                 try {
-                    // 🔥 १००% ERROR FIX: ॲडमिन पॅनेलमधील नावामध्ये स्पेस (Space) असल्यामुळे येणारा एरर सॉल्व्ह केला 🔥
-                    let finalModelName = "gemini-3.6-flash"; // Default and safe
-                    
+                    let finalModelName = "gemini-3.6-flash"; 
                     let rawModelString = geminiModel.toLowerCase();
                     if (rawModelString.includes("3.7")) {
                         finalModelName = "gemini-3.7-flash";
                     } else if (rawModelString.includes("3.6")) {
                         finalModelName = "gemini-3.6-flash";
                     } else if (rawModelString.includes("1.5")) {
-                        // 1.5 आता बंद झाले आहे, तरीही कुणी निवडले तर त्याला चालणाऱ्या 3.6 वर रीडायरेक्ट करा
                         finalModelName = "gemini-3.6-flash"; 
                     }
 
@@ -515,7 +519,7 @@
                             temperature: aiTemperature,
                             topK: 40,
                             topP: 0.95,
-                            maxOutputTokens: 1024,
+                            maxOutputTokens: 4096,
                         }
                     };
 
@@ -537,8 +541,12 @@
                         let aiResponse = data.candidates[0].content.parts[0].text;
                         let rawText = aiResponse; // 🔥 आवाज देण्यासाठी ओरिजनल मजकूर सेव्ह केला 🔥
 
+                        // 🔥 १००% BUG FIX: जुने चुकीचे 'स्टार' काढणारे लॉजिक काढले आहे. 🔥
                         aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                        aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                        aiResponse = aiResponse.replace(/^\*\s/gm, '• ');
+                        aiResponse = aiResponse.replace(/^\-\s/gm, '• ');
+                        aiResponse = aiResponse.replace(/\*/g, '');
+                        aiResponse = aiResponse.replace(/\n/g, '<br>');
                         
                         addMessage(aiResponse, 'bot-msg'); // ॲनालिसिस प्रिंट करा
                         speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
