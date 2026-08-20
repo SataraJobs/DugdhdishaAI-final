@@ -3,498 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>दुग्ध दिशा AI - AI सारथी</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b5e20">
+    <title>AI सारथी - दुग्ध दिशा</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1565c0">
     
-    <!-- 🔥 FIREBASE SDK 🔥 -->
+    <!-- 🔥 Firebase SDK 🔥 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        .app-container { max-width: 600px; margin: 0 auto; background: #fff; height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        .top-dashboard { background: linear-gradient(145deg, #1976d2, #1565c0); padding: 15px 20px; color: white; display: flex; align-items: center; gap: 15px; }
-        .top-dashboard a { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
-        .header-titles h1 { margin: 0; font-size: 20px; }
-        .header-titles p { margin: 2px 0 0; font-size: 12px; color: #bbdefb; }
+        /* Header */
+        .header { background: #1565c0; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10; }
+        .back-btn { color: white; font-size: 24px; cursor: pointer; text-decoration: none; }
+        .header-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: bold; }
+        .header-title img { width: 35px; height: 35px; border-radius: 50%; background: white; padding: 2px;}
 
         /* Chat Area */
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; background: #eef2f5; display: flex; flex-direction: column; gap: 15px; }
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #e8eaed; scroll-behavior: smooth;}
         
-        .message { max-width: 80%; padding: 12px 15px; border-radius: 15px; font-size: 14px; line-height: 1.5; position: relative; }
-        .bot-msg { background: #fff; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #1976d2; }
-        .user-msg { background: #dcedc8; color: #1b5e20; align-self: flex-end; border-bottom-right-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* 🔥 AI Sponsored Ad Box Styles */
-        .sponsored-ad-box { background: linear-gradient(145deg, #fff9c4, #fff59d); align-self: flex-start; max-width: 80%; padding: 10px 12px; border-radius: 12px; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px dashed #fbc02d; font-size: 12px; position: relative; margin-top: -5px;}
-        .sponsored-ad-box .ad-tag { font-size: 9px; font-weight: bold; background: #f57f17; color: white; padding: 2px 6px; border-radius: 4px; position: absolute; top: -8px; right: 10px; }
-        .sponsored-ad-box .ad-content { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
-        .sponsored-ad-box .ad-icon { font-size: 24px; background: white; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 8px; }
-        .sponsored-ad-box h4 { margin: 0 0 2px; font-size: 13px; color: #d32f2f; }
-        .sponsored-ad-box p { margin: 0; color: #555; font-weight: bold; font-size: 11px; }
+        /* AI Message */
+        .msg-ai { background: white; color: #333; align-self: flex-start; border-bottom-left-radius: 0; border-left: 4px solid #1565c0; }
+        
+        /* User Message */
+        .msg-user { background: #dcedc8; color: #1b5e20; align-self: flex-end; border-bottom-right-radius: 0; }
+        
+        /* Error Message */
+        .msg-error { background: #fff3e0; color: #d32f2f; align-self: center; border-left: 4px solid #ff9800; font-weight: bold; font-size: 13px; text-align: center; width: 90%;}
 
-        .typing-indicator { font-size: 12px; color: #777; align-self: flex-start; display: none; margin-left: 10px; font-style: italic; }
+        /* Typing Indicator */
+        .typing-indicator { display: none; align-self: flex-start; background: white; padding: 12px 16px; border-radius: 15px; border-bottom-left-radius: 0; border-left: 4px solid #1565c0; font-size: 13px; color: #888; font-weight: bold; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .dots { display: inline-block; width: 6px; height: 6px; background: #1565c0; border-radius: 50%; animation: blink 1.4s infinite both; }
+        .dots:nth-child(2) { animation-delay: 0.2s; }
+        .dots:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0% { opacity: 0.2; transform: scale(0.8); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.2; transform: scale(0.8); } }
 
         /* Input Area */
-        .input-area { padding: 15px; background: #fff; border-top: 1px solid #ddd; display: flex; gap: 10px; align-items: center; }
-        .input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 25px; font-size: 14px; outline: none; background: #f9f9f9; }
+        .input-area { background: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 10; }
         
-        .btn-mic { background: #ff9800; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .btn-send { background: #1976d2; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
-        .recording { animation: pulse 1.5s infinite; background: #d32f2f; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        
-        .disclaimer { font-size: 10px; text-align: center; color: #888; padding: 5px 15px 10px; background: #fff; margin: 0; }
+        .mic-btn { background: #ff9800; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 3px 6px rgba(255, 152, 0, 0.3); transition: 0.2s; flex-shrink: 0;}
+        .mic-btn:active { transform: scale(0.9); }
+        .mic-btn.recording { animation: pulseMic 1.5s infinite; background: #d32f2f; box-shadow: 0 0 15px rgba(211, 47, 47, 0.5);}
+        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* 🔥 NEW: Live Session Security Alert Popup Style 🔥 */
-        #sessionAlertBox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .session-alert-content {
-            background: white; padding: 25px; border-radius: 15px;
-            max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
+        .text-input { flex: 1; background: #f0f2f5; border: 1px solid #ddd; border-radius: 25px; padding: 12px 15px; font-size: 14px; outline: none; transition: 0.3s; }
+        .text-input:focus { border-color: #1565c0; background: white; }
+
+        .send-btn { background: #1565c0; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 3px 6px rgba(21, 101, 192, 0.3); transition: 0.2s; flex-shrink: 0;}
+        .send-btn:active { transform: scale(0.9); }
+
+        .footer-note { text-align: center; font-size: 10px; color: #888; background: white; padding: 5px 0; }
     </style>
 </head>
-<body onload="initAIVoiceChat()">
+<body>
 
-<!-- 🔒 सिक्युरिटी चेक -->
-<script>
-    if (!localStorage.getItem("current_logged_in_role")) {
-        window.location.replace("login.html");
-    }
-</script>
-
-<!-- 🔥 NEW: Live Session Security Alert Popup 🔥 -->
-<div id="sessionAlertBox">
-    <div class="session-alert-content">
-        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
-    </div>
-</div>
-
-<div class="app-container">
-    <div class="top-dashboard">
-        <a href="index.html">⬅️</a>
-        <div class="header-titles">
-            <h1>AI सारथी 🐮</h1>
-            <p>Gemini 1.5 Pro द्वारे समर्थित (मराठीत विचारा)</p>
+    <!-- Header -->
+    <div class="header">
+        <a href="index.html" class="back-btn">←</a>
+        <div class="header-title">
+            <img src="ai_calf.png" alt="AI" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8943/8943377.png'">
+            AI सारथी (Gemini)
         </div>
     </div>
 
+    <!-- Chat Area -->
     <div class="chat-container" id="chatBox">
-        <div class="message bot-msg">
-            नमस्कार! 🙏 मी तुमचा <b>'AI सारथी'</b> आहे. <br><br>
+        <div class="message msg-ai">
+            नमस्कार! 🙏 मी तुमचा <b>'AI सारथी'</b> आहे.<br><br>
             तुमच्या गाई-म्हशींच्या आरोग्याबद्दल, चाऱ्याबद्दल किंवा दुग्ध व्यवसायाबद्दल तुम्हाला काहीही प्रश्न असेल, तर खालील <b>माईक (🎤) दाबून बोला</b> किंवा टाईप करून विचारा!
         </div>
+        
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            AI विचार करत आहे <span class="dots"></span><span class="dots"></span><span class="dots"></span>
+        </div>
     </div>
-    
-    <div class="typing-indicator" id="typingIndicator">AI तज्ज्ञ विचार करत आहे... ⏳</div>
 
+    <!-- Input Area -->
     <div class="input-area">
-        <button class="btn-mic" id="micBtn" onclick="startDictation()">🎤</button>
-        <input type="text" id="userInput" placeholder="तुमचा प्रश्न येथे लिहा..." onkeypress="handleEnter(event)">
-        <button class="btn-send" onclick="sendMessage()">➤</button>
+        <button class="mic-btn" id="micBtn" onclick="toggleVoiceRecording()">🎤</button>
+        <input type="text" id="userInput" class="text-input" placeholder="तुमचा प्रश्न येथे लिहा..." onkeypress="handleKeyPress(event)">
+        <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
-    <p class="disclaimer">⚠️ हा AI सहाय्यक आहे. जनावरांच्या इमर्जन्सी आजारात प्रत्यक्ष डॉक्टरांचा सल्ला नक्की घ्या.</p>
-</div>
+    <div class="footer-note">⚠️ हा AI सहाय्यक आहे. जनावरांच्या इमर्जन्सी आजारात प्रत्यक्ष डॉक्टरांचा सल्ला नक्की घ्या.</div>
 
-<script>
-    // 🔥 FIREBASE INITIALIZATION 🔥
-    const firebaseConfig = {
-        apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
-        authDomain: "dugdhdishaai.firebaseapp.com",
-        projectId: "dugdhdishaai",
-        storageBucket: "dugdhdishaai.firebasestorage.app",
-        messagingSenderId: "1059551640041",
-        appId: "1:1059551640041:web:3fc95210b95b1319c6b378",
-        measurementId: "G-6TFEJKBVFL"
-    };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
-
-    // 🔴 रिकामी ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
-    let GEMINI_API_KEY = ""; 
-    
-    // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
-    let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
-तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणे आहे.
-तुझे कडक नियम:
-१. केवळ पशुपालन, दुग्ध व्यवसाय, चारा व्यवस्थापन, गाई-म्हशींचे आजार आणि डेअरी संबंधित प्रश्नांचीच उत्तरे दे. इतर विषयांवर (उदा. राजकारण, चित्रपट, सामान्य ज्ञान) प्रश्न विचारल्यास नम्रपणे सांग की 'माफ करा, मी केवळ पशुपालन आणि दुग्ध व्यवसाया संबंधित माहिती देऊ शकतो.'
-२. उत्तरे शुद्ध मराठी भाषेत, अत्यंत सोप्या आणि थेट शब्दांत दे.
-३. उत्तरे मोठी नसावीत, वाचायला सोपी जावीत म्हणून बुलेट पॉईंट्स (Bullet points) चा वापर कर.
-४. कोणत्याही गंभीर आजाराच्या (उदा. कासदाह, लाळ्या खुरकूत, विषबाधा) लक्षणांवर उत्तर देताना शेवटी 'तातडीने स्थानिक पशुवैद्यकीय डॉक्टरांचा (Veterinary Doctor) सल्ला घ्या' अशी कडक सूचना नक्की दे.
-५. कोणतेही चुकीचे (Hallucinated) औषध किंवा डोस सांगू नकोस. जर माहिती नसेल तर थेट सांग की 'यासाठी डॉक्टरांना बोलावणे योग्य राहील'.
-६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मार.`;
-
-    let CURRENT_MODEL = ""; // Auto-discovery variable
-
-    // --- 🔥 NEW: PAGE INIT & CLOUD SECURITY WATCHER 🔥 ---
-    function initAIVoiceChat() {
-        syncCloudSecurity();
-        initChatbot(); // क्लाऊडवरून API Key लोड करणे
-    }
-
-    function syncCloudSecurity() {
-        let userMobile = localStorage.getItem("current_user_mobile");
-        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-            db.collection("users").doc(userMobile).onSnapshot((doc) => {
-                if (doc.exists && doc.data()) {
-                    let cloudData = doc.data();
-                    let localSessionId = localStorage.getItem("current_session_id") || localStorage.getItem("currentSessionId");
-                    let cloudSessionId = cloudData.currentSessionId;
-                    if (cloudSessionId && localSessionId && cloudSessionId !== localSessionId) {
-                        let alertBox = document.getElementById("sessionAlertBox");
-                        if (alertBox) alertBox.style.display = "flex";
-                        setTimeout(() => {
-                            localStorage.clear();
-                            window.location.replace("login.html");
-                        }, 3000);
-                    }
-                }
-            }, (err) => console.log("Cloud security watcher error:", err));
-        }
-    }
-
-    // 🔥 थेट फायरबेस क्लाऊडवरून (Firestore) API Key फेच करणारे फंक्शन (लोकल स्टोरेज पूर्णपणे बंद) 🔥
-    async function initChatbot() {
-        try {
-            // 1. प्रथम 'admin_settings' च्या M16 डॉक्युमेंटमधून तपासा
-            let docSnap = await db.collection("admin_settings").doc("M16").get();
-            if (docSnap.exists && docSnap.data()) {
-                let data = docSnap.data();
-                if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
-                    GEMINI_API_KEY = data.m16_1.trim();
-                }
-                if (data.m16_4 && data.m16_4.trim() !== "") {
-                    SYSTEM_PROMPT = data.m16_4;
-                }
-            }
-            
-            // 2. जर M16 मध्ये नसेल तर 'ai_config' तपासा
-            if (!GEMINI_API_KEY) {
-                let docSnapAlt = await db.collection("admin_settings").doc("ai_config").get();
-                if (docSnapAlt.exists && docSnapAlt.data()) {
-                    let data = docSnapAlt.data();
-                    if (data.gemini_key) GEMINI_API_KEY = data.gemini_key.trim();
-                    if (data.system_prompt) SYSTEM_PROMPT = data.system_prompt;
-                }
-            }
-        } catch (e) {
-            console.log("Cloud API Key Load Error:", e);
-        }
-    }
-    
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
-    const typingIndicator = document.getElementById('typingIndicator');
-    const micBtn = document.getElementById('micBtn');
-
-    // 1. Voice Recognition Setup (Marathi)
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-    
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.lang = 'mr-IN'; // Marathi Language
-        recognition.interimResults = false;
-        
-        recognition.onstart = function() {
-            micBtn.classList.add('recording');
-            userInput.placeholder = "मी ऐकत आहे... बोला!";
+    <script>
+        // 🔥 FIREBASE INITIALIZATION 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiqbXWMpD19u-RaYZEUicHmxO8JRk_Glo",
+            authDomain: "dugdhdishaai.firebaseapp.com",
+            projectId: "dugdhdishaai",
+            storageBucket: "dugdhdishaai.firebasestorage.app",
+            messagingSenderId: "1059551640041",
+            appId: "1:1059551640041:web:3fc95210b95b1319c6b378"
         };
-        
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            userInput.value = transcript;
-            micBtn.classList.remove('recording');
-            userInput.placeholder = "तुमचा प्रश्न येथे लिहा...";
-        };
-        
-        recognition.onerror = function(event) {
-            micBtn.classList.remove('recording');
-            userInput.placeholder = "तुमचा प्रश्न येथे लिहा...";
-            alert("आवाज ओळखण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा किंवा टाईप करा.");
-        };
-        
-        recognition.onend = function() {
-            micBtn.classList.remove('recording');
-            userInput.placeholder = "तुमचा प्रश्न येथे लिहा...";
-        };
-    }
-
-    function startDictation() {
-        if (SpeechRecognition) {
-            recognition.start();
-        } else {
-            alert("तुमचा ब्राउझर व्हॉईस टायपिंग सपोर्ट करत नाही. कृपया क्रोम (Chrome) वापरा.");
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-    }
+        const db = firebase.firestore();
 
-    function handleEnter(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    }
+        // AI Configuration Variables
+        let geminiApiKey = "";
+        let geminiModel = "gemini-1.5-flash"; // Default Advanced Free Model
+        let systemPrompt = "तुम्ही 'दुग्ध दिशा AI' चे 'AI सारथी' नावाचे पशुवैद्यकीय आणि कृषी तज्ज्ञ आहात. तुम्हाला शेतकऱ्यांना त्यांच्या गाई, म्हशी, चारा, आणि गोठा व्यवस्थापनाबद्दल अचूक, सोप्या आणि मराठी भाषेत उत्तरे द्यायची आहेत. उत्तरे नेहमी आदराने आणि व्यावसायिक असावीत.";
+        let aiTemperature = 0.3;
 
-    // 2. Send Message to Gemini API
-    async function sendMessage() {
-        // अगर API Key लोड झाली नसेल, तर त्वरित क्लाऊडवरून आणा
-        if (!GEMINI_API_KEY) {
-            await initChatbot();
-        }
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const micBtn = document.getElementById('micBtn');
 
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        // Add User Message to UI
-        addMessage(text, 'user-msg');
-        userInput.value = '';
-        
-        // Show Typing Indicator
-        typingIndicator.style.display = 'block';
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        let apiKey = GEMINI_API_KEY.trim();
-
-        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
-            typingIndicator.style.display = 'none';
-            addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.", 'bot-msg');
-            return;
-        }
-
-        try {
-            // --- 🔥 SMART AUTO-DISCOVERY OF AVAILABLE MODELS 🔥 ---
-            if(!CURRENT_MODEL) {
-                let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                let mData = await mRes.json();
-                
-                if(mData.models) {
-                    // Find the best available model for generating content (Prefer Flash or Pro)
-                    let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    
-                    if(validModel) {
-                        CURRENT_MODEL = validModel.name; 
-                    }
+        // 🔥 १. ॲडमिन पॅनेलमधून API Key आणि सेटिंग्ज लोड करणे 🔥
+        window.onload = function() {
+            db.collection("admin_settings").doc("M16").get().then((doc) => {
+                if (doc.exists && doc.data().m16_1) {
+                    geminiApiKey = doc.data().m16_1.trim();
+                    geminiModel = doc.data().m16_2 || "gemini-1.5-flash";
+                    aiTemperature = parseFloat(doc.data().m16_3) || 0.3;
+                    if(doc.data().m16_4) systemPrompt = doc.data().m16_4;
+                    console.log("AI Config Loaded Successfully!");
+                } else {
+                    showErrorMessage("⚠️ API Key त्रुटी: ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.");
                 }
-                if(!CURRENT_MODEL) CURRENT_MODEL = "models/gemini-1.5-flash"; // Default Fallback
-            }
-
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
-
-            const requestBody = {
-                contents: [{
-                    parts: [{ text: SYSTEM_PROMPT + "\n\nशेतकऱ्याचा प्रश्न: " + text }]
-                }]
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
+            }).catch((error) => {
+                console.error("Error fetching AI config:", error);
+                showErrorMessage("⚠️ सर्व्हरशी संपर्क होऊ शकला नाही. इंटरनेट तपासा.");
             });
-            
-            const data = await response.json();
-            typingIndicator.style.display = 'none';
+        };
 
-            if (!response.ok) {
-                console.error("API Error Response:", data);
-                let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
-                addMessage("माफ करा, सर्व्हरकडून त्रुटी येत आहे: " + errMsg, 'bot-msg');
-                CURRENT_MODEL = ""; // Reset model to force re-fetch next time
+        // --- 💬 Chat Functions ---
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function appendMessage(sender, text) {
+            let msgDiv = document.createElement('div');
+            msgDiv.className = sender === 'user' ? 'message msg-user' : 'message msg-ai';
+            
+            // Format bold text (**text**) to HTML <b>text</b>
+            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            msgDiv.innerHTML = formattedText;
+            
+            chatBox.insertBefore(msgDiv, typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showErrorMessage(text) {
+            let errDiv = document.createElement('div');
+            errDiv.className = 'message msg-error';
+            errDiv.innerHTML = text;
+            chatBox.insertBefore(errDiv, typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            let text = userInput.value.trim();
+            if (!text) return;
+
+            if (!geminiApiKey) {
+                showErrorMessage("⚠️ API Key उपलब्ध नाही. कृपया ॲडमिन पॅनेल तपासा.");
                 return;
             }
 
-            if (data.candidates && data.candidates.length > 0) {
-                // Get AI response text
-                let aiResponse = data.candidates[0].content.parts[0].text;
-                // Simple markdown formatting to HTML (bolding and line breaks)
-                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
-                
-                addMessage(aiResponse, 'bot-msg');
-                
-                // 🔥 LOGIC: Check Context and Inject Sponsored Ad
-                injectContextualAd(text);
-
-            } else {
-                addMessage("माफ करा, मला काही तांत्रिक अडचण येत आहे. कृपया थोड्या वेळाने पुन्हा विचारा.", 'bot-msg');
-            }
-        } catch (error) {
-            typingIndicator.style.display = 'none';
-            addMessage("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये बदल झाला आहे. कृपया तपासा.", 'bot-msg');
-            console.error("API Error:", error);
-            CURRENT_MODEL = ""; // Force re-fetch
-        }
-    }
-
-    function addMessage(text, className) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${className}`;
-        msgDiv.innerHTML = text;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // 🔥 Contextual Ad Injection Logic (Dynamic suggestions based on user intent) 🔥
-    function injectContextualAd(userQuery) {
-        let query = userQuery.toLowerCase();
-        let adHtml = "";
-
-        if (query.includes("कॅल्शियम") || query.includes("दूध कमी") || query.includes("फॅट") || query.includes("snf") || query.includes("दूध वाढत")) {
-            adHtml = `
-                <span class="ad-tag">Ad</span>
-                <div style="font-weight:bold; color:#795548;">💡 AI स्मार्ट शिफारस:</div>
-                <div class="ad-content" onclick="window.location.href='krushi_mall.html'">
-                    <div class="ad-icon">🥣</div>
-                    <div>
-                        <h4>हिंदुस्तान फिड्स - कॅल्शियम जेल</h4>
-                        <p>आजच खरेदी करा आणि दुधातील फॅट वाढवा! (Click to Buy)</p>
-                    </div>
-                </div>
-            `;
-        } 
-        else if (query.includes("लाळ्या खुरकूत") || query.includes("कासदाह") || query.includes("आजार") || query.includes("ताप") || query.includes("गॅस") || query.includes("पोटफुगी")) {
-            adHtml = `
-                <span class="ad-tag">Ad</span>
-                <div style="font-weight:bold; color:#795548;">💡 AI स्मार्ट शिफारस:</div>
-                <div class="ad-content" onclick="window.location.href='krushi_mall.html'">
-                    <div class="ad-icon">💊</div>
-                    <div>
-                        <h4>Himalaya Vet - Mastilep</h4>
-                        <p>कासदाह व इतर इन्फेक्शनवर तात्काळ आराम. (Click to Buy)</p>
-                    </div>
-                </div>
-            `;
-        }
-        else if (query.includes("चारा") || query.includes("पेंड") || query.includes("खाद्य") || query.includes("पोषण") || query.includes("मुरघास")) {
-            adHtml = `
-                <span class="ad-tag">Ad</span>
-                <div style="font-weight:bold; color:#795548;">💡 AI स्मार्ट शिफारस:</div>
-                <div class="ad-content" onclick="window.location.href='krushi_mall.html'">
-                    <div class="ad-icon">🌾</div>
-                    <div>
-                        <h4>गोदावरी बायपास प्रोटीन पेलेट</h4>
-                        <p>दुभत्या गाईंसाठी सर्वोत्तम पेंड, १५% सूट. (Click to Buy)</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // जर वरीलपैकी एखादा शब्द सापडला, तरच Ad दाखवा
-        if(adHtml !== "") {
-            setTimeout(() => {
-                const adDiv = document.createElement('div');
-                adDiv.className = `sponsored-ad-box`;
-                adDiv.innerHTML = adHtml;
-                chatBox.appendChild(adDiv);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 1500); // AI उत्तर दिल्यानंतर 1.5 सेकंदाने Ad लोड होईल (नैसर्गिक वाटण्यासाठी)
-        }
-    }
-
-    // 🔥 NEW: मिल्क ॲनालायझर मधून आलेला डेटा आपोआप स्कॅन करून उत्तर देणे (अचूक Auto-Discovery सोबत) 🔥
-    window.addEventListener("DOMContentLoaded", () => {
-        setTimeout(async () => {
-            let pendingAnalysis = localStorage.getItem("pending_milk_analysis");
+            // १. युजरचा मेसेज स्क्रीनवर दाखवा
+            appendMessage('user', text);
+            userInput.value = '';
             
-            if (pendingAnalysis) {
-                // डेटा एकदा घेतला की डिलीट करा, जेणेकरून पेज रिफ्रेश केल्यावर पुन्हा मेसेज जाणार नाही
-                localStorage.removeItem("pending_milk_analysis");
+            // २. टायपिंग इंडिकेटर दाखवा
+            typingIndicator.style.display = 'flex';
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-                // UI मध्ये शेतकऱ्याचा मेसेज म्हणून दाखवा
-                addMessage("माझ्या 'मिल्क ॲनालायझर' मधील ग्राफ आणि रेकॉर्डचे सविस्तर ॲनालिसिस करा.", 'user-msg');
+            // ३. Google Gemini API ला डायरेक्ट कॉल (REST API)
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
                 
-                typingIndicator.style.display = 'block';
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-                if (!GEMINI_API_KEY) {
-                    await initChatbot(); // API Key लोड करा
-                }
-
-                let apiKey = GEMINI_API_KEY.trim();
-                
-                if(!apiKey || !apiKey.startsWith("AIzaSy")) {
-                    typingIndicator.style.display = 'none';
-                    addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही.", 'bot-msg');
-                    return;
-                }
-
-                try {
-                    // --- 🔥 SMART AUTO-DISCOVERY (जे मॅन्युअल चॅट मध्ये यशस्वी झाले तेच इथे वापरले आहे) 🔥 ---
-                    if(!CURRENT_MODEL) {
-                        try {
-                            let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                            let mData = await mRes.json();
-                            
-                            if(mData.models) {
-                                let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                
-                                if(validModel) {
-                                    CURRENT_MODEL = validModel.name; 
-                                }
-                            }
-                        } catch(err) {
-                            console.log("Model discovery error: ", err);
+                const requestBody = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: systemPrompt + "\n\nशेतकऱ्याचा प्रश्न: " + text }
+                            ]
                         }
+                    ],
+                    generationConfig: {
+                        temperature: aiTemperature,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 1024,
                     }
-                    
-                    let modelToUse = CURRENT_MODEL || "models/gemini-1.5-flash";
+                };
 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelToUse}:generateContent?key=${apiKey}`;
-                    
-                    const requestBody = {
-                        contents: [{
-                            parts: [{ text: SYSTEM_PROMPT + "\n\nशेतकऱ्याचा डेटा आणि प्रश्न: " + pendingAnalysis }]
-                        }]
-                    };
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
 
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestBody)
-                    });
-                    
-                    const data = await response.json();
-                    typingIndicator.style.display = 'none';
+                const data = await response.json();
 
-                    if (data.candidates && data.candidates.length > 0) {
-                        let aiResponse = data.candidates[0].content.parts[0].text;
-                        aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                        aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
-                        
-                        addMessage(aiResponse, 'bot-msg'); // ॲनालिसिस प्रिंट करा
-                        injectContextualAd(pendingAnalysis); // योग्य प्रॉडक्ट ॲड सुचवा
-                    } else if (data.error) {
-                        // जर गुगल कडून एरर आला तर आता तो स्क्रीनवर दिसेल
-                        addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
-                    } else {
-                        addMessage("माफ करा, डेटा ॲनालिसिस पूर्ण होऊ शकले नाही.", 'bot-msg');
-                    }
-                } catch (e) {
-                    typingIndicator.style.display = 'none';
-                    addMessage("सर्व्हर एरर आला आहे. कृपया थोडे थांबा.", 'bot-msg');
+                typingIndicator.style.display = 'none';
+
+                if (response.ok && data.candidates && data.candidates.length > 0) {
+                    let aiResponseText = data.candidates[0].content.parts[0].text;
+                    appendMessage('ai', aiResponseText);
+                    speakMarathi(aiResponseText); // उत्तराबद्दल ऑडिओ (पर्यायी)
+                } else {
+                    console.error("Gemini API Error:", data);
+                    showErrorMessage("⚠️ AI ला उत्तर देता आले नाही. कृपया पुन्हा प्रयत्न करा.");
                 }
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                typingIndicator.style.display = 'none';
+                showErrorMessage("⚠️ इंटरनेट एरर! कृपया कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.");
             }
-        }, 1500); // ॲप लोड झाल्यानंतर 1.5 सेकंदाने आपोआप ॲनालिसिस सुरू होईल
-    });
-</script>
-    <script src="fcm_setup.js"></script>
+        }
+
+        // --- 🎤 Voice Recognition (Speech to Text) ---
+        let isRecording = false;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'mr-IN'; // Marathi Language Recognition
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                userInput.placeholder = "ऐकत आहे... बोला...";
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech Recognition Error:", event.error);
+                userInput.placeholder = "आवाज ओळखता आला नाही. पुन्हा प्रयत्न करा.";
+                stopRecording();
+            };
+
+            recognition.onend = function() {
+                stopRecording();
+                if(userInput.value.trim() !== "") {
+                    sendMessage(); // ऑडिओ संपल्यावर आपोआप मेसेज सेंड करा
+                }
+            };
+        } else {
+            console.warn("Speech Recognition not supported in this browser.");
+        }
+
+        function toggleVoiceRecording() {
+            if (!recognition) {
+                alert("तुमच्या ब्राउझरमध्ये व्हॉइस टायपिंग सपोर्टेड नाही. कृपया Google Chrome वापरा.");
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                userInput.value = "";
+                recognition.start();
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            userInput.placeholder = "तुमचा प्रश्न येथे लिहा...";
+        }
+
+        // --- 🔊 Text to Speech (Marathi Audio Output - Optional) ---
+        function speakMarathi(text) {
+            // Clean text from asterisks before speaking
+            let cleanText = text.replace(/\*/g, '');
+            if ('speechSynthesis' in window) {
+                let utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'mr-IN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    </script>
 </body>
 </html>
