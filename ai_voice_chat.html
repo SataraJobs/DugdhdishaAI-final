@@ -64,6 +64,10 @@
             background: white; padding: 25px; border-radius: 15px;
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
+
+        /* 🔥 NEW: Mute Button Style 🔥 */
+        .mute-btn { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 20px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; margin-left: auto; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+        .mute-btn:active { transform: scale(0.9); }
     </style>
 </head>
 <body onload="initAIVoiceChat()">
@@ -91,7 +95,7 @@
             <p>Gemini 1.5 Pro द्वारे समर्थित (मराठीत विचारा)</p>
         </div>
         <!-- 🔥 NEW: Mute Button 🔥 -->
-        <button id="muteBtn" onclick="toggleMute()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 20px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; margin-left: auto; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" title="आवाज बंद/चालू करा">🔊</button>
+        <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="आवाज बंद/चालू करा">🔊</button>
     </div>
 
     <div class="chat-container" id="chatBox">
@@ -144,6 +148,40 @@
     let CURRENT_MODEL = ""; // Auto-discovery variable
     let isVoiceMuted = false; // 🔥 NEW: Voice Mute State 🔥
 
+    // --- 🔇 Mute Toggle Function ---
+    function toggleMute() {
+        isVoiceMuted = !isVoiceMuted;
+        let muteBtn = document.getElementById('muteBtn');
+        if (isVoiceMuted) {
+            muteBtn.innerText = "🔇";
+            muteBtn.style.background = "rgba(211, 47, 47, 0.8)";
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        } else {
+            muteBtn.innerText = "🔊";
+            muteBtn.style.background = "rgba(255,255,255,0.2)";
+        }
+    }
+
+    // --- 🔊 Text to Speech (Marathi Audio Output) ---
+    function speakMarathi(text) {
+        if (isVoiceMuted) return; // जर म्यूट असेल तर बोलू नका
+        
+        // HTML टॅग्स आणि स्टार्स (*) काढून टाका
+        let cleanText = text.replace(/<[^>]*>?/gm, ''); 
+        cleanText = cleanText.replace(/\*/g, ''); 
+        
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'mr-IN';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
     // --- 🔥 NEW: PAGE INIT & CLOUD SECURITY WATCHER 🔥 ---
     function initAIVoiceChat() {
         syncCloudSecurity();
@@ -168,40 +206,6 @@
                     }
                 }
             }, (err) => console.log("Cloud security watcher error:", err));
-        }
-    }
-
-    // --- 🔇 Mute Toggle Function ---
-    function toggleMute() {
-        isVoiceMuted = !isVoiceMuted;
-        let muteBtn = document.getElementById('muteBtn');
-        if (isVoiceMuted) {
-            muteBtn.innerText = "🔇";
-            muteBtn.style.background = "rgba(211, 47, 47, 0.8)";
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Stop AI voice immediately
-            }
-        } else {
-            muteBtn.innerText = "🔊";
-            muteBtn.style.background = "rgba(255,255,255,0.2)";
-        }
-    }
-
-    // --- 🔊 Text to Speech (Marathi Audio Output) ---
-    function speakMarathi(text) {
-        if (isVoiceMuted) return; // जर म्यूट असेल तर बोलू नका
-        
-        // HTML टॅग्स आणि स्टार्स (*) काढून टाका जेणेकरून आवाज स्वच्छ येईल
-        let cleanText = text.replace(/<[^>]*>?/gm, ''); 
-        cleanText = cleanText.replace(/\*/g, ''); 
-        
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // ओव्हरलॅपिंग टाळण्यासाठी जुना आवाज थांबवा
-            let utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.lang = 'mr-IN';
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
         }
     }
 
@@ -274,8 +278,7 @@
 
     function startDictation() {
         if (SpeechRecognition) {
-            // 🔥 जेव्हा युजर माईक चालू करेल, तेव्हा AI चा आवाज आपोआप थांबेल 🔥
-            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if('speechSynthesis' in window) window.speechSynthesis.cancel(); // 🔥 AI बोलत असल्यास थांबवा 🔥
             recognition.start();
         } else {
             alert("तुमचा ब्राउझर व्हॉईस टायपिंग सपोर्ट करत नाही. कृपया क्रोम (Chrome) वापरा.");
@@ -369,7 +372,7 @@
                 
                 addMessage(aiResponse, 'bot-msg');
                 speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
-
+                
                 // 🔥 LOGIC: Check Context and Inject Sponsored Ad
                 injectContextualAd(text);
 
@@ -515,6 +518,13 @@
                     
                     const data = await response.json();
                     typingIndicator.style.display = 'none';
+
+                    // 🔥 UPDATE: NEW API KEY VALIDATION LOGIC IN RESPONSE 🔥
+                    let apiKeyTest = geminiApiKey.trim();
+                    if(!apiKeyTest || (!apiKeyTest.startsWith("AIzaSy") && !apiKeyTest.startsWith("AQ."))) {
+                        showErrorMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.");
+                        return;
+                    }
 
                     if (data.candidates && data.candidates.length > 0) {
                         let aiResponse = data.candidates[0].content.parts[0].text;
