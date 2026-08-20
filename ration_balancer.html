@@ -586,7 +586,7 @@
 
             <div id="glossary_section" class="glossary-box adv-result pdf-page-break" style="margin-top: 0; margin-bottom: 20px; display:none;">
                 <h4 style="margin: 0 0 10px; color: #1b5e20; font-size: 14px;">📖 शब्दावली (Terms Explained)</h4>
-                <div class="glossary-item"><b>DM (Dry Matter - शुष्क घटक):</b> चाऱ्यातील पाण्याचा अंश काढून उरलेला खरा पौष्टिक भाग. गाईचे पोट भरण्यासाठी हे आवश्यक মাঠে.</div>
+                <div class="glossary-item"><b>DM (Dry Matter - शुष्क घटक):</b> चाऱ्यातील पाण्याचा अंश काढून उरलेला खरा पौष्टिक भाग. गाईचे पोट भरण्यासाठी हे आवश्यक आहे.</div>
                 <div class="glossary-item"><b>CP (Crude Protein - प्रथिने):</b> स्नायू आणि दूध तयार करण्यासाठी आवश्यक घटक. कमतरतेमुळे दूध उत्पादनात थेट घट होते.</div>
                 <div class="glossary-item"><b>ME (Metabolizable Energy - ऊर्जा):</b> अन्नातून मिळणारी प्रत्यक्ष ताकद. उर्जा कमी असल्यास गाय स्वतःच्या शरीरातील चरबी वितळवून दूध देते व हाडकुळी पडते.</div>
                 <div class="glossary-item-highlight" style="color: #1b5e20; border-left: 3px solid #4caf50;"><b>NDF/ADF (फायबर):</b> चाऱ्यातील फायबर. हे योग्य असेल तरच गाय चांगला <b>रवंथ करते</b> आणि दुधाची <b>फॅट टिकवून ठेवते</b>.</div>
@@ -682,7 +682,7 @@
             <div id="ration_vendor_ad_container"></div>
             
             <!-- 🔥 NEW: GEMINI AI INTEGRATION BUTTON & BOX 🔥 -->
-            <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)</button>
+            <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini AI)</button>
             
             <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
             
@@ -761,7 +761,6 @@
 
     // 🔥 GLOBAL DATA OBJECT TO SEND TO GEMINI API 🔥
     let globalCalculationData = {}; 
-    let CURRENT_MODEL = ""; // Auto-discovery variable
     let feedChartInstance = null; // Global Chart Variable
 
     // --- 🔥 CUSTOM CHART.JS PLUGIN FOR PERFECT CENTER TEXT 🔥 ---
@@ -1758,7 +1757,7 @@
 
         let badge = document.getElementById('final_status_badge');
         if(score >= 85) {
-            badge.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> संतुलित आहे`;
+            badge.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> संतुलित आहार`;
             badge.style.background = 'linear-gradient(145deg, #4caf50, #2e7d32)';
         } else if(score >= 65) {
             badge.innerHTML = `⚠️ थोडी सुधारणा आवश्यक`;
@@ -1841,13 +1840,14 @@
         </div>`;
     }
 
-    // --- 🔥 HYBRID GEMINI AI LOGIC (CENTRALIZED KEY & AUTO-DISCOVERY) 🔥 ---
+    // --- 🔥 UPDATED GEMINI AI LOGIC (WITH AQ. KEY SUPPORT AND STABLE FLASH FIX) 🔥 ---
     async function fetchGeminiAdvice() {
         let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
         let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
 
-        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
-            alert("⚠️ ॲडमिन पॅनेलमध्ये (M16 टॅब) Google Gemini ची योग्य API Key (AIzaSy...) जोडलेली नाही. कृपया आधी ती सेट करा.");
+        // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
+        if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
+            alert("⚠️ ॲडमिन पॅनेलमध्ये (M16 टॅब) Google Gemini ची योग्य API Key जोडलेली नाही. कृपया आधी ती सेट करा.");
             return;
         }
 
@@ -1857,7 +1857,7 @@
 
         let gData = globalCalculationData;
         let promptText = `
-        तू दुग्ध दिशा ॲपचा एक तज्ज्ञ पशुवैद्यक आणि आहारतज्ज्ञ आहेस. 
+        तू दुग्ध दिशा ॲपचा एक वरिष्ठ तज्ज्ञ पशुवैद्यक (Senior Veterinary Doctor) आणि आहारतज्ज्ञ आहेस. 
         मी एका गाईच्या आहाराचे विश्लेषण केले आहे. आकडेवारी खालीलप्रमाणे आहे:
         - गाईचे वजन: ${gData.weight} किलो
         - रोजचे दूध: ${gData.milk} लिटर
@@ -1867,32 +1867,40 @@
         - कॅल्शियम: ${fmt0(gData.totalCa)}g, फॉस्फरस: ${fmt0(gData.totalP)}g
         - न्यूट्रिशन स्कोअर: ${gData.score}/100
         
-        शेतकऱ्याला मराठीत अत्यंत सोप्या ५-६ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
-        १. आहारात नेमकी काय कमी किंवा जास्त आहे?
-        २. कोणते खाद्य वाढवावे किंवा कमी करावे (उदा. पेंड, सुका चारा, किंवा हिरवा चारा)?
-        टीप: जर ऊर्जा (ME) कमी असेल, तर सोयाबीन पेंड सांगू ভাবনা नकोस, मका किंवा गूळ सुचव.
-        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस, जसे की DM, CP. शेतकऱ्याला समजेल अशी साधी भाषा वापर.
+        शेतकऱ्याला मराठीत अत्यंत सविस्तर आणि सखोल (Detail and Comprehensive) माहिती दे.
+        १. आहारात नेमकी काय कमी किंवा जास्त आहे आणि त्याचे जनावराच्या शरीरावर काय परिणाम होतील (A to Z माहिती)?
+        २. कोणते खाद्य किती प्रमाणात वाढवावे किंवा कमी करावे (उदा. पेंड, सुका चारा, किंवा हिरवा चारा) याचे सविस्तर मार्गदर्शन कर.
+        टीप: जर ऊर्जा (ME) कमी असेल, तर सोयाबीन पेंड सुचवू नकोस, मका किंवा गूळ सुचव.
+        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस, जसे की DM, CP. शेतकऱ्याला समजेल अशी साधी, स्पष्ट आणि सविस्तर भाषा वापर.
         `;
 
         try {
-            if(!CURRENT_MODEL) {
-                let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                let mData = await mRes.json();
-                
-                if(mData.models) {
-                    let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    
-                    if(validModel) {
-                        CURRENT_MODEL = validModel.name; 
-                    }
-                }
-                if(!CURRENT_MODEL) CURRENT_MODEL = "models/gemini-1.5-flash"; 
+            // 🔥 100% ERROR FIX: व्हॉइस चॅटच्या कोडमधील हुबेहूब लॉजिक वापरले आहे 🔥
+            let finalModelName = "gemini-3.6-flash"; 
+            
+            // ॲडमिन पॅनेलमधून आलेले नाव (जर असेल तर)
+            let geminiModel = (adminAiData && adminAiData.m16_2) ? adminAiData.m16_2.trim() : "";
+            
+            let rawModelString = geminiModel.toLowerCase();
+            if (rawModelString.includes("3.7")) {
+                finalModelName = "gemini-3.7-flash";
+            } else if (rawModelString.includes("3.6")) {
+                finalModelName = "gemini-3.6-flash";
+            } else if (rawModelString.includes("1.5")) {
+                finalModelName = "gemini-3.6-flash"; // Force dead 1.5 to 3.6
             }
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
-            const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
+            
+            const requestBody = { 
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: {
+                    temperature: 0.3,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 4096, // 🔥 FORCING HIGHEST TOKEN LIMIT FOR MAX DETAILS 🔥
+                }
+            };
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -1911,7 +1919,6 @@
                 } else {
                     alert("AI Server Error: " + errMsg);
                 }
-                CURRENT_MODEL = ""; 
                 document.getElementById('btn_gemini_trigger').style.display = "block";
                 document.getElementById('gemini_loader').style.display = "none";
                 return;
@@ -1919,8 +1926,13 @@
 
             if (data.candidates && data.candidates.length > 0) {
                 let aiResponse = data.candidates[0].content.parts[0].text;
+                
+                // 🔥 BETTER MARKDOWN FORMATTING 🔥
                 aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
+                aiResponse = aiResponse.replace(/^\*\s/gm, '• ');
+                aiResponse = aiResponse.replace(/^\-\s/gm, '• ');
+                aiResponse = aiResponse.replace(/\*/g, '');
+                aiResponse = aiResponse.replace(/\n/g, '<br>');
                 
                 document.getElementById('gemini_content_text').innerHTML = aiResponse;
                 document.getElementById('gemini_loader').style.display = "none";
@@ -1936,7 +1948,6 @@
             alert("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये समस्या आहे.");
             document.getElementById('btn_gemini_trigger').style.display = "block";
             document.getElementById('gemini_loader').style.display = "none";
-            CURRENT_MODEL = ""; 
         }
     }
 </script>
