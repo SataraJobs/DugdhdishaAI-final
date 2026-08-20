@@ -83,7 +83,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत মাঠে...</p>
     </div>
 </div>
 
@@ -92,7 +92,7 @@
         <a href="index.html">⬅️</a>
         <div class="header-titles">
             <h1>AI सारथी 🐮</h1>
-            <p>Gemini 1.5 Pro द्वारे समर्थित (मराठीत विचारा)</p>
+            <p>Gemini 3.6 Flash द्वारे समर्थित (मराठीत विचारा)</p>
         </div>
         <!-- 🔥 NEW: Mute Button 🔥 -->
         <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="आवाज बंद/चालू करा">🔊</button>
@@ -136,7 +136,7 @@
     
     // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
     let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
-तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणेধানে आहे.
+तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणे आहे.
 तुझे कडक नियम:
 १. केवळ पशुपालन, दुग्ध व्यवसाय, चारा व्यवस्थापन, गाई-म्हशींचे आजार आणि डेअरी संबंधित प्रश्नांचीच उत्तरे दे. इतर विषयांवर (उदा. राजकारण, चित्रपट, सामान्य ज्ञान) प्रश्न विचारल्यास नम्रपणे सांग की 'माफ करा, मी केवळ पशुपालन आणि दुग्ध व्यवसाया संबंधित माहिती देऊ शकतो.'
 २. उत्तरे शुद्ध मराठी भाषेत, अत्यंत सोप्या आणि थेट शब्दांत दे.
@@ -145,7 +145,7 @@
 ५. कोणतेही चुकीचे (Hallucinated) औषध किंवा डोस सांगू नकोस. जर माहिती नसेल तर थेट सांग की 'यासाठी डॉक्टरांना बोलावणे योग्य राहील'.
 ६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मार.`;
 
-    let CURRENT_MODEL = "models/gemini-1.5-flash-latest"; // 🔥 FIX: FORCED LATEST WORKING MODEL TO PREVENT 404 ERRORS 🔥
+    let geminiModel = "gemini-3.6-flash"; // Default to newest
     let aiTemperature = 0.3;
     let isVoiceMuted = false;
 
@@ -169,6 +169,7 @@
     function speakMarathi(text) {
         if (isVoiceMuted) return; // जर म्यूट असेल तर बोलू नका
         
+        // HTML टॅग्स आणि स्टार्स (*) काढून टाका
         let cleanText = text.replace(/<[^>]*>?/gm, ''); 
         cleanText = cleanText.replace(/\*/g, ''); 
         
@@ -209,7 +210,7 @@
         }
     }
 
-    // 🔥 थेट फायरबेस क्लाऊडवरून (Firestore) API Key फेच करणारे फंक्शन (लोकल स्टोरेज पूर्णपणे बंद) 🔥
+    // 🔥 थेट फायरबेस क्लाऊडवरून (Firestore) API Key फेच करणारे फंक्शन 🔥
     async function initChatbot() {
         try {
             // 1. प्रथम 'admin_settings' च्या M16 डॉक्युमेंटमधून तपासा
@@ -219,9 +220,16 @@
                 if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
                     GEMINI_API_KEY = data.m16_1.trim();
                 }
+
+                // ऍडमिन पॅनेलमध्ये असलेले नाव घ्या
+                if (data.m16_2 && data.m16_2.trim() !== "") {
+                    geminiModel = data.m16_2.trim();
+                }
+                
                 if (data.m16_3) {
                     aiTemperature = parseFloat(data.m16_3) || 0.3;
                 }
+
                 if (data.m16_4 && data.m16_4.trim() !== "") {
                     SYSTEM_PROMPT = data.m16_4;
                 }
@@ -281,7 +289,7 @@
 
     function startDictation() {
         if (SpeechRecognition) {
-            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if('speechSynthesis' in window) window.speechSynthesis.cancel(); // 🔥 AI बोलत असल्यास थांबवा 🔥
             recognition.start();
         } else {
             alert("तुमचा ब्राउझर व्हॉईस टायपिंग सपोर्ट करत नाही. कृपया क्रोम (Chrome) वापरा.");
@@ -314,7 +322,7 @@
 
         let apiKey = GEMINI_API_KEY.trim();
 
-        // 🔥 FIX: ALLOW ALL API KEYS (AIzaSy and AQ.) 🔥
+        // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
         if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
             typingIndicator.style.display = 'none';
             addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही. कृपया ॲडमिनला कळवा.", 'bot-msg');
@@ -322,7 +330,21 @@
         }
 
         try {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
+            // 🔥 १००% ERROR FIX: ॲडमिन पॅनेलमधील नावामध्ये असलेल्या स्पेस (Space) आणि ब्रॅकेट मुळे येणारा एरर सॉल्व्ह केला 🔥
+            let finalModelName = "gemini-3.6-flash"; // Default and safe
+            
+            // ॲडमिन पॅनेलच्या ड्रॉपडाऊन मधून योग्य गुगल मॉडेल नाव काढण्याचे लॉजिक
+            let rawModelString = geminiModel.toLowerCase();
+            if (rawModelString.includes("3.7")) {
+                finalModelName = "gemini-3.7-flash";
+            } else if (rawModelString.includes("3.6")) {
+                finalModelName = "gemini-3.6-flash";
+            } else if (rawModelString.includes("1.5")) {
+                // 1.5 आता बंद झाले आहे, तरीही कुणी निवडले तर त्याला चालणाऱ्या 3.6 वर रीडायरेक्ट करा
+                finalModelName = "gemini-3.6-flash"; 
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
 
             const requestBody = {
                 contents: [{
@@ -348,27 +370,23 @@
             if (!response.ok) {
                 console.error("API Error Response:", data);
                 let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
-                
-                // 🔥 SMART ERROR TRANSLATION FOR USERS 🔥
-                if(errMsg.toLowerCase().includes("not found")) {
-                    addMessage("⚠️ <b>API Error:</b> तुम्ही ॲडमिन पॅनेलमध्ये चुकीचे किंवा बंद झालेले AI मॉडेल निवडले आहे.", 'bot-msg');
-                } else if(errMsg.toLowerCase().includes("api key not valid") || errMsg.toLowerCase().includes("invalid")) {
-                    addMessage("⚠️ <b>API Error:</b> तुमची API Key चुकीची किंवा ब्लॉक झालेली आहे. कृपया Google AI Studio मधून नवीन Key टाका.", 'bot-msg');
-                } else {
-                    addMessage("माफ करा, सर्व्हरकडून त्रुटी येत आहे: " + errMsg, 'bot-msg');
-                }
+                addMessage("माफ करा, सर्व्हरकडून त्रुटी येत आहे: " + errMsg, 'bot-msg');
                 return;
             }
 
             if (data.candidates && data.candidates.length > 0) {
+                // Get AI response text
                 let aiResponse = data.candidates[0].content.parts[0].text;
-                let rawText = aiResponse; 
+                let rawText = aiResponse; // 🔥 आवाज देण्यासाठी ओरिजनल मजकूर सेव्ह केला 🔥
 
+                // Simple markdown formatting to HTML (bolding and line breaks)
                 aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
                 
                 addMessage(aiResponse, 'bot-msg');
-                speakMarathi(rawText);
+                speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
+                
+                // 🔥 LOGIC: Check Context and Inject Sponsored Ad
                 injectContextualAd(text);
 
             } else {
@@ -474,7 +492,20 @@
                 }
 
                 try {
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
+                    // 🔥 १००% ERROR FIX: ॲडमिन पॅनेलमधील नावामध्ये स्पेस (Space) असल्यामुळे येणारा एरर सॉल्व्ह केला 🔥
+                    let finalModelName = "gemini-3.6-flash"; // Default and safe
+                    
+                    let rawModelString = geminiModel.toLowerCase();
+                    if (rawModelString.includes("3.7")) {
+                        finalModelName = "gemini-3.7-flash";
+                    } else if (rawModelString.includes("3.6")) {
+                        finalModelName = "gemini-3.6-flash";
+                    } else if (rawModelString.includes("1.5")) {
+                        // 1.5 आता बंद झाले आहे, तरीही कुणी निवडले तर त्याला चालणाऱ्या 3.6 वर रीडायरेक्ट करा
+                        finalModelName = "gemini-3.6-flash"; 
+                    }
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
                     
                     const requestBody = {
                         contents: [{
@@ -498,25 +529,20 @@
                     typingIndicator.style.display = 'none';
 
                     if (data.error) {
-                        let errMsg = data.error.message.toLowerCase();
-                        if (errMsg.includes("high demand") || errMsg.includes("quota") || errMsg.includes("temporarily overloaded") || errMsg.includes("503")) {
-                            addMessage("⚠️ <b>सर्व्हर बिझी:</b> सध्या गुगलच्या AI सर्व्हरवर खूप जास्त ट्रॅफिक आहे. कृपया थोड्या वेळाने प्रयत्न करा.", 'bot-msg');
-                        } else {
-                            addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
-                        }
+                        addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
                         return;
                     }
 
                     if (data.candidates && data.candidates.length > 0) {
                         let aiResponse = data.candidates[0].content.parts[0].text;
-                        let rawText = aiResponse;
+                        let rawText = aiResponse; // 🔥 आवाज देण्यासाठी ओरिजनल मजकूर सेव्ह केला 🔥
 
                         aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                         aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<br>• $1');
                         
-                        addMessage(aiResponse, 'bot-msg');
-                        speakMarathi(rawText);
-                        injectContextualAd(pendingAnalysis);
+                        addMessage(aiResponse, 'bot-msg'); // ॲनालिसिस प्रिंट करा
+                        speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
+                        injectContextualAd(pendingAnalysis); // योग्य प्रॉडक्ट ॲड सुचवा
                     } else {
                         addMessage("माफ करा, डेटा ॲनालिसिस पूर्ण होऊ शकले नाही.", 'bot-msg');
                     }
