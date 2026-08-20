@@ -92,7 +92,7 @@
         <a href="index.html">⬅️</a>
         <div class="header-titles">
             <h1>AI सारथी 🐮</h1>
-            <p>Gemini 1.5 Pro द्वारे समर्थित (मराठीत विचारा)</p>
+            <p>Gemini 3.6 Flash द्वारे समर्थित (मराठीत विचारा)</p>
         </div>
         <!-- 🔥 NEW: Mute Button 🔥 -->
         <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="आवाज बंद/चालू करा">🔊</button>
@@ -131,10 +131,11 @@
     }
     const db = firebase.firestore();
 
-    // 🔴 रिकामी ठेवा (जेणेकरून थेट क्लाऊडवरून घेईल)
+    // 🔥 AI Configuration Variables 🔥
     let GEMINI_API_KEY = ""; 
-    
-    // 🔥 ADVANCED SYSTEM PROMPT FOR HIGH ACCURACY & DAIRY FOCUS 🔥
+    let geminiModel = "gemini-3.6-flash"; // 🔥 UPDATED TO LATEST FAST MODEL 🔥
+    let aiTemperature = 0.3;
+    let isVoiceMuted = false;
     let SYSTEM_PROMPT = `तू 'दुग्ध दिशा AI' चा 'AI सारथी' नावाचा एक तज्ज्ञ पशुवैद्यक (Veterinary Doctor) आणि डेअरी कन्सल्टंट आहेस. 
 तुझे उद्दिष्ट महाराष्ट्रातील दूध उत्पादक शेतकऱ्यांना अत्यंत अचूक, शास्त्रीय आणि फायदेशीर माहिती देणे आहे.
 तुझे कडक नियम:
@@ -145,13 +146,15 @@
 ५. कोणतेही चुकीचे (Hallucinated) औषध किंवा डोस सांगू नकोस. जर माहिती नसेल तर थेट सांग की 'यासाठी डॉक्टरांना बोलावणे योग्य राहील'.
 ६. शेतकऱ्याला आदरार्थी (उदा. 'शेतकरी मित्रा', 'दादा', 'साहेब') हाक मार.`;
 
-    let CURRENT_MODEL = ""; // Auto-discovery variable
-    let isVoiceMuted = false; // 🔥 NEW: Voice Mute State 🔥
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const micBtn = document.getElementById('micBtn');
+    const muteBtn = document.getElementById('muteBtn');
 
     // --- 🔇 Mute Toggle Function ---
     function toggleMute() {
         isVoiceMuted = !isVoiceMuted;
-        let muteBtn = document.getElementById('muteBtn');
         if (isVoiceMuted) {
             muteBtn.innerText = "🔇";
             muteBtn.style.background = "rgba(211, 47, 47, 0.8)";
@@ -219,6 +222,12 @@
                 if (data.m16_1 && data.m16_1 !== "sk-xxxxxxxxxxxxx" && data.m16_1.trim() !== "") {
                     GEMINI_API_KEY = data.m16_1.trim();
                 }
+                if (data.m16_2 && data.m16_2.trim() !== "") {
+                    geminiModel = data.m16_2.trim(); // 🔥 Load model from Admin Panel
+                }
+                if (data.m16_3) {
+                    aiTemperature = parseFloat(data.m16_3) || 0.3;
+                }
                 if (data.m16_4 && data.m16_4.trim() !== "") {
                     SYSTEM_PROMPT = data.m16_4;
                 }
@@ -237,11 +246,6 @@
             console.log("Cloud API Key Load Error:", e);
         }
     }
-    
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
-    const typingIndicator = document.getElementById('typingIndicator');
-    const micBtn = document.getElementById('micBtn');
 
     // 1. Voice Recognition Setup (Marathi)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -278,8 +282,7 @@
 
     function startDictation() {
         if (SpeechRecognition) {
-            // 🔥 जेव्हा युजर माईक चालू करेल, तेव्हा AI चा आवाज आपोआप थांबेल 🔥
-            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if('speechSynthesis' in window) window.speechSynthesis.cancel(); // 🔥 AI बोलत असल्यास थांबवा 🔥
             recognition.start();
         } else {
             alert("तुमचा ब्राउझर व्हॉईस टायपिंग सपोर्ट करत नाही. कृपया क्रोम (Chrome) वापरा.");
@@ -320,30 +323,20 @@
         }
 
         try {
-            // --- 🔥 SMART AUTO-DISCOVERY OF AVAILABLE MODELS 🔥 ---
-            if(!CURRENT_MODEL) {
-                let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                let mData = await mRes.json();
-                
-                if(mData.models) {
-                    // Find the best available model for generating content (Prefer Flash or Pro)
-                    let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                    
-                    if(validModel) {
-                        CURRENT_MODEL = validModel.name; 
-                    }
-                }
-                if(!CURRENT_MODEL) CURRENT_MODEL = "models/gemini-1.5-flash"; // Default Fallback
-            }
-
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${CURRENT_MODEL}:generateContent?key=${apiKey}`;
+            // 🔥 DIRECTLY USE MODEL SELECTED IN ADMIN PANEL (No Auto-Discovery Delay) 🔥
+            let modelPath = geminiModel.startsWith("models/") ? geminiModel : "models/" + geminiModel;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${apiKey}`;
 
             const requestBody = {
                 contents: [{
                     parts: [{ text: SYSTEM_PROMPT + "\n\nशेतकऱ्याचा प्रश्न: " + text }]
-                }]
+                }],
+                generationConfig: {
+                    temperature: aiTemperature,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
             };
 
             const response = await fetch(apiUrl, {
@@ -359,7 +352,6 @@
                 console.error("API Error Response:", data);
                 let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
                 addMessage("माफ करा, सर्व्हरकडून त्रुटी येत आहे: " + errMsg, 'bot-msg');
-                CURRENT_MODEL = ""; // Reset model to force re-fetch next time
                 return;
             }
 
@@ -385,7 +377,6 @@
             typingIndicator.style.display = 'none';
             addMessage("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये बदल झाला आहे. कृपया तपासा.", 'bot-msg');
             console.error("API Error:", error);
-            CURRENT_MODEL = ""; // Force re-fetch
         }
     }
 
@@ -454,7 +445,7 @@
         }
     }
 
-    // 🔥 NEW: मिल्क ॲनालायझर मधून आलेला डेटा आपोआप स्कॅन करून उत्तर देणे (अचूक Auto-Discovery सोबत) 🔥
+    // 🔥 NEW: मिल्क ॲनालायझर मधून आलेला डेटा आपोआप स्कॅन करून उत्तर देणे 🔥
     window.addEventListener("DOMContentLoaded", () => {
         setTimeout(async () => {
             let pendingAnalysis = localStorage.getItem("pending_milk_analysis");
@@ -475,7 +466,6 @@
 
                 let apiKey = GEMINI_API_KEY.trim();
                 
-                // 🔥 UPDATE: ALLOW BOTH AIzaSy AND AQ. PREFIX FOR NEW GEMINI API KEYS 🔥
                 if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
                     typingIndicator.style.display = 'none';
                     addMessage("⚠️ <b>API Key त्रुटी:</b> ॲडमिन पॅनेलमध्ये API Key सेट केलेली नाही.", 'bot-msg');
@@ -483,34 +473,19 @@
                 }
 
                 try {
-                    // --- 🔥 SMART AUTO-DISCOVERY (जे मॅन्युअल चॅट मध्ये यशस्वी झाले तेच इथे वापरले आहे) 🔥 ---
-                    if(!CURRENT_MODEL) {
-                        try {
-                            let mRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                            let mData = await mRes.json();
-                            
-                            if(mData.models) {
-                                let validModel = mData.models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini-1.0-pro") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                if(!validModel) validModel = mData.models.find(m => m.name.includes("gemini") && m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-                                
-                                if(validModel) {
-                                    CURRENT_MODEL = validModel.name; 
-                                }
-                            }
-                        } catch(err) {
-                            console.log("Model discovery error: ", err);
-                        }
-                    }
-                    
-                    let modelToUse = CURRENT_MODEL || "models/gemini-1.5-flash";
-
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelToUse}:generateContent?key=${apiKey}`;
+                    let modelPath = geminiModel.startsWith("models/") ? geminiModel : "models/" + geminiModel;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${apiKey}`;
                     
                     const requestBody = {
                         contents: [{
                             parts: [{ text: SYSTEM_PROMPT + "\n\nशेतकऱ्याचा डेटा आणि प्रश्न: " + pendingAnalysis }]
-                        }]
+                        }],
+                        generationConfig: {
+                            temperature: aiTemperature,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 1024,
+                        }
                     };
 
                     const response = await fetch(apiUrl, {
@@ -522,6 +497,11 @@
                     const data = await response.json();
                     typingIndicator.style.display = 'none';
 
+                    if (data.error) {
+                        addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
+                        return;
+                    }
+
                     if (data.candidates && data.candidates.length > 0) {
                         let aiResponse = data.candidates[0].content.parts[0].text;
                         let rawText = aiResponse; // 🔥 आवाज देण्यासाठी ओरिजनल मजकूर सेव्ह केला 🔥
@@ -532,9 +512,6 @@
                         addMessage(aiResponse, 'bot-msg'); // ॲनालिसिस प्रिंट करा
                         speakMarathi(rawText); // 🔥 AI चे उत्तर वाचून दाखवा (म्यूट नसेल तर) 🔥
                         injectContextualAd(pendingAnalysis); // योग्य प्रॉडक्ट ॲड सुचवा
-                    } else if (data.error) {
-                        // जर गुगल कडून एरर आला तर आता तो स्क्रीनवर दिसेल
-                        addMessage("⚠️ API Error: " + data.error.message, 'bot-msg');
                     } else {
                         addMessage("माफ करा, डेटा ॲनालिसिस पूर्ण होऊ शकले नाही.", 'bot-msg');
                     }
