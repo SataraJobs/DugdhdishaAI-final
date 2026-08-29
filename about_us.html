@@ -340,30 +340,26 @@
         }
 
         // २. संस्थापक आणि टीम डेटा रिअल-टाईम क्लाऊड सिंक
-        db.collection("admin_settings").doc("M29").onSnapshot((doc) => {
-            // Note: M29 uses local storage keys 'about_us_founder' and 'about_us_team' for this specific page.
-            // If admin updates M29, we should re-fetch from Firebase to ensure it's live.
-            loadFounder();
-            loadTeam();
+        db.collection("admin_settings").doc("about_us_page").onSnapshot((doc) => {
+            if (doc.exists && doc.data()) {
+                let data = doc.data();
+                if (data.founder) {
+                    localStorage.setItem('about_us_founder', JSON.stringify(data.founder));
+                }
+                if (data.team) {
+                    localStorage.setItem('about_us_team', JSON.stringify(data.team));
+                }
+                // Update UI immediately
+                loadFounder();
+                loadTeam();
+            }
         }, (err) => console.log("CMS sync error:", err));
     }
 
     // ========== संस्थापक माहिती लोड करा (Firebase Sync) ==========
     function loadFounder() {
-        // 🔥 Firebase Logic Added 🔥
-        db.collection("cms_pages").doc("about_us_founder").get().then((doc) => {
-            let founderData = null;
-            if (doc.exists) {
-                founderData = doc.data();
-                localStorage.setItem('about_us_founder', JSON.stringify(founderData)); // Sync local
-            } else {
-                founderData = JSON.parse(localStorage.getItem('about_us_founder'));
-            }
-            renderFounder(founderData);
-        }).catch((e) => {
-            console.error("Firebase fetch error, falling back to local storage.", e);
-            renderFounder(JSON.parse(localStorage.getItem('about_us_founder')));
-        });
+        let founderData = JSON.parse(localStorage.getItem('about_us_founder'));
+        renderFounder(founderData);
     }
 
     function renderFounder(founderData) {
@@ -386,20 +382,8 @@
 
     // ========== टीम मेंबर्स लोड करा (Firebase Sync) ==========
     function loadTeam() {
-        // 🔥 Firebase Logic Added 🔥
-        db.collection("cms_pages").doc("about_us_team").get().then((doc) => {
-            let savedTeam = [];
-            if (doc.exists && doc.data().team) {
-                savedTeam = doc.data().team;
-                localStorage.setItem('about_us_team', JSON.stringify(savedTeam)); // Sync local
-            } else {
-                savedTeam = JSON.parse(localStorage.getItem('about_us_team')) || [];
-            }
-            renderTeam(savedTeam);
-        }).catch((e) => {
-            console.error("Firebase fetch error, falling back to local storage.", e);
-            renderTeam(JSON.parse(localStorage.getItem('about_us_team')) || []);
-        });
+        let savedTeam = JSON.parse(localStorage.getItem('about_us_team')) || [];
+        renderTeam(savedTeam);
     }
 
     function renderTeam(savedTeam) {
