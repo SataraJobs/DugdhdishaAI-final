@@ -990,7 +990,7 @@
                 </div>
             </div>
 
-            <!-- M29: CONTENT MANAGEMENT SYSTEM -->
+            <!-- 🔥🔥🔥 M29: CONTENT MANAGEMENT SYSTEM (NOW 100% CLOUD SYNCED) 🔥🔥🔥 -->
             <div id="m29" class="tab-content">
                 <div class="admin-card">
                     <h4>📝 कंटेंट एडिटर (CMS / Policy Pages)</h4>
@@ -1641,10 +1641,12 @@
             'M26': ['m26_gw', 'm26_key', 'm26_merchant_id', 'm26_gst', 'm26_addr', 'upi_payee_name', 'upi_id_value']
         };
 
+        // 🔥🔥🔥 100% CLOUD FIX FOR M29 (ABOUT US / CMS) 🔥🔥🔥
         function saveModule(mod) {
             if (mod === 'M29') {
                 let page = document.getElementById('m29_1').value;
                 if (page === 'About Us') {
+                    // १. Founder Data
                     let founder = {
                         name: document.getElementById('about_founder_name')?.value || '',
                         role: document.getElementById('about_founder_role')?.value || '',
@@ -1653,6 +1655,7 @@
                     };
                     localStorage.setItem('about_us_founder', JSON.stringify(founder));
 
+                    // २. Team Data
                     let team = [];
                     document.querySelectorAll('.team-member-entry').forEach(entry => {
                         let name = entry.querySelector('.team_name')?.value || '';
@@ -1663,12 +1666,23 @@
                         }
                     });
                     localStorage.setItem('about_us_team', JSON.stringify(team));
-                    alert('✅ About Us माहिती सेव्ह झाली!');
+
+                    // 🔥 ३. FIREBASE CLOUD SAVE FOR ABOUT US 🔥
+                    db.collection("admin_settings").doc("about_us_page").set({
+                        founder: founder,
+                        team: team
+                    }, { merge: true })
+                    .then(() => alert('✅ About Us ची माहिती यशस्वीरीत्या क्लाऊडवर सेव्ह झाली!'))
+                    .catch(e => {
+                        console.error("Cloud About Us save error:", e);
+                        alert('❌ क्लाऊडवर सेव्ह करताना एरर आला.');
+                    });
                 } else {
                     let data = { m29_1: page, m29_2: document.getElementById('m29_2').value };
                     localStorage.setItem('admin_data_M29', JSON.stringify(data));
-                    db.collection("admin_settings").doc("M29").set(data, { merge: true });
-                    alert('✅ CMS Content saved successfully!');
+                    
+                    db.collection("admin_settings").doc("M29").set(data, { merge: true })
+                    .then(() => alert(`✅ ${page} ची माहिती क्लाऊडवर सेव्ह झाली!`));
                 }
                 return;
             }
@@ -1726,6 +1740,12 @@
                                     else el.value = data[id];
                                 }
                             });
+                        }
+                        
+                        // 🔥 Load About Us data from Cloud if available 🔥
+                        if (mod === "about_us_page") {
+                            if(data.founder) localStorage.setItem('about_us_founder', JSON.stringify(data.founder));
+                            if(data.team) localStorage.setItem('about_us_team', JSON.stringify(data.team));
                         }
                     }
                 });
@@ -2405,7 +2425,7 @@
 आयटम: मका भरडा (50Kg) x 2
 ग्राहक: रामराव पाटील (+91 ******4321)
 पत्ता: सातारा, 415001
-[पेमेंट: COD - कमिशन भरणे बाकीহেতু बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
+[पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
             } else if (msgType === 'dues') {
                 dateSection.style.display = 'none';
                 previewBox.innerText = `*दुग्ध दिशा AI - पेमेंट रिमाइंडर*
@@ -3190,7 +3210,7 @@
         // --- 🛡️ M28: AUDIT LOG ---
         function clearLogs() {
             if(confirm("सर्व ऑडिट लॉग्स क्लिअर करायचे आहेत का?")) {
-                document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत Option...</span>";
+                document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत आहे...</span>";
                 alert("लॉग्स यशस्वीरीत्या डिलीट झाले.");
             }
         }
