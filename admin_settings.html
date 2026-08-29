@@ -1746,6 +1746,17 @@
                         if (mod === "about_us_page") {
                             if(data.founder) localStorage.setItem('about_us_founder', JSON.stringify(data.founder));
                             if(data.team) localStorage.setItem('about_us_team', JSON.stringify(data.team));
+                            
+                            // 💯 FIX: दुसऱ्या मोबाईलवर डेटा आल्यावर तो लगेच स्क्रीनवर दिसावा म्हणून UI रिफ्रेश करा
+                            if (document.getElementById('m29_1').value === 'About Us') {
+                                loadAboutUsData(); 
+                            }
+                        }
+
+                        // 🔥 Load CMS Pages (Privacy / Terms) UI Update Fix 🔥
+                        if (mod === "M29") {
+                            if(data.m29_1) document.getElementById('m29_1').value = data.m29_1;
+                            if(data.m29_2) document.getElementById('m29_2').value = data.m29_2;
                         }
                     }
                 });
@@ -1787,7 +1798,7 @@
                 }
             }).catch(e => console.log("Cloud tickets sync:", e));
 
-            // ३. विक्रेता KYC अर्ज क्लाऊडवरून सिंक (🔥 NEW KYC SYNC 🔥)
+            // ३. विक्रेता KYC अर्ज क्लाऊडवरून सिंक
             db.collection("admin_pending_kyc").get()
             .then(querySnapshot => {
                 let cloudKyc = [];
@@ -2341,413 +2352,6 @@
             }
         }
 
-        // --- 📊 M1: DASHBOARD STATS (FIREBASE INTEGRATED) ---
-        function loadDashboardStats() {
-            let users = JSON.parse(localStorage.getItem('app_users')) || [];
-            document.getElementById('stat_users').innerText = users.length; 
-
-            // 🔥 NEW: Total Logged In / Active Users Logic 🔥
-            let activeLogins = users.filter(u => u.status === 'Active' || u.isLoggedIn === true).length;
-            if(document.getElementById('stat_active_users')) {
-                document.getElementById('stat_active_users').innerText = activeLogins > 0 ? activeLogins : users.length;
-            }
-
-            // Realtime Firebase fetch for exact user count
-            db.collection("users").get().then((snap) => {
-                if(!snap.empty) {
-                    document.getElementById('stat_users').innerText = snap.size;
-                    let cloudActive = 0;
-                    snap.forEach(doc => { 
-                        let d = doc.data(); 
-                        if(d.status === 'Active' || d.isLoggedIn) cloudActive++; 
-                    });
-                    if(document.getElementById('stat_active_users')) {
-                        document.getElementById('stat_active_users').innerText = cloudActive;
-                    }
-                }
-            }).catch(e => console.log("Cloud users count sync skip:", e));
-
-            let savedAds = JSON.parse(localStorage.getItem('live_admin_ad_images'));
-            let activeAdsCount = (savedAds && savedAds.ads && savedAds.ads.length > 0) ? savedAds.ads.length : 0;
-            document.getElementById('stat_ads').innerText = activeAdsCount;
-
-            // 🔥 Fetch Live Orders from Firebase 🔥
-            db.collection("mall_orders").orderBy("timestamp", "desc").limit(5).get()
-            .then((querySnapshot) => {
-                let ordersCount = querySnapshot.size;
-                document.getElementById('stat_orders_count').innerText = ordersCount + "+"; 
-
-                let totalRev = 0;
-                let orderListHTML = '';
-                
-                if(querySnapshot.empty) {
-                    orderListHTML = '<div style="padding:15px; text-align:center; color:#888;">अद्याप कोणतीही नवीन ऑर्डर आलेली नाही.</div>';
-                } else {
-                    querySnapshot.forEach((doc) => {
-                        let o = doc.data();
-                        totalRev += (o.totalAmount || 0);
-                        let itemsSummary = (o.items || []).map(i => i.qty + "x " + i.name).join(', ');
-                        
-                        orderListHTML += `
-                        <div class="order-item">
-                            <div>
-                                <b>Order ${o.id}</b> (पिनकोड: ${o.customer?.pincode || '-'})<br>
-                                <span style="color: #666;">ग्राहक: ${o.customer?.name || '-'} | ${o.customer?.mobile || '-'}</span><br>
-                                <span style="color: #2e7d32; font-size:10px;">${itemsSummary}</span>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="color:#d32f2f; font-weight:bold; font-size:14px;">₹${o.totalAmount || 0}</span><br>
-                                <span class="order-status status-pending">${o.paymentMethod || 'COD'}</span>
-                            </div>
-                        </div>`;
-                    });
-                }
-                
-                document.getElementById('stat_revenue').innerText = "₹" + totalRev.toLocaleString('en-IN');
-                document.getElementById('live_orders_list').innerHTML = orderListHTML;
-            })
-            .catch(error => console.error("Error fetching orders:", error));
-        }
-
-        // --- 🔥 M34 WHATSAPP CRM LOGIC 🔥 ---
-        function updateWhatsAppUI() {
-            let msgType = document.getElementById('wa_msg_type').value;
-            let previewBox = document.getElementById('wa_msg_preview');
-            let dateSection = document.getElementById('wa_date_section');
-            
-            if(msgType === 'orders') {
-                dateSection.style.display = 'grid';
-                previewBox.innerText = `*दुग्ध दिशा AI - नवीन ऑर्डर्स*
-तारीख: [Date]
-व्यापारी: [Vendor Name]
-
-ऑर्डर #101 
-आयटम: मका भरडा (50Kg) x 2
-ग्राहक: रामराव पाटील (+91 ******4321)
-पत्ता: सातारा, 415001
-[पेमेंट: COD - कमिशन भरणे बाकी आहे. नंबर पाहण्यासाठी ॲपमध्ये कमिशन भरा]`;
-            } else if (msgType === 'dues') {
-                dateSection.style.display = 'none';
-                previewBox.innerText = `*दुग्ध दिशा AI - पेमेंट रिमाइंडर*
-नमस्कार [Vendor Name],
-
-तुमची 'दुग्ध दिशा AI' ॲपवरील प्लॅटफॉर्म फी आणि कमिशनची रक्कम प्रलंबित आहे. 
-
-*एकूण बाकी (Dues): ₹[Amount]*
-
-कृपया ॲपमधील 'Billing & Ledger' टॅबमध्ये जाऊन लवकरात लवकर पेमेंट पूर्ण करा. अन्यथा तुमचे स्टोअर तात्पुरते लॉक केले जाईल. 
-
-धन्यवाद!`;
-            }
-        }
-
-        function sendWhatsAppMessage() {
-            let vendor = document.getElementById('wa_vendor_list').value;
-            let msgType = document.getElementById('wa_msg_type').value;
-            
-            let phone = "919000000000"; 
-            if(vendor.includes('9876543210')) phone = "919876543210";
-            else if(vendor.includes('9988776655')) phone = "919988776655";
-            
-            let message = document.getElementById('wa_msg_preview').innerText;
-            let encodedMsg = encodeURIComponent(message);
-            
-            let url = `https://wa.me/${phone}?text=${encodedMsg}`;
-            
-            if(confirm("हा मेसेज WhatsApp वर पाठवायचा का?")) {
-                window.open(url, '_blank');
-            }
-        }
-
-        // --- 🔥 M35 COMMISSION APPROVAL LOGIC 🔥 ---
-        function loadCommissionApprovals() {
-            let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
-            let container = document.getElementById('commission_approvals_container');
-            
-            if(pendingCommissions.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">कोणतेही कमिशन पेमेंट मंजुरीसाठी प्रलंबित नाही.</div>';
-                return;
-            }
-
-            let html = '';
-            pendingCommissions.forEach(comm => {
-                let contextText = comm.orderId === 'ALL_DUES' ? 'संपूर्ण खातेवही (All Dues Cleared)' : `Order ID: ${comm.orderId}`;
-                
-                html += `
-                <div class="approval-card" id="comm_card_${comm.id}">
-                    <div class="approval-header">
-                        <div><strong style="color:#d32f2f; font-size:16px;">${comm.id}</strong><br><span style="font-size:11px; color:#666;">Date: ${comm.date}</span></div>
-                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;">⏳ Payment Checking</div>
-                    </div>
-                    <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                        <b>प्रकार:</b> ${contextText} <br>
-                        <b>अमाऊंट:</b> ₹${comm.amount} <br>
-                        <b>UTR Number:</b> <span style="background:#e8f5e9; padding:2px 5px; font-weight:bold; color:#2e7d32;">${comm.utr || 'Screenshot Uploaded'}</span>
-                    </div>
-                    <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveCommission('${comm.id}', '${comm.orderId}')">✅ Payment Verified</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectCommission('${comm.id}')">❌ Reject</button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function approveCommission(commId, orderId) {
-            if(confirm("बँकेत पेमेंट जमा झाले आहे का? हे कन्फर्म करायचे का?")) {
-                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
-                pendingCommissions = pendingCommissions.filter(c => c.id !== commId);
-                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
-                
-                if(orderId !== 'ALL_DUES') {
-                    let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
-                    let orderIndex = orders.findIndex(o => o.id === orderId);
-                    if(orderIndex > -1) {
-                        orders[orderIndex].commissionPaid = true;
-                        localStorage.setItem('user_orders', JSON.stringify(orders));
-                    }
-                }
-                
-                alert("✅ पेमेंट मंजूर झाले! व्यापाऱ्याला आता ग्राहकाचा नंबर दिसेल.");
-                loadCommissionApprovals();
-                loadAdminNotifications();
-            }
-        }
-
-        function rejectCommission(commId) {
-            if(confirm("हे पेमेंट रिजेक्ट करायचे का?")) {
-                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
-                pendingCommissions = pendingCommissions.filter(c => c.id !== commId);
-                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
-                
-                alert("❌ पेमेंट नाकारले.");
-                loadCommissionApprovals();
-                loadAdminNotifications();
-            }
-        }
-
-
-        // --- 🔥 M_FARMER_PAY: FARMER PAYMENT APPROVALS WITH 8 PM LOGIC 🔥 ---
-        function loadFarmerPayments() {
-            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-            let container = document.getElementById('farmer_payments_container');
-            
-            if(pendingList.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">सध्या कोणतेही शेतकरी पेमेंट मंजुरीसाठी पेंडिंग नाही.</div>';
-                return;
-            }
-
-            let html = '';
-            pendingList.forEach((req, index) => {
-                html += `
-                <div class="approval-card" style="border-color:#a5d6a7; background:#e8f5e9;">
-                    <div class="approval-header" style="border-color:#4caf50;">
-                        <div><strong style="color:#1b5e20; font-size:16px;">${req.farmerName}</strong><br><span style="font-size:11px; color:#666;">Req Date: ${req.requestTime}</span></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending</div>
-                    </div>
-                    <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                        <b>Mobile:</b> ${req.mobile} <br>
-                        <b>Plan Requested:</b> <span style="color:#e65100; font-weight:bold;">${req.name}</span> <br>
-                        <b>Amount:</b> ₹${req.amount} <br>
-                        <b>UTR Number:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${req.utr}</span>
-                    </div>
-                    <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveFarmerPlan(${index}, '${req.type}', '${req.name}')">✅ Approve Plan</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectFarmerPlan(${index})">❌ Reject</button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function approveFarmerPlan(index, type, planName) {
-            if(!confirm("तुम्ही बँकेत UTR चेक केला आहे का? हा प्लॅन सुरू करायचा का?")) return;
-
-            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-            let req = pendingList[index];
-
-            // --- 8 PM LOGIC ---
-            let now = new Date();
-            let expiryDate = new Date();
-            let is8pmPassed = now.getHours() >= 20; 
-
-            if(type === '24h' || type === '1Day') {
-                if(is8pmPassed) {
-                    expiryDate.setDate(expiryDate.getDate() + 1); 
-                    expiryDate.setHours(8, 0, 0, 0); 
-                    expiryDate.setHours(expiryDate.getHours() + 24); 
-                    alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, हा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
-                } else {
-                    expiryDate.setHours(expiryDate.getHours() + 24);
-                }
-            } 
-            else if(type === 'Monthly') {
-                expiryDate.setMonth(expiryDate.getMonth() + 1);
-            }
-            else if(type === '6Months') {
-                expiryDate.setMonth(expiryDate.getMonth() + 6);
-            }
-
-            let activePlan = {
-                name: planName,
-                activatedOn: now.toISOString(),
-                expiryDate: expiryDate.toISOString()
-            };
-            localStorage.setItem('farmer_active_plan', JSON.stringify(activePlan));
-            
-            localStorage.removeItem('farmer_pending_plan');
-            pendingList.splice(index, 1);
-            localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
-
-            alert("🎉 प्लॅन यशस्वीरीत्या सुरू झाला आहे!");
-            loadFarmerPayments();
-            loadAdminNotifications(); 
-        }
-
-        function rejectFarmerPlan(index) {
-            if(!confirm("हे पेमेंट नाकारायचे आहे का?")) return;
-            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
-            pendingList.splice(index, 1);
-            localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
-            localStorage.removeItem('farmer_pending_plan');
-            alert("❌ पेमेंट नाकारले.");
-            loadFarmerPayments();
-            loadAdminNotifications(); 
-        }
-
-        // --- 🔥 NEW: DOCTOR CALL NUMBER APPROVALS 🔥 ---
-        function loadDoctorApprovals() {
-            let submissions = JSON.parse(localStorage.getItem("vendor_submitted_cc"));
-            let container = document.getElementById('doctor_numbers_container');
-
-            if(!submissions || submissions.status === 'Approved') {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">कोणतेही नवीन डॉक्टर नंबर मंजुरीसाठी पेंडिंग नाहीत.</div>';
-                return;
-            }
-
-            let html = `
-                <div class="approval-card" style="border-color:#90caf9; background:#e3f2fd;">
-                    <div class="approval-header" style="border-color:#1976d2;">
-                        <div><strong style="color:#0d47a1; font-size:16px;">${submissions.vendorName}</strong></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending</div>
-                    </div>
-                    <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                        <b>Doctor / Tech Support No:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${submissions.number}</span>
-                    </div>
-                    <div class="approval-actions">
-                        <button class="btn-prime" style="background:#1976d2; flex:1;" onclick="approveDoctorNumber('${submissions.number}')">✅ Approve & Add to Routing</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectDoctorNumber()">❌ Reject</button>
-                    </div>
-                </div>`;
-            container.innerHTML = html;
-        }
-
-        function approveDoctorNumber(number) {
-            if(!confirm("हा नंबर ॲप्रूव्ह करून 'Round-Robin' कॉल सिस्टीममध्ये ॲड करायचा का?")) return;
-
-            let approvedDoctors = JSON.parse(localStorage.getItem('admin_approved_doctors')) || [];
-            if(!approvedDoctors.includes(number)) {
-                approvedDoctors.push(number);
-                localStorage.setItem('admin_approved_doctors', JSON.stringify(approvedDoctors));
-                // 🔥 FIREBASE CLOUD SAVE 🔥
-                db.collection("admin_settings").doc("admin_approved_doctors").set({ list: approvedDoctors }, { merge: true });
-            }
-
-            let submissions = JSON.parse(localStorage.getItem("vendor_submitted_cc"));
-            submissions.status = "Approved";
-            localStorage.setItem("vendor_submitted_cc", JSON.stringify(submissions));
-
-            alert("✅ डॉक्टर नंबर ॲप्रूव्ह झाला आहे आणि कॉल सिस्टीममध्ये जोडला गेला आहे!");
-            loadDoctorApprovals();
-            loadAdminNotifications(); 
-        }
-
-        function rejectDoctorNumber() {
-            if(!confirm("हा नंबर रिजेक्ट करायचा का?")) return;
-            localStorage.removeItem("vendor_submitted_cc");
-            alert("❌ नंबर रिजेक्ट केला.");
-            loadDoctorApprovals();
-            loadAdminNotifications(); 
-        }
-
-        // -------------------------------------------------------------
-        // 🔥 NEW: VET PARTNER APPROVAL LOGIC
-        // -------------------------------------------------------------
-        function loadPendingVetsForAdmin() {
-            let container = document.getElementById('admin_pending_vets_container');
-            if(!container) return;
-            
-            db.collection("vet_partners").onSnapshot(snapshot => {
-                let html = "";
-                let pendingCount = 0;
-                
-                snapshot.forEach(doc => {
-                    let vet = doc.data();
-                    
-                    if(vet.isVerified === false || vet.isVerified === "false" || !vet.isVerified) {
-                        pendingCount++;
-                        html += `
-                        <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
-                            <div class="approval-header" style="border-color:#29b6f6;">
-                                <div><strong style="color:#0277bd; font-size:16px;">${vet.name || 'Unknown'}</strong><br><span style="font-size:11px; color:#666;">शिक्षण: ${vet.qual || 'N/A'} | Reg No: ${vet.regNo || 'N/A'}</span></div>
-                                <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending KYC</div>
-                            </div>
-                            <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                                <b>मोबाईल:</b> ${vet.mobile || doc.id} <br>
-                                <b>फी / वर्किंग रेडियस:</b> ${vet.charges && vet.charges.farm ? 'Farm Visit ₹' + vet.charges.farm : 'N/A'} | ${vet.radius || 10} km<br>
-                            </div>
-                            <div class="approval-actions">
-                                <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveVetProfile('${doc.id}', '${vet.name}')">✅ मंजूर करा (Approve)</button>
-                                <button class="btn-danger" style="flex:1;" onclick="rejectVetProfile('${doc.id}', '${vet.name}')">❌ नाकारा (Reject)</button>
-                            </div>
-                        </div>`;
-                    }
-                });
-
-                if(html === "") html = "<div style='text-align:center; padding:30px; color:#888;'>कोणतेही नवीन व्हेटर्नरी डॉक्टर प्रोफाईल मंजुरीसाठी पेंडिंग नाही.</div>";
-                
-                container.innerHTML = html; 
-                
-                localStorage.setItem("admin_pending_vets_count", pendingCount);
-                loadAdminNotifications();
-            }, error => {
-                console.error("Error loading vet partners:", error);
-            });
-        }
-
-        function approveVetProfile(mobileNo, vetName) {
-            if(confirm(`${vetName} यांचे प्रोफाईल मंजूर करायचे आहे का?`)) {
-                db.collection("vet_partners").doc(mobileNo).update({
-                    isVerified: true,
-                    status: "Online"
-                }).then(() => {
-                    alert(`✅ ${vetName} यांचे प्रोफाईल मंजूर झाले.`);
-                    
-                    let newNotif = {
-                        id: Date.now(),
-                        title: "✅ तुमचे प्रोफाईल मंजूर झाले आहे!",
-                        message: "ॲडमिनने तुमचे KYC तपासले आहे. आता तुम्ही शेतकऱ्यांच्या अपॉइंटमेंट्स घेऊ शकता.",
-                        target: mobileNo,
-                        timestamp: new Date().toISOString(),
-                        time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
-                    };
-                    db.collection("broadcast_notifications").add(newNotif);
-                    
-                }).catch(error => {
-                    console.error("Error approving vet: ", error);
-                    alert("काहीतरी चूक झाली. पुन्हा प्रयत्न करा.");
-                });
-            }
-        }
-
-        function rejectVetProfile(mobileNo, vetName) {
-            if(confirm(`${vetName} यांचा अर्ज खरोखर डिलीट/नाकारायचा आहे का?`)) {
-                db.collection("vet_partners").doc(mobileNo).delete().then(() => {
-                    alert(`❌ ${vetName} यांचा अर्ज डिलीट केला आहे.`);
-                }).catch(e => console.error(e));
-            }
-        }
-
         // --- 👥 M2: USER MANAGEMENT LOGIC ---
         function searchUser() {
             let mobile = document.getElementById('search_user_mobile').value;
@@ -2777,6 +2381,13 @@
                 users[index].name = newName;
                 users[index].status = newStatus;
                 localStorage.setItem('app_users', JSON.stringify(users));
+                
+                // 🔥 100% BUG FIX: Cloud Sync for User Updates 🔥
+                db.collection("users").doc(mobile).update({
+                    name: newName,
+                    status: newStatus
+                }).catch(e => console.log("User update error:", e));
+
                 alert("✅ युजरची माहिती यशस्वीरीत्या अपडेट केली!");
                 refreshAllUsersTable();
             }
@@ -2897,327 +2508,258 @@
             }
         }
 
-        // --- 🔥 M32: VENDOR KYC APPROVAL LOGIC (UPDATED WITH VIEW DOCUMENTS) 🔥 ---
-        function loadPendingKyc() {
-            let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-            let container = document.getElementById('pending_kyc_container');
+        // --- 🔥 M35 COMMISSION APPROVAL LOGIC 🔥 ---
+        function loadCommissionApprovals() {
+            let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
+            let container = document.getElementById('commission_approvals_container');
             
-            if(pendingKycList.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">सध्या कोणतेही KYC पडताळणीसाठी प्रलंबित नाही.</div>';
+            if(pendingCommissions.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">कोणतेही कमिशन पेमेंट मंजुरीसाठी प्रलंबित नाही.</div>';
                 return;
             }
 
             let html = '';
-            pendingKycList.forEach((kyc, index) => {
-                // 🔥 Updated Logic to fetch Real Firebase uploaded Image URLs
-                let panImageLink = kyc.aadhaarUrl || kyc.panUrl || 'https://www.w3schools.com/html/pic_trulli.jpg'; 
-                let shopImageLink = kyc.shopProofUrl || kyc.shopActUrl || 'https://www.w3schools.com/html/img_girl.jpg';
+            pendingCommissions.forEach(comm => {
+                let contextText = comm.orderId === 'ALL_DUES' ? 'संपूर्ण खातेवही (All Dues Cleared)' : `Order ID: ${comm.orderId}`;
                 
                 html += `
-                <div class="approval-card" style="border-color:#81d4fa; background:#e1f5fe;">
-                    <div class="approval-header" style="border-color:#29b6f6;">
-                        <div><strong style="color:#0277bd; font-size:16px;">${kyc.vendorName}</strong><br><span style="font-size:11px; color:#666;">Date: ${kyc.date}</span></div>
-                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending KYC</div>
+                <div class="approval-card" id="comm_card_${comm.id}">
+                    <div class="approval-header">
+                        <div><strong style="color:#d32f2f; font-size:16px;">${comm.id}</strong><br><span style="font-size:11px; color:#666;">Date: ${comm.date}</span></div>
+                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;">⏳ Payment Checking</div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                        <b>Mobile:</b> ${kyc.mobile} <br>
-                        <b>GST No:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold;">${kyc.gst || 'Not Provided'}</span> <br>
-                        
-                        <!-- 🔥 NEW: Bank Details Displayed Here 🔥 -->
-                        <div style="background:#f1f8e9; padding:8px; border-radius:6px; border:1px solid #c8e6c9; margin-top:10px;">
-                            <span style="font-size:11px; color:#2e7d32; font-weight:bold; display:block; margin-bottom:4px;">बँक डिटेल्स (पेमेंट रिफंडसाठी):</span>
-                            <b>Bank A/C:</b> <span style="background:#fff; padding:1px 4px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${kyc.bankAccount || 'Not Provided'}</span> <br>
-                            <b>IFSC Code:</b> <span style="background:#fff; padding:1px 4px; border:1px solid #ccc; font-weight:bold; color:#2e7d32;">${kyc.bankIfsc || 'Not Provided'}</span>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
-                            <button onclick="openDocumentModal('${panImageLink}', 'आधार / पॅन कार्ड - ${kyc.vendorName}')" 
-                                    style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                👁️ आधार/पॅन पहा
-                            </button>
-                            <button onclick="openDocumentModal('${shopImageLink}', 'शॉप ॲक्ट / दुकानाचा पुरावा - ${kyc.vendorName}')" 
-                                    style="background: #fff; color: #0288d1; border: 1px solid #0288d1; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
-                                👁️ शॉप ॲक्ट/दुकान पहा
-                            </button>
-                        </div>
+                        <b>प्रकार:</b> ${contextText} <br>
+                        <b>अमाऊंट:</b> ₹${comm.amount} <br>
+                        <b>UTR Number:</b> <span style="background:#e8f5e9; padding:2px 5px; font-weight:bold; color:#2e7d32;">${comm.utr || 'Screenshot Uploaded'}</span>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-prime" style="background:#0288d1; flex:1;" onclick="approveKyc('${kyc.mobile}', ${index})">✅ Approve Seller</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectKyc(${index})">❌ Reject</button>
+                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveCommission('${comm.id}', '${comm.orderId}')">✅ Payment Verified</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectCommission('${comm.id}')">❌ Reject</button>
                     </div>
                 </div>`;
             });
             container.innerHTML = html;
         }
 
-        function approveKyc(mobile, index) {
-            if(confirm("या व्यापाऱ्याचे डॉक्युमेंट्स बरोबर आहेत का? याला ॲपवर 'Verified Seller' बनवायचे का?")) {
-                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                let kycDoc = pendingKycList[index];
+        function approveCommission(commId, orderId) {
+            if(confirm("बँकेत पेमेंट जमा झाले आहे का? हे कन्फर्म करायचे का?")) {
+                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
+                pendingCommissions = pendingCommissions.filter(c => c.id !== commId);
+                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
+                
+                // 🔥 100% BUG FIX: Cloud Sync 🔥
+                db.collection("successful_payments").doc(commId).update({ status: "Approved" }).catch(e => console.log(e));
 
-                let users = JSON.parse(localStorage.getItem('app_users')) || [];
-                let userIndex = users.findIndex(u => u.mobile === mobile);
-                if(userIndex > -1) {
-                    users[userIndex].isVerified = true;
-                    users[userIndex].role = 'dealer'; 
-                    users[userIndex].kyc_status = 'approved';
-                    // 🔥 NEW: Store Bank Details locally in App Users
-                    users[userIndex].bankAccount = kycDoc.bankAccount || '';
-                    users[userIndex].bankIfsc = kycDoc.bankIfsc || '';
-                    localStorage.setItem('app_users', JSON.stringify(users));
-                }
-
-                // 🔥 FIREBASE UPDATE (Real-time sync to vendor's app) 🔥
-                if(mobile) {
-                    db.collection("users").doc(mobile).set({
-                        isVerified: true,
-                        role: 'dealer',
-                        kyc_status: 'approved',
-                        bankAccount: kycDoc.bankAccount || '',  // <-- NEW: Save Bank details
-                        bankIfsc: kycDoc.bankIfsc || ''         // <-- NEW: Save IFSC Code
-                    }, { merge: true }).catch(e => console.log("User KYC update error:", e));
+                if(orderId !== 'ALL_DUES') {
+                    let orders = JSON.parse(localStorage.getItem('user_orders')) || [];
+                    let orderIndex = orders.findIndex(o => o.id === orderId);
+                    if(orderIndex > -1) {
+                        orders[orderIndex].commissionPaid = true;
+                        localStorage.setItem('user_orders', JSON.stringify(orders));
+                    }
+                    db.collection("mall_orders").doc(orderId).update({ commissionPaid: true }).catch(e => console.log(e));
                 }
                 
-                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
-                if(kycDoc && kycDoc.firebaseDocId) {
-                    db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
-                }
-
-                pendingKycList.splice(index, 1);
-                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-
-                alert("🎉 विक्रेता यशस्वीरीत्या 'Approve' झाला आहे. आता तो प्रॉडक्ट आणि जाहिरात लावू शकतो.");
-                loadPendingKyc(); 
-                loadAdminNotifications(); 
-                refreshSupplierTable();
+                alert("✅ पेमेंट मंजूर झाले आणि क्लाऊडवर सेव्ह झाले! व्यापाऱ्याला आता ग्राहकाचा नंबर दिसेल.");
+                loadCommissionApprovals();
+                loadAdminNotifications();
             }
         }
 
-        function rejectKyc(index) {
-            if(confirm("या व्यापाऱ्याची पडताळणी नाकारायची (Reject) आहे का?")) {
-                let pendingKycList = JSON.parse(localStorage.getItem('admin_pending_kyc')) || [];
-                let kycDoc = pendingKycList[index];
+        function rejectCommission(commId) {
+            if(confirm("हे पेमेंट रिजेक्ट करायचे का?")) {
+                let pendingCommissions = JSON.parse(localStorage.getItem('admin_pending_commissions')) || [];
+                pendingCommissions = pendingCommissions.filter(c => c.id !== commId);
+                localStorage.setItem('admin_pending_commissions', JSON.stringify(pendingCommissions));
                 
-                // 🔥 Firebase मधील KYC रिक्वेस्ट डिलीट करा 🔥
-                if(kycDoc && kycDoc.firebaseDocId) {
-                    db.collection("admin_pending_kyc").doc(kycDoc.firebaseDocId).delete().catch(e => console.log(e));
-                }
+                // 🔥 100% BUG FIX: Cloud Sync 🔥
+                db.collection("successful_payments").doc(commId).update({ status: "Rejected" }).catch(e => console.log(e));
 
-                pendingKycList.splice(index, 1);
-                localStorage.setItem('admin_pending_kyc', JSON.stringify(pendingKycList));
-                alert("❌ विक्रेत्याचा अर्ज नाकारला.");
-                loadPendingKyc(); 
-                loadAdminNotifications(); 
+                alert("❌ पेमेंट नाकारले.");
+                loadCommissionApprovals();
+                loadAdminNotifications();
             }
         }
 
-        // --- 📢 M12: NOTIFICATIONS LOGIC (NOW CLOUD SYNCED) ---
-        function sendBroadcastNotification() {
-            let type = document.getElementById('notif_type').value;
-            let title = document.getElementById('notif_title').value;
-            let msg = document.getElementById('notif_msg').value;
-            if(!title || !msg) { alert("सूचना आणि शीर्षक भरा!"); return; }
 
-            let notifs = JSON.parse(localStorage.getItem('system_notifications')) || [];
-            let newNotif = {
-                id: Date.now(),
-                title: type + " - " + title,
-                message: msg,
-                target: 'all',
-                timestamp: new Date().toISOString(),
-                time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })
+        // --- 🔥 M_FARMER_PAY: FARMER PAYMENT APPROVALS WITH 8 PM LOGIC 🔥 ---
+        function loadFarmerPayments() {
+            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+            let container = document.getElementById('farmer_payments_container');
+            
+            if(pendingList.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">सध्या कोणतेही शेतकरी पेमेंट मंजुरीसाठी पेंडिंग नाही.</div>';
+                return;
+            }
+
+            let html = '';
+            pendingList.forEach((req, index) => {
+                html += `
+                <div class="approval-card" style="border-color:#a5d6a7; background:#e8f5e9;">
+                    <div class="approval-header" style="border-color:#4caf50;">
+                        <div><strong style="color:#1b5e20; font-size:16px;">${req.farmerName}</strong><br><span style="font-size:11px; color:#666;">Req Date: ${req.requestTime}</span></div>
+                        <div style="background:#ff9800; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:white;">⏳ Pending</div>
+                    </div>
+                    <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
+                        <b>Mobile:</b> ${req.mobile} <br>
+                        <b>Plan Requested:</b> <span style="color:#e65100; font-weight:bold;">${req.name}</span> <br>
+                        <b>Amount:</b> ₹${req.amount} <br>
+                        <b>UTR Number:</b> <span style="background:#fff; padding:2px 5px; border:1px solid #ccc; font-weight:bold; color:#d32f2f;">${req.utr}</span>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveFarmerPlan(${index}, '${req.type}', '${req.name}')">✅ Approve Plan</button>
+                        <button class="btn-danger" style="flex:1;" onclick="rejectFarmerPlan(${index})">❌ Reject</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function approveFarmerPlan(index, type, planName) {
+            if(!confirm("तुम्ही बँकेत UTR चेक केला आहे का? हा प्लॅन सुरू करायचा का?")) return;
+
+            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+            let req = pendingList[index];
+
+            // --- 8 PM LOGIC ---
+            let now = new Date();
+            let expiryDate = new Date();
+            let is8pmPassed = now.getHours() >= 20; 
+
+            if(type === '24h' || type === '1Day') {
+                if(is8pmPassed) {
+                    expiryDate.setDate(expiryDate.getDate() + 1); 
+                    expiryDate.setHours(8, 0, 0, 0); 
+                    expiryDate.setHours(expiryDate.getHours() + 24); 
+                    alert("⏰ रात्रीचे ८ वाजले असल्यामुळे, हा २४ तासांचा पास उद्या सकाळी ८ वाजल्यापासून लागू होईल.");
+                } else {
+                    expiryDate.setHours(expiryDate.getHours() + 24);
+                }
+            } 
+            else if(type === 'Monthly') {
+                expiryDate.setMonth(expiryDate.getMonth() + 1);
+            }
+            else if(type === '6Months') {
+                expiryDate.setMonth(expiryDate.getMonth() + 6);
+            }
+
+            let activePlan = {
+                name: planName,
+                activatedOn: now.toISOString(),
+                expiryDate: expiryDate.toISOString(),
+                status: "Active"
             };
-            notifs.unshift(newNotif);
-            localStorage.setItem('system_notifications', JSON.stringify(notifs));
 
-            // 🔥 FIREBASE CLOUD BROADCAST SAVE 🔥
-            db.collection("broadcast_notifications").add(newNotif)
-            .catch(e => console.error("Cloud broadcast error: ", e));
+            // 🔥 100% BUG FIX: Update User's Profile in Cloud 🔥
+            if (req.mobile) {
+                db.collection("users").doc(req.mobile).set({
+                    activePlan: activePlan
+                }, { merge: true }).catch(e => console.log("User plan update error:", e));
+            }
+            
+            // 🔥 Update Payment Status in Cloud 🔥
+            if (req.id) {
+                db.collection("successful_payments").doc(req.id).update({
+                    status: "Approved",
+                    approvedAt: new Date().toISOString()
+                }).catch(e => console.log("Payment update error:", e));
+            }
+            
+            pendingList.splice(index, 1);
+            localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
 
-            alert("🚀 सर्व युजर्सना नोटिफिकेशन यशस्वीरीत्या क्लाऊडवरून पाठवले आहे!");
-            document.getElementById('notif_title').value = '';
-            document.getElementById('notif_msg').value = '';
+            alert("🎉 प्लॅन यशस्वीरीत्या सुरू झाला आहे आणि क्लाऊडवर सेव्ह झाला आहे!");
+            loadFarmerPayments();
+            loadAdminNotifications(); 
         }
 
-        // --- 🔥 M13: FLASH AD LOGIC 🔥 ---
-        function publishFlashAd() {
-            let text = document.getElementById('flash_ad_text').value;
-            let url = document.getElementById('flash_ad_url').value;
-            if(!text) { alert("कृपया फ्लॅश ॲडचा मजकूर भरा!"); return; }
-            localStorage.setItem('live_flash_ad', JSON.stringify({text: text, url: url, active: true}));
-            // 🔥 FIREBASE CLOUD SAVE 🔥
-            db.collection("admin_settings").doc("live_flash_ad").set({text: text, url: url, active: true}, { merge: true });
-            alert("⚡ फ्लॅश जाहिरात ॲपवर लाईव्ह झाली आहे!");
-        }
-        function removeFlashAd() {
-            localStorage.removeItem('live_flash_ad');
-            // 🔥 FIREBASE CLOUD UPDATE 🔥
-            db.collection("admin_settings").doc("live_flash_ad").set({active: false}, { merge: true });
-            document.getElementById('flash_ad_text').value = '';
-            document.getElementById('flash_ad_url').value = '';
-            alert("🗑️ फ्लॅश जाहिरात काढून टाकली आहे.");
+        function rejectFarmerPlan(index) {
+            if(!confirm("हे पेमेंट नाकारायचे आहे का?")) return;
+            let pendingList = JSON.parse(localStorage.getItem('admin_pending_farmer_payments')) || [];
+            let req = pendingList[index];
+            
+            // 🔥 Cloud Update 🔥
+            if (req.id) {
+                db.collection("successful_payments").doc(req.id).update({
+                    status: "Rejected",
+                    rejectedAt: new Date().toISOString()
+                }).catch(e => console.log(e));
+            }
+
+            pendingList.splice(index, 1);
+            localStorage.setItem('admin_pending_farmer_payments', JSON.stringify(pendingList));
+            alert("❌ पेमेंट नाकारले आणि क्लाऊडवर अपडेट केले.");
+            loadFarmerPayments();
+            loadAdminNotifications(); 
         }
 
-        // --- 🚚 M26: DELIVERY MATRIX LOGIC ---
-        function saveDeliveryRate() {
-            let courier = document.getElementById('del_courier').value;
-            let pincode = document.getElementById('del_pincode').value;
-            let charge = document.getElementById('del_charge').value;
-            if(!courier || !pincode || !charge) { alert("कृपया सर्व माहिती भरा!"); return; }
-            let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
-            rates[pincode] = { courier: courier, charge: parseInt(charge) };
-            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-            // 🔥 FIREBASE CLOUD SAVE 🔥
-            db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
-            alert("✅ पिनकोड दर सेव्ह झाले!");
-            document.getElementById('del_pincode').value = ''; document.getElementById('del_charge').value = '';
-            loadDeliveryRates(); 
-        }
-        function handleCSVUpload() {
-            const fileInput = document.getElementById('csv_file');
-            const file = fileInput.files[0];
-            if (!file) { alert('कृपया CSV फाईल निवडा!'); return; }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
-                let count = 0;
-                for(let i = 0; i < lines.length; i++) { 
-                    let line = lines[i].trim();
-                    if(line === '' || line.toLowerCase().includes('pincode')) continue;
-                    let cols = line.split(',');
-                    if(cols.length >= 3) {
-                        let pin = cols[0].trim(); let courier = cols[1].trim(); let charge = parseInt(cols[2].trim());
-                        if(pin && courier && !isNaN(charge)) { rates[pin] = { courier: courier, charge: charge }; count++; }
+        // --- 📊 M1: DASHBOARD STATS (FIREBASE INTEGRATED) ---
+        function loadDashboardStats() {
+            let users = JSON.parse(localStorage.getItem('app_users')) || [];
+            document.getElementById('stat_users').innerText = users.length; 
+
+            // 🔥 NEW: Total Logged In / Active Users Logic 🔥
+            let activeLogins = users.filter(u => u.status === 'Active' || u.isLoggedIn === true).length;
+            if(document.getElementById('stat_active_users')) {
+                document.getElementById('stat_active_users').innerText = activeLogins > 0 ? activeLogins : users.length;
+            }
+
+            // Realtime Firebase fetch for exact user count
+            db.collection("users").get().then((snap) => {
+                if(!snap.empty) {
+                    document.getElementById('stat_users').innerText = snap.size;
+                    let cloudActive = 0;
+                    snap.forEach(doc => { 
+                        let d = doc.data(); 
+                        if(d.status === 'Active' || d.isLoggedIn) cloudActive++; 
+                    });
+                    if(document.getElementById('stat_active_users')) {
+                        document.getElementById('stat_active_users').innerText = cloudActive;
                     }
                 }
-                localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-                // 🔥 FIREBASE CLOUD SAVE 🔥
-                db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
-                alert(`✅ यशस्वी! ${count} नवीन पिनकोडचे दर सिस्टीममध्ये अपलोड झाले आहेत.`);
-                loadDeliveryRates(); fileInput.value = '';
-            };
-            reader.readAsText(file);
-        }
-        function loadDeliveryRates() {
-            let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {};
-            let container = document.getElementById('saved_rates_list');
-            let html = '';
-            for(let pin in rates) {
-                html += `<div class="order-item"><div><b style="font-size:14px; color:#1b5e20;">पिनकोड: ${pin}</b><br><span style="color: #666; font-size:11px;">कुरिअर: ${rates[pin].courier}</span></div><div style="text-align: right;"><span style="color:#d32f2f; font-weight:bold; font-size:14px;">₹${rates[pin].charge}</span><br><span style="color:#e65100; cursor:pointer; font-size:11px; font-weight:bold; text-decoration:underline;" onclick="deleteDeliveryRate('${pin}')">Delete</span></div></div>`;
-            }
-            container.innerHTML = html || '<div style="padding:15px; text-align:center; color:#888;">अद्याप कोणतेही दर सेट केलेले नाहीत.</div>';
-        }
-        function deleteDeliveryRate(pin) {
-            let rates = JSON.parse(localStorage.getItem('admin_delivery_rates')) || {}; delete rates[pin];
-            localStorage.setItem('admin_delivery_rates', JSON.stringify(rates));
-            // 🔥 FIREBASE CLOUD SAVE 🔥
-            db.collection("admin_settings").doc("admin_delivery_rates").set({ rates: rates }, { merge: true });
-            loadDeliveryRates();
-        }
-        function clearAllRates() {
-            if(confirm("सर्व पिनकोड डिलीट करायचे?")) { 
-                localStorage.removeItem('admin_delivery_rates'); 
-                db.collection("admin_settings").doc("admin_delivery_rates").delete();
-                loadDeliveryRates(); 
-            }
-        }
+            }).catch(e => console.log("Cloud users count sync skip:", e));
 
-        // --- 🔥 M31: PENDING AD APPROVALS LOGIC 🔥 ---
-        function loadPendingAds() {
-            let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-            let container = document.getElementById('pending_ads_container');
-            
-            if(pendingAds.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">कोणत्याही जाहिराती मंजुरीसाठी प्रलंबित नाहीत.</div>';
-                return;
-            }
+            let savedAds = JSON.parse(localStorage.getItem('live_admin_ad_images'));
+            let activeAdsCount = (savedAds && savedAds.ads && savedAds.ads.length > 0) ? savedAds.ads.length : 0;
+            document.getElementById('stat_ads').innerText = activeAdsCount;
 
-            let html = '';
-            pendingAds.forEach(ad => {
-                html += `
-                <div class="approval-card" id="approval_card_${ad.id}">
-                    <div class="approval-header">
-                        <div><strong style="color:#d32f2f; font-size:16px;">${ad.id}</strong><br><span style="font-size:11px; color:#666;">Date: ${ad.date}</span></div>
-                        <div style="background:#ffe0b2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; color:#e65100;">⏳ Pending Approval</div>
-                    </div>
-                    <div style="font-size:13px; line-height:1.6; margin-bottom:10px;">
-                        <b>Ad Type:</b> ${ad.type} <br>
-                        <b>Target:</b> ${ad.audience} in ${ad.location} <br>
-                        <b>Title:</b> ${ad.title} <br>
-                        <b>Budget:</b> ₹${ad.budget} <br>
-                        <b>UTR Number:</b> <span style="background:#e8f5e9; padding:2px 5px; font-weight:bold; color:#2e7d32;">${ad.utr}</span>
-                    </div>
-                    <div class="approval-actions">
-                        <button class="btn-prime" style="background:#2e7d32; flex:1;" onclick="approveAd('${ad.id}')">✅ Payment Received (Approve)</button>
-                        <button class="btn-danger" style="flex:1;" onclick="rejectAd('${ad.id}')">❌ Reject</button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
+            // 🔥 Fetch Live Orders from Firebase 🔥
+            db.collection("mall_orders").orderBy("timestamp", "desc").limit(5).get()
+            .then((querySnapshot) => {
+                let ordersCount = querySnapshot.size;
+                document.getElementById('stat_orders_count').innerText = ordersCount + "+"; 
 
-        // 🔥🔥🔥 नवीन बदल: पेंडिंग जाहिरात मंजूर केल्यावर ती होमपेज बॅनर कलेक्शनमध्ये जाण्यासाठी 🔥🔥🔥
-        function approveAd(adId) {
-            if(confirm("तुम्ही बँक खात्यात पेमेंट तपासले आहे का? ही जाहिरात 'लाईव्ह' करायची का?")) {
-                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-                let ad = pendingAds.find(a => a.id === adId);
+                let totalRev = 0;
+                let orderListHTML = '';
                 
-                pendingAds = pendingAds.filter(a => a.id !== adId);
-                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
-
-                if (ad) {
-                    let liveAds = JSON.parse(localStorage.getItem('live_admin_ad_images')) || { ads: [], active: false, place: 'Home Slider' };
-                    liveAds.ads.push({
-                        text: ad.title,
-                        url: ad.url,
-                        images: ad.images || []
-                    });
-                    liveAds.active = true;
-                    localStorage.setItem('live_admin_ad_images', JSON.stringify(liveAds));
-                    // 🔥 FIREBASE CLOUD SAVE 🔥
-                    db.collection("admin_settings").doc("live_admin_ad_images").set(liveAds, { merge: true });
-
-                    // 🔥🔥🔥 नवीन बदल: होमपेज बॅनर कलेक्शनमध्ये नवीन ॲड जोडणे 🔥🔥🔥
-                    let newIndex = liveAds.ads.length - 1;
-                    db.collection("homepage_banners").doc("banner_" + newIndex).set({
-                        imageUrl: (ad.images && ad.images.length > 0) ? ad.images[0] : '', 
-                        link: ad.url || '',
-                        status: "Approved",
-                        title: ad.title || ''
+                if(querySnapshot.empty) {
+                    orderListHTML = '<div style="padding:15px; text-align:center; color:#888;">अद्याप कोणतीही नवीन ऑर्डर आलेली नाही.</div>';
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        let o = doc.data();
+                        totalRev += (o.totalAmount || 0);
+                        let itemsSummary = (o.items || []).map(i => i.qty + "x " + i.name).join(', ');
+                        
+                        orderListHTML += `
+                        <div class="order-item">
+                            <div>
+                                <b>Order ${o.id}</b> (पिनकोड: ${o.customer?.pincode || '-'})<br>
+                                <span style="color: #666;">ग्राहक: ${o.customer?.name || '-'} | ${o.customer?.mobile || '-'}</span><br>
+                                <span style="color: #2e7d32; font-size:10px;">${itemsSummary}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="color:#d32f2f; font-weight:bold; font-size:14px;">₹${o.totalAmount || 0}</span><br>
+                                <span class="order-status status-pending">${o.paymentMethod || 'COD'}</span>
+                            </div>
+                        </div>`;
                     });
                 }
                 
-                alert(`✅ जाहिरात ${adId} मंजूर करून होमपेजवर लाईव्ह केली!`);
-                loadPendingAds(); 
-                loadAdminNotifications();
-                loadDashboardStats(); 
-            }
-        }
-
-        function rejectAd(adId) {
-            if(confirm("पेमेंट न मिळाल्यामुळे ही जाहिरात रद्द करायची का?")) {
-                let pendingAds = JSON.parse(localStorage.getItem('admin_pending_ad_approvals')) || [];
-                pendingAds = pendingAds.filter(a => a.id !== adId);
-                localStorage.setItem('admin_pending_ad_approvals', JSON.stringify(pendingAds));
-                alert("❌ जाहिरात रद्द केली.");
-                loadPendingAds(); 
-                loadAdminNotifications(); 
-            }
-        }
-
-        // --- 🛡️ M28: AUDIT LOG ---
-        function clearLogs() {
-            if(confirm("सर्व ऑडिट लॉग्स क्लिअर करायचे आहेत का?")) {
-                document.getElementById('audit_log_box').innerHTML = "<span style='color:#888;'>लॉग्स क्लिअर केले गेले आहेत. सिस्टीम नवीन लॉग्स रेकॉर्ड करत आहे...</span>";
-                alert("लॉग्स यशस्वीरीत्या डिलीट झाले.");
-            }
-        }
-
-        // --- 🔌 M30: API MANAGER ---
-        function testAPI() {
-            alert("🔌 API कनेक्शन यशस्वी! (Server Response: 200 OK)");
+                document.getElementById('stat_revenue').innerText = "₹" + totalRev.toLocaleString('en-IN');
+                document.getElementById('live_orders_list').innerHTML = orderListHTML;
+            })
+            .catch(error => console.error("Error fetching orders:", error));
         }
 
         // ============== 📊 M20 रिपोर्ट बिल्डर (नवीन लॉजिक) ==============
@@ -3379,7 +2921,6 @@
                         'Status': t.status,
                         'Date': t.date
                     }));
-                    // Removed dummy fallback
                     break;
 
                 // 🔥 NEW: Online Order & Supplier Commission/Refund Report Logic 🔥
@@ -3441,8 +2982,8 @@
                             'Total Amount (₹)': totalOrderAmt.toFixed(2),
                             'Platform Cut (₹)': fee.toFixed(2),
                             'Supplier Refund (₹)': supplierPayable.toFixed(2),
-                            'Bank A/C No': bankAccNo,      // <--- नवीन लाईन
-                            'IFSC Code': bankIfscCode      // <--- नवीन लाईन
+                            'Bank A/C No': bankAccNo,      
+                            'IFSC Code': bankIfscCode      
                         };
                     });
                     
