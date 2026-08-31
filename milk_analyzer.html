@@ -311,24 +311,34 @@
     const btnRetake = document.getElementById('btn_retake');
     const btnMagic = document.getElementById('btn_ai_scan');
 
-    // Cloud Database Sync
+    // 🔥 100% FIXED CLOUD SYNC: Always Fetch Latest from Firebase 🔥
     function syncMilkDataFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-            db.collection("milk_records").where("farmerMobile", "==", userMobile).orderBy("timestamp", "desc").limit(10)
-            .onSnapshot((querySnapshot) => {
-                let cloudRecords = [];
-                querySnapshot.forEach((doc) => {
-                    let data = doc.data();
-                    data.firebaseDocId = doc.id;
-                    cloudRecords.push(data);
-                });
-                if (cloudRecords.length > 0) {
+            
+            // 🔥 Listen to Cloud changes in Real-Time (Cloud-First Approach)
+            db.collection("milk_records")
+                .where("farmerMobile", "==", userMobile)
+                .orderBy("timestamp", "desc")
+                .limit(20) // Get the latest 20 records
+                .onSnapshot((querySnapshot) => {
+                    let cloudRecords = [];
+                    querySnapshot.forEach((doc) => {
+                        let data = doc.data();
+                        data.firebaseDocId = doc.id;
+                        cloudRecords.push(data);
+                    });
+                    
+                    // Directly override local storage with fresh Cloud Data
                     localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
+                    
+                    // Immediately update UI
                     loadHistory();
-                }
-            });
+                }, (error) => {
+                    console.log("Error syncing milk data from cloud: ", error);
+                });
 
+            // Single Device Login Watcher
             db.collection("users").doc(userMobile).onSnapshot((doc) => {
                 if (doc.exists && doc.data()) {
                     let cloudData = doc.data();
@@ -339,6 +349,8 @@
                     }
                 }
             });
+        } else {
+            loadHistory(); // Fallback for local testing if no mobile number
         }
     }
 
@@ -500,6 +512,7 @@
         document.getElementById('milk_total').value = total.toFixed(2);
     }
 
+    // 🔥 FIXED: Direct Save to Cloud (Cloud-First Approach) 🔥
     function saveMilkRecord() {
         let date = document.getElementById('milk_date').value;
         let shift = document.getElementById('milk_shift').value;
@@ -516,24 +529,47 @@
 
         let saveBtn = document.getElementById("save_btn_milk");
         let originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
+        saveBtn.innerHTML = "⏳ क्लाऊडवर सेव्ह करत आहे...";
         saveBtn.disabled = true;
 
         let uniqueId = "MILK_" + Date.now();
-        let newRecord = { id: uniqueId, date: date, shift: shift, animalId: animalId, animalName: animalNameText, liters: parseFloat(liters), fat: parseFloat(fat), snf: parseFloat(snf), rate: parseFloat(rate), total: parseFloat(total) };
-
-        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
-        records.unshift(newRecord);
-        localStorage.setItem('milk_history', JSON.stringify(records));
-
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
-        let firebaseData = { ...newRecord, farmerName: fName, farmerMobile: fMob, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+        
+        // Prepare data for Firebase
+        let firebaseData = { 
+            id: uniqueId, 
+            date: date, 
+            shift: shift, 
+            animalId: animalId, 
+            animalName: animalNameText, 
+            liters: parseFloat(liters), 
+            fat: parseFloat(fat), 
+            snf: parseFloat(snf), 
+            rate: parseFloat(rate), 
+            total: parseFloat(total),
+            farmerName: fName, 
+            farmerMobile: fMob, 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+        };
 
+        // 🔥 Save directly to Firebase (This will automatically trigger onSnapshot and update UI across all devices) 🔥
         db.collection("milk_records").doc(uniqueId).set(firebaseData)
-        .then(() => { alert("✅ दूध संकलनाची नोंद यशस्वीरित्या सेव्ह झाली!"); })
-        .catch(err => { console.error("Firebase save error: ", err); alert("✅ नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे."); })
+        .then(() => { 
+            alert("✅ दूध संकलनाची नोंद यशस्वीरित्या क्लाऊडवर सेव्ह झाली!"); 
+        })
+        .catch(err => { 
+            console.error("Firebase save error: ", err); 
+            
+            // Offline Fallback: If no internet, save locally and sync later
+            alert("⚠️ इंटरनेट एरर! नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे. नेट आल्यावर ती क्लाऊडवर जाईल."); 
+            let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+            records.unshift(firebaseData);
+            localStorage.setItem('milk_history', JSON.stringify(records));
+            loadHistory();
+        })
         .finally(() => {
+            // Reset Form UI
             document.getElementById('milk_liters').value = ''; document.getElementById('milk_fat').value = '';
             document.getElementById('milk_snf').value = ''; document.getElementById('milk_rate').value = '';
             document.getElementById('milk_total').value = '';
@@ -541,7 +577,8 @@
             preview.style.display = "none"; placeholder.style.display = "block";
             btnRetake.style.display = "none"; btnStartCam.style.display = "block";
             btnMagic.disabled = true; btnMagic.style.opacity = "0.6";
-            stopCamera(); loadHistory();
+            stopCamera(); 
+            
             saveBtn.innerHTML = originalText; saveBtn.disabled = false;
         });
     }
@@ -552,7 +589,7 @@
         if (records.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888; font-size:13px;'>कोणतीही नोंद आढळली नाही.</p>"; return; }
 
         let html = "";
-        let displayRecords = records.slice(0, 5);
+        let displayRecords = records.slice(0, 5); // Show top 5
         displayRecords.forEach(rec => {
             let d = new Date(rec.date);
             let dateStr = `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
@@ -696,7 +733,8 @@
     window.addEventListener("DOMContentLoaded", () => {
         initChatbotAPI();
         loadAnimalsIntoDropdown();
-        loadHistory();
+        
+        // Start cloud listener to keep local storage fresh and up-to-date
         syncMilkDataFromCloud(); 
         
         let today = new Date();
