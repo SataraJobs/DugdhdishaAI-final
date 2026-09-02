@@ -311,12 +311,11 @@
     const btnRetake = document.getElementById('btn_retake');
     const btnMagic = document.getElementById('btn_ai_scan');
 
-    // 🔥 100% FIXED CLOUD SYNC: Always Fetch Latest from Firebase without indexing errors 🔥
+    // 🔥 100% FIXED CLOUD SYNC: Removed .orderBy to prevent Firebase index errors 🔥
     function syncMilkDataFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
-            
-            // 🔥 Removing .orderBy("timestamp", "desc") to prevent Firestore silent failures due to missing compound index 🔥
+            // 🔥 फिक्स: येथे .orderBy काढले आहे जेणेकरून फायरबेसचा इंडेक्सिंग एरर येणार नाही आणि डेटा क्लाऊडवरून वाचला जाईल.
             db.collection("milk_records")
                 .where("farmerMobile", "==", userMobile)
                 .onSnapshot((querySnapshot) => {
@@ -327,26 +326,21 @@
                         cloudRecords.push(data);
                     });
                     
-                    // Sort records client-side (Newest to Oldest based on selected date)
+                    // क्लाएंट साईडवर (मोबाईलमध्ये) तारखेनुसार नवीन नोंदी वर दिसाव्यात म्हणून सॉर्टिंग केले
                     cloudRecords.sort((a, b) => {
-                        let dateA = new Date(a.date).getTime();
-                        let dateB = new Date(b.date).getTime();
+                        let dateA = new Date(a.date).getTime() || 0;
+                        let dateB = new Date(b.date).getTime() || 0;
                         return dateB - dateA;
                     });
                     
-                    // Keep the storage light (Top 50 records is enough for quick history view)
-                    cloudRecords = cloudRecords.slice(0, 50);
-
-                    // Directly override local storage with fresh Cloud Data
-                    localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
-                    
-                    // Immediately update UI
-                    loadHistory();
+                    if (cloudRecords.length > 0) {
+                        localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
+                        loadHistory();
+                    }
                 }, (error) => {
-                    console.log("Error syncing milk data from cloud: ", error);
+                    console.log("Cloud Sync Error: ", error);
                 });
 
-            // Single Device Login Watcher
             db.collection("users").doc(userMobile).onSnapshot((doc) => {
                 if (doc.exists && doc.data()) {
                     let cloudData = doc.data();
@@ -357,8 +351,6 @@
                     }
                 }
             });
-        } else {
-            loadHistory(); // Fallback for local testing if no mobile number
         }
     }
 
@@ -455,7 +447,7 @@
     }
     function retakePhoto() { startCamera(); }
 
-    // 🔥 AI VISION EXTRACTION (Updated Model Fix) 🔥
+    // 🔥 AI VISION EXTRACTION 🔥
     async function scanReceiptWithAI() {
         if (!GEMINI_API_KEY) await initChatbotAPI();
         if (!GEMINI_API_KEY) { alert("API Key सापडली नाही. ॲडमिनला कळवा."); return; }
@@ -466,9 +458,8 @@
         try {
             let base64Image = preview.src.split(',')[1];
             
-            // 🔥 FIXED: Using stable gemini-3.6-flash for visual scanning instead of dead 1.5-pro 🔥
-            let finalModelName = "gemini-3.6-flash";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${GEMINI_API_KEY}`;
+            // 🔥 फिक्स: '1.5-pro' मॉडेल क्रॅश होत होते म्हणून अधिक जलद आणि स्टेबल '3.6-flash' टाकले आहे.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
             const prompt = `तू एक अचूक पावती वाचक (Receipt Scanner) आहेस. या दूध डेअरीच्या थर्मल पावतीमधील आकडे शोध. 
             मला फक्त आणि फक्त JSON फॉरमॅटमध्ये उत्तर दे. इतर कोणताही मजकूर लिहू नकोस.
             फॉरमॅट: {"liters": 0.0, "fat": 0.0, "snf": 0.0, "rate": 0.0}`;
@@ -484,11 +475,6 @@
 
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             const data = await response.json();
-
-            if (!response.ok) {
-                console.error("API Error: ", data.error);
-                throw new Error("API Error");
-            }
 
             if (data.candidates && data.candidates.length > 0) {
                 let aiText = data.candidates[0].content.parts[0].text;
@@ -510,7 +496,7 @@
             }
         } catch (error) {
             console.error(error);
-            alert("पावती स्पष्ट वाचता आली नाही किंवा सर्व्हर एरर आला. कृपया आकडे मॅन्युअली भरा.");
+            alert("पावती स्पष्ट वाचता आली नाही. कृपया आकडे मॅन्युअली भरा.");
         } finally {
             setTimeout(() => {
                 btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
@@ -527,7 +513,6 @@
         document.getElementById('milk_total').value = total.toFixed(2);
     }
 
-    // 🔥 FIXED: Instant UI Update + Cloud Save 🔥
     function saveMilkRecord() {
         let date = document.getElementById('milk_date').value;
         let shift = document.getElementById('milk_shift').value;
@@ -548,43 +533,20 @@
         saveBtn.disabled = true;
 
         let uniqueId = "MILK_" + Date.now();
+        let newRecord = { id: uniqueId, date: date, shift: shift, animalId: animalId, animalName: animalNameText, liters: parseFloat(liters), fat: parseFloat(fat), snf: parseFloat(snf), rate: parseFloat(rate), total: parseFloat(total) };
+
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        records.unshift(newRecord);
+        localStorage.setItem('milk_history', JSON.stringify(records));
+
         let fName = localStorage.getItem("current_user_name") || "शेतकरी";
         let fMob = localStorage.getItem("current_user_mobile") || "अज्ञात";
-        
-        // Prepare data for Firebase
-        let firebaseData = { 
-            id: uniqueId, 
-            date: date, 
-            shift: shift, 
-            animalId: animalId, 
-            animalName: animalNameText, 
-            liters: parseFloat(liters), 
-            fat: parseFloat(fat), 
-            snf: parseFloat(snf), 
-            rate: parseFloat(rate), 
-            total: parseFloat(total),
-            farmerName: fName, 
-            farmerMobile: fMob, 
-            timestamp: firebase.firestore.FieldValue.serverTimestamp() 
-        };
+        let firebaseData = { ...newRecord, farmerName: fName, farmerMobile: fMob, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
 
-        // 🔥 STEP 1: Optimistic UI Update (Save locally immediately so user sees it instantly)
-        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
-        records.unshift(firebaseData);
-        localStorage.setItem('milk_history', JSON.stringify(records));
-        loadHistory();
-
-        // 🔥 STEP 2: Save to Firebase Cloud in background
         db.collection("milk_records").doc(uniqueId).set(firebaseData)
-        .then(() => { 
-            // Silent success, UI is already updated
-            console.log("Milk record successfully synced to cloud.");
-        })
-        .catch(err => { 
-            console.error("Firebase save error: ", err); 
-        })
+        .then(() => { alert("✅ दूध संकलनाची नोंद यशस्वीरित्या क्लाऊडवर सेव्ह झाली!"); })
+        .catch(err => { console.error("Firebase save error: ", err); alert("⚠️ इंटरनेट समस्या: नोंद तुमच्या मोबाईलमध्ये सेव्ह झाली आहे."); })
         .finally(() => {
-            // Reset Form UI
             document.getElementById('milk_liters').value = ''; document.getElementById('milk_fat').value = '';
             document.getElementById('milk_snf').value = ''; document.getElementById('milk_rate').value = '';
             document.getElementById('milk_total').value = '';
@@ -592,8 +554,7 @@
             preview.style.display = "none"; placeholder.style.display = "block";
             btnRetake.style.display = "none"; btnStartCam.style.display = "block";
             btnMagic.disabled = true; btnMagic.style.opacity = "0.6";
-            stopCamera(); 
-            
+            stopCamera(); loadHistory();
             saveBtn.innerHTML = originalText; saveBtn.disabled = false;
         });
     }
@@ -604,7 +565,7 @@
         if (records.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888; font-size:13px;'>कोणतीही नोंद आढळली नाही.</p>"; return; }
 
         let html = "";
-        let displayRecords = records.slice(0, 5); // Show top 5
+        let displayRecords = records.slice(0, 5);
         displayRecords.forEach(rec => {
             let d = new Date(rec.date);
             let dateStr = `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
@@ -622,7 +583,7 @@
         container.innerHTML = html;
     }
 
-    // 🔥 4 GRAPHS & DATE FILTERING FIX 🔥
+    // 🔥 4 GRAPHS & 30 DAYS VALIDATION & REDIRECTION TO AI SARTHI 🔥
     let milkChartInst = null;
     let fatChartInst = null;
     let snfChartInst = null;
@@ -634,37 +595,27 @@
         
         if(!startDateInput || !endDateInput) { alert("कृपया 'पासून' आणि 'पर्यंत' तारखा अचूक निवडा."); return; }
         
-        // 🔥 FIXED: Safe Date Parsing including exact boundaries 🔥
-        let startDate = new Date(startDateInput);
-        startDate.setHours(0, 0, 0, 0); // Start of the day
-        
-        let endDate = new Date(endDateInput);
-        endDate.setHours(23, 59, 59, 999); // End of the day
-        
-        if(isNaN(startDate) || isNaN(endDate)) { alert("कृपया योग्य तारखा निवडा."); return; }
-        
-        let timeDifference = endDate - startDate;
-        let dayDifference = timeDifference / (1000 * 3600 * 24);
-
-        if (dayDifference < 0) {
+        // 🔥 फिक्स: "No Data Found" चा एरर टाळण्यासाठी String Comparison वापरले आहे (UTC Timezone चा अडथळा दूर).
+        if (startDateInput > endDateInput) {
             alert("⚠️ 'पर्यंत'ची तारीख 'पासून'च्या तारखेपेक्षा आधीची असू शकत नाही.");
             return;
         }
 
-        if (dayDifference > 31) {
+        let d1 = new Date(startDateInput);
+        let d2 = new Date(endDateInput);
+        let dayDifference = (d2 - d1) / (1000 * 3600 * 24);
+
+        if (dayDifference > 30) {
             alert("⚠️ कृपया अचूक आणि जलद AI ॲनालिसिससाठी जास्तीत जास्त ३० दिवसांपर्यंतचाच कालावधी निवडा.");
             return;
         }
 
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
         
-        // Filter and Sort from Oldest to Newest for the graphs
-        let filtered = records.filter(r => { 
-            let d = new Date(r.date); 
-            return d >= startDate && d <= endDate; 
-        }).sort((a, b) => new Date(a.date) - new Date(b.date));
+        // 🔥 फिक्स: थेट तारखेच्या टेक्स्टने (Text) फिल्टर केले आहे.
+        let filtered = records.filter(r => r.date >= startDateInput && r.date <= endDateInput).sort((a, b) => (a.date > b.date ? 1 : -1));
         
-        if(filtered.length === 0) { alert("या निवडलेल्या तारखांमध्ये कोणतीही दुधाची नोंद आढळली नाही. कृपया वेगळी तारीख निवडून पहा."); return; }
+        if(filtered.length === 0) { alert("या निवडलेल्या तारखांमध्ये कोणतीही दुधाची नोंद आढळली नाही. कृपया दुसरी तारीख तपासा."); return; }
 
         let dailyData = {};
         filtered.forEach(r => {
@@ -762,13 +713,17 @@
         initChatbotAPI();
         loadAnimalsIntoDropdown();
         
+        // 🔥 फिक्स: भारतीय वेळेनुसार (IST) तारखा योग्य फॉर्मेटमध्ये सेट केल्या आहेत.
+        let today = new Date();
+        let yyyy = today.getFullYear();
+        let mm = String(today.getMonth() + 1).padStart(2, '0');
+        let dd = String(today.getDate()).padStart(2, '0');
+        
+        document.getElementById('ana_start_date').value = `${yyyy}-${mm}-01`;
+        document.getElementById('ana_end_date').value = `${yyyy}-${mm}-${dd}`;
+        
         // Start cloud listener to keep local storage fresh and up-to-date
         syncMilkDataFromCloud(); 
-        
-        let today = new Date();
-        let firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        document.getElementById('ana_start_date').valueAsDate = firstDayOfMonth;
-        document.getElementById('ana_end_date').valueAsDate = today;
     });
 </script>
 
