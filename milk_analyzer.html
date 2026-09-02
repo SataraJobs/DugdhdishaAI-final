@@ -311,16 +311,14 @@
     const btnRetake = document.getElementById('btn_retake');
     const btnMagic = document.getElementById('btn_ai_scan');
 
-    // 🔥 100% FIXED CLOUD SYNC: Always Fetch Latest from Firebase 🔥
+    // 🔥 100% FIXED CLOUD SYNC: Always Fetch Latest from Firebase without indexing errors 🔥
     function syncMilkDataFromCloud() {
         let userMobile = localStorage.getItem("current_user_mobile");
         if (userMobile && userMobile !== "+91 9XXXX XXXX") {
             
-            // 🔥 Listen to Cloud changes in Real-Time (Cloud-First Approach)
+            // 🔥 Removing .orderBy("timestamp", "desc") to prevent Firestore silent failures due to missing compound index 🔥
             db.collection("milk_records")
                 .where("farmerMobile", "==", userMobile)
-                .orderBy("timestamp", "desc")
-                .limit(20) // Get the latest 20 records
                 .onSnapshot((querySnapshot) => {
                     let cloudRecords = [];
                     querySnapshot.forEach((doc) => {
@@ -329,6 +327,16 @@
                         cloudRecords.push(data);
                     });
                     
+                    // Sort records client-side (Newest to Oldest based on selected date)
+                    cloudRecords.sort((a, b) => {
+                        let dateA = new Date(a.date).getTime();
+                        let dateB = new Date(b.date).getTime();
+                        return dateB - dateA;
+                    });
+                    
+                    // Keep the storage light (Top 50 records is enough for quick history view)
+                    cloudRecords = cloudRecords.slice(0, 50);
+
                     // Directly override local storage with fresh Cloud Data
                     localStorage.setItem('milk_history', JSON.stringify(cloudRecords));
                     
@@ -447,7 +455,7 @@
     }
     function retakePhoto() { startCamera(); }
 
-    // 🔥 AI VISION EXTRACTION 🔥
+    // 🔥 AI VISION EXTRACTION (Updated Model Fix) 🔥
     async function scanReceiptWithAI() {
         if (!GEMINI_API_KEY) await initChatbotAPI();
         if (!GEMINI_API_KEY) { alert("API Key सापडली नाही. ॲडमिनला कळवा."); return; }
@@ -458,7 +466,9 @@
         try {
             let base64Image = preview.src.split(',')[1];
             
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+            // 🔥 FIXED: Using stable gemini-3.6-flash for visual scanning instead of dead 1.5-pro 🔥
+            let finalModelName = "gemini-3.6-flash";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${GEMINI_API_KEY}`;
             const prompt = `तू एक अचूक पावती वाचक (Receipt Scanner) आहेस. या दूध डेअरीच्या थर्मल पावतीमधील आकडे शोध. 
             मला फक्त आणि फक्त JSON फॉरमॅटमध्ये उत्तर दे. इतर कोणताही मजकूर लिहू नकोस.
             फॉरमॅट: {"liters": 0.0, "fat": 0.0, "snf": 0.0, "rate": 0.0}`;
@@ -474,6 +484,11 @@
 
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             const data = await response.json();
+
+            if (!response.ok) {
+                console.error("API Error: ", data.error);
+                throw new Error("API Error");
+            }
 
             if (data.candidates && data.candidates.length > 0) {
                 let aiText = data.candidates[0].content.parts[0].text;
@@ -495,7 +510,7 @@
             }
         } catch (error) {
             console.error(error);
-            alert("पावती स्पष्ट वाचता आली नाही. कृपया आकडे मॅन्युअली भरा.");
+            alert("पावती स्पष्ट वाचता आली नाही किंवा सर्व्हर एरर आला. कृपया आकडे मॅन्युअली भरा.");
         } finally {
             setTimeout(() => {
                 btnMagic.innerHTML = "🤖 AI ने फॉर्म भरा (जादू पहा)";
@@ -512,7 +527,7 @@
         document.getElementById('milk_total').value = total.toFixed(2);
     }
 
-    // 🔥 FIXED: Direct Save to Cloud (Cloud-First Approach) 🔥
+    // 🔥 FIXED: Instant UI Update + Cloud Save 🔥
     function saveMilkRecord() {
         let date = document.getElementById('milk_date').value;
         let shift = document.getElementById('milk_shift').value;
@@ -529,7 +544,7 @@
 
         let saveBtn = document.getElementById("save_btn_milk");
         let originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = "⏳ क्लाऊडवर सेव्ह करत आहे...";
+        saveBtn.innerHTML = "⏳ सेव्ह करत आहे...";
         saveBtn.disabled = true;
 
         let uniqueId = "MILK_" + Date.now();
@@ -553,20 +568,20 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp() 
         };
 
-        // 🔥 Save directly to Firebase (This will automatically trigger onSnapshot and update UI across all devices) 🔥
+        // 🔥 STEP 1: Optimistic UI Update (Save locally immediately so user sees it instantly)
+        let records = JSON.parse(localStorage.getItem('milk_history')) || [];
+        records.unshift(firebaseData);
+        localStorage.setItem('milk_history', JSON.stringify(records));
+        loadHistory();
+
+        // 🔥 STEP 2: Save to Firebase Cloud in background
         db.collection("milk_records").doc(uniqueId).set(firebaseData)
         .then(() => { 
-            alert("✅ दूध संकलनाची नोंद यशस्वीरित्या क्लाऊडवर सेव्ह झाली!"); 
+            // Silent success, UI is already updated
+            console.log("Milk record successfully synced to cloud.");
         })
         .catch(err => { 
             console.error("Firebase save error: ", err); 
-            
-            // Offline Fallback: If no internet, save locally and sync later
-            alert("⚠️ इंटरनेट एरर! नोंद लोकल सिस्टीममध्ये सेव्ह झाली आहे. नेट आल्यावर ती क्लाऊडवर जाईल."); 
-            let records = JSON.parse(localStorage.getItem('milk_history')) || [];
-            records.unshift(firebaseData);
-            localStorage.setItem('milk_history', JSON.stringify(records));
-            loadHistory();
         })
         .finally(() => {
             // Reset Form UI
@@ -607,7 +622,7 @@
         container.innerHTML = html;
     }
 
-    // 🔥 4 GRAPHS & 30 DAYS VALIDATION & REDIRECTION TO AI SARTHI 🔥
+    // 🔥 4 GRAPHS & DATE FILTERING FIX 🔥
     let milkChartInst = null;
     let fatChartInst = null;
     let snfChartInst = null;
@@ -617,12 +632,17 @@
         let startDateInput = document.getElementById('ana_start_date').value;
         let endDateInput = document.getElementById('ana_end_date').value;
         
+        if(!startDateInput || !endDateInput) { alert("कृपया 'पासून' आणि 'पर्यंत' तारखा अचूक निवडा."); return; }
+        
+        // 🔥 FIXED: Safe Date Parsing including exact boundaries 🔥
         let startDate = new Date(startDateInput);
+        startDate.setHours(0, 0, 0, 0); // Start of the day
+        
         let endDate = new Date(endDateInput);
+        endDate.setHours(23, 59, 59, 999); // End of the day
         
-        if(isNaN(startDate) || isNaN(endDate)) { alert("कृपया 'पासून' आणि 'पर्यंत' तारखा अचूक निवडा."); return; }
+        if(isNaN(startDate) || isNaN(endDate)) { alert("कृपया योग्य तारखा निवडा."); return; }
         
-        // 🔥 ३० दिवसांची मर्यादा (30 Days Limit Validation) 🔥
         let timeDifference = endDate - startDate;
         let dayDifference = timeDifference / (1000 * 3600 * 24);
 
@@ -631,21 +651,29 @@
             return;
         }
 
-        if (dayDifference > 30) {
+        if (dayDifference > 31) {
             alert("⚠️ कृपया अचूक आणि जलद AI ॲनालिसिससाठी जास्तीत जास्त ३० दिवसांपर्यंतचाच कालावधी निवडा.");
             return;
         }
 
         let records = JSON.parse(localStorage.getItem('milk_history')) || [];
-        let filtered = records.filter(r => { let d = new Date(r.date); return d >= startDate && d <= endDate; }).sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        if(filtered.length === 0) { alert("या निवडलेल्या तारखांमध्ये कोणतीही दुधाची नोंद आढळली नाही."); return; }
+        // Filter and Sort from Oldest to Newest for the graphs
+        let filtered = records.filter(r => { 
+            let d = new Date(r.date); 
+            return d >= startDate && d <= endDate; 
+        }).sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        if(filtered.length === 0) { alert("या निवडलेल्या तारखांमध्ये कोणतीही दुधाची नोंद आढळली नाही. कृपया वेगळी तारीख निवडून पहा."); return; }
 
         let dailyData = {};
         filtered.forEach(r => {
             if(!dailyData[r.date]) dailyData[r.date] = { date: r.date, liters: 0, total: 0, fatSum: 0, snfSum: 0, count: 0 };
-            dailyData[r.date].liters += r.liters; dailyData[r.date].total += r.total;
-            dailyData[r.date].fatSum += r.fat; dailyData[r.date].snfSum += (r.snf || 0); dailyData[r.date].count += 1;
+            dailyData[r.date].liters += parseFloat(r.liters); 
+            dailyData[r.date].total += parseFloat(r.total);
+            dailyData[r.date].fatSum += parseFloat(r.fat); 
+            dailyData[r.date].snfSum += parseFloat(r.snf || 0); 
+            dailyData[r.date].count += 1;
         });
 
         let labels = []; let litersData = []; let totalData = []; let fatData = []; let snfData = [];
