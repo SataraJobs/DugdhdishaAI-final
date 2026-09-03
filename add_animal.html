@@ -240,6 +240,26 @@
     function initAddAnimalPage() {
         // 🔥 NEW: CLOUD DATABASE SYNC ACROSS ALL DEVICES (WITH SESSION TRACKER) 🔥
         syncUserSessionFromCloud();
+        
+        // 🔥 १००% FIX: नवीन मोबाईलवर जुनी सर्व जनावरे डाऊनलोड करण्यासाठी हे फंक्शन कॉल केले आहे 🔥
+        syncAnimalsFromCloud();
+    }
+
+    // 🔥 १००% FIX: हे नवीन फंक्शन फायरबेसवरून जनावरे शोधून लोकल मेमरीमध्ये सेव्ह करते 🔥
+    function syncAnimalsFromCloud() {
+        let userMobile = localStorage.getItem("current_user_mobile");
+        if (userMobile && userMobile !== "+91 9XXXX XXXX") {
+            db.collection("farmer_animals").where("farmerMobile", "==", userMobile)
+            .onSnapshot((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    let animalData = doc.data();
+                    // फायरबेसवरून आलेला डेटा लोकल मेमरीमध्ये सेव्ह करा
+                    localStorage.setItem(doc.id, JSON.stringify(animalData));
+                });
+            }, (error) => {
+                console.log("Cloud Animal Sync Error: ", error);
+            });
+        }
     }
 
     function syncUserSessionFromCloud() {
@@ -400,7 +420,7 @@
         // 🔥 FIX: Directly setting Doc ID to match local storage key 🔥
         db.collection("farmer_animals").doc(storageKey).set(animalData)
         .then(() => {
-            alert('✅ जनावराची नोंदणी यशस्वी झाली!');
+            alert('✅ जनावराची नोंदणी यशस्वी झाली आणि ती क्लाऊडवर सेव्ह झाली आहे!');
             window.location.href = 'cattle_profile.html';
         })
         .catch((error) => {
