@@ -894,7 +894,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत अलं आहे...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
     </div>
 </div>
 
@@ -1614,9 +1614,9 @@
         let starter = parseFloat(document.getElementById("rb_starter").value) || 0;
 
         // 3 Green Fodders
-        let green1Type = document.getElementById("rb_green1_type").value;
-        let green2Type = document.getElementById("rb_green2_type").value;
-        let green3Type = document.getElementById("rb_green3_type").value;
+        let green1Type = document.getElementById("rb_green1_type").options[document.getElementById("rb_green1_type").selectedIndex].text;
+        let green2Type = document.getElementById("rb_green2_type").options[document.getElementById("rb_green2_type").selectedIndex].text;
+        let green3Type = document.getElementById("rb_green3_type").options[document.getElementById("rb_green3_type").selectedIndex].text;
 
         let green1 = parseFloat(document.getElementById("rb_green1").value) || 0;
         let green2 = parseFloat(document.getElementById("rb_green2").value) || 0;
@@ -1624,8 +1624,8 @@
         let totalGreen = green1 + green2 + green3;
 
         // 2 Dry Fodders
-        let dry1Type = document.getElementById("rb_dry1_type").value;
-        let dry2Type = document.getElementById("rb_dry2_type").value;
+        let dry1Type = document.getElementById("rb_dry1_type").options[document.getElementById("rb_dry1_type").selectedIndex].text;
+        let dry2Type = document.getElementById("rb_dry2_type").options[document.getElementById("rb_dry2_type").selectedIndex].text;
 
         let dry1 = parseFloat(document.getElementById("rb_dry1").value) || 0;
         let dry2 = parseFloat(document.getElementById("rb_dry2").value) || 0;
@@ -1746,7 +1746,9 @@
 
         function addRow(cat, name, qty, unit) {
             if(name && !name.includes('काहीच नाही') && !name.includes('काहीच देत नाही') && qty > 0) {
-                inputHtml += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${cat}: <b>${name}</b></td><td style="text-align:right; padding:8px; border-bottom:1px solid #eee; color:#111;"><b>${qty} ${unit}</b></td></tr>`;
+                // Remove numbers from the name like "१. हिरवी मका / कडवळ"
+                let cleanName = name.replace(/^[०-९\d]+\.\s*/, '');
+                inputHtml += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${cat}: <b>${cleanName}</b></td><td style="text-align:right; padding:8px; border-bottom:1px solid #eee; color:#111;"><b>${qty} ${unit}</b></td></tr>`;
             }
         }
 
@@ -1837,7 +1839,7 @@
                 <tr>
                     <td>पारंपारिक खुराक (एकूण ३ प्रकार)</td>
                     <td>${totalTradGrams} g</td>
-                    <td style="color:#ff6f00; font-weight:900;">${recTrad} g (${trad1Type} मुख्यत्वे)</td>
+                    <td style="color:#ff6f00; font-weight:900;">${recTrad} g (${trad1Type.replace(/^[०-९\d]+\.\s*/, '')} मुख्यत्वे)</td>
                 </tr>
                 <tr>
                     <td>हिरवा चारा (३ प्रकार मिळून)</td>
@@ -1853,7 +1855,7 @@
 
             // 🔥 सुधारणा: सविस्तर मराठी विश्लेषण व मार्गदर्शन
             document.getElementById("advance_tips_ui").innerHTML = `
-                <b>शर्यतीच्या बैलासाठी विशेष शिफारस:</b> तुमच्या बैलाचे सध्याचे वजन (${weight} Kg) आणि शर्यतीची तयारी लक्षात घेता, आहारात <b>${trad1Type}</b> सोबत रोज <b>३० मिली लिक्विड कॅल्शियम + इलेक्ट्रोलाईट्स</b> देणे अत्यंत आवश्यक आहे. यामुळे मैदानात पळताना पायात गोळे (Cramps) येणार नाहीत, धाप लागणार नाही आणि हाडांचा सांगाडा मजबूत बनेल.`;
+                <b>शर्यतीच्या बैलासाठी विशेष शिफारस:</b> तुमच्या बैलाचे सध्याचे वजन (${weight} Kg) आणि शर्यतीची तयारी लक्षात घेता, आहारात <b>${trad1Type.replace(/^[०-९\d]+\.\s*/, '')}</b> सोबत रोज <b>३० मिली लिक्विड कॅल्शियम + इलेक्ट्रोलाईट्स</b> देणे अत्यंत आवश्यक आहे. यामुळे मैदानात पळताना पायात गोळे (Cramps) येणार नाहीत, धाप लागणार नाही आणि हाडांचा सांगाडा मजबूत बनेल.`;
             
             // Daily Routine
             document.getElementById("daily_routine_content").innerHTML = `
@@ -1999,25 +2001,15 @@
         - पशुखाद्य: ${gData.starter} ग्रॅम
         
         शेतकऱ्याला मराठीत अत्यंत सोप्या ४-५ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
-        १. शर्यतीच्या मैदानात बादशाह बनवण्यासाठी आहारात नेमकी काय वाढ करावी (उदा. उडदाची डाळ, मटकी, किंवा स्टॅमिना पावडर)?
+        १. शर्यतीच्या मैदानात बादशाह बनवण्यासाठी आहारात नेमकी काय वाढ करावी?
         २. धावताना पायात गोळे येऊ नयेत म्हणून काय काळजी घ्यावी?
         कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
         `;
 
         try {
-            // 🔥 FIX 2: Dynamic Model Selection (Fallback to stable 3.6-flash, totally avoiding dead 1.5-flash)
-            let finalModelName = "gemini-3.6-flash"; 
-            let geminiModel = (adminAiData && adminAiData.m16_2) ? adminAiData.m16_2.trim() : "";
-            let rawModelString = geminiModel.toLowerCase();
+            // 🔥 FIX 2: Dynamic Model Selection (Fallback to stable 1.5-flash)
+            let finalModelName = "gemini-1.5-flash"; 
             
-            if (rawModelString.includes("3.7")) {
-                finalModelName = "gemini-3.7-flash";
-            } else if (rawModelString.includes("3.6")) {
-                finalModelName = "gemini-3.6-flash";
-            } else if (rawModelString.includes("1.5")) {
-                finalModelName = "gemini-3.6-flash"; // Force dead 1.5 to 3.6
-            }
-
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
             
             // 🔥 FIX 3: Added maxOutputTokens to prevent answer truncation
@@ -2027,7 +2019,7 @@
                     temperature: 0.3,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 4096, 
+                    maxOutputTokens: 2000, 
                 }
             };
 
@@ -2044,6 +2036,9 @@
                 document.getElementById('gemini_content_text').innerHTML = aiResponse;
                 document.getElementById('gemini_loader').style.display = "none";
                 document.getElementById('gemini_response_box').style.display = "block";
+                
+                // Scroll to show AI response
+                document.getElementById('gemini_response_box').scrollIntoView({ behavior: "smooth" });
             } else {
                 let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
                 alert("AI कडून उत्तर आले नाही: " + errMsg);
