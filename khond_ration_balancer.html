@@ -871,6 +871,12 @@
             max-width: 85%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
 
+        /* 🔥 NEW: PDF Specific Page Break Styles 🔥 */
+        .pdf-page-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
         @media (max-width: 480px) {
             .form-grid-2, .basic-summary-grid, .nutrition-14-grid {
                 grid-template-columns: 1fr;
@@ -1119,10 +1125,10 @@
     <div class="card-box" id="result_container" style="display: none;">
         
         <!-- 🔥 PDF Header (Hidden on screen, shown in PDF) 🔥 -->
-        <div id="pdf_main_heading" style="display:none; text-align:center; padding-bottom: 15px; border-bottom: 3px solid #1b5e20; margin-bottom: 20px;">
+        <div class="pdf-page-break" id="pdf_main_heading" style="display:none; text-align:center; padding-bottom: 15px; border-bottom: 3px solid #1b5e20; margin-bottom: 25px; margin-top: 10px;">
             <div style="font-size: 35px; margin-bottom: 5px;">🐂</div>
             <h2 style="margin: 0; color: #1b5e20; font-weight: 900; font-size: 26px;">दुग्ध दिशा AI</h2>
-            <p style="margin: 5px 0 0; font-size: 14px; color: #555; font-weight: bold;">शर्यत खोंड व वळू आहार अहवाल</p>
+            <p style="margin: 5px 0 0; font-size: 14px; color: #555; font-weight: bold;">शर्यत खोंड व वळू प्रगत आहार अहवाल</p>
             <p style="margin: 8px 0 0; font-size: 11px; color: #1b5e20; background: #e8f5e9; display: inline-block; padding: 4px 10px; border-radius: 4px; border: 1px solid #c8e6c9;">📝 संदर्भ: ही मूल्ये ICAR व देशी मानकांवर आधारित आहेत.</p>
         </div>
 
@@ -1133,10 +1139,10 @@
         </div>
 
         <!-- 🔥 NEW: INPUT SUMMARY INJECTED FOR PDF 🔥 -->
-        <div id="pdf_input_summary" style="display:none; background:#f0f7ff; border:1px solid #1976d2; padding:15px; border-radius:10px; margin-bottom:15px;"></div>
+        <div id="pdf_input_summary" class="pdf-page-break" style="display:none; background:#f0f7ff; border:1px solid #1976d2; padding:15px; border-radius:10px; margin-bottom:15px;"></div>
 
         <!-- 3 Meters / Gauges (DM, Protein, Bone/Calcium) -->
-        <div class="meter-row">
+        <div class="meter-row pdf-page-break">
             <div class="meter-card">
                 <h4 id="meter_dm" style="color:#2e7d32;">०%</h4>
                 <p>पोट भरले का? (DM)</p>
@@ -1152,7 +1158,7 @@
         </div>
 
         <!-- 🔥 NEW: EXPLICIT BASIC 2-BOX CHECK (DRY MATTER & PROTEIN STATUS) 🔥 -->
-        <div class="basic-summary-grid">
+        <div class="basic-summary-grid pdf-page-break">
             <div class="basic-check-card">
                 <h5>
                     <span>🌾 ड्राय मॅटर (DM)</span>
@@ -1179,7 +1185,7 @@
         </div>
 
         <!-- BASIC MODE OUTPUT (Always Visible): Problems Identified -->
-        <div class="problem-box">
+        <div class="problem-box pdf-page-break">
             <h4>⚠️ आहारातील कमतरता व समस्या (Basic Problem ID):</h4>
             <ul id="problem_list_ui">
                 <!-- JS will inject problem bullets here -->
@@ -1191,7 +1197,7 @@
             <h4>👑 वैज्ञानिक उपाय व देशी शर्यत डाएट चार्ट (Advance Solution):</h4>
             
             <!-- 🔥 NEW: ADVANCE AI PERFORMANCE SCORE BADGE 🔥 -->
-            <div class="adv-score-badge">
+            <div class="adv-score-badge pdf-page-break">
                 <span style="font-size:11px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">AI Race Bull Performance Score</span>
                 <h3 id="adv_perf_score">८८ / १००</h3>
                 <p style="font-size:11.5px; color:#c8e6c9; margin-top:4px; font-weight:700;">तुमच्या बैलाचा स्टॅमिना व स्नायू विकास उत्तम पातळीवर आहे!</p>
@@ -1199,7 +1205,7 @@
 
             <!-- 🔥 NEW: 14-PARAMETER NUTRITION & STATUS DASHBOARD 🔥 -->
             <h5 style="color:#1b5e20; font-size:13.5px; font-weight:900; margin:10px 0 8px;">🧪 १४-पॅरामीटर पोषण व आरोग्य विश्लेषण (14-Point Nutrition Status):</h5>
-            <div class="nutrition-14-grid">
+            <div class="nutrition-14-grid pdf-page-break">
                 <div class="nut-item">1. Dry Matter Intake <span id="n14_dm">18.6 kg (96%)</span></div>
                 <div class="nut-item">2. Protein (CP) <span id="n14_cp">2.4 kg (86%)</span></div>
                 <div class="nut-item">3. Energy (ME) <span id="n14_me">29 Mcal (91%)</span></div>
@@ -1217,7 +1223,7 @@
             </div>
 
             <!-- 🔥 NEW: RISK SCORE MATRIX FOR RACING BULLS 🔥 -->
-            <div class="risk-matrix-box">
+            <div class="risk-matrix-box pdf-page-break">
                 <h5>⚠️ शर्यत धोका व ताण मूल्यांकन (Risk Score Matrix):</h5>
                 <div class="risk-item"><span>1. Acidosis (पोटफुगी/ऍसिड):</span> <span style="color:#ff8f00;">⭐⭐ (Medium Risk)</span></div>
                 <div class="risk-item"><span>2. Laminitis (खूर आजार/लचक):</span> <span style="color:#2e7d32;">⭐ (Low Risk)</span></div>
@@ -1226,24 +1232,24 @@
             </div>
 
             <!-- 🔥 नवीन ॲडव्हान्स बॉक्सेस (Daily Routine, Exercise Plan & Countdown Plan) 🔥 -->
-            <div class="routine-box" id="daily_routine_box">
+            <div class="routine-box pdf-page-break" id="daily_routine_box">
                 <h5>🕒 रोजचा आहार वेळापत्रक (Daily Routine)</h5>
                 <div id="daily_routine_content"></div>
             </div>
 
-            <div class="exercise-box" id="exercise_plan_box">
+            <div class="exercise-box pdf-page-break" id="exercise_plan_box">
                 <h5>🏋️ व्यायाम व प्रशिक्षण योजना</h5>
                 <div id="exercise_plan_content"></div>
             </div>
 
-            <div class="countdown-box" id="countdown_plan_box" style="display:none;">
+            <div class="countdown-box pdf-page-break" id="countdown_plan_box" style="display:none;">
                 <h5>⏳ शर्यतपूर्व खास तयारी (Countdown Plan)</h5>
                 <div id="countdown_plan_content"></div>
             </div>
 
             <p style="font-size: 13px; color: #111; line-height: 1.5; font-weight: 700;" id="advance_tips_ui"></p>
             
-            <table class="diet-table">
+            <table class="diet-table pdf-page-break">
                 <thead>
                     <tr>
                         <th>आहार घटक</th>
@@ -1256,7 +1262,7 @@
                 </tbody>
             </table>
 
-            <div style="background:#fff3e0; border-left:5px solid #ff6f00; padding:14px; border-radius:12px; margin-top:16px;">
+            <div class="pdf-page-break" style="background:#fff3e0; border-left:5px solid #ff6f00; padding:14px; border-radius:12px; margin-top:16px;">
                 <h5 style="color:#d84315; font-size:13.5px; font-weight:900; margin-bottom:6px;">🏆 छाती व मान रुंद करण्याचा पारंपारिक देशी सल्ला:</h5>
                 <p style="font-size:12px; color:#222; line-height:1.6; font-weight:700;">
                     शर्यतीच्या बैलाची छाती आणि मान मजबूत करण्यासाठी आठवड्यातून ३ दिवस <b>उकडलेली मटकी किंवा भिजवलेली उडदाची डाळ</b> चारा देण्यापूर्वी खाऊ घाला. तसेच मैदानात धावताना पायात गोळे (Cramps) येऊ नयेत म्हणून रोज <b>३० मिली लिक्विड कॅल्शियम व इलेक्ट्रोलाईट्स</b> पाण्यातून देणे आवश्यक आहे.
@@ -1273,7 +1279,7 @@
                 ✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini AI)
             </button>
             <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
-            <div class="gemini-response-box" id="gemini_response_box">
+            <div class="gemini-response-box pdf-page-break" id="gemini_response_box">
                 <h4>✨ दुग्ध दिशा AI विशेष शर्यत सल्ला:</h4>
                 <div class="gemini-content" id="gemini_content_text"></div>
             </div>
@@ -1924,20 +1930,24 @@
             margin:       10,
             filename:     'Khillar_Racing_Bull_Diet_Report.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
         
-        html2pdf().set(opt).from(element).save().then(() => {
-            // Restore Original UI after Download is complete
-            if(pdfHeader) pdfHeader.style.display = 'none';
-            if(btnPdf) btnPdf.style.display = 'block';
-            if(btnAi) btnAi.style.display = (currentMode === 'adv' || isPlanActive('adv')) ? 'block' : 'none';
-            
-            element.style.boxShadow = oldShadow;
-            element.style.margin = oldMargin;
-            element.style.border = oldBorder;
-        });
+        // 🔥 FIX: Added setTimeout to ensure DOM is fully repainted with the Header before generating PDF
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore Original UI after Download is complete
+                if(pdfHeader) pdfHeader.style.display = 'none';
+                if(btnPdf) btnPdf.style.display = 'block';
+                if(btnAi) btnAi.style.display = (currentMode === 'adv' || isPlanActive('adv')) ? 'block' : 'none';
+                
+                element.style.boxShadow = oldShadow;
+                element.style.margin = oldMargin;
+                element.style.border = oldBorder;
+            });
+        }, 500);
     }
 
     // 🔥 11. GEMINI AI ADVICE INTEGRATION (FIXED API KEY & MODEL BUG) 🔥
@@ -1969,7 +1979,7 @@
         शेतकऱ्याला मराठीत अत्यंत सोप्या ४-५ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
         १. शर्यतीच्या मैदानात बादशाह बनवण्यासाठी आहारात नेमकी काय वाढ करावी (उदा. उडदाची डाळ, मटकी, किंवा स्टॅमिना पावडर)?
         २. धावताना पायात गोळे येऊ नयेत म्हणून काय काळजी घ्यावी?
-        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
+        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू মজकूर वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
         `;
 
         try {
