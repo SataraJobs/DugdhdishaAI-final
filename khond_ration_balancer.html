@@ -1118,11 +1118,22 @@
 
     <div class="card-box" id="result_container" style="display: none;">
         
+        <!-- 🔥 PDF Header (Hidden on screen, shown in PDF) 🔥 -->
+        <div id="pdf_main_heading" style="display:none; text-align:center; padding-bottom: 15px; border-bottom: 3px solid #1b5e20; margin-bottom: 20px;">
+            <div style="font-size: 35px; margin-bottom: 5px;">🐂</div>
+            <h2 style="margin: 0; color: #1b5e20; font-weight: 900; font-size: 26px;">दुग्ध दिशा AI</h2>
+            <p style="margin: 5px 0 0; font-size: 14px; color: #555; font-weight: bold;">शर्यत खोंड व वळू आहार अहवाल</p>
+            <p style="margin: 8px 0 0; font-size: 11px; color: #1b5e20; background: #e8f5e9; display: inline-block; padding: 4px 10px; border-radius: 4px; border: 1px solid #c8e6c9;">📝 संदर्भ: ही मूल्ये ICAR व देशी मानकांवर आधारित आहेत.</p>
+        </div>
+
         <!-- Freemium Status Bar -->
         <div class="freemium-badge-bar">
             <span id="status_message_top">⚡ बेसिक आहारातील कमतरता तपासणी</span>
             <span id="lock_icon_status" style="color:#d32f2f;">🔒 Advance Locked</span>
         </div>
+
+        <!-- 🔥 NEW: INPUT SUMMARY INJECTED FOR PDF 🔥 -->
+        <div id="pdf_input_summary" style="display:none; background:#f0f7ff; border:1px solid #1976d2; padding:15px; border-radius:10px; margin-bottom:15px;"></div>
 
         <!-- 3 Meters / Gauges (DM, Protein, Bone/Calcium) -->
         <div class="meter-row">
@@ -1601,7 +1612,9 @@
     function calculateKhondRation() {
         let weight = parseFloat(document.getElementById("rb_weight").value) || 400;
         let age = parseFloat(document.getElementById("rb_age").value) || 36;
-        let stage = document.getElementById("rb_racing_stage").value;
+        let stageSelect = document.getElementById("rb_racing_stage");
+        let stage = stageSelect.value;
+        let stageText = stageSelect.options[stageSelect.selectedIndex].text;
         let starter = parseFloat(document.getElementById("rb_starter").value) || 0;
 
         // 3 Green Fodders
@@ -1651,7 +1664,6 @@
         document.getElementById("dm_req_val").innerText = `${targetDM.toFixed(1)} Kg`;
         document.getElementById("dm_supp_val").innerText = `${suppliedDM.toFixed(1)} Kg`;
         
-        // 🔥 सुधारणा १: DM फरक दाखवताना वजा चिन्ह (-) हटवले
         let dmDiff = (suppliedDM - targetDM).toFixed(1);
         let dmDiffEl = document.getElementById("dm_diff_val");
         let dmPill = document.getElementById("dm_status_pill");
@@ -1672,7 +1684,6 @@
         document.getElementById("cp_req_val").innerText = `${Math.round(targetProteinGrams)} g`;
         document.getElementById("cp_supp_val").innerText = `${Math.round(suppliedProtein)} g`;
         
-        // 🔥 सुधारणा १: प्रथिने (CP) फरक दाखवताना वजा चिन्ह (-) हटवले
         let cpDiff = Math.round(suppliedProtein - targetProteinGrams);
         let cpDiffEl = document.getElementById("cp_diff_val");
         let cpPill = document.getElementById("cp_status_pill");
@@ -1734,7 +1745,6 @@
             document.getElementById("n14_cp").innerText = `${(suppliedProtein/1000).toFixed(2)} kg / ${(targetProteinGrams/1000).toFixed(2)} kg (${cpPercent}%)`;
             document.getElementById("n14_me").innerText = `${suppliedME.toFixed(1)} Mcal / ${targetME} Mcal (${mePercent}%)`;
             
-            // 🔥 सुधारणा २: १४-पॅरामीटर रिपोर्टमध्ये पाण्याची गरज वजनानुसार डायनॅमिक मोजली (१०% ते ११%)
             let waterReq = Math.round(weight * 0.11);
             let currentWaterEst = Math.round(weight * 0.09);
             document.getElementById("n14_water").innerText = `${currentWaterEst} L / ${waterReq} L Needed`;
@@ -1814,6 +1824,37 @@
                 countdownBox.style.display = "none";
             }
 
+            // 🔥 NEW: GENERATE INPUT SUMMARY FOR PDF 🔥
+            let inputHtml = `
+            <h4 style="color:#1565c0; margin-top:0; margin-bottom:10px; border-bottom:1px solid #bbdefb; padding-bottom:5px;">📋 बैलाची माहिती व दिलेला आहार</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; font-size:12px; color:#333;">
+                <div><b>वजन:</b> ${weight} Kg</div>
+                <div><b>वय:</b> ${age} महिने</div>
+                <div><b>टप्पा:</b> ${stageText}</div>
+                <div><b>पशुखाद्य:</b> ${starter} ग्रॅम</div>
+            </div>
+            <h5 style="margin:10px 0 5px; color:#333; font-size:13px; border-bottom:1px dashed #ccc; padding-bottom:3px;">दिलेला चारा व खुराक:</h5>
+            <table style="width:100%; font-size:12px; border-collapse:collapse; color:#444;">`;
+
+            function addRow(cat, name, qty, unit) {
+                if(name && !name.includes('काहीच नाही') && !name.includes('काहीच देत नाही') && qty > 0) {
+                    inputHtml += `<tr><td style="padding:4px 0; border-bottom:1px solid #eee;">${cat}: <b>${name}</b></td><td style="text-align:right; border-bottom:1px solid #eee; color:#111;"><b>${qty} ${unit}</b></td></tr>`;
+                }
+            }
+
+            addRow('हिरवा चारा', document.getElementById("rb_green1_type").value, green1, 'Kg');
+            addRow('हिरवा चारा', document.getElementById("rb_green2_type").value, green2, 'Kg');
+            addRow('हिरवा चारा', document.getElementById("rb_green3_type").value, green3, 'Kg');
+            addRow('सुका चारा', document.getElementById("rb_dry1_type").value, dry1, 'Kg');
+            addRow('सुका चारा', document.getElementById("rb_dry2_type").value, dry2, 'Kg');
+            addRow('देशी खुराक', trad1Type, trad1Qty, 'g');
+            addRow('देशी खुराक', trad2Type, trad2Qty, 'g');
+            addRow('देशी खुराक', trad3Type, trad3Qty, 'g');
+
+            inputHtml += `</table>`;
+            document.getElementById("pdf_input_summary").innerHTML = inputHtml;
+            document.getElementById("pdf_input_summary").style.display = "block";
+
             document.getElementById("btn_pdf_download").style.display = "block";
             document.getElementById("btn_gemini_trigger").style.display = "block";
         } else {
@@ -1822,6 +1863,7 @@
             topStatusText.innerText = "⚡ बेसिक समस्या अहवाल";
             lockIconStatus.innerText = "🔒 Advance Locked";
             lockIconStatus.style.color = "#d32f2f";
+            document.getElementById("pdf_input_summary").style.display = "none";
             document.getElementById("btn_pdf_download").style.display = "none";
             document.getElementById("btn_gemini_trigger").style.display = "none";
         }
@@ -1855,10 +1897,29 @@
         .catch(e => console.error("Cloud save error:", e));
     }
 
-    // 10. PDF DOWNLOAD LOGIC
+    // 10. PDF DOWNLOAD LOGIC (🔥 UPDATED TO CLEAN UI & SHOW HEADER 🔥)
     function downloadRealPDF() {
         window.scrollTo(0, 0);
         let element = document.getElementById('result_container');
+        
+        let pdfHeader = document.getElementById('pdf_main_heading');
+        let btnPdf = document.getElementById('btn_pdf_download');
+        let btnAi = document.getElementById('btn_gemini_trigger');
+        
+        // Show Header & Hide Buttons for a Clean PDF Print
+        if(pdfHeader) pdfHeader.style.display = 'block';
+        if(btnPdf) btnPdf.style.display = 'none';
+        if(btnAi) btnAi.style.display = 'none';
+
+        // Remove box shadow and margin for better PDF format
+        let oldShadow = element.style.boxShadow;
+        let oldMargin = element.style.margin;
+        let oldBorder = element.style.border;
+        
+        element.style.boxShadow = 'none';
+        element.style.margin = '0';
+        element.style.border = 'none';
+
         let opt = {
             margin:       10,
             filename:     'Khillar_Racing_Bull_Diet_Report.pdf',
@@ -1866,7 +1927,17 @@
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        html2pdf().set(opt).from(element).save();
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Restore Original UI after Download is complete
+            if(pdfHeader) pdfHeader.style.display = 'none';
+            if(btnPdf) btnPdf.style.display = 'block';
+            if(btnAi) btnAi.style.display = (currentMode === 'adv' || isPlanActive('adv')) ? 'block' : 'none';
+            
+            element.style.boxShadow = oldShadow;
+            element.style.margin = oldMargin;
+            element.style.border = oldBorder;
+        });
     }
 
     // 🔥 11. GEMINI AI ADVICE INTEGRATION (FIXED API KEY & MODEL BUG) 🔥
