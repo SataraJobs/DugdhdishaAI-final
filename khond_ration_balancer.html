@@ -1214,7 +1214,7 @@
                 <div class="risk-item"><span>4. Muscle Fatigue (स्नायू थकवा):</span> <span style="color:#d32f2f;">⭐⭐⭐⭐ (Critical Need)</span></div>
             </div>
 
-            <!-- 🔥 नवीन ॲडव्हान्स सेक्शन्स (Daily Routine, Exercise Plan & Countdown Plan) 🔥 -->
+            <!-- 🔥 नवीन ॲडव्हान्स बॉक्सेस (Daily Routine, Exercise Plan & Countdown Plan) 🔥 -->
             <div class="routine-box" id="daily_routine_box">
                 <h5>🕒 रोजचा आहार वेळापत्रक (Daily Routine)</h5>
                 <div id="daily_routine_content"></div>
@@ -1259,7 +1259,7 @@
 
             <!-- Gemini AI Advice Button -->
             <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">
-                ✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini 1.5)
+                ✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini AI)
             </button>
             <div class="gemini-loader" id="gemini_loader">तज्ज्ञ AI तुमचा डेटा तपासत आहे... कृपया थांबा ⏳</div>
             <div class="gemini-response-box" id="gemini_response_box">
@@ -1869,12 +1869,13 @@
         html2pdf().set(opt).from(element).save();
     }
 
-    // 11. GEMINI AI ADVICE INTEGRATION
+    // 🔥 11. GEMINI AI ADVICE INTEGRATION (FIXED API KEY & MODEL BUG) 🔥
     async function fetchGeminiAdvice() {
         let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
         let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
 
-        if(!apiKey || !apiKey.startsWith("AIzaSy")) {
+        // 🔥 FIX 1: Support for new 'AQ.' API Keys alongside 'AIzaSy'
+        if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
             alert("⚠️ ॲडमिन पॅनेलमध्ये Google Gemini ची योग्य API Key जोडलेली नाही. कृपया ती सेट करा.");
             return;
         }
@@ -1901,11 +1902,36 @@
         `;
 
         try {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // 🔥 FIX 2: Dynamic Model Selection (Fallback to stable 3.6-flash, totally avoiding dead 1.5-flash)
+            let finalModelName = "gemini-3.6-flash"; 
+            let geminiModel = (adminAiData && adminAiData.m16_2) ? adminAiData.m16_2.trim() : "";
+            let rawModelString = geminiModel.toLowerCase();
+            
+            if (rawModelString.includes("3.7")) {
+                finalModelName = "gemini-3.7-flash";
+            } else if (rawModelString.includes("3.6")) {
+                finalModelName = "gemini-3.6-flash";
+            } else if (rawModelString.includes("1.5")) {
+                finalModelName = "gemini-3.6-flash"; // Force dead 1.5 to 3.6
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
+            
+            // 🔥 FIX 3: Added maxOutputTokens to prevent answer truncation
+            const requestBody = { 
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: {
+                    temperature: 0.3,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 4096, 
+                }
+            };
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                body: JSON.stringify(requestBody)
             });
             const data = await response.json();
             
@@ -1916,12 +1942,13 @@
                 document.getElementById('gemini_loader').style.display = "none";
                 document.getElementById('gemini_response_box').style.display = "block";
             } else {
-                alert("AI कडून उत्तर आले नाही. कृपया पुन्हा प्रयत्न करा.");
+                let errMsg = data.error && data.error.message ? data.error.message : "अज्ञात त्रुटी";
+                alert("AI कडून उत्तर आले नाही: " + errMsg);
                 document.getElementById('btn_gemini_trigger').style.display = "block";
                 document.getElementById('gemini_loader').style.display = "none";
             }
         } catch (error) {
-            alert("इंटरनेट कनेक्शनची अडचण आहे.");
+            alert("इंटरनेट कनेक्शनची अडचण आहे किंवा API Key मध्ये समस्या आहे.");
             document.getElementById('btn_gemini_trigger').style.display = "block";
             document.getElementById('gemini_loader').style.display = "none";
         }
