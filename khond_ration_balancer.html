@@ -894,7 +894,7 @@
 <div id="sessionAlertBox">
     <div class="session-alert-content">
         <h3 style="color: #d32f2f; margin-top: 0;">⚠️ सुरक्षा सूचना!</h3>
-        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत आहे...</p>
+        <p style="font-size: 14px; color: #333;">तुमच्या खात्यावर दुसऱ्या डिव्हाईसवरून लॉगिन झाले आहे. सुरक्षा कारणास्तव या डिव्हाईसवरून ३ सेकंदांत स्वयंचलित लॉग-आऊट होत अलं आहे...</p>
     </div>
 </div>
 
@@ -1141,69 +1141,73 @@
         <!-- 🔥 NEW: INPUT SUMMARY INJECTED FOR PDF 🔥 -->
         <div id="pdf_input_summary" class="pdf-page-break" style="display:none; background:#f0f7ff; border:1px solid #1976d2; padding:15px; border-radius:10px; margin-bottom:15px;"></div>
 
-        <!-- 3 Meters / Gauges (DM, Protein, Bone/Calcium) -->
-        <div class="meter-row pdf-page-break">
-            <div class="meter-card">
-                <h4 id="meter_dm" style="color:#2e7d32;">०%</h4>
-                <p>पोट भरले का? (DM)</p>
-            </div>
-            <div class="meter-card">
-                <h4 id="meter_cp" style="color:#d32f2f;">०%</h4>
-                <p>स्नायू प्रथिने (CP)</p>
-            </div>
-            <div class="meter-card">
-                <h4 id="meter_cal" style="color:#ff9800;">०%</h4>
-                <p>हाडे व खूर ताकद</p>
-            </div>
-        </div>
-
-        <!-- 🔥 NEW: EXPLICIT BASIC 2-BOX CHECK (DRY MATTER & PROTEIN STATUS) 🔥 -->
-        <div class="basic-summary-grid pdf-page-break">
-            <div class="basic-check-card">
-                <h5>
-                    <span>🌾 ड्राय मॅटर (DM)</span>
-                    <span class="status-pill" id="dm_status_pill">पुरेसे</span>
-                </h5>
-                <div class="data-row"><span>एकूण आवश्यक:</span> <b id="dm_req_val">0 Kg</b></div>
-                <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="dm_supp_val">0 Kg</b></div>
-                <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
-                    <span>स्थिती (फरक):</span> <b id="dm_diff_val" style="color:#2e7d32;">0 Kg</b>
+        <!-- ======================= BASIC RESULTS AREA ======================= -->
+        <div id="basic_results_area">
+            <!-- 3 Meters / Gauges (DM, Protein, Bone/Calcium) -->
+            <div class="meter-row pdf-page-break">
+                <div class="meter-card">
+                    <h4 id="meter_dm" style="color:#2e7d32;">०%</h4>
+                    <p>पोट भरले का? (DM)</p>
+                </div>
+                <div class="meter-card">
+                    <h4 id="meter_cp" style="color:#d32f2f;">०%</h4>
+                    <p>स्नायू प्रथिने (CP)</p>
+                </div>
+                <div class="meter-card">
+                    <h4 id="meter_cal" style="color:#ff9800;">०%</h4>
+                    <p>हाडे व खूर ताकद</p>
                 </div>
             </div>
 
-            <div class="basic-check-card protein">
-                <h5>
-                    <span>💪 प्रथिने (Protein - CP)</span>
-                    <span class="status-pill" id="cp_status_pill">कमतरता</span>
-                </h5>
-                <div class="data-row"><span>एकूण आवश्यक:</span> <b id="cp_req_val">0 g</b></div>
-                <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="cp_supp_val">0 g</b></div>
-                <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
-                    <span>स्थिती (फरक):</span> <b id="cp_diff_val" style="color:#c62828;">0 g</b>
+            <!-- EXPLICIT BASIC 2-BOX CHECK (DRY MATTER & PROTEIN STATUS) -->
+            <div class="basic-summary-grid pdf-page-break">
+                <div class="basic-check-card">
+                    <h5>
+                        <span>🌾 ड्राय मॅटर (DM)</span>
+                        <span class="status-pill" id="dm_status_pill">पुरेसे</span>
+                    </h5>
+                    <div class="data-row"><span>एकूण आवश्यक:</span> <b id="dm_req_val">0 Kg</b></div>
+                    <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="dm_supp_val">0 Kg</b></div>
+                    <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
+                        <span>स्थिती (फरक):</span> <b id="dm_diff_val" style="color:#2e7d32;">0 Kg</b>
+                    </div>
                 </div>
+
+                <div class="basic-check-card protein">
+                    <h5>
+                        <span>💪 प्रथिने (Protein - CP)</span>
+                        <span class="status-pill" id="cp_status_pill">कमतरता</span>
+                    </h5>
+                    <div class="data-row"><span>एकूण आवश्यक:</span> <b id="cp_req_val">0 g</b></div>
+                    <div class="data-row"><span>सध्या मिळत आहे:</span> <b id="cp_supp_val">0 g</b></div>
+                    <div class="data-row" style="margin-top:6px; border-top:1px dashed #ccc; padding-top:4px;">
+                        <span>स्थिती (फरक):</span> <b id="cp_diff_val" style="color:#c62828;">0 g</b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BASIC MODE OUTPUT: Problems Identified -->
+            <div class="problem-box pdf-page-break">
+                <h4>⚠️ आहारातील कमतरता व समस्या (Basic Problem ID):</h4>
+                <ul id="problem_list_ui">
+                    <!-- JS will inject problem bullets here -->
+                </ul>
             </div>
         </div>
 
-        <!-- BASIC MODE OUTPUT (Always Visible): Problems Identified -->
-        <div class="problem-box pdf-page-break">
-            <h4>⚠️ आहारातील कमतरता व समस्या (Basic Problem ID):</h4>
-            <ul id="problem_list_ui">
-                <!-- JS will inject problem bullets here -->
-            </ul>
-        </div>
-
-        <!-- ADVANCE MODE OUTPUT (Visible ONLY if user has Premium Plan) -->
+        <!-- ======================= ADVANCE RESULTS AREA ======================= -->
+        <!-- ADVANCE MODE OUTPUT (Visible ONLY if user is on Advance Tab & Paid) -->
         <div class="advance-solution-box" id="advance_solution_container">
             <h4>👑 वैज्ञानिक उपाय व देशी शर्यत डाएट चार्ट (Advance Solution):</h4>
             
-            <!-- 🔥 NEW: ADVANCE AI PERFORMANCE SCORE BADGE 🔥 -->
+            <!-- ADVANCE AI PERFORMANCE SCORE BADGE -->
             <div class="adv-score-badge pdf-page-break">
                 <span style="font-size:11px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">AI Race Bull Performance Score</span>
                 <h3 id="adv_perf_score">८८ / १००</h3>
                 <p style="font-size:11.5px; color:#c8e6c9; margin-top:4px; font-weight:700;">तुमच्या बैलाचा स्टॅमिना व स्नायू विकास उत्तम पातळीवर आहे!</p>
             </div>
 
-            <!-- 🔥 NEW: 14-PARAMETER NUTRITION & STATUS DASHBOARD 🔥 -->
+            <!-- 14-PARAMETER NUTRITION & STATUS DASHBOARD -->
             <h5 style="color:#1b5e20; font-size:13.5px; font-weight:900; margin:10px 0 8px;">🧪 १४-पॅरामीटर पोषण व आरोग्य विश्लेषण (14-Point Nutrition Status):</h5>
             <div class="nutrition-14-grid pdf-page-break">
                 <div class="nut-item">1. Dry Matter Intake <span id="n14_dm">18.6 kg (96%)</span></div>
@@ -1222,7 +1226,7 @@
                 <div class="nut-item">14. Recovery Index <span style="color:#1b5e20;">High Stamina</span></div>
             </div>
 
-            <!-- 🔥 NEW: RISK SCORE MATRIX FOR RACING BULLS 🔥 -->
+            <!-- RISK SCORE MATRIX FOR RACING BULLS -->
             <div class="risk-matrix-box pdf-page-break">
                 <h5>⚠️ शर्यत धोका व ताण मूल्यांकन (Risk Score Matrix):</h5>
                 <div class="risk-item"><span>1. Acidosis (पोटफुगी/ऍसिड):</span> <span style="color:#ff8f00;">⭐⭐ (Medium Risk)</span></div>
@@ -1231,7 +1235,7 @@
                 <div class="risk-item"><span>4. Muscle Fatigue (स्नायू थकवा):</span> <span style="color:#d32f2f;">⭐⭐⭐⭐ (Critical Need)</span></div>
             </div>
 
-            <!-- 🔥 नवीन ॲडव्हान्स बॉक्सेस (Daily Routine, Exercise Plan & Countdown Plan) 🔥 -->
+            <!-- ॲडव्हान्स बॉक्सेस (Daily Routine, Exercise Plan & Countdown Plan) -->
             <div class="routine-box pdf-page-break" id="daily_routine_box">
                 <h5>🕒 रोजचा आहार वेळापत्रक (Daily Routine)</h5>
                 <div id="daily_routine_content"></div>
@@ -1287,12 +1291,7 @@
 
         <!-- LOCKED PREMIUM BOX (Visible ONLY if user is Free/Basic) -->
         <div class="locked-premium-box" id="locked_premium_box">
-            <div style="font-size: 42px; margin-bottom: 6px;">🔒</div>
-            <h3>अचूक उपाय आणि शर्यत डाएट चार्ट लॉक आहे!</h3>
-            <p>तुमच्या बैलाची छाती, मान व स्नायू बळकट करण्यासाठी, हाडांची मजबूती आणि पारंपारिक देशी खुराक + वैज्ञानिक आहाराचा अचूक चार्ट पाहण्यासाठी <b>'ॲडव्हान्स प्लॅन'</b> अनलॉक करा.</p>
-            <button class="btn-upgrade" id="btn_upgrade_locked" onclick="showPaywall()">
-                👑 Advance Plan अनलॉक करा
-            </button>
+            <!-- Content will be injected dynamically based on payment status -->
         </div>
 
     </div>
@@ -1476,7 +1475,7 @@
         let isPremium = isPlanActive('adv');
         let modeTag = document.getElementById("plan_mode_tag");
 
-        if (isPremium) {
+        if (isPremium && currentMode === 'adv') {
             modeTag.innerText = "ADVANCE (PREMIUM)";
             modeTag.style.background = "#1b5e20";
         } else {
@@ -1488,7 +1487,6 @@
     function updateTabLockUI() {
         let price = getKhillarAdvPrice();
         let advTab = document.getElementById('tab_price_adv');
-        let upgradeBtn = document.getElementById('btn_upgrade_locked');
 
         if(isPlanActive('adv')) {
             advTab.innerHTML = `✅ ॲक्टिव्ह`;
@@ -1498,14 +1496,6 @@
             advTab.style.color = '#d32f2f';
         }
 
-        if(upgradeBtn) {
-            if (price > 0) {
-                upgradeBtn.innerText = `👑 Advance Plan अनलॉक करा (₹${price})`;
-            } else {
-                upgradeBtn.innerText = `👑 Advance Plan ॲक्टिव्हेट करा (मोफत)`;
-            }
-        }
-        
         let paywallPrice = document.getElementById('paywall_price');
         if(paywallPrice) paywallPrice.innerText = `₹ ${price} / २४ तास`;
     }
@@ -1624,12 +1614,19 @@
         let starter = parseFloat(document.getElementById("rb_starter").value) || 0;
 
         // 3 Green Fodders
+        let green1Type = document.getElementById("rb_green1_type").value;
+        let green2Type = document.getElementById("rb_green2_type").value;
+        let green3Type = document.getElementById("rb_green3_type").value;
+
         let green1 = parseFloat(document.getElementById("rb_green1").value) || 0;
         let green2 = parseFloat(document.getElementById("rb_green2").value) || 0;
         let green3 = parseFloat(document.getElementById("rb_green3").value) || 0;
         let totalGreen = green1 + green2 + green3;
 
         // 2 Dry Fodders
+        let dry1Type = document.getElementById("rb_dry1_type").value;
+        let dry2Type = document.getElementById("rb_dry2_type").value;
+
         let dry1 = parseFloat(document.getElementById("rb_dry1").value) || 0;
         let dry2 = parseFloat(document.getElementById("rb_dry2").value) || 0;
         let totalDry = dry1 + dry2;
@@ -1728,20 +1725,86 @@
         });
         document.getElementById("problem_list_ui").innerHTML = problemHtml;
 
-        // 6. Freemium Access Check (Show Advance or Lock Box)
+        // 6. Freemium Access Check (Basic vs Advance Mode Segregation)
         let isPremium = isPlanActive('adv');
         let lockBox = document.getElementById("locked_premium_box");
         let advanceBox = document.getElementById("advance_solution_container");
         let topStatusText = document.getElementById("status_message_top");
         let lockIconStatus = document.getElementById("lock_icon_status");
 
-        if (isPremium || currentMode === 'adv') {
+        // 🔥 GENERATE INPUT SUMMARY FOR PDF & ADVANCE VIEW 🔥
+        let inputHtml = `
+        <h4 style="color:#1565c0; margin-top:0; margin-bottom:10px; border-bottom:1px solid #bbdefb; padding-bottom:5px;">📋 बैलाची माहिती व दिलेला आहार</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; font-size:12px; color:#333;">
+            <div><b>वजन:</b> ${weight} Kg</div>
+            <div><b>वय:</b> ${age} महिने</div>
+            <div><b>टप्पा:</b> ${stageText}</div>
+            <div><b>पशुखाद्य:</b> ${starter} ग्रॅम</div>
+        </div>
+        <h5 style="margin:10px 0 5px; color:#333; font-size:13px; border-bottom:1px dashed #ccc; padding-bottom:3px;">दिलेला चारा व खुराक:</h5>
+        <table class="diet-table" style="margin-top:0;">`;
+
+        function addRow(cat, name, qty, unit) {
+            if(name && !name.includes('काहीच नाही') && !name.includes('काहीच देत नाही') && qty > 0) {
+                inputHtml += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${cat}: <b>${name}</b></td><td style="text-align:right; padding:8px; border-bottom:1px solid #eee; color:#111;"><b>${qty} ${unit}</b></td></tr>`;
+            }
+        }
+
+        addRow('हिरवा चारा', green1Type, green1, 'Kg');
+        addRow('हिरवा चारा', green2Type, green2, 'Kg');
+        addRow('हिरवा चारा', green3Type, green3, 'Kg');
+        addRow('सुका चारा', dry1Type, dry1, 'Kg');
+        addRow('सुका चारा', dry2Type, dry2, 'Kg');
+        addRow('देशी खुराक', trad1Type, trad1Qty, 'g');
+        addRow('देशी खुराक', trad2Type, trad2Qty, 'g');
+        addRow('देशी खुराक', trad3Type, trad3Qty, 'g');
+
+        inputHtml += `</table>`;
+        document.getElementById("pdf_input_summary").innerHTML = inputHtml;
+
+        // 🔥 CONDITION: ONLY SHOW ADVANCE IF IN ADVANCE TAB & IS PREMIUM
+        if (currentMode === 'basic') {
+            // Hide advance things completely
+            advanceBox.style.display = "none";
+            document.getElementById("pdf_input_summary").style.display = "none";
+            
+            topStatusText.innerText = "⚡ बेसिक आहारातील कमतरता तपासणी";
+            lockIconStatus.innerText = isPremium ? "✅ Premium Active" : "🔒 Advance Locked";
+            lockIconStatus.style.color = isPremium ? "#1b5e20" : "#d32f2f";
+
+            lockBox.style.display = "block";
+            if (isPremium) {
+                lockBox.innerHTML = `
+                    <div style="font-size: 42px; margin-bottom: 6px;">👑</div>
+                    <h3>तुमचा ॲडव्हान्स प्लॅन ॲक्टिव्ह आहे!</h3>
+                    <p>सविस्तर उपाय आणि शर्यत डाएट चार्ट पाहण्यासाठी वरती <b>'ॲडव्हान्स खुराक चार्ट'</b> टॅबवर क्लिक करा.</p>
+                    <button class="btn-upgrade" onclick="setLevel('adv')">
+                        ॲडव्हान्स टॅब उघडा ➔
+                    </button>
+                `;
+            } else {
+                let price = getKhillarAdvPrice();
+                let pText = price > 0 ? `(₹${price})` : `(मोफत)`;
+                lockBox.innerHTML = `
+                    <div style="font-size: 42px; margin-bottom: 6px;">🔒</div>
+                    <h3>अचूक उपाय आणि शर्यत डाएट चार्ट लॉक आहे!</h3>
+                    <p>तुमच्या बैलाची छाती, मान व स्नायू बळकट करण्यासाठी, हाडांची मजबूती आणि पारंपारिक देशी खुराक + वैज्ञानिक आहाराचा अचूक चार्ट पाहण्यासाठी <b>'ॲडव्हान्स प्लॅन'</b> अनलॉक करा.</p>
+                    <button class="btn-upgrade" onclick="showPaywall()">
+                        👑 Advance Plan अनलॉक करा ${pText}
+                    </button>
+                `;
+            }
+        } else {
+            // ADVANCE MODE
             if(!isPremium) {
                 showPaywall();
                 return;
             }
+            
             lockBox.style.display = "none";
             advanceBox.style.display = "block";
+            document.getElementById("pdf_input_summary").style.display = "block";
+            
             topStatusText.innerText = "👑 Advance Racing Diet Unlocked";
             lockIconStatus.innerText = "✅ Premium User";
             lockIconStatus.style.color = "#1b5e20";
@@ -1829,52 +1892,10 @@
             } else {
                 countdownBox.style.display = "none";
             }
-
-            // 🔥 NEW: GENERATE INPUT SUMMARY FOR PDF 🔥
-            let inputHtml = `
-            <h4 style="color:#1565c0; margin-top:0; margin-bottom:10px; border-bottom:1px solid #bbdefb; padding-bottom:5px;">📋 बैलाची माहिती व दिलेला आहार</h4>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; font-size:12px; color:#333;">
-                <div><b>वजन:</b> ${weight} Kg</div>
-                <div><b>वय:</b> ${age} महिने</div>
-                <div><b>टप्पा:</b> ${stageText}</div>
-                <div><b>पशुखाद्य:</b> ${starter} ग्रॅम</div>
-            </div>
-            <h5 style="margin:10px 0 5px; color:#333; font-size:13px; border-bottom:1px dashed #ccc; padding-bottom:3px;">दिलेला चारा व खुराक:</h5>
-            <table style="width:100%; font-size:12px; border-collapse:collapse; color:#444;">`;
-
-            function addRow(cat, name, qty, unit) {
-                if(name && !name.includes('काहीच नाही') && !name.includes('काहीच देत नाही') && qty > 0) {
-                    inputHtml += `<tr><td style="padding:4px 0; border-bottom:1px solid #eee;">${cat}: <b>${name}</b></td><td style="text-align:right; border-bottom:1px solid #eee; color:#111;"><b>${qty} ${unit}</b></td></tr>`;
-                }
-            }
-
-            addRow('हिरवा चारा', document.getElementById("rb_green1_type").value, green1, 'Kg');
-            addRow('हिरवा चारा', document.getElementById("rb_green2_type").value, green2, 'Kg');
-            addRow('हिरवा चारा', document.getElementById("rb_green3_type").value, green3, 'Kg');
-            addRow('सुका चारा', document.getElementById("rb_dry1_type").value, dry1, 'Kg');
-            addRow('सुका चारा', document.getElementById("rb_dry2_type").value, dry2, 'Kg');
-            addRow('देशी खुराक', trad1Type, trad1Qty, 'g');
-            addRow('देशी खुराक', trad2Type, trad2Qty, 'g');
-            addRow('देशी खुराक', trad3Type, trad3Qty, 'g');
-
-            inputHtml += `</table>`;
-            document.getElementById("pdf_input_summary").innerHTML = inputHtml;
-            document.getElementById("pdf_input_summary").style.display = "block";
-
-            document.getElementById("btn_pdf_download").style.display = "block";
-            document.getElementById("btn_gemini_trigger").style.display = "block";
-        } else {
-            lockBox.style.display = "block";
-            advanceBox.style.display = "none";
-            topStatusText.innerText = "⚡ बेसिक समस्या अहवाल";
-            lockIconStatus.innerText = "🔒 Advance Locked";
-            lockIconStatus.style.color = "#d32f2f";
-            document.getElementById("pdf_input_summary").style.display = "none";
-            document.getElementById("btn_pdf_download").style.display = "none";
-            document.getElementById("btn_gemini_trigger").style.display = "none";
         }
 
         // 7. स्क्रीनवर अहवाल दाखवा आणि स्क्रोल करा
+        checkUserPlanStatus(); // Update the mode tag
         document.getElementById("result_heading").style.display = "flex";
         document.getElementById("result_container").style.display = "block";
         document.getElementById("result_heading").scrollIntoView({ behavior: "smooth" });
@@ -1903,7 +1924,7 @@
         .catch(e => console.error("Cloud save error:", e));
     }
 
-    // 10. PDF DOWNLOAD LOGIC (🔥 UPDATED TO CLEAN UI & SHOW HEADER 🔥)
+    // 10. PDF DOWNLOAD LOGIC (🔥 UPDATED TO INCLUDE INPUT SUMMARY SEAMLESSLY 🔥)
     function downloadRealPDF() {
         window.scrollTo(0, 0);
         let element = document.getElementById('result_container');
@@ -1911,6 +1932,7 @@
         let pdfHeader = document.getElementById('pdf_main_heading');
         let btnPdf = document.getElementById('btn_pdf_download');
         let btnAi = document.getElementById('btn_gemini_trigger');
+        let aiBox = document.getElementById('gemini_response_box');
         
         // Show Header & Hide Buttons for a Clean PDF Print
         if(pdfHeader) pdfHeader.style.display = 'block';
@@ -1979,7 +2001,7 @@
         शेतकऱ्याला मराठीत अत्यंत सोप्या ४-५ ओळीत (बुलेट पॉईंट्समध्ये) सांग की:
         १. शर्यतीच्या मैदानात बादशाह बनवण्यासाठी आहारात नेमकी काय वाढ करावी (उदा. उडदाची डाळ, मटकी, किंवा स्टॅमिना पावडर)?
         २. धावताना पायात गोळे येऊ नयेत म्हणून काय काळजी घ्यावी?
-        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू মজकूर वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
+        कोणताही तांत्रिक किंवा इंग्रजी शब्द वापरू नकोस. शेतकऱ्याच्या अंगात जोश येईल अशी पॉझिटिव्ह भाषा वापर.
         `;
 
         try {
