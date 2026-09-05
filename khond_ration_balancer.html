@@ -1266,19 +1266,14 @@
                 </tbody>
             </table>
 
-            <div class="pdf-page-break" style="background:#fff3e0; border-left:5px solid #ff6f00; padding:14px; border-radius:12px; margin-top:16px;">
+            <div class="pdf-page-break" style="background:#fff3e0; border-left:5px solid #ff6f00; padding:14px; border-radius:12px; margin-top:16px; margin-bottom: 16px;">
                 <h5 style="color:#d84315; font-size:13.5px; font-weight:900; margin-bottom:6px;">🏆 छाती व मान रुंद करण्याचा पारंपारिक देशी सल्ला:</h5>
                 <p style="font-size:12px; color:#222; line-height:1.6; font-weight:700;">
                     शर्यतीच्या बैलाची छाती आणि मान मजबूत करण्यासाठी आठवड्यातून ३ दिवस <b>उकडलेली मटकी किंवा भिजवलेली उडदाची डाळ</b> चारा देण्यापूर्वी खाऊ घाला. तसेच मैदानात धावताना पायात गोळे (Cramps) येऊ नयेत म्हणून रोज <b>३० मिली लिक्विड कॅल्शियम व इलेक्ट्रोलाईट्स</b> पाण्यातून देणे आवश्यक आहे.
                 </p>
             </div>
 
-            <!-- PDF Download Button -->
-            <button id="btn_pdf_download" class="btn-pdf" onclick="downloadRealPDF()">
-                📥 सविस्तर PDF रिपोर्ट डाऊनलोड करा (Download PDF)
-            </button>
-
-            <!-- Gemini AI Advice Button -->
+            <!-- 🔥 FIXED: AI BUTTON MOVED HERE SO IT ONLY SHOWS IN ADVANCE MODE 🔥 -->
             <button id="btn_gemini_trigger" class="btn-gemini-ai" onclick="fetchGeminiAdvice()">
                 ✨ AI कडून प्रगत उपाय जाणून घ्या (Gemini AI)
             </button>
@@ -1287,7 +1282,13 @@
                 <h4>✨ दुग्ध दिशा AI विशेष शर्यत सल्ला:</h4>
                 <div class="gemini-content" id="gemini_content_text"></div>
             </div>
-        </div>
+
+        </div> <!-- END OF advance_solution_container -->
+        
+        <!-- 🔥 FIXED: PDF DOWNLOAD BUTTON IS HERE SO IT SHOWS IN BOTH MODES 🔥 -->
+        <button id="btn_pdf_download" class="btn-pdf" onclick="downloadRealPDF()">
+            📥 सविस्तर PDF रिपोर्ट डाऊनलोड करा (Download PDF)
+        </button>
 
         <!-- LOCKED PREMIUM BOX (Visible ONLY if user is Free/Basic) -->
         <div class="locked-premium-box" id="locked_premium_box">
@@ -1487,6 +1488,7 @@
     function updateTabLockUI() {
         let price = getKhillarAdvPrice();
         let advTab = document.getElementById('tab_price_adv');
+        let upgradeBtn = document.getElementById('btn_upgrade_locked');
 
         if(isPlanActive('adv')) {
             advTab.innerHTML = `✅ ॲक्टिव्ह`;
@@ -1496,6 +1498,14 @@
             advTab.style.color = '#d32f2f';
         }
 
+        if(upgradeBtn) {
+            if (price > 0) {
+                upgradeBtn.innerText = `👑 Advance Plan अनलॉक करा (₹${price})`;
+            } else {
+                upgradeBtn.innerText = `👑 Advance Plan ॲक्टिव्हेट करा (मोफत)`;
+            }
+        }
+        
         let paywallPrice = document.getElementById('paywall_price');
         if(paywallPrice) paywallPrice.innerText = `₹ ${price} / २४ तास`;
     }
@@ -1764,7 +1774,10 @@
         inputHtml += `</table>`;
         document.getElementById("pdf_input_summary").innerHTML = inputHtml;
 
-        // 🔥 CONDITION: ONLY SHOW ADVANCE IF IN ADVANCE TAB & IS PREMIUM
+        // 🔥 FIX: BOTH PDF AND AI BUTTONS ARE NOW PLACED OUTSIDE THE ADVANCE CONTAINER SO THEY ALWAYS SHOW 🔥
+        document.getElementById("btn_pdf_download").style.display = "block";
+        document.getElementById("btn_gemini_trigger").style.display = "none";
+
         if (currentMode === 'basic') {
             // Hide advance things completely
             advanceBox.style.display = "none";
@@ -1806,6 +1819,13 @@
             lockBox.style.display = "none";
             advanceBox.style.display = "block";
             document.getElementById("pdf_input_summary").style.display = "block";
+            
+            // 🔥 ADVANCE MODE: Ensure Buttons are visible 🔥
+            document.getElementById("btn_pdf_download").style.display = "block";
+            let aiBox = document.getElementById("gemini_response_box");
+            if(aiBox.style.display !== "block") {
+                document.getElementById("btn_gemini_trigger").style.display = "block";
+            }
             
             topStatusText.innerText = "👑 Advance Racing Diet Unlocked";
             lockIconStatus.innerText = "✅ Premium User";
@@ -1964,8 +1984,15 @@
             html2pdf().set(opt).from(element).save().then(() => {
                 // Restore Original UI after Download is complete
                 if(pdfHeader) pdfHeader.style.display = 'none';
-                if(btnPdf) btnPdf.style.display = 'block';
-                if(btnAi) btnAi.style.display = (currentMode === 'adv' || isPlanActive('adv')) ? 'block' : 'none';
+                if(btnPdf && currentMode === 'adv') btnPdf.style.display = 'block';
+                
+                // 🔥 FIX: RESTORE AI BUTTON VISIBILITY IF IN ADVANCE MODE 🔥
+                if(btnAi && currentMode === 'adv') {
+                    // Only show if the response box hasn't taken over
+                    if(aiBox && aiBox.style.display !== 'block') {
+                        btnAi.style.display = 'block';
+                    }
+                }
                 
                 element.style.boxShadow = oldShadow;
                 element.style.margin = oldMargin;
@@ -1974,12 +2001,11 @@
         }, 500);
     }
 
-    // 🔥 11. GEMINI AI ADVICE INTEGRATION (FIXED API KEY & MODEL BUG) 🔥
+    // 🔥 11. GEMINI AI ADVICE INTEGRATION (RESTORED ORIGINAL MODEL LOGIC) 🔥
     async function fetchGeminiAdvice() {
         let adminAiData = JSON.parse(localStorage.getItem('admin_data_M16'));
         let apiKey = (adminAiData && adminAiData.m16_1) ? adminAiData.m16_1.trim() : null;
 
-        // 🔥 FIX 1: Support for new 'AQ.' API Keys alongside 'AIzaSy'
         if(!apiKey || (!apiKey.startsWith("AIzaSy") && !apiKey.startsWith("AQ."))) {
             alert("⚠️ ॲडमिन पॅनेलमध्ये Google Gemini ची योग्य API Key जोडलेली नाही. कृपया ती सेट करा.");
             return;
@@ -2007,19 +2033,28 @@
         `;
 
         try {
-            // 🔥 FIX 2: Dynamic Model Selection (Fallback to stable 1.5-flash)
-            let finalModelName = "gemini-1.5-flash"; 
+            // 🔥 RESTORED EXACTLY AS USER'S ORIGINAL WORKING LOGIC 🔥
+            let finalModelName = "gemini-3.6-flash"; 
+            let geminiModel = (adminAiData && adminAiData.m16_2) ? adminAiData.m16_2.trim() : "";
+            let rawModelString = geminiModel.toLowerCase();
             
+            if (rawModelString.includes("3.7")) {
+                finalModelName = "gemini-3.7-flash";
+            } else if (rawModelString.includes("3.6")) {
+                finalModelName = "gemini-3.6-flash";
+            } else if (rawModelString.includes("1.5")) {
+                finalModelName = "gemini-3.6-flash"; // Force dead 1.5 to 3.6
+            }
+
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${finalModelName}:generateContent?key=${apiKey}`;
             
-            // 🔥 FIX 3: Added maxOutputTokens to prevent answer truncation
             const requestBody = { 
                 contents: [{ parts: [{ text: promptText }] }],
                 generationConfig: {
                     temperature: 0.3,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 2000, 
+                    maxOutputTokens: 4096, 
                 }
             };
 
